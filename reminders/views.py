@@ -1,3 +1,29 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect
+from .models import Event
+from .forms import EventForm
+from django.contrib.auth.decorators import login_required
+
+# from django.http import HttpResponse
+#
+#
+# def home(request):
+#     return HttpResponse("Welcome to the Birthday Reminder App!")
 
 # Create your views here.
+@login_required
+def add_event(request):
+    if request.method=='POST':
+        form=EventForm(request.POST)
+        if form.is_valid():
+            event=form.save(commit=False)
+            event.user=request.user
+            event.save()
+            return redirect('event_list')
+    else:
+        form=EventForm()
+    return render(request,'reminders/event_form.html',{'form':form})
+
+@login_required
+def event_list(request):
+    events=Event.objects.filter(user=request.user).order_by('date')
+    return render(request,'reminders/event_list.html',{'events':events})

@@ -133,3 +133,4 @@ Q_CLUSTER = {
     'bulk': 10,
     'orm': 'default',
 }
+LOGOUT_REDIRECT_URL = '/'

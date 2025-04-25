@@ -1,10 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Birthday Reminder</title>
 </head>
 <body>
-
+    {% if user.is_authenticated %}
+      <p>Welcome, {{ user.username }}
+         | <a href="{% url 'logout' %}">Logout</a>
+      </p>
+    {% else %}
+      <p><a href="{% url 'login' %}">Login</a> | <a href="{% url 'signup' %}">Sign Up</a></p>
+    {% endif %}
+    <hr>
+    {% block content %}{% endblock %}
 </body>
 </html>
