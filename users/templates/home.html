@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Welcome to the Birthday Reminder App</h2>
+<p>Your personal reminder app for birthdays and anniversaries.</p>
+
+<p>
+    <a href="{% url 'login' %}">Login</a> or
+    <a href="{% url 'signup' %}">Sign up</a>
+</p>
+{% endblock %}

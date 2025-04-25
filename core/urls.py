@@ -23,5 +23,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('reminders/', include('reminders.urls')),
     path('logout/', LogoutView.as_view(), name='logout'),
-    path('', lambda request: redirect('event_list')),
+
+    path('users/', include('users.urls')),
+    path('', lambda request: redirect('home')),
 ]

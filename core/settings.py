@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'reminders',
     'django_q',
+    'users',
 ]
 
 MIDDLEWARE = [
@@ -133,4 +134,7 @@ Q_CLUSTER = {
     'bulk': 10,
     'orm': 'default',
 }
-LOGOUT_REDIRECT_URL = '/'
+# LOGOUT_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = 'event_list'
+LOGOUT_REDIRECT_URL = 'login'
+LOGIN_URL = 'login'
