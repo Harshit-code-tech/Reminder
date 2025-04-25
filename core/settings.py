@@ -37,6 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'reminders',
+    'django_q',
 ]
 
 MIDDLEWARE = [
@@ -121,3 +124,12 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+Q_CLUSTER = {
+    'name': 'BirthdayAppQueue',
+    'workers': 2,
+    'retry': 120,
+    'timeout': 60,
+    'queue_limit': 50,
+    'bulk': 10,
+    'orm': 'default',
+}
