@@ -1,0 +1,41 @@
+Birthday/
+├── core/                      # Django project settings
+│   ├── __init__.py
+│   ├── asgi.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+│
+├── reminders/                # Main app (events, media, API)
+│   ├── migrations/
+│   ├── templates/reminders/  # HTML templates (if using Django templates)
+│   ├── static/reminders/     # Static files: CSS, JS, animations
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py
+│   ├── serializers.py        # DRF serializers
+│   ├── views.py              # DRF or Template views
+│   ├── urls.py               # App-level URLs
+│   ├── tasks.py              # Django Q tasks
+│   └── utils.py              # Helpers: email, Supabase upload
+│
+├── media/                    # Local media uploads (optional fallback)
+├── staticfiles/              # Collected static files for deployment
+├── manage.py
+├── requirements.txt
+└── README.md
+
+📦 Key Components Overview
+
+Folder/File	Purpose
+core/	Django config and global URL routing
+reminders/	Main logic for events, reminders, media, and UI
+reminders/templates/	HTML templates (landing page, dashboard, celebration)
+reminders/static/	CSS, JS, images, Lottie animations, fonts
+reminders/serializers.py	DRF: Convert models to JSON for API
+reminders/tasks.py	Scheduled email sending via Django Q
+reminders/utils.py	Custom functions (SendGrid email, Supabase upload)
+media/	Local uploads directory (for development)
+requirements.txt	Python packages list
+README.md	Project documentation
