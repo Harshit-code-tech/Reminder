@@ -4,6 +4,9 @@ from .forms import EventForm
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from .email_utils import send_reminder_email
+from django.shortcuts import redirect
+from django.contrib import messages
+from django_q.tasks import async_task
 # from django.http import HttpResponse
 #
 #
@@ -37,3 +40,9 @@ def event_list(request):
 #         recipient_list=["unknownhai517@gmail.com"],  # Put your actual email to test
 #     )
 #     return HttpResponse("Test email sent! Check your inbox 📬.")
+
+@login_required
+def send_reminders_manual(request):
+    async_task('reminders.tasks.send_reminder_emails')
+    messages.success(request, "🎉 Reminder emails are being sent!")
+    return redirect('event_list')

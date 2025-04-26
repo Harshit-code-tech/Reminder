@@ -1,6 +1,12 @@
 {% extends 'base.html' %}
 
 {% block content %}
+  {% if messages %}
+    {% for message in messages %}
+      <script>alert('{{ message }}');</script>
+    {% endfor %}
+  {% endif %}
+
   <h2>Your Events</h2>
   <a href="{% url 'add_event' %}">Add Event</a>
   <ul>
