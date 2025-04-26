@@ -30,10 +30,10 @@ def event_list(request):
     return render(request,'reminders/event_list.html',{'events':events})
 
 # temproary
-def test_email(request):
-    send_reminder_email(
-        subject="🎉 Test Email from Birthday Reminder App",
-        message="Hello! This is a test email sent via MailerSend SMTP settings.",
-        recipient_list=["unknownhai517@gmail.com"],  # Put your actual email to test
-    )
-    return HttpResponse("Test email sent! Check your inbox 📬.")
+# def test_email(request):
+#     send_reminder_email(
+#         subject="🎉 Test Email from Birthday Reminder App",
+#         message="Hello! This is a test email sent via MailerSend SMTP settings.",
+#         recipient_list=["unknownhai517@gmail.com"],  # Put your actual email to test
+#     )
+#     return HttpResponse("Test email sent! Check your inbox 📬.")

@@ -109,7 +109,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 
@@ -126,14 +126,16 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 Q_CLUSTER = {
-    'name': 'BirthdayAppQueue',
-    'workers': 2,
-    'retry': 120,
+    'name': 'birthday_reminder',
+    'workers': 4,  # Number of worker threads
+    'recycle': 500,
     'timeout': 60,
+    'retry': 90,
     'queue_limit': 50,
     'bulk': 10,
-    'orm': 'default',
+    'orm': 'default',  # Using Django ORM for queue (easy setup)
 }
+
 # LOGOUT_REDIRECT_URL = '/'
 LOGIN_REDIRECT_URL = 'event_list'
 LOGOUT_REDIRECT_URL = 'login'
