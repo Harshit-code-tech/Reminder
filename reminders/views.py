@@ -2,7 +2,8 @@ from django.shortcuts import render,redirect
 from .models import Event
 from .forms import EventForm
 from django.contrib.auth.decorators import login_required
-
+from django.http import HttpResponse
+from .email_utils import send_reminder_email
 # from django.http import HttpResponse
 #
 #
@@ -27,3 +28,12 @@ def add_event(request):
 def event_list(request):
     events=Event.objects.filter(user=request.user).order_by('date')
     return render(request,'reminders/event_list.html',{'events':events})
+
+# temproary
+def test_email(request):
+    send_reminder_email(
+        subject="🎉 Test Email from Birthday Reminder App",
+        message="Hello! This is a test email sent via MailerSend SMTP settings.",
+        recipient_list=["unknownhai517@gmail.com"],  # Put your actual email to test
+    )
+    return HttpResponse("Test email sent! Check your inbox 📬.")
