@@ -6,7 +6,7 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY =     config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 import os
@@ -134,13 +134,17 @@ LOGOUT_REDIRECT_URL = 'login'
 LOGIN_URL = 'login'
 
 # MailerSend SMTP Configuration
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.mailersend.net'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = 'Birthday Reminder App <{}>'.format(EMAIL_HOST_USER)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+MAILERSEND_API_KEY = config('MAILERSEND_API_KEY')
+
+DEFAULT_FROM_EMAIL = 'Birthday Reminder App <{}>'.format(config('EMAIL_FROM'))
+
+# EMAIL_HOST = 'smtp.mailersend.net'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+# EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+# DEFAULT_FROM_EMAIL = 'Birthday Reminder App <{}>'.format(EMAIL_HOST_USER)
 
 AUTHENTICATION_BACKENDS = [
     'users.backends.EmailOrUserModelBackend',  # Our custom backend
