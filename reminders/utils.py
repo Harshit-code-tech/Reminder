@@ -1,7 +1,7 @@
-from reminders.models import Event
+from .models import Event
 from django.utils import timezone
 from django.core.mail import send_mail
-
+from django.conf import settings
 
 def send_upcoming_reminders():
     today = timezone.localdate()
@@ -11,7 +11,7 @@ def send_upcoming_reminders():
         send_mail(
             subject=f"Reminder: {event.name}'s {event.event_type}",
             message=event.message or f"Don't forget {event.name}'s {event.event_type}!",
-            from_email=None,  # Uses DEFAULT_FROM_EMAIL
+            from_email=settings.DEFAULT_FROM_EMAIL,  # Uses DEFAULT_FROM_EMAIL
             recipient_list=[event.user.email],  # Assuming your Event has a ForeignKey to User
             fail_silently=False,
         )

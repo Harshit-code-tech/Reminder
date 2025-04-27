@@ -17,7 +17,7 @@ class Event(models.Model):
     created_at=models.DateTimeField(auto_now_add=True)
     notified = models.BooleanField(default=False)
     def __str__(self):
-        return f"{self.name}'s{self.get_event_type_display()}on {self.date}"
+        return f"{self.name}'s {self.get_event_type_display()} on {self.date}"
 
 class ReminderLog(models.Model):
     user=models.ForeignKey(User,on_delete=models.CASCADE)
