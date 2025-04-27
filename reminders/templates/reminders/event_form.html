@@ -1,7 +1,11 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <h2>Add New Event</h2>
+  {% if edit %}
+    <h2>Edit Event</h2>
+  {% else %}
+    <h2>Add New Event</h2>
+  {% endif %}
   <form method="post">
     {% csrf_token %}
     {{ form.as_p }}

@@ -9,9 +9,14 @@
 
   <h2>Your Events</h2>
   <a href="{% url 'add_event' %}">Add Event</a>
+
   <ul>
     {% for event in events %}
-      <li>{{ event.name }}'s {{ event.get_event_type_display }} on {{ event.date }}</li>
+      <li>
+        {{ event.name }}'s {{ event.get_event_type_display }} on {{ event.date }}
+        <a class="btn btn-sm btn-primary" href="{% url 'edit_event' event.id %}">Edit</a>
+        <a href="{% url 'delete_event' event.id %}" class="btn btn-sm btn-danger">Delete</a>
+      </li>
     {% empty %}
       <li>No events yet!</li>
     {% endfor %}

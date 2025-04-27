@@ -5,8 +5,18 @@ from django.contrib import messages
 from django.shortcuts import redirect
 from .forms import CustomUserCreationForm
 # Home page view
+from django.apps import apps
+from django.utils import timezone
+
 def home(request):
-    return render(request, 'home.html')
+    upcoming_events = []
+    if request.user.is_authenticated:
+        today = timezone.localdate()
+        Event = apps.get_model('reminders', 'Event')
+        upcoming_events = Event.objects.filter(user=request.user, date__gte=today).order_by('date')[:5]
+
+    return render(request, 'home.html', {'upcoming_events': upcoming_events})
+
 
 # Login view
 def login_view(request):

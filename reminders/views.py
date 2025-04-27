@@ -27,6 +27,29 @@ def event_list(request):
     events = Event.objects.filter(user=request.user).order_by('date')
     return render(request, 'reminders/event_list.html', {'events': events})
 
+@login_required
+def edit_event(request, event_id):
+    event = Event.objects.get(id=event_id, user=request.user)
+
+    if request.method == 'POST':
+        form = EventForm(request.POST, instance=event)
+        if form.is_valid():
+            form.save()
+            return redirect('event_list')
+    else:
+        form = EventForm(instance=event)
+
+    return render(request, 'reminders/event_form.html', {'form': form, 'edit': True})
+
+@login_required
+def delete_event(request, event_id):
+    event = Event.objects.get(id=event_id, user=request.user)
+    if request.method == 'POST':
+        event.delete()
+        return redirect('event_list')
+    return render(request, 'reminders/confirm_delete.html', {'event': event})
+
+
 @csrf_exempt
 def trigger_send_reminders(request):
     try:
