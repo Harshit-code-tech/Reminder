@@ -1,4 +1,4 @@
-import psycopg2.extras
+# import psycopg2.extras
 from pathlib import Path
 from decouple import config
 import dj_database_url
@@ -13,7 +13,7 @@ import os
 
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',') + ['127.0.0.1']
 
 # CSRF trusted origins (important for Render)
 CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in ALLOWED_HOSTS]
@@ -80,11 +80,11 @@ DATABASES = {
     )
 }
 
-# Force SimpleConnection for Supabase Transaction Pooling
-DATABASES['default']['OPTIONS'] = {
-    'sslmode': 'require',
-    'connection_factory': psycopg2.extras.SimpleConnection,
-}
+# # Force SimpleConnection for Supabase Transaction Pooling
+# DATABASES['default']['OPTIONS'] = {
+#     'sslmode': 'require',
+#     'connection_factory': psycopg2.extras.SimpleConnection,
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
