@@ -1,18 +1,40 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Birthday Reminder</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Birthday Reminder{% endblock %}</title>
 </head>
 <body>
-    {% if user.is_authenticated %}
-      <p>Welcome, {{ user.username }}
-         | <a href="{% url 'logout' %}">Logout</a>
-         | <a href="{% url 'send_reminders_manual' %}">Send Reminders</a> <!-- Fixed URL name -->
-      </p>
-    {% else %}
-      <p><a href="{% url 'login' %}">Login</a> | <a href="{% url 'signup' %}">Sign Up</a></p>
+    <header>
+        <h1>🎁 Birthday & Anniversary Reminders</h1>
+        <nav>
+            <ul>
+                {% if user.is_authenticated %}
+                    <li>Welcome, {{ user.username }}!</li>
+                    <li><a href="{% url 'event_list' %}">My Events</a></li>
+                    <li><a href="{% url 'send_reminders_manual' %}">Send Reminders</a></li>
+                    <li><a href="{% url 'logout' %}">Logout</a></li>
+                {% else %}
+                    <li><a href="{% url 'home' %}">Home</a></li>
+                    <li><a href="{% url 'login' %}">Login</a></li>
+                    <li><a href="{% url 'signup' %}">Sign Up</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
     {% endif %}
+
     <hr>
-    {% block content %}{% endblock %}
+
+    {% block content %}
+    {% endblock %}
 </body>
 </html>

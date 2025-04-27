@@ -148,4 +148,9 @@ EMAIL_PORT = 587  # You can also use 2525 if 587 is blocked
 EMAIL_USE_TLS = True  # MailerSend recommends TLS
 EMAIL_HOST_USER = 'MS_mfXOSJ@test-q3enl6kkqd842vwr.mlsender.net'  # Your provided Username
 EMAIL_HOST_PASSWORD = 'mssp.gt9zTjU.vywj2lp7pe1l7oqz.OvpXld1'  # Your provided Password
-DEFAULT_FROM_EMAIL = 'Birthday Reminder App <MS_mfXOSJ@test-q3enl6kkqd842vwr.mlsender.net>' # Using the same email for consistency
+DEFAULT_FROM_EMAIL = 'Birthday Reminder App <MS_mfXOSJ@test-q3enl6kkqd842vwr.mlsender.net>'
+
+AUTHENTICATION_BACKENDS = [
+    'users.backends.EmailOrUserModelBackend',  # Our custom backend
+    'django.contrib.auth.backends.ModelBackend',   # Django's default
+]

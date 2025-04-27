@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import login, authenticate, logout, get_backends
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib import messages
 from django.shortcuts import redirect
+from .forms import CustomUserCreationForm
 # Home page view
 def home(request):
     return render(request, 'home.html')
@@ -22,18 +23,28 @@ def login_view(request):
     return render(request, 'users/login.html', {'form': form})
 
 # Signup view
-def signup(request):
+def signup_view(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, "Account created successfully")
-            return redirect('login')  # Redirect to login after signup
+            user = form.save(commit=False)
+            user.save()
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password1')
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                messages.success(request, "Account created successfully.")
+                return redirect('home')
+            else:
+                messages.error(request, "Authentication failed after signup. Please login manually.")
+                return redirect('login')
         else:
-            messages.error(request, "Error during signup")
+            messages.error(request, "Error during signup. Please correct the errors below.")
     else:
-        form = UserCreationForm()
+        form = CustomUserCreationForm()
     return render(request, 'users/signup.html', {'form': form})
+
 
 def logout_view(request):
     logout(request)

@@ -2,11 +2,13 @@ from django.shortcuts import render,redirect
 from .models import Event
 from .forms import EventForm
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from .email_utils import send_reminder_email
 from django.shortcuts import redirect
 from django.contrib import messages
 from django_q.tasks import async_task
+from .tasks import send_reminder_emails
+from django.views.decorators.csrf import csrf_exempt
 # from django.http import HttpResponse
 #
 #
@@ -41,8 +43,17 @@ def event_list(request):
 #     )
 #     return HttpResponse("Test email sent! Check your inbox 📬.")
 
-@login_required
+# @login_required
+# def send_reminders_manual(request):
+#     async_task('reminders.tasks.send_reminder_emails')
+#     messages.success(request, "🎉 Reminder emails are being sent!")
+#     return redirect('event_list')
+
+@csrf_exempt  # since cronjob is an external POST/GET request, no CSRF token available
 def send_reminders_manual(request):
-    async_task('reminders.tasks.send_reminder_emails')
-    messages.success(request, "🎉 Reminder emails are being sent!")
-    return redirect('event_list')
+    if request.method == 'POST' or request.method == 'GET':
+        # Directly call the function
+        send_reminder_emails()
+        return JsonResponse({'status': 'Reminders triggered! 🎉'})
+    else:
+        return JsonResponse({'error': 'Invalid request'}, status=400)
