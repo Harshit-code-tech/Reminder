@@ -143,3 +143,47 @@ AUTHENTICATION_BACKENDS = [
     'users.backends.EmailOrUserModelBackend',  # Our custom backend
     'django.contrib.auth.backends.ModelBackend',   # Django's default
 ]
+# Define the logs directory
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(exist_ok=True)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': LOGS_DIR / 'error.log',
+            'formatter': 'verbose',
+        },
+        'app_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': LOGS_DIR / 'app.log',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+        'app_logger': {
+            'handlers': ['app_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
