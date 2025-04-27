@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
-
+import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -83,6 +83,22 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+DATABASES['default'] = dj_database_url.parse("postgresql://birthday_reminder_ot4f_user:eTYkJ8rjWNSSZSMKmnzO1aPUiEB1Iras@dpg-d06v9eali9vc73ep709g-a.singapore-postgres.render.com/birthday_reminder_ot4f")
+
+# postgresql://birthday_reminder_ot4f_user:eTYkJ8rjWNSSZSMKmnzO1aPUiEB1Iras@dpg-d06v9eali9vc73ep709g-a.singapore-postgres.render.com/birthday_reminder_ot4f
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'djongo',
+#         'NAME': 'Birthday_Anniversary_Reminder',  # You can give your MongoDB database a name
+#         'ENFORCE_SCHEMA': True,  # Optional: Enforces schema validation (recommended for MongoDB)
+#         'CLIENT': {
+#             'host': 'mongodb+srv://harshitghosh7:pi4k4dhL97R8qyFe@trial1.vq20ye1.mongodb.net/?retryWrites=true&w=majority',
+#             'authSource': 'admin',  # Optional: Use this if you set up an auth database.
+#             'authMechanism': 'SCRAM-SHA-1'  # Optional: For authentication mechanism
+#         }
+#     }
+# }
+
 
 
 # Password validation
