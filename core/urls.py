@@ -15,15 +15,15 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path,include
+from django.urls import path, include
 from django.shortcuts import redirect
 from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('reminders/', include('reminders.urls')),
-    path('logout/', LogoutView.as_view(), name='logout'),
-
-    path('users/', include('users.urls')),
-    path('', lambda request: redirect('home')),
+    path('reminders/', include('reminders.urls')),  # URLs for the reminders app start with /reminders/
+    path('users/', include('users.urls')),        # URLs for the users app start with /users/
+    path('logout/', LogoutView.as_view(), name='logout'), #  /logout/ for logout
+    path('', lambda request: redirect('home')), # Redirect root URL to the 'home' view
 ]
+

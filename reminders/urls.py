@@ -1,10 +1,9 @@
 from django.urls import path
 from . import views
-# from .views import test_email
+from .views import trigger_send_reminders
 
 urlpatterns = [
-    path('add/', views.add_event, name='add_event'),
     path('', views.event_list, name='event_list'),
-    path('send-reminders/', views.send_reminders_manual, name='send_reminders_manual'),
-    # path('test-email/', test_email, name='test_email'),
+    path('add/', views.add_event, name='add_event'),
+    path('send-daily-reminders/', trigger_send_reminders, name='send_daily_reminders'),
 ]

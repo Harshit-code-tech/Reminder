@@ -17,6 +17,7 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(" ")
 
 
 INSTALLED_APPS = [
+    'django_crontab',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -173,12 +174,21 @@ LOGGING = {
             'filename': LOGS_DIR / 'app.log',
             'formatter': 'verbose',
         },
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
     },
     'loggers': {
         'django': {
-            'handlers': ['file'],
-            'level': 'ERROR',
+            'handlers': ['file','console'],
+            'level': 'INFO',
             'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
         },
         'app_logger': {
             'handlers': ['app_file'],
@@ -187,3 +197,10 @@ LOGGING = {
         },
     },
 }
+REMINDER_CRON_SECRET = config('REMINDER_CRON_SECRET')
+
+CRONJOBS = [
+    ('5 0 * * *', 'myapp.cron.my_scheduled_job')
+]
+
+

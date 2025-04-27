@@ -13,8 +13,13 @@
                 {% if user.is_authenticated %}
                     <li>Welcome, {{ user.username }}!</li>
                     <li><a href="{% url 'event_list' %}">My Events</a></li>
-                    <li><a href="{% url 'send_reminders_manual' %}">Send Reminders</a></li>
-                    <li><a href="{% url 'logout' %}">Logout</a></li>
+                    <li><a href="{% url 'send_daily_reminders' %}">Send Reminders</a></li>
+                    <li>
+                        <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" style="background: none; border: none; color: blue; cursor: pointer;">Logout</button>
+                        </form>
+                    </li>
                 {% else %}
                     <li><a href="{% url 'home' %}">Home</a></li>
                     <li><a href="{% url 'login' %}">Login</a></li>
