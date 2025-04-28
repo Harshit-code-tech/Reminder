@@ -1,11 +1,13 @@
 {% extends 'base.html' %}
 
-{% block content %}
-  <h2>Are you sure you want to delete "{{ event.name }}"?</h2>
+{% block title %}Delete Event{% endblock %}
 
-  <form method="post">
+{% block content %}
+<h2>Are you sure you want to delete "{{ event.name }}"?</h2>
+
+<form method="post" style="margin-top: 20px;">
     {% csrf_token %}
-    <button type="submit" class="btn btn-danger">Yes, Delete</button>
-    <a href="{% url 'event_list' %}" class="btn btn-secondary">Cancel</a>
-  </form>
+    <button type="submit" class="btn btn-danger glow">Yes, Delete</button>
+    <a href="{% url 'event_list' %}" class="btn btn-secondary glow">Cancel</a>
+</form>
 {% endblock %}

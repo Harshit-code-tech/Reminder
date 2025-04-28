@@ -1,6 +1,6 @@
 # import psycopg2.extras
 from pathlib import Path
-from decouple import config
+from decouple import config, Csv
 import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -11,12 +11,12 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 import os
 
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
+DEBUG = config('DEBUG', cast=bool, default=True)
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',') + ['127.0.0.1']
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv()) + ['127.0.0.1']
 
-# CSRF trusted origins (important for Render)
-CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in ALLOWED_HOSTS]
+# CSRF Trusted Origins
+CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in ALLOWED_HOSTS if host]
 
 INSTALLED_APPS = [
     'django_crontab',
@@ -62,15 +62,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'core.wsgi.application'
 
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-# DATABASES = {
-#     'default': dj_database_url.parse(config('DATABASE_URL'))
-# }
 
 DATABASES = {
     'default': dj_database_url.parse(
@@ -80,14 +71,6 @@ DATABASES = {
     )
 }
 
-# # Force SimpleConnection for Supabase Transaction Pooling
-# DATABASES['default']['OPTIONS'] = {
-#     'sslmode': 'require',
-#     'connection_factory': psycopg2.extras.SimpleConnection,
-# }
-
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -145,17 +128,12 @@ LOGOUT_REDIRECT_URL = 'login'
 LOGIN_URL = 'login'
 
 # MailerSend SMTP Configuration
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 MAILERSEND_API_KEY = config('MAILERSEND_API_KEY')
+MAILERSEND_API_URL = config('MAILERSEND_API_URL', default="https://api.mailersend.com/v1/email")
+EMAIL_FROM = config('EMAIL_FROM')
+DEFAULT_FROM_EMAIL = f"Birthday Reminder App <{EMAIL_FROM}>"
 
-DEFAULT_FROM_EMAIL = 'Birthday Reminder App <{}>'.format(config('EMAIL_FROM'))
-
-# EMAIL_HOST = 'smtp.mailersend.net'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-# EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-# DEFAULT_FROM_EMAIL = 'Birthday Reminder App <{}>'.format(EMAIL_HOST_USER)
 
 AUTHENTICATION_BACKENDS = [
     'users.backends.EmailOrUserModelBackend',  # Our custom backend
@@ -217,7 +195,8 @@ LOGGING = {
 REMINDER_CRON_SECRET = config('REMINDER_CRON_SECRET')
 
 CRONJOBS = [
-    ('5 0 * * *', 'myapp.cron.my_scheduled_job')
+    ('5 0 * * *', 'reminders.cron.send_reminders')
 ]
+
 
 

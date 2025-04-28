@@ -21,6 +21,17 @@
 
     <button type="submit">Login</button>
 </form>
+{% if force_verify %}
+<br>
+<p>Your account is not verified yet.</p>
+<form method="post" action="{% url 'resend_verification_code' %}">
+    {% csrf_token %}
+    <button type="submit">Resend Verification Code</button>
+</form>
+<form method="get" action="{% url 'verify_email' %}">
+    <button type="submit">Verify Email</button>
+</form>
+{% endif %}
 
 <p>Don't have an account? <a href="{% url 'signup' %}">Sign up here</a>.</p>
 {% endblock %}

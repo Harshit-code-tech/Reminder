@@ -1,24 +1,24 @@
 {% extends 'base.html' %}
 
+{% block title %}My Events{% endblock %}
+
 {% block content %}
-  {% if messages %}
-    {% for message in messages %}
-      <script>alert('{{ message }}');</script>
-    {% endfor %}
-  {% endif %}
+<h2>My Events</h2>
 
-  <h2>Your Events</h2>
-  <a href="{% url 'add_event' %}">Add Event</a>
+<a href="{% url 'event_create' %}" class="btn glow">+ Add New Event</a>
 
-  <ul>
-    {% for event in events %}
-      <li>
-        {{ event.name }}'s {{ event.get_event_type_display }} on {{ event.date }}
-        <a class="btn btn-sm btn-primary" href="{% url 'edit_event' event.id %}">Edit</a>
-        <a href="{% url 'delete_event' event.id %}" class="btn btn-sm btn-danger">Delete</a>
-      </li>
-    {% empty %}
-      <li>No events yet!</li>
-    {% endfor %}
-  </ul>
+{% if events %}
+    <ul style="margin-top: 20px;">
+        {% for event in events %}
+            <li style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                <strong>{{ event.name }}</strong> — {{ event.date }}
+                <br>
+                <a href="{% url 'event_update' event.pk %}" class="btn btn-secondary glow" style="margin-right: 10px;">Edit</a>
+                <a href="{% url 'event_delete' event.pk %}" class="btn btn-danger glow">Delete</a>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p style="margin-top: 20px;">No events yet. Start by adding one!</p>
+{% endif %}
 {% endblock %}

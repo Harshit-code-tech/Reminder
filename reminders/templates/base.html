@@ -4,6 +4,107 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Birthday Reminder{% endblock %}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f0f4f8;
+            color: #333;
+        }
+        header {
+            background: linear-gradient(90deg, #ff7eb3, #ff758c);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 10px;
+        }
+        nav ul li {
+            display: inline-block;
+            margin: 0 10px;
+        }
+        nav a, button {
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+        }
+        nav button {
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        ul.messages {
+            margin: 20px;
+            padding: 0;
+            list-style: none;
+        }
+        ul.messages li {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        ul.messages li.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        ul.messages li.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .container {
+            padding: 20px;
+            max-width: 800px;
+            margin: auto;
+        }
+        a.btn, button.btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 8px #4CAF50;
+        }
+        a.btn:hover, button.btn:hover {
+            background-color: #45a049;
+            box-shadow: 0 0 15px #4CAF50, 0 0 25px #4CAF50;
+        }
+        a.btn-danger, button.btn-danger {
+            background-color: #e74c3c;
+            box-shadow: 0 0 8px #e74c3c;
+        }
+        a.btn-danger:hover, button.btn-danger:hover {
+            background-color: #c0392b;
+            box-shadow: 0 0 15px #e74c3c, 0 0 25px #e74c3c;
+        }
+        a.btn-secondary {
+            background-color: #95a5a6;
+            box-shadow: 0 0 8px #95a5a6;
+        }
+        a.btn-secondary:hover {
+            background-color: #7f8c8d;
+            box-shadow: 0 0 15px #95a5a6, 0 0 25px #95a5a6;
+        }
+        .glow {
+            animation: glow 1.5s infinite alternate;
+        }
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 5px #ffffff;
+            }
+            to {
+                box-shadow: 0 0 15px #ffffff, 0 0 25px #ffffff;
+            }
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -17,7 +118,7 @@
                     <li>
                         <form action="{% url 'logout' %}" method="post" style="display: inline;">
                             {% csrf_token %}
-                            <button type="submit" style="background: none; border: none; color: blue; cursor: pointer;">Logout</button>
+                            <button type="submit">Logout</button>
                         </form>
                     </li>
                 {% else %}
@@ -30,16 +131,16 @@
     </header>
 
     {% if messages %}
-        <ul>
+        <ul class="messages">
             {% for message in messages %}
-                <li {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</li>
+                <li class="{{ message.tags }}">{{ message }}</li>
             {% endfor %}
         </ul>
     {% endif %}
 
-    <hr>
-
-    {% block content %}
-    {% endblock %}
+    <div class="container">
+        {% block content %}
+        {% endblock %}
+    </div>
 </body>
 </html>
