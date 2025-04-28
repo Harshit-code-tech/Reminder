@@ -4,8 +4,8 @@ from .views import trigger_send_reminders
 
 urlpatterns = [
     path('', views.event_list, name='event_list'),
-    path('add/', views.add_event, name='add_event'),
+    path('create/', views.add_event, name='event_create'),
+    path('update/<int:event_id>/', views.edit_event, name='event_update'),
+    path('delete/<int:event_id>/', views.delete_event, name='event_delete'),
     path('send-daily-reminders/', trigger_send_reminders, name='send_daily_reminders'),
-    path('edit/<int:event_id>/', views.edit_event, name='edit_event'),
-    path('delete/<int:event_id>/', views.delete_event, name='delete_event'),
 ]

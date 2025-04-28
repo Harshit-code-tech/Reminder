@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Add / Edit Event{% endblock %}
+{% block title %}{% if form.instance.pk %}Edit{% else %}Add{% endif %} Event{% endblock %}
 
 {% block content %}
 <h2>{% if form.instance.pk %}Edit{% else %}Add{% endif %} Event</h2>
@@ -9,5 +9,6 @@
     {% csrf_token %}
     {{ form.as_p }}
     <button type="submit" class="btn glow">{% if form.instance.pk %}Update{% else %}Add{% endif %}</button>
+    <a href="{% url 'event_list' %}" class="btn btn-secondary glow">Cancel</a>
 </form>
 {% endblock %}

@@ -11,7 +11,7 @@
     <ul style="margin-top: 20px;">
         {% for event in events %}
             <li style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                <strong>{{ event.name }}</strong> — {{ event.date }}
+                <strong>{{ event.name }}</strong> — {{ event.date }} ({{ event.get_event_type_display }})
                 <br>
                 <a href="{% url 'event_update' event.pk %}" class="btn btn-secondary glow" style="margin-right: 10px;">Edit</a>
                 <a href="{% url 'event_delete' event.pk %}" class="btn btn-danger glow">Delete</a>
