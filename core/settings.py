@@ -1,21 +1,15 @@
-# import psycopg2.extras
 from pathlib import Path
 from decouple import config, Csv
 import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 SECRET_KEY = config('SECRET_KEY')
-
-# SECURITY WARNING: don't run with debug turned on in production!
-import os
 
 DEBUG = config('DEBUG', cast=bool, default=True)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv()) + ['127.0.0.1']
 
-# CSRF Trusted Origins
 CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in ALLOWED_HOSTS if host]
 
 INSTALLED_APPS = [
@@ -28,7 +22,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'reminders',
     'django_q',
-    'users',
+    'users.apps.UsersConfig',  # Updated to use UsersConfig for signals
+    # 'ratelimit',  # Added for rate limiting
 ]
 
 MIDDLEWARE = [
@@ -46,7 +41,7 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],  # Added for email and password reset templates
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -61,8 +56,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-
-
 DATABASES = {
     'default': dj_database_url.parse(
         config('DATABASE_URL'),
@@ -70,7 +63,6 @@ DATABASES = {
         ssl_require=True
     )
 }
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -87,10 +79,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'Asia/Kolkata'
@@ -99,47 +87,59 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-
-
-
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'mediafiles'
 
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 Q_CLUSTER = {
     'name': 'birthday_reminder',
-    'workers': 4,  # Number of worker threads
+    'workers': 4,
     'recycle': 500,
     'timeout': 60,
     'retry': 90,
     'queue_limit': 50,
     'bulk': 10,
-    'orm': 'default',  # Using Django ORM for queue (easy setup)
+    'orm': 'default',
 }
 
-# LOGOUT_REDIRECT_URL = '/'
 LOGIN_REDIRECT_URL = 'event_list'
 LOGOUT_REDIRECT_URL = 'login'
 LOGIN_URL = 'login'
 
-# MailerSend SMTP Configuration
+# Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 MAILERSEND_API_KEY = config('MAILERSEND_API_KEY')
 MAILERSEND_API_URL = config('MAILERSEND_API_URL', default="https://api.mailersend.com/v1/email")
 EMAIL_FROM = config('EMAIL_FROM')
 DEFAULT_FROM_EMAIL = f"Birthday Reminder App <{EMAIL_FROM}>"
 
-
 AUTHENTICATION_BACKENDS = [
-    'users.backends.EmailOrUserModelBackend',  # Our custom backend
-    'django.contrib.auth.backends.ModelBackend',   # Django's default
+    'users.backends.EmailOrUserModelBackend',
+    'django.contrib.auth.backends.ModelBackend',
 ]
-# Define the logs directory
+
+# Verification Code Settings
+VERIFICATION_CODE_LENGTH = 6
+VERIFICATION_CODE_EXPIRY_MINUTES = 10
+VERIFICATION_CODE_MAX_ATTEMPTS = 5
+
+# Rate Limit Settings
+RATELIMIT_CACHE = 'default'
+RATELIMIT_BACKEND = 'ratelimit.backends.cache.RateLimitCacheBackend'
+
+
+# Cache Settings
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
+# Logging
 LOGS_DIR = BASE_DIR / 'logs'
 LOGS_DIR.mkdir(exist_ok=True)
 
@@ -176,7 +176,7 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'handlers': ['file','console'],
+            'handlers': ['file', 'console'],
             'level': 'INFO',
             'propagate': True,
         },
@@ -192,11 +192,9 @@ LOGGING = {
         },
     },
 }
+
 REMINDER_CRON_SECRET = config('REMINDER_CRON_SECRET')
 
 CRONJOBS = [
     ('5 0 * * *', 'reminders.cron.send_reminders')
 ]
-
-
-

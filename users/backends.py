@@ -5,7 +5,6 @@ from django.contrib.auth.backends import ModelBackend
 
 UserModel = get_user_model()
 
-
 class EmailOrUserModelBackend(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
         if username is None:
@@ -19,6 +18,5 @@ class EmailOrUserModelBackend(ModelBackend):
                 return None
 
         if user.check_password(password):
-            # Allow inactive users to login (to verify email later)
             return user
         return None

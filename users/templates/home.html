@@ -2,24 +2,24 @@
 
 {% block content %}
 {% if user.is_authenticated %}
-    <h2>Upcoming Events</h2>
+    <h2 class="text-xl font-semibold mb-4">Upcoming Events</h2>
     {% if upcoming_events %}
-        <ul>
+        <ul class="space-y-2">
             {% for event in upcoming_events %}
-                <li>
+                <li class="bg-white p-4 rounded shadow">
                     <strong>{{ event.name }}</strong> - {{ event.get_event_type_display }} on {{ event.date }}
                 </li>
             {% endfor %}
         </ul>
     {% else %}
-        <p>No upcoming events!</p>
+        <p class="text-gray-600">No upcoming events!</p>
     {% endif %}
 {% else %}
-    <h2>Welcome to the Birthday Reminder App</h2>
-    <p>Your personal reminder app for birthdays and anniversaries.</p>
-    <p>Please <a href="{% url 'login' %}">login</a> to see your upcoming events.</p>
+    <h2 class="text-xl font-semibold mb-4">Welcome to the Birthday Reminder App</h2>
+    <p class="text-gray-600 mb-2">Your personal reminder app for birthdays and anniversaries.</p>
+    <p class="mb-2">Please <a href="{% url 'login' %}" class="text-blue-600 hover:underline">login</a> to see your upcoming events.</p>
     <p>
-        <a href="{% url 'signup' %}">Sign up</a>
+        <a href="{% url 'signup' %}" class="text-blue-600 hover:underline">Sign up</a>
     </p>
 {% endif %}
 {% endblock %}

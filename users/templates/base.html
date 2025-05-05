@@ -4,36 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Birthday Reminder{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .alert-success { @apply bg-green-100 text-green-800 p-4 rounded mb-4; }
+        .alert-error { @apply bg-red-100 text-red-800 p-4 rounded mb-4; }
+        .alert-info { @apply bg-blue-100 text-blue-800 p-4 rounded mb-4; }
+    </style>
 </head>
-<body>
-    <header>
-        <h1>🎉 Birthday Reminder App</h1>
-        <nav>
-            <ul>
-                {% if user.is_authenticated %}
-                    <li>Welcome, {{ user.username }}!</li>
-                    <li><a href="{% url 'event_list' %}">My Events</a></li>
-                    <li><a href="{% url 'logout' %}">Logout</a></li>
-                {% else %}
-                    <li><a href="{% url 'home' %}">Home</a></li>
-                    <li><a href="{% url 'login' %}">Login</a></li>
-                    <li><a href="{% url 'signup' %}">Sign Up</a></li>
-                {% endif %}
-            </ul>
-        </nav>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+    <header class="bg-blue-600 text-white p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">🎉 Birthday Reminder App</h1>
+            <nav>
+                <ul class="flex space-x-4">
+                    {% if user.is_authenticated %}
+                        <li>Welcome, {{ user.username }}!</li>
+                        <li><a href="{% url 'event_list' %}" class="hover:underline">My Events</a></li>
+                        <li><a href="{% url 'logout' %}" class="hover:underline">Logout</a></li>
+                    {% else %}
+                        <li><a href="{% url 'home' %}" class="hover:underline">Home</a></li>
+                        <li><a href="{% url 'login' %}" class="hover:underline">Login</a></li>
+                        <li><a href="{% url 'signup' %}" class="hover:underline">Sign Up</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
     </header>
 
     {% if messages %}
-        <ul>
+        <div class="container mx-auto mt-4">
             {% for message in messages %}
-                <li {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</li>
+                <div class="alert-{{ message.tags }}">{{ message }}</div>
             {% endfor %}
-        </ul>
+        </div>
     {% endif %}
 
-    <hr>
+    <main class="container mx-auto flex-grow p-4">
+        {% block content %}
+        {% endblock %}
+    </main>
 
-    {% block content %}
-    {% endblock %}
+    <footer class="bg-blue-600 text-white p-4 text-center">
+        <p>&copy; 2025 Birthday Reminder App</p>
+    </footer>
 </body>
 </html>
