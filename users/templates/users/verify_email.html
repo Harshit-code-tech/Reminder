@@ -1,26 +1,41 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% load static %}
+{% block title %}Verify Email{% endblock %}
 {% block header_class %}bg-blue-600 text-white p-4{% endblock %}
 {% block header_content %}
-    <h1 class="text-2xl font-bold flex items-center gap-2">🔐Verification</h1>
+    <h1 class="text-2xl font-bold flex items-center gap-2">🔐 Verification</h1>
 {% endblock %}
 {% block content %}
-<h2 class="text-xl font-semibold mb-4">Verify Your Email</h2>
-
-<form method="POST" class="space-y-4 max-w-md">
-    {% csrf_token %}
-    <label for="code" class="block text-sm font-medium text-gray-700">Enter Verification Code:</label>
-    <input type="text" name="code" id="code" maxlength="6" required autofocus class="block w-full border-gray-300 rounded-md shadow-sm p-2">
-    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Verify</button>
-</form>
-
-<div class="mt-4">
-    <form method="POST" action="{% url 'resend_verification_code' %}">
+<div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md mt-6">
+    <h2 class="text-xl font-semibold mb-4">Verify Your Email</h2>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert-{{ message.tags }} p-2 rounded mb-2">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    <form method="post" class="space-y-4">
         {% csrf_token %}
-        <button type="submit" id="resendButton" disabled class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 opacity-50 cursor-not-allowed">Resend Code (30s)</button>
+        <div>
+            <label for="code" class="block text-sm font-medium text-gray-700">Verification Code:</label>
+            <input type="text" name="code" id="code" maxlength="6" required autofocus placeholder="Enter code"
+                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                   aria-label="Verification code">
+        </div>
+        <button type="submit"
+                class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                aria-label="Verify code">Verify</button>
     </form>
+    <div class="mt-4">
+        <form method="post" action="{% url 'resend_verification_code' %}">
+            {% csrf_token %}
+            <button type="submit"
+                    id="resendButton"
+                    disabled
+                    class="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 opacity-50 cursor-not-allowed transition"
+                    aria-label="Resend verification code">Resend Code (30s)</button>
+        </form>
+    </div>
 </div>
-
 <script>
     let countdown = 30;
     const resendButton = document.getElementById('resendButton');

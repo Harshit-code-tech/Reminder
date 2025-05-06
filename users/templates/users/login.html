@@ -9,41 +9,46 @@
 {% block content %}
     <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md mt-6">
         <h2 class="text-xl font-semibold mb-4">Login</h2>
-        {% if form.non_field_errors %}
-            <div class="alert-error">{{ form.non_field_errors }}</div>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
         {% endif %}
         <form method="post" class="space-y-4">
             {% csrf_token %}
             <div>
                 <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700">Username or Email:</label>
-                <input type="text" name="{{ form.username.name }}" id="{{ form.username.id_for_label }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" required>
+                <input type="text" name="{{ form.username.name }}" id="{{ form.username.id_for_label }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" required aria-label="Username or Email">
                 {% if form.username.errors %}
                     <div class="text-red-600 text-sm">{{ form.username.errors }}</div>
                 {% endif %}
             </div>
             <div>
                 <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-gray-700">Password:</label>
-                <input type="password" name="{{ form.password.name }}" id="{{ form.password.id_for_label }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" required>
+                <input type="password" name="{{ form.password.name }}" id="{{ form.password.id_for_label }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" required aria-label="Password">
                 {% if form.password.errors %}
                     <div class="text-red-600 text-sm">{{ form.password.errors }}</div>
                 {% endif %}
             </div>
-            <button type="submit" class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">Login</button>
+            <button type="submit" class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition" aria-label="Log in">Login</button>
         </form>
         {% if force_verify %}
             <div class="mt-4">
                 <p class="text-gray-600">Your account is not verified yet.</p>
                 <form method="post" action="{% url 'resend_verification_code' %}" class="mt-2">
                     {% csrf_token %}
-                    <button type="submit" class="w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">Resend Verification Code</button>
+                    <button type="submit" class="w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition" aria-label="Resend verification code">Resend Verification Code</button>
                 </form>
                 <form method="get" action="{% url 'verify_email' %}" class="mt-2">
-                    <button type="submit" class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">Verify Email</button>
+                    <button type="submit" class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition" aria-label="Verify email">Verify Email</button>
                 </form>
             </div>
         {% endif %}
         <p class="mt-4 text-center">
-            Don't have an account? <a href="{% url 'signup' %}" class="text-blue-500 hover:underline">Sign Up</a>
+            Forgot your password? <a href="{% url 'password_reset' %}" class="text-blue-500 hover:underline" aria-label="Reset password">Reset Password</a>
+        </p>
+        <p class="mt-2 text-center">
+            Don't have an account? <a href="{% url 'signup' %}" class="text-blue-500 hover:underline" aria-label="Sign up">Sign Up</a>
         </p>
     </div>
 {% endblock %}

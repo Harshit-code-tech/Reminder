@@ -1,16 +1,15 @@
+import os
 from pathlib import Path
 from decouple import config, Csv
 import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+AUTH_USER_MODEL = 'users.CustomUser'
 
 SECRET_KEY = config('SECRET_KEY')
-
 DEBUG = config('DEBUG', cast=bool, default=True)
-
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv()) + ['127.0.0.1']
-
-CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in ALLOWED_HOSTS if host]
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv(delimiter=','), default='127.0.0.1,localhost')
+CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', cast=Csv(delimiter=','), default='')
 
 INSTALLED_APPS = [
     'django_crontab',
@@ -20,9 +19,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework_simplejwt',
     'reminders',
     'django_q',
-    'users.apps.UsersConfig',  # Updated to use UsersConfig for signals
+    'users.apps.UsersConfig',
 ]
 
 MIDDLEWARE = [
@@ -40,7 +41,7 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],  # Added for email and password reset templates
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -59,35 +60,40 @@ DATABASES = {
     'default': dj_database_url.parse(
         config('DATABASE_URL'),
         conn_max_age=600,
-        ssl_require=True
+        ssl_require=config('DATABASE_SSL', cast=bool, default=True)
     )
 }
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
+
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'Asia/Kolkata'
-
 USE_I18N = True
-
 USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'mediafiles'
@@ -109,42 +115,47 @@ LOGIN_REDIRECT_URL = 'event_list'
 LOGOUT_REDIRECT_URL = 'login'
 LOGIN_URL = 'login'
 
-# Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 MAILERSEND_API_KEY = config('MAILERSEND_API_KEY')
-MAILERSEND_API_URL = config('MAILERSEND_API_URL', default="https://api.mailersend.com/v1/email")
+MAILERSEND_API_URL = config('MAILERSEND_API_URL', default='https://api.mailersend.com/v1/email')
 EMAIL_FROM = config('EMAIL_FROM')
 DEFAULT_FROM_EMAIL = f"Birthday Reminder App <{EMAIL_FROM}>"
+EMAIL_HOST = 'smtp.mailersend.net'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = config('EMAIL_FROM')
+EMAIL_HOST_PASSWORD = config('MAILERSEND_API_KEY')
 
 AUTHENTICATION_BACKENDS = [
     'users.backends.EmailOrUserModelBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-# Verification Code Settings
 VERIFICATION_CODE_LENGTH = 6
 VERIFICATION_CODE_EXPIRY_MINUTES = 10
 VERIFICATION_CODE_MAX_ATTEMPTS = 5
 
-# Rate Limit Settings
+SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', cast=bool, default=True)
+CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', cast=bool, default=True)
+CSRF_COOKIE_HTTPONLY = True
+SESSION_COOKIE_HTTPONLY = True
+SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', cast=bool, default=False)
+
 RATELIMIT_CACHE = 'default'
 RATELIMIT_BACKEND = 'ratelimit.backends.cache.RateLimitCacheBackend'
+RATELIMIT_USE_CACHE = 'default'
+HANDLER429 = 'users.views.too_many_requests'
 
-
-# Cache Settings
 CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": config('UPSTASH_REDIS_URL'),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': config('UPSTASH_REDIS_URL'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
     }
 }
-HANDLER429 = 'users.views.too_many_requests'
 
-RATELIMIT_USE_CACHE = 'default'
-# Logging
 LOGS_DIR = BASE_DIR / 'logs'
 LOGS_DIR.mkdir(exist_ok=True)
 
