@@ -20,6 +20,8 @@ from .utils import EmailService
 logger = logging.getLogger('app_logger')
 signer = Signer()
 
+def too_many_requests(request, exception=None):
+    return render(request, '429.html', status=429)
 # Home page view
 @email_verified_required
 def home(request):
@@ -32,7 +34,8 @@ def home(request):
     return render(request, 'home.html', {'upcoming_events': upcoming_events})
 
 # Login view
-@ratelimit(key='ip', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='10/m', method='POST', block=True)
+
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('event_list')
@@ -63,7 +66,8 @@ def login_view(request):
     })
 
 # Signup view
-@ratelimit(key='ip', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='10/m', method='POST', block=True)
+
 def signup_view(request):
     if request.user.is_authenticated:
         return redirect('event_list')
@@ -106,7 +110,8 @@ def generate_verification_code(user, length=settings.VERIFICATION_CODE_LENGTH,
     raise ValueError("Unable to generate a unique verification code")
 
 # Resend verification code view
-@ratelimit(key='ip', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='10/m', method='POST', block=True)
+
 def resend_verification_code_view(request):
     last_resend = request.session.get('last_resend_time')
     if last_resend:

@@ -23,7 +23,6 @@ INSTALLED_APPS = [
     'reminders',
     'django_q',
     'users.apps.UsersConfig',  # Updated to use UsersConfig for signals
-    # 'ratelimit',  # Added for rate limiting
 ]
 
 MIDDLEWARE = [
@@ -134,11 +133,17 @@ RATELIMIT_BACKEND = 'ratelimit.backends.cache.RateLimitCacheBackend'
 
 # Cache Settings
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": config('UPSTASH_REDIS_URL'),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
     }
 }
+HANDLER429 = 'users.views.too_many_requests'
+
+RATELIMIT_USE_CACHE = 'default'
 # Logging
 LOGS_DIR = BASE_DIR / 'logs'
 LOGS_DIR.mkdir(exist_ok=True)
