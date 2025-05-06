@@ -1,24 +1,36 @@
 {% extends 'base.html' %}
-
 {% block title %}My Events{% endblock %}
-
+{% block header_class %}bg-gradient-to-r from-pink-400 to-red-400 text-white p-4{% endblock %}
+{% block header_content %}
+    <h1 class="text-2xl font-bold flex items-center gap-2">
+        🎁 Your Events
+    </h1>
+{% endblock %}
 {% block content %}
-<h2>My Events</h2>
-
-<a href="{% url 'event_create' %}" class="btn glow">+ Add New Event</a>
-
-{% if events %}
-    <ul style="margin-top: 20px;">
-        {% for event in events %}
-            <li style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                <strong>{{ event.name }}</strong> — {{ event.date }} ({{ event.get_event_type_display }})
-                <br>
-                <a href="{% url 'event_update' event.pk %}" class="btn btn-secondary glow" style="margin-right: 10px;">Edit</a>
-                <a href="{% url 'event_delete' event.pk %}" class="btn btn-danger glow">Delete</a>
-            </li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <p style="margin-top: 20px;">No events yet. Start by adding one!</p>
-{% endif %}
+    <div class="max-w-3xl mx-auto mt-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold">My Events</h2>
+            <a href="{% url 'event_create' %}" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition shadow-md">+ Add New Event</a>
+        </div>
+        {% if events %}
+            <ul class="space-y-4">
+                {% for event in events %}
+                    <li class="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <strong class="text-lg">{{ event.name }}</strong>
+                                <p class="text-gray-600">{{ event.date }} ({{ event.get_event_type_display }})</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <a href="{% url 'event_update' event.pk %}" class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600 transition">Edit</a>
+                                <a href="{% url 'event_delete' event.pk %}" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition">Delete</a>
+                            </div>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-gray-600 bg-white p-4 rounded-lg shadow-md">No events yet. Start by adding one!</p>
+        {% endif %}
+    </div>
 {% endblock %}

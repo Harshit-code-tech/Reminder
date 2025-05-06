@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% load static %}
-
+{% block header_class %}bg-blue-600 text-white p-4{% endblock %}
+{% block header_content %}
+    <h1 class="text-2xl font-bold flex items-center gap-2">🔐Verification</h1>
+{% endblock %}
 {% block content %}
 <h2 class="text-xl font-semibold mb-4">Verify Your Email</h2>
 

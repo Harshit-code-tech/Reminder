@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Home{% endblock %}
+{% block header_class %}bg-blue-600 text-white p-4{% endblock %}
+{% block header_content %}
+    <h1 class="text-2xl font-bold flex items-center gap-2">
+        🎉 Welcome to Birthday Reminder
+    </h1>
+{% endblock %}
+{% block content %}
+    <div class="text-center max-w-3xl mx-auto">
+        <h2 class="text-2xl font-bold mb-4">Never Miss a Celebration!</h2>
+        <p class="mb-4">Track birthdays and anniversaries with ease.</p>
+        <a href="{% url 'signup' %}" class="inline-block bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">Sign Up</a>
+        <a href="{% url 'login' %}" class="inline-block bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 ml-2">Login</a>
+    </div>
+{% endblock %}
