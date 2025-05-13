@@ -11,14 +11,14 @@
         <h2 class="text-xl font-semibold mb-4">Login</h2>
         {% if messages %}
             {% for message in messages %}
-                <div class="alert-{{ message.tags }}">{{ message }}</div>
+                <div class="alert-{{ message.tags }} p-2 rounded mb-2 text-red-600">{{ message }}</div>
             {% endfor %}
         {% endif %}
         <form method="post" class="space-y-4">
             {% csrf_token %}
             <div>
                 <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700">Username or Email:</label>
-                <input type="text" name="{{ form.username.name }}" id="{{ form.username.id_for_label }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" required aria-label="Username or Email">
+                <input type="text" name="{{ form.username.name }}" id="{{ form.username.id_for_label }}" value="{{ username|default:'' }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" required aria-label="Username or Email">
                 {% if form.username.errors %}
                     <div class="text-red-600 text-sm">{{ form.username.errors }}</div>
                 {% endif %}
@@ -33,10 +33,11 @@
             <button type="submit" class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition" aria-label="Log in">Login</button>
         </form>
         {% if force_verify %}
-            <div class="mt-4">
+            <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
                 <p class="text-gray-600">Your account is not verified yet.</p>
                 <form method="post" action="{% url 'resend_verification_code' %}" class="mt-2">
                     {% csrf_token %}
+                    <input type="hidden" name="email" value="{{ username|default:'' }}">
                     <button type="submit" class="w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition" aria-label="Resend verification code">Resend Verification Code</button>
                 </form>
                 <form method="get" action="{% url 'verify_email' %}" class="mt-2">

@@ -15,10 +15,12 @@ from .models import VerificationCode, AuditLog
 from .forms import CustomUserCreationForm, User
 from .decorators import email_verified_required
 from .utils import EmailService
+from .utils import generate_verification_code
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.forms import PasswordResetForm
 from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
+from django.db.models import Q
 
 logger = logging.getLogger('app_logger')
 
@@ -40,39 +42,71 @@ def home(request):
 
 @ratelimit(key='ip', rate='10/m', method='POST', block=True)
 def login_view(request):
-    if request.user.is_authenticated:
-        return redirect('event_list')
-
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
+        username = request.POST.get('username', '')
+        password = request.POST.get('password', '')
+
         if form.is_valid():
-            user = form.get_user()
+            try:
+                # Check if user exists by username or email
+                user = User.objects.get(Q(username__iexact=username) | Q(email__iexact=username))
+
+                # If the user is inactive or unverified, send verification code
+                if not user.is_active:
+                    request.session['force_verify'] = True
+                    request.session['user_id'] = user.id
+
+                    # Generate verification code and send email
+                    code = generate_verification_code(user)
+                    EmailService.send_verification_email(user, code)
+
+                    # Store JWT tokens temporarily
+                    refresh = RefreshToken.for_user(user)
+                    request.session['access_token'] = str(refresh.access_token)
+                    request.session['refresh_token'] = str(refresh)
+
+                    # Show message and redirect to verification page
+                    messages.info(request, "This account is inactive. A verification code has been sent to your email.")
+                    logger.info(f"Unverified user {username} attempted login. Verification email sent.")
+                    return redirect('verify_email')  # Change this URL as per your view
+
+            except User.DoesNotExist:
+                # If no user is found
+                messages.error(request, "Invalid username or password.")
+                return render(request, 'users/login.html', {'form': form, 'username': username})
+
+            # If the user is active, authenticate them
+            user = authenticate(request, username=username, password=password)
+            if user is None:
+                messages.error(request, "Invalid username or password.")
+                logger.warning(f"Login failed for {username}: Invalid credentials")
+                return render(request, 'users/login.html', {'form': form, 'username': username})
+
+            # Successful login
             auth_login(request, user)
             AuditLog.objects.create(user=user, action='login', details='User logged in')
-            if not user.is_active:
-                code = generate_verification_code(user)
-                EmailService.send_verification_email(user, code)
-                refresh = RefreshToken.for_user(user)
-                request.session['access_token'] = str(refresh.access_token)
-                request.session['refresh_token'] = str(refresh)
-                request.session['force_verify'] = True
-                messages.info(request, "Please verify your email. A verification code has been sent.")
-                return redirect('verify_email')
+
+            # Generate and store JWT tokens
             refresh = RefreshToken.for_user(user)
             request.session['access_token'] = str(refresh.access_token)
             request.session['refresh_token'] = str(refresh)
+
+            # Show success message and redirect to the main page (or dashboard)
             messages.success(request, f"Welcome back, {user.username}!")
-            return redirect('event_list')
+            logger.info(f"User {user.username} logged in successfully")
+            return redirect('event_list')  # Change this URL as per your view
         else:
-            logger.warning(f"Failed login attempt: {request.POST.get('username')}")
-            messages.error(request, "Invalid username or password. Please try again.")
+            messages.error(request, "Invalid username or password.")
     else:
         form = AuthenticationForm()
 
     return render(request, 'users/login.html', {
         'form': form,
-        'force_verify': request.session.get('force_verify', False)
+        'username': '',
+        'force_verify': request.session.pop('force_verify', False)
     })
+
 
 
 @ratelimit(key='ip', rate='10/m', method='POST', block=True)

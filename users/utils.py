@@ -2,8 +2,13 @@
 from mailersend import emails
 from django.conf import settings
 from django.template.loader import render_to_string
+from django.utils.timezone import now
 from tenacity import retry, stop_after_attempt, wait_fixed
+from datetime import timedelta
+import random
+import string
 import logging
+from .models import VerificationCode
 
 logger = logging.getLogger('app_logger')
 
@@ -30,3 +35,16 @@ class EmailService:
         response = mailer.send(mail_body)
         logger.info(f"Verification email sent to {user.email} with code: {code}. Response: {response}")
         return True
+
+def generate_verification_code(user):
+    """Generate and store a 6-digit verification code with expiration."""
+    code = ''.join(random.choices(string.digits, k=6))
+    expiration_time = now() + timedelta(minutes=10)
+
+    VerificationCode.objects.update_or_create(
+        user=user,
+        defaults={'code': code, 'expires_at': expiration_time}
+    )
+
+    logger.debug(f"Generated verification code {code} for user {user.email}, expires at {expiration_time}")
+    return code
