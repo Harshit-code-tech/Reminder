@@ -11,6 +11,8 @@ DEBUG = config('DEBUG', cast=bool, default=True)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv(delimiter=','), default='127.0.0.1,localhost')
 CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', cast=Csv(delimiter=','), default='')
 
+
+
 INSTALLED_APPS = [
     'django_crontab',
     'django.contrib.admin',
@@ -71,6 +73,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
+AUTH_USER_MODEL = 'users.User'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -81,13 +84,14 @@ REST_FRAMEWORK = {
 from datetime import timedelta
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # Adjust as needed
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),  # Adjust as needed
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),     # Adjust as needed
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY,
     'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
 }
 
 LANGUAGE_CODE = 'en-us'

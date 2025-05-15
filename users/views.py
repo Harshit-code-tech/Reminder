@@ -298,7 +298,7 @@ def logout_view(request):
         AuditLog.objects.create(user=user, action='logout', details='User logged out')
     response = redirect('home')
     messages.success(request, "You have been logged out.")
-    response.delete_cookie('access_token')
+    response.delete_cookie('jwt')
     return response
 
 
