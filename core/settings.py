@@ -163,6 +163,7 @@ CACHES = {
         }
     }
 }
+AUTH_USER_MODEL = 'users.User'
 
 
 LOGS_DIR = BASE_DIR / 'logs'
