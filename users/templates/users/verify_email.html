@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block title %}Verify Email{% endblock %}
 
@@ -12,22 +12,24 @@
 <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md mt-6">
     <h2 class="text-xl font-semibold mb-4">Verify Your Email</h2>
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="p-2 rounded mb-2 text-sm font-medium
-                        {% if message.tags == 'error' %}
-                            bg-red-100 text-red-700 border border-red-300
-                        {% elif message.tags == 'success' %}
-                            bg-green-100 text-green-700 border border-green-300
-                        {% elif message.tags == 'info' %}
-                            bg-blue-100 text-blue-700 border border-blue-300
-                        {% else %}
-                            bg-gray-100 text-gray-800 border border-gray-300
-                        {% endif %}">
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %}
+    <div aria-live="polite">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="p-2 rounded mb-2 text-sm font-medium
+                            {% if message.tags == 'error' %}
+                                bg-red-100 text-red-700 border border-red-300
+                            {% elif message.tags == 'success' %}
+                                bg-green-100 text-green-700 border border-green-300
+                            {% elif message.tags == 'info' %}
+                                bg-blue-100 text-blue-700 border border-blue-300
+                            {% else %}
+                                bg-gray-100 text-gray-800 border border-gray-300
+                            {% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
 
     <form method="post" class="space-y-4">
         {% csrf_token %}
@@ -56,10 +58,12 @@
         </button>
     </form>
 
-
     <div class="mt-4">
         <form method="post" action="{% url 'resend_verification_code' %}">
             {% csrf_token %}
+            {% if email %}
+                <input type="hidden" name="email" value="{{ email }}">
+            {% endif %}
             <button type="submit"
                     id="resendButton"
                     disabled

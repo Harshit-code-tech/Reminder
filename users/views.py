@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout,get_backends
 from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.tokens import default_token_generator
 
@@ -23,6 +23,7 @@ from .utils import (
     is_account_locked, reset_failed_login_attempts,
     should_show_captcha, lock_account
 )
+from django.utils.module_loading import import_string
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.utils.timezone import now
@@ -73,9 +74,9 @@ def login_view(request):
     identifier = ""
     error_message = None
 
-    user_agent = request.META.get('HTTP_USER_AGENT', '')
+    user_agent = request.META.get("HTTP_USER_AGENT", "")
     user_info = user_agent_parser(user_agent)
-    ip_address = request.META.get('REMOTE_ADDR', 'unknown')
+    ip_address = request.META.get("REMOTE_ADDR", "unknown")
 
     if request.method == "POST":
         identifier = request.POST.get("username_or_email", "").strip().lower()
@@ -83,11 +84,19 @@ def login_view(request):
         form = LoginForm(request.POST, show_captcha=show_captcha)
 
         if form.is_valid():
+            captcha_value = form.cleaned_data.get("captcha", None)
+            logger.info(f"Login attempt with CAPTCHA: {captcha_value} for identifier: {identifier}")
             identifier = normalize_identifier(form.cleaned_data["username_or_email"])
             password = form.cleaned_data["password"]
 
             if is_account_locked(identifier):
                 error_message = "Account temporarily locked due to repeated failed attempts."
+                AuditLog.objects.create(
+                    user=None,
+                    action="locked_login",
+                    details=f"Locked account login attempt for {identifier} from IP {ip_address}",
+                    timestamp=now()
+                )
                 form = LoginForm(show_captcha=True)
                 return render(request, "users/login.html", {
                     "form": form,
@@ -98,11 +107,18 @@ def login_view(request):
             user = authenticate(request, username=identifier, password=password)
 
             if user:
+                if not user.is_active:
+                    error_message = "Account is deactivated. Please contact support."
+                    return render(request, "users/login.html", {
+                        "form": form,
+                        "error_message": error_message,
+                        "username": identifier,
+                    })
                 if not user.is_verified:
                     code = generate_verification_code(user)
                     EmailService.send_verification_email(user, code)
-                    request.session['force_verify'] = True
-                    request.session['user_id'] = user.id
+                    request.session["force_verify"] = True
+                    request.session["user_id"] = user.id
                     messages.info(request, "Please verify your email. A code has been sent.")
                     return redirect("verify_email")
 
@@ -111,7 +127,7 @@ def login_view(request):
 
                 token = generate_token(user)
                 response = redirect("home")
-                response.set_cookie("jwt", token, httponly=True, secure=True, samesite="Lax")
+                response.set_cookie("jwt", token, httponly=True, secure=True, samesite="Lax",max_age=60 * 60 * 2)
 
                 AuditLog.objects.create(
                     user=user,
@@ -142,6 +158,9 @@ def login_view(request):
                 )
         else:
             error_message = "Invalid form submission."
+            captcha_value = request.POST.get('captcha', 'N/A')
+            logger.error(
+                f"[CAPTCHA] Invalid login form submission. CAPTCHA: {captcha_value} | Identifier: {identifier} | IP: {ip_address}")
     else:
         request.session.pop("force_verify", None)
         form = LoginForm(show_captcha=False)
@@ -152,6 +171,7 @@ def login_view(request):
         "force_verify": request.session.pop("force_verify", False),
         "username": identifier,
     })
+
 
 
 @ratelimit(key='ip', rate='10/m', method='POST', block=True)
@@ -246,6 +266,8 @@ def verify_email_view(request):
 
     if request.method == 'POST':
         if form.is_valid():
+            captcha_value = form.cleaned_data.get("captcha", None)
+            logger.info(f"Email verification attempt with CAPTCHA: {captcha_value}")
             code = form.cleaned_data['code'].strip()
             logger.info(f"Submitted code: {code}")
 
@@ -269,8 +291,17 @@ def verify_email_view(request):
                 return redirect('resend_verification_code')
 
             user.is_active = True
+            user.is_verified = True
             user.save()
             verification.delete()
+            # Set the backend attribute explicitly
+            backends = get_backends()
+            backend_class = import_string(settings.AUTHENTICATION_BACKENDS[0])
+
+            for backend in backends:
+                if isinstance(backend, backend_class):
+                    user.backend = f"{backend.__module__}.{backend.__class__.__name__}"
+                    break
             auth_login(request, user)
 
             AuditLog.objects.create(user=user, action='email_verified', details='Email verified successfully')
@@ -286,7 +317,9 @@ def verify_email_view(request):
             messages.success(request, "Your email has been verified successfully!")
             return redirect('event_list')
         else:
-            messages.error(request, "Invalid form submission.")
+            logger.error(f"Invalid email verification form submission. CAPTCHA: {request.POST.get('captcha', 'N/A')}")
+            messages.error(request, "Invalid verification form submission.")
+
 
     return render(request, 'users/verify_email.html', {'form': form})
 

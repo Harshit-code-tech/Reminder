@@ -73,7 +73,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
-AUTH_USER_MODEL = 'users.User'
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -211,7 +211,7 @@ LOGGING = {
             'propagate': False,
         },
         'app_logger': {
-            'handlers': ['app_file'],
+            'handlers': ['app_file', 'console'],  # console added here
             'level': 'INFO',
             'propagate': False,
         },
