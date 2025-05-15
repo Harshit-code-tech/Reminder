@@ -9,6 +9,8 @@ import random
 import string
 import logging
 from .models import VerificationCode
+from django.core.cache import cache
+from django.utils.crypto import get_random_string
 
 logger = logging.getLogger('app_logger')
 
@@ -48,3 +50,49 @@ def generate_verification_code(user):
 
     logger.debug(f"Generated verification code {code} for user {user.email}, expires at {expiration_time}")
     return code
+
+
+MAX_FAILED_ATTEMPTS = 5
+LOCKOUT_TIME = 300  # 5 minutes in seconds
+CAPTCHA_THRESHOLD = 3
+from rest_framework_simplejwt.tokens import RefreshToken
+
+def generate_token(user):
+    refresh = RefreshToken.for_user(user)
+    return str(refresh.access_token)
+def normalize_identifier(identifier):
+    return identifier.strip().lower()
+
+def failed_login_key(identifier):
+    return f"failed_login:{normalize_identifier(identifier)}"
+
+def lockout_key(identifier):
+    return f"lockout:{normalize_identifier(identifier)}"
+
+def increment_failed_login_attempts(identifier):
+    key = failed_login_key(identifier)
+    attempts = cache.get(key, 0) + 1
+    cache.set(key, attempts, LOCKOUT_TIME)
+    if attempts >= MAX_FAILED_ATTEMPTS:
+        lock_account(identifier)
+    return attempts
+
+
+def reset_failed_login_attempts(identifier):
+    cache.delete(failed_login_key(identifier))
+    cache.delete(lockout_key(identifier))
+
+def is_account_locked(identifier):
+    return cache.get(lockout_key(identifier)) is not None
+
+def lock_account(identifier):
+    cache.set(lockout_key(identifier), True, LOCKOUT_TIME)
+
+def should_show_captcha(identifier):
+    return cache.get(failed_login_key(identifier), 0) >= CAPTCHA_THRESHOLD
+
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        return x_forwarded_for.split(',')[0]
+    return request.META.get('REMOTE_ADDR')

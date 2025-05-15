@@ -1,29 +1,38 @@
-import logging
-from datetime import timedelta
-from django.utils import timezone
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth import login as auth_login, authenticate, logout as auth_logout
-from django.contrib.auth.forms import AuthenticationForm
 from django.conf import settings
-from django.apps import apps
-from django.core.paginator import Paginator
-from django_ratelimit.decorators import ratelimit
-import string
-import random
-from .models import VerificationCode, AuditLog
-from .forms import CustomUserCreationForm, User
-from .decorators import email_verified_required
-from .utils import EmailService
-from .utils import generate_verification_code
-from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib import messages
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.forms import PasswordResetForm
-from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
-from django.db.models import Q
 
+from django.core.mail import send_mail
+from django.core.paginator import Paginator
+from django.shortcuts import redirect, render
+from django.utils import timezone
+
+from django.views.decorators.csrf import csrf_protect
+from django_ratelimit.decorators import ratelimit
+from rest_framework_simplejwt.tokens import RefreshToken
+from user_agents import parse as user_agent_parser
+from django.contrib.auth.decorators import login_required
+from .decorators import email_verified_required
+from .forms import CustomUserCreationForm, LoginForm, VerificationCodeForm
+from .models import AuditLog, User, VerificationCode
+from .utils import (
+    generate_verification_code, EmailService, generate_token,
+    normalize_identifier, increment_failed_login_attempts,
+    is_account_locked, reset_failed_login_attempts,
+    should_show_captcha, lock_account
+)
+from django.contrib.auth import get_user_model
+from django.core.cache import cache
+from django.utils.timezone import now
+import logging
+import random
+import string
+from datetime import timedelta
+from django.apps import apps
 logger = logging.getLogger('app_logger')
-
+User = get_user_model()
 
 def too_many_requests(request, exception=None):
     return render(request, '429.html', status=429)
@@ -40,73 +49,109 @@ def home(request):
     return render(request, 'home.html', {'upcoming_events': upcoming_events})
 
 
-@ratelimit(key='ip', rate='10/m', method='POST', block=True)
+
+
+logger = logging.getLogger(__name__)
+
+FAILED_LOGIN_THRESHOLD = 3
+
+
+# Dynamically return login form with or without CAPTCHA
+def get_login_form_class(identifier):
+    if should_show_captcha(identifier):
+        from captcha.fields import CaptchaField
+        class LoginFormWithCaptcha(LoginForm):
+            captcha = CaptchaField()
+
+        return LoginFormWithCaptcha
+    return LoginForm
+
+
+@csrf_protect
+@ratelimit(key='ip', rate='5/m', method='POST', block=True)
 def login_view(request):
-    if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
-        username = request.POST.get('username', '')
-        password = request.POST.get('password', '')
+    identifier = ""
+    error_message = None
+
+    user_agent = request.META.get('HTTP_USER_AGENT', '')
+    user_info = user_agent_parser(user_agent)
+    ip_address = request.META.get('REMOTE_ADDR', 'unknown')
+
+    if request.method == "POST":
+        identifier = request.POST.get("username_or_email", "").strip().lower()
+        show_captcha = cache.get(f"login_attempts:{identifier}", 0) >= FAILED_LOGIN_THRESHOLD
+        form = LoginForm(request.POST, show_captcha=show_captcha)
 
         if form.is_valid():
-            try:
-                # Check if user exists by username or email
-                user = User.objects.get(Q(username__iexact=username) | Q(email__iexact=username))
+            identifier = normalize_identifier(form.cleaned_data["username_or_email"])
+            password = form.cleaned_data["password"]
 
-                # If the user is inactive or unverified, send verification code
-                if not user.is_active:
-                    request.session['force_verify'] = True
-                    request.session['user_id'] = user.id
+            if is_account_locked(identifier):
+                error_message = "Account temporarily locked due to repeated failed attempts."
+                form = LoginForm(show_captcha=True)
+                return render(request, "users/login.html", {
+                    "form": form,
+                    "error_message": error_message,
+                    "username": identifier,
+                })
 
-                    # Generate verification code and send email
+            user = authenticate(request, username=identifier, password=password)
+
+            if user:
+                if not user.is_verified:
                     code = generate_verification_code(user)
                     EmailService.send_verification_email(user, code)
+                    request.session['force_verify'] = True
+                    request.session['user_id'] = user.id
+                    messages.info(request, "Please verify your email. A code has been sent.")
+                    return redirect("verify_email")
 
-                    # Store JWT tokens temporarily
-                    refresh = RefreshToken.for_user(user)
-                    request.session['access_token'] = str(refresh.access_token)
-                    request.session['refresh_token'] = str(refresh)
+                auth_login(request, user)
+                reset_failed_login_attempts(identifier)
 
-                    # Show message and redirect to verification page
-                    messages.info(request, "This account is inactive. A verification code has been sent to your email.")
-                    logger.info(f"Unverified user {username} attempted login. Verification email sent.")
-                    return redirect('verify_email')  # Change this URL as per your view
+                token = generate_token(user)
+                response = redirect("home")
+                response.set_cookie("jwt", token, httponly=True, secure=True, samesite="Lax")
 
-            except User.DoesNotExist:
-                # If no user is found
-                messages.error(request, "Invalid username or password.")
-                return render(request, 'users/login.html', {'form': form, 'username': username})
+                AuditLog.objects.create(
+                    user=user,
+                    action="login",
+                    details=f"User logged in via {user_info.device.family}/{user_info.browser.family} (IP: {ip_address})",
+                    timestamp=now()
+                )
 
-            # If the user is active, authenticate them
-            user = authenticate(request, username=username, password=password)
-            if user is None:
-                messages.error(request, "Invalid username or password.")
-                logger.warning(f"Login failed for {username}: Invalid credentials")
-                return render(request, 'users/login.html', {'form': form, 'username': username})
+                messages.success(request, f"Welcome back, {user.username}!")
+                return response
+            else:
+                increment_failed_login_attempts(identifier)
+                attempts = cache.get(f"login_attempts:{identifier}", 0)
 
-            # Successful login
-            auth_login(request, user)
-            AuditLog.objects.create(user=user, action='login', details='User logged in')
+                if attempts >= FAILED_LOGIN_THRESHOLD:
+                    lock_account(identifier)
+                    error_message = "Account locked after too many failed attempts."
+                else:
+                    error_message = "Invalid credentials."
+                    if attempts >= FAILED_LOGIN_THRESHOLD:
+                        error_message += " Too many failed attempts? Try resetting your password."
 
-            # Generate and store JWT tokens
-            refresh = RefreshToken.for_user(user)
-            request.session['access_token'] = str(refresh.access_token)
-            request.session['refresh_token'] = str(refresh)
-
-            # Show success message and redirect to the main page (or dashboard)
-            messages.success(request, f"Welcome back, {user.username}!")
-            logger.info(f"User {user.username} logged in successfully")
-            return redirect('event_list')  # Change this URL as per your view
+                AuditLog.objects.create(
+                    user=None,
+                    action="failed_login",
+                    details=f"Failed login for {identifier}. Browser: {user_info.browser.family}, IP: {ip_address}",
+                    timestamp=now()
+                )
         else:
-            messages.error(request, "Invalid username or password.")
+            error_message = "Invalid form submission."
     else:
-        form = AuthenticationForm()
+        request.session.pop("force_verify", None)
+        form = LoginForm(show_captcha=False)
 
-    return render(request, 'users/login.html', {
-        'form': form,
-        'username': '',
-        'force_verify': request.session.pop('force_verify', False)
+    return render(request, "users/login.html", {
+        "form": form,
+        "error_message": error_message,
+        "force_verify": request.session.pop("force_verify", False),
+        "username": identifier,
     })
-
 
 
 @ratelimit(key='ip', rate='10/m', method='POST', block=True)
@@ -145,7 +190,7 @@ def generate_verification_code(user, length=settings.VERIFICATION_CODE_LENGTH,
     for _ in range(max_attempts):
         code = ''.join(random.choices(charset, k=length))
         if not VerificationCode.objects.filter(user=user, code=code).exists():
-            expires_at = timezone.now() + timezone.timedelta(minutes=expiry_minutes)
+            expires_at = timezone.now() + timedelta(minutes=expiry_minutes)
             VerificationCode.objects.create(user=user, code=code, expires_at=expires_at)
             logger.info(f"Generated verification code for user {user.username}: {code}")
             return code
@@ -197,44 +242,53 @@ def resend_verification_code_view(request):
 
 @ratelimit(key='ip', rate='10/m', method='POST', block=True)
 def verify_email_view(request):
+    form = VerificationCodeForm(request.POST or None)
+
     if request.method == 'POST':
-        code = request.POST.get('code', '').strip()
-        logger.info(f"Submitted code: {code}")
-        try:
-            verification = VerificationCode.objects.get(code=code)
-            user = verification.user
-            logger.info(f"Found verification code: {verification.code} for user: {user.username}")
-        except VerificationCode.DoesNotExist:
-            logger.error(f"No verification code found for code: {code}")
-            messages.error(request, "Invalid verification code. Check your email or request a new one.")
-            return redirect('verify_email')
-        except VerificationCode.MultipleObjectsReturned:
-            logger.error(f"Multiple verification codes found for code: {code}")
-            VerificationCode.objects.filter(code=code).delete()
-            messages.error(request, "Invalid verification state. Please request a new code.")
-            return redirect('resend_verification_code')
+        if form.is_valid():
+            code = form.cleaned_data['code'].strip()
+            logger.info(f"Submitted code: {code}")
 
-        if verification.is_expired():
+            try:
+                verification = VerificationCode.objects.get(code=code)
+                user = verification.user
+                logger.info(f"Found verification code: {verification.code} for user: {user.username}")
+            except VerificationCode.DoesNotExist:
+                logger.error(f"No verification code found for code: {code}")
+                messages.error(request, "Invalid verification code. Check your email or request a new one.")
+                return redirect('verify_email')
+            except VerificationCode.MultipleObjectsReturned:
+                logger.error(f"Multiple verification codes found for code: {code}")
+                VerificationCode.objects.filter(code=code).delete()
+                messages.error(request, "Invalid verification state. Please request a new code.")
+                return redirect('resend_verification_code')
+
+            if verification.is_expired():
+                verification.delete()
+                messages.error(request, "Verification code expired. Please request a new one.")
+                return redirect('resend_verification_code')
+
+            user.is_active = True
+            user.save()
             verification.delete()
-            messages.error(request, "Verification code expired. Please request a new one.")
-            return redirect('resend_verification_code')
+            auth_login(request, user)
 
-        user.is_active = True
-        user.save()
-        verification.delete()
-        auth_login(request, user)
-        AuditLog.objects.create(user=user, action='email_verified', details='Email verified successfully')
-        refresh = RefreshToken.for_user(user)
-        request.session['access_token'] = str(refresh.access_token)
-        request.session['refresh_token'] = str(refresh)
-        request.session.pop('last_resend_time', None)
-        request.session.pop('user_id', None)
-        request.session.pop('force_verify', None)
-        logger.info(f"User {user.username} email verified successfully")
-        messages.success(request, "Your email has been verified successfully!")
-        return redirect('event_list')
+            AuditLog.objects.create(user=user, action='email_verified', details='Email verified successfully')
 
-    return render(request, 'users/verify_email.html')
+            refresh = RefreshToken.for_user(user)
+            request.session['access_token'] = str(refresh.access_token)
+            request.session['refresh_token'] = str(refresh)
+            request.session.pop('last_resend_time', None)
+            request.session.pop('user_id', None)
+            request.session.pop('force_verify', None)
+
+            logger.info(f"User {user.username} email verified successfully")
+            messages.success(request, "Your email has been verified successfully!")
+            return redirect('event_list')
+        else:
+            messages.error(request, "Invalid form submission.")
+
+    return render(request, 'users/verify_email.html', {'form': form})
 
 
 def logout_view(request):
@@ -242,8 +296,10 @@ def logout_view(request):
     auth_logout(request)
     if user.is_authenticated:
         AuditLog.objects.create(user=user, action='logout', details='User logged out')
+    response = redirect('home')
     messages.success(request, "You have been logged out.")
-    return redirect('login')
+    response.delete_cookie('access_token')
+    return response
 
 
 @ratelimit(key='ip', rate='5/m', method='POST', block=True)
