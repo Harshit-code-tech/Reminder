@@ -73,6 +73,7 @@ def get_login_form_class(identifier):
 def login_view(request):
     identifier = ""
     error_message = None
+    show_captcha = False
 
     user_agent = request.META.get("HTTP_USER_AGENT", "")
     user_info = user_agent_parser(user_agent)
@@ -126,7 +127,7 @@ def login_view(request):
                 reset_failed_login_attempts(identifier)
 
                 token = generate_token(user)
-                response = redirect("home")
+                response = redirect('event_list')
                 response.set_cookie("jwt", token, httponly=True, secure=True, samesite="Lax",max_age=60 * 60 * 2)
 
                 AuditLog.objects.create(
@@ -167,6 +168,7 @@ def login_view(request):
 
     return render(request, "users/login.html", {
         "form": form,
+        "show_captcha": show_captcha,
         "error_message": error_message,
         "force_verify": request.session.pop("force_verify", False),
         "username": identifier,

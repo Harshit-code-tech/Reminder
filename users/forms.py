@@ -22,12 +22,14 @@ class CustomUserCreationForm(UserCreationForm):
 class LoginForm(forms.Form):
     username_or_email = forms.CharField(max_length=100)
     password = forms.CharField(widget=forms.PasswordInput)
-    captcha = CaptchaField(required=False)  # Include conditionally
+    # captcha = CaptchaField(required=False)  # Include conditionally
 
     def __init__(self, *args, show_captcha=False, **kwargs):
         super().__init__(*args, **kwargs)
-        if not show_captcha:
-            self.fields.pop('captcha')
+        # if not show_captcha:
+        #     self.fields.pop('captcha')
+        if show_captcha:
+            self.fields['captcha'] = CaptchaField()
 
 
 class VerificationCodeForm(forms.Form):
