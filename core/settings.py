@@ -1,9 +1,11 @@
+# missing SECURE_HSTS_SECONDS, SECURE_BROWSER_XSS_FILTER, and SECURE_CONTENT_TYPE_NOSNIFF
 import os
 from pathlib import Path
 from decouple import config, Csv
 import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
 
 
 SECRET_KEY = config('SECRET_KEY')
@@ -218,6 +220,14 @@ LOGGING = {
         },
     },
 }
+
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+X_FRAME_OPTIONS = 'DENY'
 
 REMINDER_CRON_SECRET = config('REMINDER_CRON_SECRET')
 

@@ -47,7 +47,7 @@ def home(request):
     paginator = Paginator(events, 5)
     page_number = request.GET.get('page')
     upcoming_events = paginator.get_page(page_number)
-    return render(request, 'home.html', {'upcoming_events': upcoming_events})
+    return render(request, 'user_home.html', {'upcoming_events': upcoming_events})
 
 
 
@@ -72,7 +72,6 @@ def get_login_form_class(identifier):
 @ratelimit(key='ip', rate='5/m', method='POST', block=True)
 def login_view(request):
     identifier = ""
-    error_message = None
     show_captcha = False
 
     user_agent = request.META.get("HTTP_USER_AGENT", "")
@@ -91,7 +90,7 @@ def login_view(request):
             password = form.cleaned_data["password"]
 
             if is_account_locked(identifier):
-                error_message = "Account temporarily locked due to repeated failed attempts."
+                messages.error(request, "Account temporarily locked due to repeated failed attempts.")
                 AuditLog.objects.create(
                     user=None,
                     action="locked_login",
@@ -101,7 +100,6 @@ def login_view(request):
                 form = LoginForm(show_captcha=True)
                 return render(request, "users/login.html", {
                     "form": form,
-                    "error_message": error_message,
                     "username": identifier,
                 })
 
@@ -109,10 +107,9 @@ def login_view(request):
 
             if user:
                 if not user.is_active:
-                    error_message = "Account is deactivated. Please contact support."
+                    messages.error(request, "Account is deactivated. Please contact support.")
                     return render(request, "users/login.html", {
                         "form": form,
-                        "error_message": error_message,
                         "username": identifier,
                     })
                 if not user.is_verified:
@@ -128,7 +125,7 @@ def login_view(request):
 
                 token = generate_token(user)
                 response = redirect('event_list')
-                response.set_cookie("jwt", token, httponly=True, secure=True, samesite="Lax",max_age=60 * 60 * 2)
+                response.set_cookie("jwt", token, httponly=True, secure=True, samesite="Lax", max_age=60 * 60 * 2)
 
                 AuditLog.objects.create(
                     user=user,
@@ -145,11 +142,11 @@ def login_view(request):
 
                 if attempts >= FAILED_LOGIN_THRESHOLD:
                     lock_account(identifier)
-                    error_message = "Account locked after too many failed attempts."
+                    messages.error(request, "Account locked after too many failed attempts.")
                 else:
-                    error_message = "Invalid credentials."
+                    messages.error(request, "Invalid credentials.")
                     if attempts >= FAILED_LOGIN_THRESHOLD:
-                        error_message += " Too many failed attempts? Try resetting your password."
+                        messages.error(request, "Too many failed attempts? Try resetting your password.")
 
                 AuditLog.objects.create(
                     user=None,
@@ -158,7 +155,7 @@ def login_view(request):
                     timestamp=now()
                 )
         else:
-            error_message = "Invalid form submission."
+            messages.error(request, "Invalid form submission.")
             captcha_value = request.POST.get('captcha', 'N/A')
             logger.error(
                 f"[CAPTCHA] Invalid login form submission. CAPTCHA: {captcha_value} | Identifier: {identifier} | IP: {ip_address}")
@@ -169,7 +166,6 @@ def login_view(request):
     return render(request, "users/login.html", {
         "form": form,
         "show_captcha": show_captcha,
-        "error_message": error_message,
         "force_verify": request.session.pop("force_verify", False),
         "username": identifier,
     })
@@ -330,7 +326,7 @@ def logout_view(request):
     user = request.user
     auth_logout(request)
     if user.is_authenticated:
-        AuditLog.objects.create(user=user, action='logout', details='User logged out')
+        AuditLog.objects.create(user=user, action='logout', details='User logged out',timestamp=now())
     response = redirect('home')
     messages.success(request, "You have been logged out.")
     response.delete_cookie('jwt')

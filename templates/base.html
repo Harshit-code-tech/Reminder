@@ -9,11 +9,25 @@
     <title>{% block title %}Birthday Reminder{% endblock %}</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .alert-success { @apply bg-green-100 text-green-800 p-4 rounded mb-4; }
-        .alert-error { @apply bg-red-100 text-red-800 p-4 rounded mb-4; }
-        .alert-info { @apply bg-blue-100 text-blue-800 p-4 rounded mb-4; }
-    </style>
+    {% if messages %}
+        <div class="container mx-auto mt-4">
+            {% for message in messages %}
+                <div class="
+                    {% if message.tags == 'error' %}
+                        bg-red-100 text-red-800 p-4 rounded mb-4
+                    {% elif message.tags == 'success' %}
+                        bg-green-100 text-green-800 p-4 rounded mb-4
+                    {% elif message.tags == 'info' %}
+                        bg-blue-100 text-blue-800 p-4 rounded mb-4
+                    {% else %}
+                        bg-gray-100 text-gray-800 p-4 rounded mb-4
+                    {% endif %}
+                ">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
     {% block header_style %}{% endblock %}
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col font-sans text-gray-800">
