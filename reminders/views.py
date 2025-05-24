@@ -87,12 +87,14 @@ def delete_event(request, event_id):
 
 @csrf_exempt
 def trigger_send_reminders(request):
+    if request.method != 'POST':
+        logger.warning("Non-POST request to trigger_send_reminders")
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
     try:
-        secret_token = request.GET.get('token')
+        secret_token = request.POST.get('token')
         if not secret_token or secret_token != getattr(settings, 'REMINDER_CRON_SECRET', None):
             logger.warning("Unauthorized attempt to trigger reminders")
             return JsonResponse({'error': 'Unauthorized'}, status=401)
-
         send_upcoming_reminders()
         logger.info("Reminders sent successfully via trigger_send_reminders")
         return JsonResponse({'message': 'Reminders sent successfully'})
