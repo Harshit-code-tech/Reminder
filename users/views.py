@@ -345,24 +345,20 @@ def password_reset_request(request):
                     messages.error(request, "No account found with this email.")
                 else:
                     subject = "Password Reset Request"
+                    token = default_token_generator.make_token(user)
+                    reset_url = f"{request.build_absolute_uri('/users/reset/')}{user.id}/{token}/"
                     message = f"""
                     Hi {user.username},
 
                     You requested a password reset. Click the link below to reset your password:
-                    {request.build_absolute_uri('/users/reset/')}{user.id}/{default_token_generator.make_token(user)}/
+                    {reset_url}
 
                     If you didn't request this, please ignore this email.
 
                     Thanks,
                     Birthday Reminder App
                     """
-                    send_mail(
-                        subject,
-                        message,
-                        settings.DEFAULT_FROM_EMAIL,
-                        [email],
-                        fail_silently=False,
-                    )
+                    EmailService.send_reset_password_email(user, message)
                     messages.success(request, "Password reset email sent. Check your inbox (including spam).")
                     return redirect('password_reset_done')
             except Exception as e:
@@ -372,4 +368,4 @@ def password_reset_request(request):
             messages.error(request, "Please enter a valid email address.")
     else:
         form = PasswordResetForm()
-    return render(request, 'users/password_reset.html', {'form': form})
+    return render(request, 'emails/password_reset.html', {'form': form})

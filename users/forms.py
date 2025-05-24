@@ -22,7 +22,8 @@ class CustomUserCreationForm(UserCreationForm):
 class LoginForm(forms.Form):
     username_or_email = forms.CharField(max_length=100)
     password = forms.CharField(widget=forms.PasswordInput)
-    # captcha = CaptchaField(required=False)  # Include conditionally
+
+    captcha = CaptchaField()  # Include conditionally
 
     def __init__(self, *args, show_captcha=False, **kwargs):
         super().__init__(*args, **kwargs)

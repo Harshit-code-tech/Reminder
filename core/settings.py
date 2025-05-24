@@ -136,6 +136,15 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config('EMAIL_FROM')
 EMAIL_HOST_PASSWORD = config('MAILERSEND_API_KEY')
 
+# Gmail SMTP Configuration
+GMAIL_EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+GMAIL_EMAIL_HOST = 'smtp.gmail.com'
+GMAIL_EMAIL_PORT = 587
+GMAIL_EMAIL_USE_TLS = True
+GMAIL_EMAIL_HOST_USER = config('GMAIL_EMAIL_HOST_USER')  # Your Gmail address
+GMAIL_EMAIL_HOST_PASSWORD = config('GMAIL_APP_PASSWORD')  # Your Gmail app password
+
+
 AUTHENTICATION_BACKENDS = [
     'users.backends.EmailOrUserModelBackend',
     'django.contrib.auth.backends.ModelBackend',

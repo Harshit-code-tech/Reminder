@@ -38,6 +38,32 @@ class EmailService:
         logger.info(f"Verification email sent to {user.email} with code: {code}. Response: {response}")
         return True
 
+    @staticmethod
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
+    def send_reset_password_email(user, reset_url):
+        api_key = settings.MAILERSEND_API_KEY
+        mailer = emails.NewEmail(api_key)
+        from_email = settings.DEFAULT_FROM_EMAIL
+        if '<' in from_email and '>' in from_email:
+            from_email = from_email.split('<')[1].strip('>')
+
+        html_content = render_to_string('emails/password_reset.html', {
+            'reset_url': reset_url,
+            'username': user.username
+        })
+        mail_body = {
+            "from": {"email": from_email},
+            "to": [{"email": user.email}],
+            "subject": "Reset Your Password",
+            "text": f"Click the link to reset your password: {reset_url}",
+            "html": html_content
+        }
+
+        response = mailer.send(mail_body)
+        logger.info(f"Password reset email sent to {user.email}. Response: {response}")
+        return True
+
+
 def generate_verification_code(user):
     """Generate and store a 6-digit verification code with expiration."""
     code = ''.join(random.choices(string.digits, k=6))
