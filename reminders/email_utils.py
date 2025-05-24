@@ -1,11 +1,10 @@
-from mailersend import emails
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils.timezone import now
 from tenacity import retry, stop_after_attempt, wait_fixed
 from .models import ReminderLog
 import logging
-
+import requests
 logger = logging.getLogger('app_logger')
 
 class ReminderEmailService:
@@ -13,7 +12,7 @@ class ReminderEmailService:
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
     def send_reminder_email(user, event):
         api_key= settings.MAILERSEND_API_KEY
-        mailer= emails.NewEmail(api_key)
+        api_url = settings.MAILERSEND_API_URL
         from_email= settings.DEFAULT_FROM_EMAIL
         if '<' in from_email and '>' in from_email:
             from_email= from_email.split('<')[1].strip('>')
@@ -34,9 +33,14 @@ class ReminderEmailService:
             "text":f"Hi {user.username},\n\nYou have an upcoming reminder for {event.name}'s {event.get_event_type_display()} on {event.date}!\n\nMessage: {event.message or 'No special message.'}\n\nBest,\nBirthday Reminder App.",
             "html": html_content
         }
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
         try:
-            response = mailer.send(mail_body)
-            logger.info(f"Reminder email sent to {user.email} for event {event.name}. Response: {response}")
+            response = requests.post(api_url, json=mail_body, headers=headers)
+            response.raise_for_status()
+            logger.info(f"Reminder email sent to {user.email} for event {event.name}. Response: {response}, Status: {response.status_code}")
             ReminderLog.objects.create(
                 user=user,
                 event=event,
@@ -46,7 +50,7 @@ class ReminderEmailService:
                         f"Response: {response.status_code} - {response.reason_phrase}"
             )
             return True
-        except Exception as e:
+        except requests.RequestException as e:
             logger.error(f"Failed to send reminder email to {user.email} for event {event.name}: {str(e)}")
             ReminderLog.objects.create(
                 user=user,

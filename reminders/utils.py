@@ -27,6 +27,6 @@ def send_upcoming_reminders():
             else:
                 logger.error(f"Failed to send reminder email for {event.name} to {event.user.email}")
         else:
-            logger.info(f"Skipping reminder for {event.name} as user {event.user.email} has email notifications disabled.")
+            logger.warning(f"Skipping reminder for {event.name} as user {event.user.email} has email notifications disabled.")
     logger.info(f"Total reminders sent: {sent_count}")
     return {"sent_count": sent_count, "total_events": events.count()}
