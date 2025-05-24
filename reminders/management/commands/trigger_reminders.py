@@ -9,7 +9,7 @@ class Command(BaseCommand):
         try:
             result = send_upcoming_reminders()
             self.stdout.write(self.style.SUCCESS(
-                f"Sent {result['sent']} of {result['total']} reminders"
+                f"Sent {result['sent_count']} of {result['total_events']} reminders"
             ))
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"Error: {str(e)}"))
