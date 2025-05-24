@@ -240,6 +240,4 @@ X_FRAME_OPTIONS = 'DENY'
 
 REMINDER_CRON_SECRET = config('REMINDER_CRON_SECRET')
 
-CRONJOBS = [
-    ('5 0 * * *', 'reminders.cron.send_reminders')
-]
+CRONJOBS = [('*/5 * * * *', 'reminders.cron.daily_reminder_job')]

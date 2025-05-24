@@ -8,6 +8,7 @@ from django.contrib import messages
 from .models import Event
 from .forms import EventForm
 from .utils import send_upcoming_reminders
+# from self_project.Birthday.users.decorators import email_verified_required
 from users.decorators import email_verified_required
 
 logger = logging.getLogger('app_logger')

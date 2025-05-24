@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Event Reminder</title>
+    <style>
+        body { font-family: Arial, sans-serif; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #ff6f61; color: white; padding: 10px; text-align: center; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .button { display: inline-block; padding: 10px 20px; background: #ff6f61; color: white; text-decoration: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Event Reminder</h1>
+        </div>
+        <div class="content">
+            <p>Hi {{ user }},</p>
+            <p>Don't forget <strong>{{ event_name }}</strong>'s {{ event_type }} happening on <strong>{{ event_date }}</strong>!</p>
+            <p><strong>Message:</strong> {{ message }}</p>
+            <p><a href="{{ request.build_absolute_uri }}" class="button">View Your Events</a></p>
+            <p>Best,<br>Birthday Reminder App</p>
+        </div>
+    </div>
+</body>
+</html>
