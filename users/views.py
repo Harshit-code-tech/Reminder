@@ -49,6 +49,22 @@ def home(request):
     upcoming_events = paginator.get_page(page_number)
     return render(request, 'user_home.html', {'upcoming_events': upcoming_events})
 
+logger = logging.getLogger(__name__)
+
+FAILED_LOGIN_THRESHOLD = 3
+
+
+# Dynamically return login form with or without CAPTCHA
+def get_login_form_class(identifier):
+    if should_show_captcha(identifier):
+        from captcha.fields import CaptchaField
+        class LoginFormWithCaptcha(LoginForm):
+            captcha = CaptchaField()
+
+        return LoginFormWithCaptcha
+    return LoginForm
+
+
 @csrf_protect
 @ratelimit(key='ip', rate='5/m', method='POST', block=True)
 def login_view(request):
@@ -61,7 +77,7 @@ def login_view(request):
 
     if request.method == "POST":
         identifier = request.POST.get("username_or_email", "").strip().lower()
-        show_captcha = cache.get(f"login_attempts:{identifier}", 0) >= 3
+        show_captcha = cache.get(f"login_attempts:{identifier}", 0) >= FAILED_LOGIN_THRESHOLD
         form = get_login_form_class(identifier)(request.POST)
 
         if form.is_valid():
@@ -121,12 +137,12 @@ def login_view(request):
                 increment_failed_login_attempts(identifier)
                 attempts = cache.get(f"login_attempts:{identifier}", 0)
 
-                if attempts >= 3:
+                if attempts >= FAILED_LOGIN_THRESHOLD:
                     lock_account(identifier)
                     messages.error(request, "Account locked after too many failed attempts.")
                 else:
                     messages.error(request, "Invalid credentials.")
-                    if attempts >= 3:
+                    if attempts >= FAILED_LOGIN_THRESHOLD:
                         messages.error(request, "Too many failed attempts? Try resetting your password.")
 
                 AuditLog.objects.create(
