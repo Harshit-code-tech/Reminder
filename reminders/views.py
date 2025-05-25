@@ -17,6 +17,9 @@ logger = logging.getLogger('app_logger')
 @email_verified_required
 def event_list(request):
     try:
+        sort_by = request.GET.get('sort', 'date')
+        if sort_by not in ['name', 'date']:
+            sort_by = 'date'
         events = Event.objects.filter(user=request.user).order_by('date')
         logger.info(f"Fetched {events.count()} events for user {request.user.username}")
     except Exception as e:
