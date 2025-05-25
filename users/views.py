@@ -1,14 +1,12 @@
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout,get_backends
-from django.contrib.auth.forms import PasswordResetForm
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout, get_backends
+from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
 from django.contrib.auth.tokens import default_token_generator
-
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.shortcuts import redirect, render
 from django.utils import timezone
-
 from django.views.decorators.csrf import csrf_protect
 from django_ratelimit.decorators import ratelimit
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -32,12 +30,14 @@ import random
 import string
 from datetime import timedelta
 from django.apps import apps
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_str
+
 logger = logging.getLogger('app_logger')
 User = get_user_model()
 
 def too_many_requests(request, exception=None):
     return render(request, '429.html', status=429)
-
 
 @email_verified_required
 def home(request):
@@ -48,25 +48,6 @@ def home(request):
     page_number = request.GET.get('page')
     upcoming_events = paginator.get_page(page_number)
     return render(request, 'user_home.html', {'upcoming_events': upcoming_events})
-
-
-
-
-logger = logging.getLogger(__name__)
-
-FAILED_LOGIN_THRESHOLD = 3
-
-
-# Dynamically return login form with or without CAPTCHA
-def get_login_form_class(identifier):
-    if should_show_captcha(identifier):
-        from captcha.fields import CaptchaField
-        class LoginFormWithCaptcha(LoginForm):
-            captcha = CaptchaField()
-
-        return LoginFormWithCaptcha
-    return LoginForm
-
 
 @csrf_protect
 @ratelimit(key='ip', rate='5/m', method='POST', block=True)
@@ -80,8 +61,8 @@ def login_view(request):
 
     if request.method == "POST":
         identifier = request.POST.get("username_or_email", "").strip().lower()
-        show_captcha = cache.get(f"login_attempts:{identifier}", 0) >= FAILED_LOGIN_THRESHOLD
-        form = LoginForm(request.POST, show_captcha=show_captcha)
+        show_captcha = cache.get(f"login_attempts:{identifier}", 0) >= 3
+        form = get_login_form_class(identifier)(request.POST)
 
         if form.is_valid():
             captcha_value = form.cleaned_data.get("captcha", None)
@@ -97,7 +78,7 @@ def login_view(request):
                     details=f"Locked account login attempt for {identifier} from IP {ip_address}",
                     timestamp=now()
                 )
-                form = LoginForm(show_captcha=True)
+                form = get_login_form_class(identifier)
                 return render(request, "users/login.html", {
                     "form": form,
                     "username": identifier,
@@ -140,12 +121,12 @@ def login_view(request):
                 increment_failed_login_attempts(identifier)
                 attempts = cache.get(f"login_attempts:{identifier}", 0)
 
-                if attempts >= FAILED_LOGIN_THRESHOLD:
+                if attempts >= 3:
                     lock_account(identifier)
                     messages.error(request, "Account locked after too many failed attempts.")
                 else:
                     messages.error(request, "Invalid credentials.")
-                    if attempts >= FAILED_LOGIN_THRESHOLD:
+                    if attempts >= 3:
                         messages.error(request, "Too many failed attempts? Try resetting your password.")
 
                 AuditLog.objects.create(
@@ -161,7 +142,7 @@ def login_view(request):
                 f"[CAPTCHA] Invalid login form submission. CAPTCHA: {captcha_value} | Identifier: {identifier} | IP: {ip_address}")
     else:
         request.session.pop("force_verify", None)
-        form = LoginForm(show_captcha=False)
+        form = get_login_form_class("")
 
     return render(request, "users/login.html", {
         "form": form,
@@ -169,8 +150,6 @@ def login_view(request):
         "force_verify": request.session.pop("force_verify", False),
         "username": identifier,
     })
-
-
 
 @ratelimit(key='ip', rate='10/m', method='POST', block=True)
 def signup_view(request):
@@ -199,7 +178,6 @@ def signup_view(request):
 
     return render(request, 'users/signup.html', {'form': form})
 
-
 def generate_verification_code(user, length=settings.VERIFICATION_CODE_LENGTH,
                                expiry_minutes=settings.VERIFICATION_CODE_EXPIRY_MINUTES,
                                charset=string.ascii_letters + string.digits):
@@ -214,7 +192,6 @@ def generate_verification_code(user, length=settings.VERIFICATION_CODE_LENGTH,
             return code
     logger.error(f"Failed to generate unique verification code for user {user.username} after {max_attempts} attempts")
     raise ValueError("Unable to generate a unique verification code")
-
 
 @ratelimit(key='ip', rate='10/m', method='POST', block=True)
 def resend_verification_code_view(request):
@@ -256,7 +233,6 @@ def resend_verification_code_view(request):
     else:
         messages.error(request, "Failed to send email. Check your email address or try again later.")
     return redirect('verify_email')
-
 
 @ratelimit(key='ip', rate='10/m', method='POST', block=True)
 def verify_email_view(request):
@@ -318,35 +294,35 @@ def verify_email_view(request):
             logger.error(f"Invalid email verification form submission. CAPTCHA: {request.POST.get('captcha', 'N/A')}")
             messages.error(request, "Invalid verification form submission.")
 
-
     return render(request, 'users/verify_email.html', {'form': form})
-
 
 def logout_view(request):
     user = request.user
     auth_logout(request)
     if user.is_authenticated:
-        AuditLog.objects.create(user=user, action='logout', details='User logged out',timestamp=now())
+        AuditLog.objects.create(user=user, action='logout', details='User logged out', timestamp=now())
     response = redirect('home')
     messages.success(request, "You have been logged out.")
     response.delete_cookie('jwt')
     return response
 
-
 @ratelimit(key='ip', rate='5/m', method='POST', block=True)
 def password_reset_request(request):
+    ip_address = request.META.get('REMOTE_ADDR', 'unknown')
     if request.method == 'POST':
         form = PasswordResetForm(request.POST)
         if form.is_valid():
-            email = form.cleaned_data['email']
+            email = form.cleaned_data['email'].strip().lower()
             try:
                 user = User.objects.filter(email=email).first()
                 if not user:
+                    logger.warning(f"Password reset attempted for non-existent email: {email}, IP: {ip_address}")
                     messages.error(request, "No account found with this email.")
                 else:
                     subject = "Password Reset Request"
                     token = default_token_generator.make_token(user)
-                    reset_url = f"{request.build_absolute_uri('/users/reset/')}{user.id}/{token}/"
+                    uid = user.id
+                    reset_url = f"{request.build_absolute_uri('/users/reset/')}{uid}/{token}/"
                     message = f"""
                     Hi {user.username},
 
@@ -358,14 +334,55 @@ def password_reset_request(request):
                     Thanks,
                     Birthday Reminder App
                     """
-                    EmailService.send_reset_password_email(user, message)
-                    messages.success(request, "Password reset email sent. Check your inbox (including spam).")
-                    return redirect('password_reset_done')
+                    if EmailService.send_reset_password_email(user, message):
+                        logger.info(f"Password reset email sent to {email}, IP: {ip_address}")
+                        messages.success(request, "Password reset email sent. Check your inbox (including spam).")
+                        return redirect('password_reset_done')
+                    else:
+                        logger.error(f"Failed to send password reset email to {email}, IP: {ip_address}")
+                        messages.error(request, "Failed to send reset email. Please try again later.")
             except Exception as e:
-                logger.error(f"Error sending password reset email: {str(e)}")
-                messages.error(request, "Failed to send reset email. Please try again later.")
+                logger.error(f"Error in password reset for {email}: {str(e)}, IP: {ip_address}")
+                messages.error(request, "An error occurred. Please try again later.")
         else:
+            logger.warning(f"Invalid password reset form submission, IP: {ip_address}")
             messages.error(request, "Please enter a valid email address.")
     else:
         form = PasswordResetForm()
-    return render(request, 'emails/password_reset.html', {'form': form})
+    return render(request, 'emails/password_reset_email.html', {'form': form})
+
+@ratelimit(key='ip', rate='5/m', method='POST', block=True)
+def password_reset_confirm(request, uid, token):
+    ip_address = request.META.get('REMOTE_ADDR', 'unknown')
+    try:
+        user = User.objects.get(id=uid)
+        if default_token_generator.check_token(user, token):
+            if request.method == 'POST':
+                form = SetPasswordForm(user, request.POST)
+                if form.is_valid():
+                    form.save()
+                    logger.info(f"Password reset successful for user {user.username}, IP: {ip_address}")
+                    messages.success(request, "Your password has been reset successfully.")
+                    AuditLog.objects.create(
+                        user=user,
+                        action='password_reset',
+                        details=f"Password reset completed, IP: {ip_address}",
+                        timestamp=now()
+                    )
+                    return redirect('password_reset_complete')
+                else:
+                    logger.warning(f"Invalid password reset form for user {user.username}, IP: {ip_address}")
+                    messages.error(request, "Please correct the errors below.")
+            else:
+                form = SetPasswordForm(user)
+            return render(request, 'users/password_reset_confirm.html', {'form': form, 'validlink': True})
+        else:
+            logger.warning(f"Invalid password reset token for user {user.username}, IP: {ip_address}")
+            messages.error(request, "The password reset link is invalid or has expired.")
+    except User.DoesNotExist:
+        logger.error(f"Password reset attempted for non-existent user ID {uid}, IP: {ip_address}")
+        messages.error(request, "Invalid user.")
+    return render(request, 'users/password_reset_confirm.html', {'validlink': False})
+
+def password_reset_complete(request):
+    return render(request, 'users/password_reset_complete.html')

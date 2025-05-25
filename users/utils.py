@@ -14,7 +14,6 @@ from django.utils.crypto import get_random_string
 
 logger = logging.getLogger('app_logger')
 
-
 class EmailService:
     @staticmethod
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
@@ -34,20 +33,26 @@ class EmailService:
             "html": html_content
         }
 
-        response = mailer.send(mail_body)
-        logger.info(f"Verification email sent to {user.email} with code: {code}. Response: {response}")
-        return True
+        try:
+            response = mailer.send(mail_body)
+            logger.info(f"Verification email sent to {user.email} with code: {code}. Response: {response}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to send verification email to {user.email}: {str(e)}")
+            return False
 
     @staticmethod
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
-    def send_reset_password_email(user, reset_url):
+    def send_reset_password_email(user, message):
         api_key = settings.MAILERSEND_API_KEY
         mailer = emails.NewEmail(api_key)
         from_email = settings.DEFAULT_FROM_EMAIL
         if '<' in from_email and '>' in from_email:
             from_email = from_email.split('<')[1].strip('>')
 
-        html_content = render_to_string('emails/password_reset.html', {
+        # Extract reset_url from message (assuming message contains the URL)
+        reset_url = [line.strip() for line in message.split('\n') if line.strip().startswith('http')][0]
+        html_content = render_to_string('emails/password_reset_email.html', {
             'reset_url': reset_url,
             'username': user.username
         })
@@ -55,14 +60,17 @@ class EmailService:
             "from": {"email": from_email},
             "to": [{"email": user.email}],
             "subject": "Reset Your Password",
-            "text": f"Click the link to reset your password: {reset_url}",
+            "text": message,
             "html": html_content
         }
 
-        response = mailer.send(mail_body)
-        logger.info(f"Password reset email sent to {user.email}. Response: {response}")
-        return True
-
+        try:
+            response = mailer.send(mail_body)
+            logger.info(f"Password reset email sent to {user.email}. Response: {response}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to send password reset email to {user.email}: {str(e)}")
+            return False
 
 def generate_verification_code(user):
     """Generate and store a 6-digit verification code with expiration."""
@@ -77,7 +85,6 @@ def generate_verification_code(user):
     logger.debug(f"Generated verification code {code} for user {user.email}, expires at {expiration_time}")
     return code
 
-
 MAX_FAILED_ATTEMPTS = 5
 LOCKOUT_TIME = 300  # 5 minutes in seconds
 CAPTCHA_THRESHOLD = 3
@@ -86,6 +93,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 def generate_token(user):
     refresh = RefreshToken.for_user(user)
     return str(refresh.access_token)
+
 def normalize_identifier(identifier):
     return identifier.strip().lower()
 
@@ -102,7 +110,6 @@ def increment_failed_login_attempts(identifier):
     if attempts >= MAX_FAILED_ATTEMPTS:
         lock_account(identifier)
     return attempts
-
 
 def reset_failed_login_attempts(identifier):
     cache.delete(failed_login_key(identifier))
