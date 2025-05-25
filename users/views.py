@@ -70,6 +70,7 @@ def get_login_form_class(identifier):
 def login_view(request):
     identifier = ""
     show_captcha = False
+    form = None  # Ensure it's defined outside if/else
 
     user_agent = request.META.get("HTTP_USER_AGENT", "")
     user_info = user_agent_parser(user_agent)
@@ -77,12 +78,11 @@ def login_view(request):
 
     if request.method == "POST":
         identifier = request.POST.get("username_or_email", "").strip().lower()
-        show_captcha = cache.get(f"login_attempts:{identifier}", 0) >= FAILED_LOGIN_THRESHOLD
-        form = get_login_form_class(identifier)(request.POST)
+        show_captcha = should_show_captcha(identifier)
+
+        form = get_login_form_class(identifier)(request.POST, show_captcha=show_captcha)
 
         if form.is_valid():
-            captcha_value = form.cleaned_data.get("captcha", None)
-            logger.info(f"Login attempt with CAPTCHA: {captcha_value} for identifier: {identifier}")
             identifier = normalize_identifier(form.cleaned_data["username_or_email"])
             password = form.cleaned_data["password"]
 
@@ -94,10 +94,11 @@ def login_view(request):
                     details=f"Locked account login attempt for {identifier} from IP {ip_address}",
                     timestamp=now()
                 )
-                form = get_login_form_class(identifier)
+                form = get_login_form_class(identifier)(show_captcha=True)
                 return render(request, "users/login.html", {
                     "form": form,
                     "username": identifier,
+                    "show_captcha": True,
                 })
 
             user = authenticate(request, username=identifier, password=password)
@@ -108,7 +109,9 @@ def login_view(request):
                     return render(request, "users/login.html", {
                         "form": form,
                         "username": identifier,
+                        "show_captcha": show_captcha,
                     })
+
                 if not user.is_verified:
                     code = generate_verification_code(user)
                     EmailService.send_verification_email(user, code)
@@ -153,12 +156,15 @@ def login_view(request):
                 )
         else:
             messages.error(request, "Invalid form submission.")
-            captcha_value = request.POST.get('captcha', 'N/A')
+            captcha_value = request.POST.get("captcha", "N/A")
             logger.error(
-                f"[CAPTCHA] Invalid login form submission. CAPTCHA: {captcha_value} | Identifier: {identifier} | IP: {ip_address}")
+                f"[CAPTCHA] Invalid login form submission. CAPTCHA: {captcha_value} | Identifier: {identifier} | IP: {ip_address}"
+            )
     else:
         request.session.pop("force_verify", None)
-        form = get_login_form_class("")
+        identifier = request.GET.get("username_or_email", "").strip().lower()
+        show_captcha = cache.get(f"login_attempts:{identifier}", 0) >= FAILED_LOGIN_THRESHOLD
+        form = get_login_form_class(identifier)(show_captcha=show_captcha)
 
     return render(request, "users/login.html", {
         "form": form,
@@ -166,6 +172,7 @@ def login_view(request):
         "force_verify": request.session.pop("force_verify", False),
         "username": identifier,
     })
+
 
 @ratelimit(key='ip', rate='10/m', method='POST', block=True)
 def signup_view(request):
