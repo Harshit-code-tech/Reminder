@@ -10,7 +10,14 @@
     <div class="max-w-3xl mx-auto mt-6">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-semibold">My Events</h2>
-            <a href="{% url 'event_create' %}" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition shadow-md">+ Add New Event</a>
+            <div class="flex items-center gap-4">
+                <select id="sort-events" class="border rounded-lg p-2" onchange="window.location.href=this.value">
+                    <option value="">Sort By</option>
+                    <option value="{% url 'event_list' %}?sort=name">Name</option>
+                    <option value="{% url 'event_list' %}?sort=date">Date</option>
+                </select>
+                <a href="{% url 'event_create' %}" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition shadow-md">+ Add New Event</a>
+            </div>
         </div>
         {% if events %}
             <ul class="space-y-4">
@@ -20,6 +27,7 @@
                             <div>
                                 <strong class="text-lg">{{ event.name }}</strong>
                                 <p class="text-gray-600">{{ event.date }} ({{ event.get_event_type_display }})</p>
+                                <p class="text-gray-500 text-sm">Remind {{ event.remind_days_before }} day{{ event.remind_days_before|pluralize }} before</p>
                                 <p class="text-gray-500 text-sm">{{ event.message|truncatechars:50|default:"No message" }}</p>
                             </div>
                             <div class="flex space-x-2">
