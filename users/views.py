@@ -346,18 +346,7 @@ def password_reset_request(request):
                     token = default_token_generator.make_token(user)
                     uid = user.id
                     reset_url = f"{request.build_absolute_uri('/users/reset/')}{uid}/{token}/"
-                    message = f"""
-                    Hi {user.username},
-
-                    You requested a password reset. Click the link below to reset your password:
-                    {reset_url}
-
-                    If you didn't request this, please ignore this email.
-
-                    Thanks,
-                    Birthday Reminder App
-                    """
-                    if EmailService.send_reset_password_email(user, message):
+                    if EmailService.send_reset_password_email(user, reset_url):
                         logger.info(f"Password reset email sent to {email}, IP: {ip_address}")
                         messages.success(request, "Password reset email sent. Check your inbox (including spam).")
                         return redirect('password_reset_done')
