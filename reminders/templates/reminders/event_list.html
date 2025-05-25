@@ -20,10 +20,11 @@
                             <div>
                                 <strong class="text-lg">{{ event.name }}</strong>
                                 <p class="text-gray-600">{{ event.date }} ({{ event.get_event_type_display }})</p>
+                                <p class="text-gray-500 text-sm">{{ event.message|truncatechars:50|default:"No message" }}</p>
                             </div>
                             <div class="flex space-x-2">
                                 <a href="{% url 'event_update' event.pk %}" class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600 transition">Edit</a>
-                                <a href="{% url 'event_delete' event.pk %}" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition">Delete</a>
+                                <a href="{% url 'event_delete' event.pk %}" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition" onclick="return confirm('Are you sure you want to delete {{ event.name }}?')">Delete</a>
                             </div>
                         </div>
                     </li>
