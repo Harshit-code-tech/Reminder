@@ -409,3 +409,7 @@ def password_reset_confirm(request, uid, token):
 
 def password_reset_complete(request):
     return render(request, 'users/password_reset_complete.html')
+
+
+def password_reset_done(request):
+    return render(request, 'users/password_reset_done.html')
