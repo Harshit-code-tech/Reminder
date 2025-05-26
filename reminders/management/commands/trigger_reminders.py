@@ -1,6 +1,5 @@
 # for manual testing
 from django.core.management.base import BaseCommand
-# from self_project.Birthday.reminders.utils import send_upcoming_reminders
 from reminders.utils import send_upcoming_reminders
 class Command(BaseCommand):
     help = 'Manually trigger sending of upcoming event reminders'

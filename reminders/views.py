@@ -105,3 +105,5 @@ def trigger_send_reminders(request):
     except Exception as e:
         logger.error(f"Error in trigger_send_reminders: {str(e)}")
         return JsonResponse({'error': f'An error occurred: {str(e)}'}, status=500)
+
+

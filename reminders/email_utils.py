@@ -7,12 +7,10 @@ from .models import ReminderLog
 
 logger = logging.getLogger('app_logger')
 
-
 class ReminderEmailService:
     @staticmethod
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
     def send_reminder_email(user, event):
-        # === Sanity checks ===
         if not user or not getattr(user, 'email', None):
             logger.error("User object is missing or has no email.")
             return False
@@ -21,35 +19,24 @@ class ReminderEmailService:
             return False
 
         try:
-            # === Prepare values ===
             api_key = settings.MAILERSEND_API_KEY
             api_url = settings.MAILERSEND_API_URL
             from_email = settings.DEFAULT_FROM_EMAIL
-
-            # Strip "Name <email>" format
             if '<' in from_email and '>' in from_email:
                 from_email = from_email.split('<')[1].strip('>')
 
             username = getattr(user, 'username', 'User')
-            user_email = getattr(user, 'email', 'no-reply@example.com')
+            user_email = user.profile.notification_email if user.profile.notification_email else user.email
             event_name = getattr(event, 'name', 'Unknown Event')
             event_type = event.get_event_type_display() if hasattr(event, 'get_event_type_display') else 'Event'
             event_date = getattr(event, 'date', 'Unknown Date')
-
-            try:
-                event_time = event.time.strftime('%I:%M %p') if event.time else 'N/A'
-            except AttributeError:
-                event_time = 'Invalid Time'
-
             message = event.message or 'No special message provided.'
 
-            # === Email Content ===
-            html_content = render_to_string('reminders/email_reminder.html', {
+            html_content = render_to_string('reminders/reminder.html', {
                 'user': username,
                 'event_name': event_name,
                 'event_type': event_type,
                 'event_date': event_date,
-                'event_time': event_time,
                 'message': message
             })
 
@@ -71,7 +58,6 @@ class ReminderEmailService:
                 "Content-Type": "application/json"
             }
 
-            # === Send Email ===
             response = requests.post(api_url, json=mail_body, headers=headers)
             response.raise_for_status()
 

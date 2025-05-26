@@ -1,0 +1,22 @@
+name: Reminder and Backup Cron
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+  workflow_dispatch:
+
+jobs:
+  cron:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Trigger reminder endpoint securely
+        run: |
+          echo "Triggering reminder cron..."
+          curl --fail --silent --show-error \
+               --max-time 20 \
+               -X POST https://reminder-app-gap4.onrender.com/reminders/send-daily-reminders/ \
+               --data-urlencode "token=${{ secrets.REMINDER_CRON_SECRET }}" \
+               -H "Content-Type: application/x-www-form-urlencoded"
+          echo "✅ Reminder trigger completed successfully."
