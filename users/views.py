@@ -21,6 +21,8 @@ from .utils import (
     is_account_locked, reset_failed_login_attempts,
     should_show_captcha, lock_account
 )
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
 from django.utils.module_loading import import_string
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
@@ -363,38 +365,36 @@ def password_reset_request(request):
         form = PasswordResetForm()
     return render(request, 'emails/password_reset_email.html', {'form': form})
 
+
 @ratelimit(key='ip', rate='5/m', method='POST', block=True)
-def password_reset_confirm(request, uid, token):
+def password_reset_request(request):
     ip_address = request.META.get('REMOTE_ADDR', 'unknown')
-    try:
-        user = User.objects.get(id=uid)
-        if default_token_generator.check_token(user, token):
-            if request.method == 'POST':
-                form = SetPasswordForm(user, request.POST)
-                if form.is_valid():
-                    form.save()
-                    logger.info(f"Password reset successful for user {user.username}, IP: {ip_address}")
-                    messages.success(request, "Your password has been reset successfully.")
-                    AuditLog.objects.create(
-                        user=user,
-                        action='password_reset',
-                        details=f"Password reset completed, IP: {ip_address}",
-                        timestamp=now()
-                    )
-                    return redirect('password_reset_complete')
-                else:
-                    logger.warning(f"Invalid password reset form for user {user.username}, IP: {ip_address}")
-                    messages.error(request, "Please correct the errors below.")
+    if request.method == 'POST':
+        form = PasswordResetForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email'].strip().lower()
+            user = User.objects.filter(email=email).first()
+            if not user:
+                logger.warning(f"Password reset attempted for non-existent email: {email}, IP: {ip_address}")
+                messages.error(request, "No account found with this email.")
             else:
-                form = SetPasswordForm(user)
-            return render(request, 'users/password_reset_confirm.html', {'form': form, 'validlink': True})
+                subject = "Password Reset Request"
+                token = default_token_generator.make_token(user)
+                uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+                reset_url = request.build_absolute_uri(f"/users/reset/{uidb64}/{token}/")
+                if EmailService.send_reset_password_email(user, reset_url):
+                    logger.info(f"Password reset email sent to {email}, IP: {ip_address}")
+                    messages.success(request, "Password reset email sent. Check your inbox (including spam).")
+                    return redirect('password_reset_done')
+                else:
+                    logger.error(f"Failed to send password reset email to {email}, IP: {ip_address}")
+                    messages.error(request, "Failed to send reset email. Please try again later.")
         else:
-            logger.warning(f"Invalid password reset token for user {user.username}, IP: {ip_address}")
-            messages.error(request, "The password reset link is invalid or has expired.")
-    except User.DoesNotExist:
-        logger.error(f"Password reset attempted for non-existent user ID {uid}, IP: {ip_address}")
-        messages.error(request, "Invalid user.")
-    return render(request, 'users/password_reset_confirm.html', {'validlink': False})
+            logger.warning(f"Invalid password reset form submission, IP: {ip_address}")
+            messages.error(request, "Please enter a valid email address.")
+    else:
+        form = PasswordResetForm()
+    return render(request, 'users/password_reset_form.html', {'form': form})
 
 def password_reset_complete(request):
     return render(request, 'users/password_reset_complete.html')
@@ -402,3 +402,24 @@ def password_reset_complete(request):
 
 def password_reset_done(request):
     return render(request, 'users/password_reset_done.html')
+
+@ratelimit(key='ip', rate='5/m', method='POST', block=True)
+def password_reset_confirm(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    validlink = user is not None and default_token_generator.check_token(user, token)
+    form = SetPasswordForm(user, request.POST or None) if validlink else None
+
+    if request.method == 'POST' and validlink and form.is_valid():
+        form.save()
+        messages.success(request, "Your password has been set. You can now log in.")
+        return redirect('password_reset_complete')
+
+    return render(request, 'users/password_reset_confirm.html', {
+        'form': form,
+        'validlink': validlink,
+    })
