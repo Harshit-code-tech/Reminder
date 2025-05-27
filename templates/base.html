@@ -44,6 +44,13 @@
                         <li class="text-sm md:text-base">Welcome, {{ user.username }}!</li>
                         <li><a href="{% url 'event_list' %}" class="hover:underline focus:outline-none focus:ring-2 focus:ring-white" aria-label="View your events">My Events</a></li>
                         <li><a href="{% url 'send_daily_reminders' %}" class="hover:underline focus:outline-none focus:ring-2 focus:ring-white" aria-label="Send reminders">Send Reminders</a></li>
+                        {% if user.is_superuser %}
+                            <li>
+                                <a href="{% url 'admin_tools' %}" class="hover:underline focus:outline-none focus:ring-2 focus:ring-white" aria-label="Admin tools">
+                                    Admin Tools
+                                </a>
+                            </li>
+                        {% endif %}
                         <li>
                             <form action="{% url 'logout' %}" method="post" class="inline">
                                 {% csrf_token %}

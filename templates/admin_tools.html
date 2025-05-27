@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Admin Tools - Birthday Reminder{% endblock %}
+{% block content %}
+  <div class="bg-white shadow-md rounded-lg p-6 max-w-4xl mx-auto">
+    <h1 class="text-2xl font-bold mb-4">Admin Tools</h1>
+    {% if messages %}
+      {% for message in messages %}
+        <div class="p-4 mb-4 rounded {% if message.tags == 'success' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+    <h2 class="text-xl font-semibold mb-2">Actions</h2>
+    <form method="post" class="mb-6">
+      {% csrf_token %}
+      <div class="flex gap-4">
+        <button type="submit" name="action" value="trigger_reminders" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Trigger Reminders</button>
+        <button type="submit" name="action" value="export_backup" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Export Backup</button>
+      </div>
+    </form>
+    <h2 class="text-xl font-semibold mb-2">Recent Logs</h2>
+    <pre class="bg-gray-100 p-4 rounded-lg overflow-auto max-h-96">
+{% for log in logs %}
+{{ log }}
+{% endfor %}
+    </pre>
+  </div>
+{% endblock %}

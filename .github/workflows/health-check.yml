@@ -1,0 +1,21 @@
+name: Health Check
+on:
+  schedule:
+    - cron: '*/10 * * * *'  # Every 10 minutes
+  workflow_dispatch:
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check health endpoint
+        run: |
+          echo "Checking health endpoint..."
+          RESPONSE=$(curl -s -o response.json -w "%{http_code}" --max-time 10 https://reminder-app-gap4.onrender.com/health/)
+          if [ "$RESPONSE" -eq 200 ]; then
+            echo "✅ Health check passed: HTTP $RESPONSE"
+            cat response.json
+          else
+            echo "❌ Health check failed: HTTP $RESPONSE" >&2
+            cat response.json
+            exit 1
+          fi
