@@ -103,7 +103,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = []
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'mediafiles'
@@ -135,14 +135,12 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config('EMAIL_FROM')
 EMAIL_HOST_PASSWORD = config('MAILERSEND_API_KEY')
-
-# Gmail SMTP Configuration
-# GMAIL_EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# GMAIL_EMAIL_HOST = 'smtp.gmail.com'
-# GMAIL_EMAIL_PORT = 587
-# GMAIL_EMAIL_USE_TLS = True
-# GMAIL_EMAIL_HOST_USER = config('GMAIL_EMAIL_HOST_USER')  # Your Gmail address
-# GMAIL_EMAIL_HOST_PASSWORD = config('GMAIL_APP_PASSWORD')  # Your Gmail app password
+SUPABASE_URL = config('SUPABASE_URL')
+SUPABASE_KEY = config('SUPABASE_KEY')
+SUPABASE_SERVICE_KEY = config('SUPABASE_SERVICE_KEY')
+SUPABASE_JWT_SECRET = config('SUPABASE_JWT_SECRET')
+ALLOWED_MEDIA_TYPES = ['image/jpeg', 'image/png', 'application/pdf', 'audio/mpeg', 'audio/wav']
+MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
 
 
 AUTHENTICATION_BACKENDS = [
