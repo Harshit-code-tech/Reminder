@@ -1,9 +1,11 @@
-from datetime import timedelta
+
 import random
 import string
 import logging
-
+import jwt
+from datetime import datetime, timedelta
 from django.conf import settings
+
 from django.template.loader import render_to_string
 from django.utils.timezone import now
 from django.core.cache import cache
@@ -129,33 +131,32 @@ def lockout_key(identifier):
 
 
 def increment_failed_login_attempts(identifier):
-    key = failed_login_key(identifier)
-    attempts = cache.get(key, 0) + 1
-    cache.set(key, attempts, LOCKOUT_TIME)
-    if attempts >= MAX_FAILED_ATTEMPTS:
-        lock_account(identifier)
+    cache_key = f"login_attempts:{identifier}"
+    attempts = cache.get(cache_key, 0)
+    attempts += 1
+    cache.set(cache_key, attempts, timeout=60 * 15)  # 15 minutes
     return attempts
 
 
 def reset_failed_login_attempts(identifier):
-    cache.delete(failed_login_key(identifier))
-    cache.delete(lockout_key(identifier))
+    cache_key = f"login_attempts:{identifier}"
+    cache.delete(cache_key)
 
 
 def is_account_locked(identifier):
-    return cache.get(lockout_key(identifier)) is not None
+    cache_key = f"login_attempts:{identifier}"
+    attempts = cache.get(cache_key, 0)
+    return attempts >= 3
 
 
 def lock_account(identifier):
-    cache.set(lockout_key(identifier), True, LOCKOUT_TIME)
+    cache_key = f"login_attempts:{identifier}"
+    cache.set(cache_key, 999, timeout=60 * 15)
 
 
 def should_show_captcha(identifier):
-    return cache.get(failed_login_key(identifier), 0) >= CAPTCHA_THRESHOLD
+    cache_key = f"login_attempts:{identifier}"
+    attempts = cache.get(cache_key, 0)
+    return attempts >= 2
 
 
-def get_client_ip(request):
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        return x_forwarded_for.split(',')[0]
-    return request.META.get('REMOTE_ADDR')
