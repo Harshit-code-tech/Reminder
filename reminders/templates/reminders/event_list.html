@@ -29,6 +29,12 @@
                                 <p class="text-gray-600">{{ event.date }} ({{ event.get_event_type_display }})</p>
                                 <p class="text-gray-500 text-sm">Remind {{ event.remind_days_before }} day{{ event.remind_days_before|pluralize }} before</p>
                                 <p class="text-gray-500 text-sm">{{ event.message|truncatechars:50|default:"No message" }}</p>
+                                {% if event.media_url %}
+                                    <div class="mt-2">
+                                        <a href="{{ event.media_url }}" download class="text-blue-500 hover:underline">Download Image</a>
+                                        <img src="{{ event.media_url }}" alt="{{ event.name }}" class="max-w-xs rounded-lg mt-2">
+                                    </div>
+                                {% endif %}
                             </div>
                             <div class="flex space-x-2">
                                 <a href="{% url 'event_update' event.pk %}" class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600 transition">Edit</a>
