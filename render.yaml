@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: birthday-reminder
+    env: python
+    buildCommand: "pip install -r requirements.txt && npm install compressorjs && python manage.py collectstatic --noinput"
+    startCommand: "gunicorn core.wsgi:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12
+      - key: DJANGO_SETTINGS_MODULE
+        value: core.settings
+      - key: SUPABASE_URL
+        fromService:
+          type: env
+          name: SUPABASE_URL
+      - key: SUPABASE_KEY
+        fromService:
+          type: env
+          name: SUPABASE_KEY
+      - key: SUPABASE_SERVICE_KEY
+        fromService:
+          type: env
+          name: SUPABASE_SERVICE_KEY
+      - key: SUPABASE_JWT_SECRET
+        fromService:
+          type: env
+          name: SUPABASE_JWT_SECRET
+    static:
+      - path: /static
+        folder: staticfiles
