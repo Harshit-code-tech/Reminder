@@ -31,11 +31,12 @@
         {% endif %}
     </div>
 
-    <form method="post" class="space-y-4">
+    <form method="post" class="space-y-4" id="login-form">
         {% csrf_token %}
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
 
         <div>
-            <label for="username_or_email" class="block text-sm font-medium text-gray-700">
+            <label for="{{ form.username_or_email.id_for_label }}" class="block text-sm font-medium text-gray-700">
                 Username or Email:
             </label>
             {{ form.username_or_email }}
@@ -47,7 +48,7 @@
         </div>
 
         <div>
-            <label for="password" class="block text-sm font-medium text-gray-700">Password:</label>
+            <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-gray-700">Password:</label>
             {{ form.password }}
             {% if form.password.errors %}
                 <div class="text-red-600 text-sm mt-1">
