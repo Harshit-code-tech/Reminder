@@ -1,4 +1,6 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block title %}{% if form.instance.pk %}Edit{% else %}Add{% endif %} Event{% endblock %}
 {% block content %}
 <div class="max-w-3xl mx-auto mt-6">
@@ -10,15 +12,18 @@
       <label for="id_media" class="block text-sm font-medium text-gray-700">Upload Media (Optional)</label>
       <input type="file" name="media" id="id_media" accept=".jpg,.png,.pdf,.mp3,.wav" class="mt-1 block w-full">
       <p class="text-sm text-gray-500">Max 50MB. Allowed: .jpg, .png, .pdf, .mp3, .wav</p>
+      <div id="media-preview" class="mt-2"></div>
       {% if form.instance.pk and form.instance.media_url %}
         <p class="text-gray-600 mt-2">Current Media:</p>
-        {% if form.instance.media_type == 'image' %}
+        {% if form.instance.media_type and form.instance.media_type|slice:":5" == "image" %}
           <img src="{{ form.instance.media_url }}" alt="Event Image" class="max-w-xs rounded-lg shadow-md">
-        {% elif form.instance.media_type == 'audio' %}
+        {% elif form.instance.media_type and form.instance.media_type|slice:":5" == "audio" %}
           <audio controls>
             <source src="{{ form.instance.media_url }}" type="{{ form.instance.media_type }}">
             Your browser does not support the audio element.
           </audio>
+        {% elif form.instance.media_type == "application/pdf" %}
+          <embed src="{{ form.instance.media_url }}" type="application/pdf" class="w-full h-64 rounded shadow" />
         {% endif %}
         <label class="mt-2 block">
           <input type="checkbox" name="remove_media" class="mr-2"> Remove Media
@@ -33,4 +38,5 @@
     </div>
   </form>
 </div>
+<script src="{% static 'js/event_form.js' %}"></script>
 {% endblock %}

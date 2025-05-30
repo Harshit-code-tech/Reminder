@@ -25,19 +25,4 @@ class EventForm(forms.ModelForm):
             # Validate file size (50MB)
             if media.size > 50 * 1024 * 1024:
                 raise ValidationError('File size must be under 50MB.')
-            # Compress image
-            try:
-                img = Image.open(media)
-                if img.mode != 'RGB':
-                    img = img.convert('RGB')
-                output = io.BytesIO()
-                img.thumbnail((1920, 1920))  # Resize to max 1920x1920
-                img.save(output, format='JPEG', quality=80, optimize=True)
-                output.seek(0)
-                media = InMemoryUploadedFile(
-                    output, 'ImageField', f"{media.name.split('.')[0]}.jpg",
-                    'image/jpeg', output.getbuffer().nbytes, None
-                )
-            except Exception as e:
-                raise ValidationError(f'Image processing failed: {str(e)}')
         return media

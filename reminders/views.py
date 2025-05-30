@@ -54,19 +54,21 @@ def add_event(request):
                     file_path = f"{request.user.supabase_id}/{event.id}/{file.name}"
                     response = supabase.storage.from_('event-media').upload(file_path, file.read())
                     # Check for success using status_code or data
-                    if hasattr(response, 'status_code') and response.status_code == 200:
-                        public_url = supabase.storage.from_('event-media').get_public_url(file_path)
-                        event.media_url = public_url
-                        event.media_type = file.content_type
-                    elif hasattr(response, 'data') and response.data:
-                        public_url = supabase.storage.from_('event-media').get_public_url(file_path)
-                        event.media_url = public_url
-                        event.media_type = file.content_type
-                    else:
+                    # Check for error in response
+                    if hasattr(response, 'error') and response.error:
+                        logger.error(f"Media upload failed for user {request.user.username}: {response.error}")
+                        messages.error(request, f"Failed to upload media: {response.error}")
+                        event.delete()
+                        return render(request, "reminders/event_form.html", {"form": form})
+                    elif hasattr(response, 'status_code') and response.status_code not in (200, 201):
                         logger.error(f"Media upload failed for user {request.user.username}: {response}")
                         messages.error(request, "Failed to upload media.")
+                        event.delete()
                         return render(request, "reminders/event_form.html", {"form": form})
-                event.save()
+                    else:
+                        public_url = supabase.storage.from_('event-media').get_public_url(file_path)
+                        event.media_url = public_url
+                        event.media_type = file.content_type
                 messages.success(request, "Event created successfully!")
                 logger.info(f"Event {event.name} created for user {request.user.username}")
                 return redirect('event_list')

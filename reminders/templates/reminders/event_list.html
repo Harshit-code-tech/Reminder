@@ -30,10 +30,20 @@
                                 <p class="text-gray-500 text-sm">Remind {{ event.remind_days_before }} day{{ event.remind_days_before|pluralize }} before</p>
                                 <p class="text-gray-500 text-sm">{{ event.message|truncatechars:50|default:"No message" }}</p>
                                 {% if event.media_url %}
-                                    <div class="mt-2">
-                                        <a href="{{ event.media_url }}" download class="text-blue-500 hover:underline">Download Image</a>
-                                        <img src="{{ event.media_url }}" alt="{{ event.name }}" class="max-w-xs rounded-lg mt-2">
-                                    </div>
+                                  <div class="mt-2">
+                                    {% if event.media_type and event.media_type|slice:":5" == "image" %}
+                                      <img src="{{ event.media_url }}" alt="{{ event.name }}" class="max-w-xs rounded-lg mt-2">
+                                    {% elif event.media_type and event.media_type|slice:":5" == "audio" %}
+                                      <audio controls class="mt-2">
+                                        <source src="{{ event.media_url }}" type="{{ event.media_type }}">
+                                        Your browser does not support the audio element.
+                                      </audio>
+                                    {% elif event.media_type == "application/pdf" %}
+                                      <embed src="{{ event.media_url }}" type="application/pdf" class="w-full h-32 rounded shadow mt-2" />
+                                    {% endif %}
+                                    <a href="{{ event.media_url }}" download data-download="media" class="text-blue-500 hover:underline block mt-1">Download Media</a>
+                                    <a href="{% url 'event_update' event.pk %}" class="text-red-500 hover:underline text-sm">Remove Media</a>
+                                  </div>
                                 {% endif %}
                             </div>
                             <div class="flex space-x-2">
