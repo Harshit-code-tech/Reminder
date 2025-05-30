@@ -69,6 +69,7 @@ def add_event(request):
                         public_url = supabase.storage.from_('event-media').get_public_url(file_path)
                         event.media_url = public_url
                         event.media_type = file.content_type
+                event.save()
                 messages.success(request, "Event created successfully!")
                 logger.info(f"Event {event.name} created for user {request.user.username}")
                 return redirect('event_list')
