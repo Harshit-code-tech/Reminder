@@ -1,14 +1,36 @@
 {% extends 'base.html' %}
-
 {% block title %}{% if form.instance.pk %}Edit{% else %}Add{% endif %} Event{% endblock %}
-
 {% block content %}
-<h2>{% if form.instance.pk %}Edit{% else %}Add{% endif %} Event</h2>
-
-<form method="post" style="margin-top: 20px;">
+<div class="max-w-3xl mx-auto mt-6">
+  <h2 class="text-xl font-semibold mb-4">{% if form.instance.pk %}Edit{% else %}Add{% endif %} Event</h2>
+  <form method="post" enctype="multipart/form-data" style="margin-top: 20px;">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit" class="btn glow">{% if form.instance.pk %}Update{% else %}Add{% endif %}</button>
-    <a href="{% url 'event_list' %}" class="btn btn-secondary glow">Cancel</a>
-</form>
+    <div class="mb-4">
+      <label for="id_media" class="block text-sm font-medium text-gray-700">Upload Media (Optional)</label>
+      <input type="file" name="media" id="id_media" accept=".jpg,.png,.pdf,.mp3,.wav" class="mt-1 block w-full">
+      <p class="text-sm text-gray-500">Max 50MB. Allowed: .jpg, .png, .pdf, .mp3, .wav</p>
+      {% if form.instance.pk and form.instance.media_url %}
+        <p class="text-gray-600 mt-2">Current Media:</p>
+        {% if form.instance.media_type == 'image' %}
+          <img src="{{ form.instance.media_url }}" alt="Event Image" class="max-w-xs rounded-lg shadow-md">
+        {% elif form.instance.media_type == 'audio' %}
+          <audio controls>
+            <source src="{{ form.instance.media_url }}" type="{{ form.instance.media_type }}">
+            Your browser does not support the audio element.
+          </audio>
+        {% endif %}
+        <label class="mt-2 block">
+          <input type="checkbox" name="remove_media" class="mr-2"> Remove Media
+        </label>
+      {% endif %}
+    </div>
+    <div class="flex gap-4">
+      <button type="submit" class="btn glow bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition shadow-md">
+        {% if form.instance.pk %}Update{% else %}Add{% endif %}
+      </button>
+      <a href="{% url 'event_list' %}" class="btn btn-secondary glow bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition shadow-md">Cancel</a>
+    </div>
+  </form>
+</div>
 {% endblock %}
