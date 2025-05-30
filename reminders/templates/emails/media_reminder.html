@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+<head>
+    <title>Media Deletion Reminder</title>
+</head>
+<h1>Hi {{ user.username }},</h1>
+<p>The media for {{ event_name }}'s {{ event_type }} on {{ event_date }} will be deleted tomorrow.</p>
+<p>Please download it now if you want to keep it:</p>
+<p><a href="{{ download_url }}" style="color: #2563eb;">Download Media</a></p>
+<p>Best,<br>Birthday Reminder App</p>
+{% endblock %}
