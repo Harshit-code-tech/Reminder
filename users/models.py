@@ -1,11 +1,12 @@
-# users/models.py
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
 class User(AbstractUser):
+    email = models.EmailField(unique=True)
     is_verified = models.BooleanField(default=False)
+    supabase_id = models.UUIDField(null=True, blank=True)
 
     def __str__(self):
         return self.username
@@ -22,17 +23,14 @@ class VerificationCode(models.Model):
     def __str__(self):
         return f"VerificationCode(user={self.user.username}, code={self.code}, expires_at={self.expires_at})"
 
-
 class UserProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
     timezone = models.CharField(max_length=50, default='Asia/Kolkata')
-    notification_email = models.BooleanField(default=True)
+    notification_email = models.EmailField(blank=True, null=True)
     notification_sms = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Profile for {self.user.username}"
-
-
 
 class AuditLog(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE, related_name='audit_logs')
