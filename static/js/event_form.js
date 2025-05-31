@@ -1,25 +1,38 @@
-// static/js/event_form.js
+// Helper to get cookie by name
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const mediaInput = document.querySelector('#id_media');
     const previewContainer = document.querySelector('#media-preview');
     const removeCheckbox = document.querySelector('input[name="remove_media"]');
+    let previewUrl = null;
 
     function updatePreview(file) {
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+            previewUrl = null;
+        }
         previewContainer.innerHTML = '';
         if (!file) return;
+        previewUrl = URL.createObjectURL(file);
         if (file.type.startsWith('image/')) {
             const img = document.createElement('img');
-            img.src = URL.createObjectURL(file);
+            img.src = previewUrl;
             img.className = 'max-w-xs mt-2 rounded-lg shadow-md';
             previewContainer.appendChild(img);
         } else if (file.type.startsWith('audio/')) {
             const audio = document.createElement('audio');
             audio.controls = true;
-            audio.src = URL.createObjectURL(file);
+            audio.src = previewUrl;
             previewContainer.appendChild(audio);
         } else if (file.type === 'application/pdf') {
             const embed = document.createElement('embed');
-            embed.src = URL.createObjectURL(file);
+            embed.src = previewUrl;
             embed.type = 'application/pdf';
             embed.className = 'w-full h-64 mt-2 rounded shadow';
             previewContainer.appendChild(embed);
@@ -35,6 +48,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (removeCheckbox && previewContainer) {
         removeCheckbox.addEventListener('change', function() {
             previewContainer.style.display = this.checked ? 'none' : '';
+            if (this.checked && previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+                previewUrl = null;
+            }
         });
     }
 
@@ -42,7 +59,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadLinks = document.querySelectorAll('a[data-download="media"]');
     downloadLinks.forEach(link => {
         link.addEventListener('click', (e) => {
-            // Default browser download is usually enough, but you can enhance as needed
+            e.preventDefault();
+            const url = link.href;
+            const jwt = getCookie('jwt');
+            fetch(url, {
+                headers: { 'Authorization': `Bearer ${jwt}` }
+            })
+                .then(res => {
+                    if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+                    return res.blob();
+                })
+                .then(blob => {
+                    const downloadUrl = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    a.download = url.split('/').pop();
+                    a.click();
+                    URL.revokeObjectURL(downloadUrl);
+                })
+                .catch(err => {
+                    console.error('Download failed:', err);
+                    alert('Failed to download media.');
+                });
         });
     });
 });

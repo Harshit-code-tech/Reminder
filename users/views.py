@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate, login as auth_login, logout as aut
 from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+import time
 import requests
 from django.core.paginator import Paginator
 from django.shortcuts import redirect, render
@@ -171,8 +172,10 @@ def login_view(request):
                 data = response.json()
                 token = data.get("access_token")
                 refresh_token = data.get("refresh_token")
+                expires_in = data.get("expires_in", 3600)
                 request.session['supabase_jwt'] = token
                 request.session['supabase_refresh_token'] = refresh_token
+                request.session['jwt_expiry'] = time.time() + expires_in
                 logger.info(f"Fetched Supabase JWT for {user.email}")
             else:
                 logger.error(f"Supabase JWT fetch failed for {user.email}: {response.status_code} {response.text}")
@@ -268,8 +271,10 @@ def signup_view(request):
                         data = token_response.json()
                         token = data.get("access_token")
                         refresh_token = data.get("refresh_token")
+                        expires_in = data.get("expires_in", 3600)
                         request.session['supabase_jwt'] = token
                         request.session['supabase_refresh_token'] = refresh_token
+                        request.session['jwt_expiry'] = time.time() + expires_in
                         logger.info(f"Fetched Supabase JWT for {user.email}")
                     else:
                         logger.error(f"JWT fetch failed for {user.email}: {token_response.status_code} {token_response.text}")
