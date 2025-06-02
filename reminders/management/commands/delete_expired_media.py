@@ -49,14 +49,17 @@ class Command(BaseCommand):
         logger.info(f"Found {events_to_delete.count()} events to delete media")
         for event in events_to_delete:
             try:
-                file_path = f"{event.user.supabase_id}/{event.id}/{event.media_url.split('/')[-1]}"
+                file_path = event.media_path
                 logger.info(f"Deleting media for event {event.id} ({event.name}) at path {file_path}")
                 supabase.storage.from_('event-media').remove([file_path])
                 event.media_url = None
                 event.media_type = None
+                event.media_path = None
                 event.save()
                 logger.info(f"Media deleted for event {event.id}")
             except Exception as e:
                 logger.error(f"Media deletion failed for event {event.id}: {str(e)}")
 
         logger.info("delete_expired_media finished")
+
+
