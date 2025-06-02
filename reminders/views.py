@@ -28,6 +28,7 @@ def event_list(request):
         events = []
     return render(request, 'reminders/event_list.html', {'events': events})
 
+
 @login_required
 @email_verified_required
 def add_event(request):
@@ -41,7 +42,7 @@ def add_event(request):
 
                 file = request.FILES.get('media')
                 if file:
-                    supabase = get_user_supabase_client(request)
+
                     if file.size > settings.MAX_FILE_SIZE:
                         messages.error(request, "File size exceeds 50MB")
                         event.delete()
@@ -50,7 +51,7 @@ def add_event(request):
                         messages.error(request, "Invalid file type. Allowed: .jpg, .png, .pdf, .mp3, .wav")
                         event.delete()
                         return redirect('event_create')
-
+                    supabase = get_user_supabase_client(request)
                     file_name = file.name
                     file_path = f"{request.user.supabase_id}/{event.id}/{file_name}"
                     event.media_path = file_path
