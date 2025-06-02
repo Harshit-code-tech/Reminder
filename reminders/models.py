@@ -24,6 +24,7 @@ class Event(models.Model):
     notified = models.BooleanField(default=False)
     media_url = models.URLField(max_length=1000, blank=True, null=True)  # Increased
     media_type = models.CharField(max_length=100, blank=True, null=True)  # Increased
+    media_path = models.CharField(max_length=512, null=True, blank=True)
 
     class Meta:
         indexes = [
