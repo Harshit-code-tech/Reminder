@@ -5,11 +5,12 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.contrib import messages
-from .models import Event
+from .models import Event, CelebrationCardPage, EventMedia
 from .forms import EventForm
 from .utils import send_upcoming_reminders
 from users.decorators import email_verified_required
 from .supabase_helpers import get_user_supabase_client
+import  uuid
 
 logger = logging.getLogger('app_logger')
 
@@ -38,56 +39,62 @@ def add_event(request):
             try:
                 event = form.save(commit=False)
                 event.user = request.user
-                event.save()  # Save to get event.id
+                event.save()  # Save early to get event.id
 
-                file = request.FILES.get('media')
-                if file:
+                files = request.FILES.getlist('media_files')  # supports multiple
+                supabase = get_user_supabase_client(request)
 
+                for file in files:
+                    # Validate file
                     if file.size > settings.MAX_FILE_SIZE:
-                        messages.error(request, "File size exceeds 50MB")
+                        messages.error(request, f"File '{file.name}' exceeds 50MB limit.")
                         event.delete()
                         return redirect('event_create')
                     if file.content_type not in settings.ALLOWED_MEDIA_TYPES:
-                        messages.error(request, "Invalid file type. Allowed: .jpg, .png, .pdf, .mp3, .wav")
+                        messages.error(request, f"Invalid file type for '{file.name}'. Allowed: .jpg, .png, .pdf, .mp3, .wav")
                         event.delete()
                         return redirect('event_create')
-                    supabase = get_user_supabase_client(request)
-                    file_name = file.name
-                    file_path = f"{request.user.supabase_id}/{event.id}/{file_name}"
-                    event.media_path = file_path
 
+                    # Upload to Supabase
+                    unique_suffix = uuid.uuid4().hex[:8]
+                    filename = f"{unique_suffix}_{file.name}"
+                    file_path = f"{request.user.supabase_id}/{event.id}/{filename}"
                     logger.debug(f"Uploading media to path: {file_path}")
+
                     response = supabase.storage.from_('event-media').upload(
                         file_path, file.read(), file_options={"content-type": file.content_type}
                     )
                     if hasattr(response, 'error') and response.error:
-                        logger.error(f"Media upload failed for user {request.user.username}: {response.error}")
-                        messages.error(request, f"Failed to upload media: {response.error}")
+                        logger.error(f"Upload failed for '{file.name}': {response.error}")
+                        messages.error(request, f"Failed to upload '{file.name}': {response.error}")
                         event.delete()
                         return render(request, "reminders/event_form.html", {"form": form})
                     elif hasattr(response, 'status_code') and response.status_code not in (200, 201):
-                        logger.error(f"Media upload failed for user {request.user.username}: {response}")
-                        messages.error(request, "Failed to upload media.")
+                        logger.error(f"Upload failed for '{file.name}' with status: {response.status_code}")
+                        messages.error(request, f"Failed to upload '{file.name}'")
                         event.delete()
                         return render(request, "reminders/event_form.html", {"form": form})
-                    else:
-                        public_url = supabase.storage.from_('event-media').get_public_url(file_path)
-                        event.media_url = public_url
-                        event.media_type = file.content_type
-                        event.media_path = file_path
-                        event.save()
-                        logger.info(f"Updated media for event {event.name}")
+
+                    # Save EventMedia entry
+                    public_url = supabase.storage.from_('event-media').get_public_url(file_path)
+                    EventMedia.objects.create(
+                        event=event,
+                        media_file=public_url,
+                        media_type=file.content_type.split('/')[0],
+                    )
+
                 messages.success(request, "Event created successfully!")
-                logger.info(f"Event {event.name} created for user {request.user.username}")
+                logger.info(f"Event '{event.name}' created with {len(files)} media files")
                 return redirect('event_list')
             except Exception as e:
-                logger.error(f"Error saving event for user {request.user.username}: {str(e)}")
+                logger.error(f"Error saving event: {str(e)}")
                 messages.error(request, f"Failed to create event: {str(e)}")
         else:
             messages.error(request, "Please correct the errors below.")
     else:
         form = EventForm()
     return render(request, "reminders/event_form.html", {"form": form})
+
 
 @login_required
 @email_verified_required
@@ -98,84 +105,72 @@ def edit_event(request, event_id):
         if form.is_valid():
             try:
                 supabase = get_user_supabase_client(request)
-                if request.POST.get('remove_media') and event.media_path:
-                    file_path = event.media_path
-                    # Pre-check file existence
-                    dir_path = "/".join(file_path.split('/')[:-1])
-                    file_list = supabase.storage.from_('event-media').list(path=dir_path)
-                    file_exists = any(f['name'] == file_path.split('/')[-1] for f in file_list)
-                    if file_exists:
-                        logger.debug(f"Attempting to delete file at path: {file_path}")
-                        response = supabase.storage.from_('event-media').remove([file_path])
-                        logger.debug(f"Supabase delete response: {response}")
-                        if response is None or (isinstance(response, list) and not response):
-                            logger.error(f"Media deletion failed for event {event.name}: Invalid path or permissions")
-                            messages.error(request, f"Failed to delete media for event {event.name}.")
-                            return render(request, "reminders/event_form.html", {"form": form})
-                        event.media_url = None
-                        event.media_type = None
-                        event.media_path = None
-                        logger.info(f"Removed media for event {event.name}")
-                    else:
-                        logger.warning(f"File not found in storage for event {event.name}: {file_path}")
-                        event.media_url = None
-                        event.media_type = None
-                        event.media_path = None
-                file = request.FILES.get('media')
-                if file:
-                    if file.size > settings.MAX_FILE_SIZE:
-                        messages.error(request, "File size exceeds 50MB")
-                        return render(request, "reminders/event_form.html", {"form": form})
-                    if file.content_type not in settings.ALLOWED_MEDIA_TYPES:
-                        messages.error(request, "Invalid file type. Allowed: .jpg, .png, .pdf, .mp3, .wav")
-                        return render(request, "reminders/event_form.html", {"form": form})
 
-                    file_name = file.name
-                    file_path = f"{request.user.supabase_id}/{event.id}/{file_name}"
-                    # If old media exists, try to remove it before replacing
-                    if event.media_path:
-                        old_file_path = event.media_path
-                        dir_path = "/".join(old_file_path.split('/')[:-1])
+                # Handle deletions
+                if request.POST.get('remove_media'):
+                    for media in event.media.all():
+                        file_path = media.media_file
                         try:
-                            file_list = supabase.storage.from_('event-media').list(path=dir_path)
-                            file_exists = any(f['name'] == old_file_path.split('/')[-1] for f in file_list)
-                            if file_exists:
-                                supabase.storage.from_('event-media').remove([old_file_path])
+                            dir_path = "/".join(file_path.split('/')[:-1])
+                            existing_files = supabase.storage.from_('event-media').list(dir_path)
+                            if any(f['name'] == file_path.split('/')[-1] for f in existing_files):
+                                supabase.storage.from_('event-media').remove([file_path])
+                            if media and media.id:
+                                media.delete()
                             else:
-                                logger.warning(f"Old media not found before replacement: {old_file_path}")
+                                logger.error(
+                                    f"Cannot delete EventMedia: invalid or unsaved object for event '{event.name}'")
+                            logger.info(f"Deleted media '{file_path}' for event '{event.name}'")
                         except Exception as e:
-                            logger.warning(f"Error checking or deleting old media for {event.name}: {str(e)}")
+                            logger.warning(f"Failed to delete media {file_path}: {str(e)}")
+                        if media and media.id:
+                            media.delete()
+                        else:
+                            logger.error(
+                                f"Cannot delete EventMedia: invalid or unsaved object for event '{event.name}'")
 
-                    logger.debug(f"Uploading media to path: {file_path}")
+                # Handle new uploads
+                files = request.FILES.getlist('media_files')
+                for file in files:
+                    if file.size > settings.MAX_FILE_SIZE:
+                        messages.error(request, f"File '{file.name}' exceeds 50MB limit.")
+                        return render(request, "reminders/event_form.html", {"form": form, "event": event})
+                    if file.content_type not in settings.ALLOWED_MEDIA_TYPES:
+                        messages.error(request, f"Invalid file type for '{file.name}'.")
+                        return render(request, "reminders/event_form.html", {"form": form, "event": event})
+
+                    unique_suffix = uuid.uuid4().hex[:8]
+                    filename = f"{unique_suffix}_{file.name}"
+                    file_path = f"{request.user.supabase_id}/{event.id}/{filename}"
                     response = supabase.storage.from_('event-media').upload(
                         file_path, file.read(), file_options={"content-type": file.content_type}
                     )
                     if hasattr(response, 'error') and response.error:
-                        logger.error(f"Media upload failed for user {request.user.username}: {response.error}")
-                        messages.error(request, f"Failed to upload media: {response.error}")
-                        return render(request, "reminders/event_form.html", {"form": form})
+                        messages.error(request, f"Failed to upload '{file.name}': {response.error}")
+                        return render(request, "reminders/event_form.html", {"form": form, "event": event})
                     elif hasattr(response, 'status_code') and response.status_code not in (200, 201):
-                        logger.error(f"Media upload failed for user {request.user.username}: {response}")
-                        messages.error(request, "Failed to upload media.")
-                        return render(request, "reminders/event_form.html", {"form": form})
-                    else:
-                        public_url = supabase.storage.from_('event-media').get_public_url(file_path)
-                        event.media_url = public_url
-                        event.media_type = file.content_type
-                        event.media_path = file_path
-                        logger.info(f"Updated media for event {event.name}")
+                        messages.error(request, f"Upload failed for '{file.name}'")
+                        return render(request, "reminders/event_form.html", {"form": form, "event": event})
+
+                    public_url = supabase.storage.from_('event-media').get_public_url(file_path)
+                    EventMedia.objects.create(
+                        event=event,
+                        media_file=public_url,
+                        media_type=file.content_type.split('/')[0],
+                    )
+
                 form.save()
                 messages.success(request, f"Event '{event.name}' updated successfully!")
-                logger.info(f"Event updated: {event.name} for user {request.user.username}")
                 return redirect('event_list')
             except Exception as e:
-                logger.error(f"Error updating event {event.name} for user {request.user.username}: {str(e)}")
+                logger.error(f"Error updating event '{event.name}': {str(e)}")
                 messages.error(request, f"Failed to update event: {str(e)}")
         else:
             messages.error(request, "Please correct the errors below.")
     else:
         form = EventForm(instance=event)
     return render(request, "reminders/event_form.html", {"form": form, "event": event})
+
 
 @login_required
 @email_verified_required
@@ -215,17 +210,17 @@ def delete_event(request, event_id):
 
 @login_required
 @email_verified_required
-def delete_event_media(request, event_id):
-    event = get_object_or_404(Event, id=event_id, user=request.user)
-    if request.method == 'POST' and event.media_path:
+def delete_event_media(request, media_id):
+    media = get_object_or_404(EventMedia, id=media_id, event__user=request.user)
+    if request.method == 'POST' and media.media_file:
         try:
             supabase = get_user_supabase_client(request)
-            file_path = event.media_path
+            file_path = media.media_file
             dir_path = "/".join(file_path.split('/')[:-1])
             # Optional sanity check
             existing_files = supabase.storage.from_('event-media').list(dir_path)
             if not any(f['name'] == file_path.split('/')[-1] for f in existing_files):
-                logger.warning(f"Media already gone for event {event.name}, clearing DB fields")
+                logger.warning(f"Media already gone for event {media.name}, clearing DB fields")
             else:
                 supabase.storage.from_('event-media').remove([file_path])
 
@@ -234,24 +229,24 @@ def delete_event_media(request, event_id):
                 response = supabase.storage.from_('event-media').remove([file_path])
                 logger.debug(f"Supabase delete response: {response}")
                 if response is None or (isinstance(response, list) and not response):
-                    logger.error(f"Media deletion failed for event {event.id}: Invalid path or permissions")
-                    messages.error(request, f"Failed to delete media for event {event.name}.")
+                    logger.error(f"Media deletion failed for event {media.id}: Invalid path or permissions")
+                    messages.error(request, f"Failed to delete media for event {media.name}.")
                     return redirect('event_list')
-                logger.info(f"Media deleted for event {event.id} by user {request.user.username}")
+                logger.info(f"Media deleted for event {media.id} by user {request.user.username}")
             except Exception as e:
-                logger.error(f"Exception during media deletion for event {event.id}: {str(e)}")
-                messages.error(request, f"Media deletion failed for event {event.name}: {str(e)}")
+                logger.error(f"Exception during media deletion for event {media.id}: {str(e)}")
+                messages.error(request, f"Media deletion failed for event {media.name}: {str(e)}")
                 return redirect('event_list')
-            event.media_url = None
-            event.media_type = None
-            event.media_path = None
-            event.save()
+            media.media_url = None
+            media.media_type = None
+            media.media_file = None
+            media.save()
             messages.success(request, "Media deleted successfully!")
         except Exception as e:
             messages.error(request, f"Media deletion failed: {str(e)}")
-            logger.error(f"Media deletion failed for event {event.id}: {str(e)}")
+            logger.error(f"Media deletion failed for event {media.id}: {str(e)}")
         return redirect('event_list')
-    return redirect('event_update', event_id=event_id)
+    return redirect('event_update', media_id=media_id)
 
 @csrf_exempt
 def trigger_send_reminders(request):
@@ -269,3 +264,42 @@ def trigger_send_reminders(request):
     except Exception as e:
         logger.error(f"Error in trigger_send_reminders: {str(e)}")
         return JsonResponse({'error': f'An error occurred: {str(e)}'}, status=500)
+
+@login_required
+@email_verified_required
+def card_view(request, event_id, page_number):
+    event = get_object_or_404(Event, id=event_id, user=request.user)
+    try:
+        page = CelebrationCardPage.objects.get(event=event, page_number=page_number)
+    except CelebrationCardPage.DoesNotExist:
+        page = None
+        if page_number == 1:
+            page = CelebrationCardPage.objects.create(
+                event=event,
+                page_number=1,
+                caption="Welcome to your celebration card!"
+            )
+
+    if page_number == 1:
+        if request.method == 'POST':
+            password = request.POST.get('password')
+            expected_password = event.name.split()[0].lower() if event.event_type in ['birthday', 'other'] else event.highlights.lower() or 'love'
+            if password.lower() == expected_password:
+                return redirect('reminders:card_view', event_id=event_id, page_number=page_number)
+            else:
+                messages.error(request, 'Incorrect password.')
+        else:
+            return render(request, 'reminders/card_view.html', {
+                'event': event,
+                'page_number': page_number,
+                'requires_password': True
+            })
+
+    next_page = page_number + 1 if page_number < 5 else None
+    context = {
+        'event': event,
+        'page': page,
+        'page_number': page_number,
+        'next_page': next_page,
+    }
+    return render(request, 'reminders/card_view.html', context)

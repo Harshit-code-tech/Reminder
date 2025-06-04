@@ -11,6 +11,7 @@ def email_verified_required(view_func):
             return redirect('login')
 
         if not request.user.is_active:
+            messages.error(request, "Please verify your email before proceeding.")
             return redirect('verify_email')
 
         return view_func(request, *args, **kwargs)
