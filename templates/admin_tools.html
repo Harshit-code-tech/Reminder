@@ -1,28 +1,161 @@
 {% extends 'base.html' %}
+
 {% block title %}Admin Tools - Birthday Reminder{% endblock %}
+
+{% block header_class %}bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-500 text-white p-6 shadow-lg{% endblock %}
+
+{% block header_content %}
+    <h1 class="text-3xl font-bold flex items-center gap-3">
+        <span class="text-2xl">⚙️</span> Admin Dashboard
+    </h1>
+{% endblock %}
+
 {% block content %}
-  <div class="bg-white shadow-md rounded-lg p-6 max-w-4xl mx-auto">
-    <h1 class="text-2xl font-bold mb-4">Admin Tools</h1>
-    {% if messages %}
-      {% for message in messages %}
-        <div class="p-4 mb-4 rounded {% if message.tags == 'success' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
-          {{ message }}
+    <div class="max-w-4xl mx-auto mt-8">
+        <!-- Admin card with gradient border -->
+        <div class="card rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl relative">
+            <div class="p-[2px] bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl">
+                <div class="bg-white dark:bg-slate-800 rounded-[10px] p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                            <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            Admin Tools
+                        </h2>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                            Admin Access
+                        </span>
+                    </div>
+
+                    {% if messages %}
+                        <div class="mb-6 space-y-3">
+                            {% for message in messages %}
+                                <div class="p-4 rounded-lg border {% if message.tags == 'success' %}bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300 border-green-200 dark:border-green-800{% else %}bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300 border-red-200 dark:border-red-800{% endif %} flex items-start">
+                                    <svg class="w-5 h-5 mr-3 mt-0.5 {% if message.tags == 'success' %}text-green-500 dark:text-green-400{% else %}text-red-500 dark:text-red-400{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        {% if message.tags == 'success' %}
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        {% else %}
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        {% endif %}
+                                    </svg>
+                                    <span>{{ message }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            Quick Actions
+                        </h3>
+                        <form method="post" class="flex flex-wrap gap-4">
+                            {% csrf_token %}
+                            <button type="submit" name="action" value="trigger_reminders" class="group relative inline-flex items-center justify-center px-6 py-3 rounded-xl overflow-hidden bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-medium shadow-lg hover:shadow-xl transition duration-300 ease-out hover:-translate-y-1">
+                                <span class="relative z-10 flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                                    </svg>
+                                    Trigger Reminders
+                                </span>
+                                <span class="absolute inset-0 bg-gradient-to-br from-blue-700 to-indigo-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out"></span>
+                            </button>
+
+                            <button type="submit" name="action" value="export_backup" class="group relative inline-flex items-center justify-center px-6 py-3 rounded-xl overflow-hidden bg-gradient-to-br from-indigo-600 to-purple-600 text-white font-medium shadow-lg hover:shadow-xl transition duration-300 ease-out hover:-translate-y-1">
+                                <span class="relative z-10 flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                    </svg>
+                                    Export Backup
+                                </span>
+                                <span class="absolute inset-0 bg-gradient-to-br from-indigo-700 to-purple-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out"></span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                            </svg>
+                            Recent Logs
+                        </h3>
+                        <div class="relative">
+                            <div class="absolute top-0 right-0 p-2 z-10">
+                                <button class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg p-2 transition-all" title="Copy logs" id="copy-logs">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-2M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <pre id="logs-content" class="bg-gray-50 dark:bg-slate-900 text-gray-800 dark:text-gray-300 p-4 rounded-lg overflow-auto max-h-96 font-mono text-sm border border-gray-200 dark:border-gray-700">{% for log in logs %}{{ log }}
+{% endfor %}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      {% endfor %}
-    {% endif %}
-    <h2 class="text-xl font-semibold mb-2">Actions</h2>
-    <form method="post" class="mb-6">
-      {% csrf_token %}
-      <div class="flex gap-4">
-        <button type="submit" name="action" value="trigger_reminders" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Trigger Reminders</button>
-        <button type="submit" name="action" value="export_backup" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Export Backup</button>
-      </div>
-    </form>
-    <h2 class="text-xl font-semibold mb-2">Recent Logs</h2>
-    <pre class="bg-gray-100 p-4 rounded-lg overflow-auto max-h-96">
-{% for log in logs %}
-{{ log }}
-{% endfor %}
-    </pre>
-  </div>
+
+        <!-- System stats card -->
+        <div class="card rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl relative mt-8">
+            <div class="p-[2px] bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl">
+                <div class="bg-white dark:bg-slate-800 rounded-[10px] p-6">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        System Statistics
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-4 text-center">
+                            <span class="block text-sm text-gray-500 dark:text-gray-400">Total Users</span>
+                            <span class="block text-2xl font-bold text-blue-600 dark:text-blue-400">{{ user_count|default:"--" }}</span>
+                        </div>
+
+                        <div class="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-4 text-center">
+                            <span class="block text-sm text-gray-500 dark:text-gray-400">Total Events</span>
+                            <span class="block text-2xl font-bold text-purple-600 dark:text-purple-400">{{ event_count|default:"--" }}</span>
+                        </div>
+
+                        <div class="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-4 text-center">
+                            <span class="block text-sm text-gray-500 dark:text-gray-400">Reminders Sent Today</span>
+                            <span class="block text-2xl font-bold text-green-600 dark:text-green-400">{{ reminders_today|default:"0" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const copyButton = document.getElementById('copy-logs');
+            const logsContent = document.getElementById('logs-content');
+
+            if (copyButton && logsContent) {
+                copyButton.addEventListener('click', function() {
+                    const text = logsContent.textContent;
+                    navigator.clipboard.writeText(text).then(function() {
+                        // Show success feedback
+                        const originalText = copyButton.innerHTML;
+                        copyButton.innerHTML = `
+                            <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        `;
+                        setTimeout(() => {
+                            copyButton.innerHTML = originalText;
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Failed to copy text: ', err);
+                    });
+                });
+            }
+        });
+    </script>
 {% endblock %}

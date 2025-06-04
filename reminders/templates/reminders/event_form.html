@@ -1,42 +1,115 @@
+<!-- reminders/templates/reminders/event_form.html -->
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{% if form.instance.pk %}Edit{% else %}Add{% endif %} Event{% endblock %}
+{% block title %}{% if event %}Edit{% else %}Add{% endif %} Event{% endblock %}
 {% block content %}
 <div class="max-w-3xl mx-auto mt-6">
-  <h2 class="text-xl font-semibold mb-4">{% if form.instance.pk %}Edit{% else %}Add{% endif %} Event</h2>
+  <h2 class="text-xl font-semibold mb-4">{% if event %}Edit{% else %}Add{% endif %} Event</h2>
   <form method="post" enctype="multipart/form-data" style="margin-top: 20px;">
     {% csrf_token %}
-    {{ form.as_p }}
+    {{ form.non_field_errors }}
+
+    <!-- Standard form fields -->
     <div class="mb-4">
-      <label for="id_media" class="block text-sm font-medium text-gray-700">Upload Media (Optional)</label>
-      <input type="file" name="media" id="id_media" accept=".jpg,.png,.pdf,.mp3,.wav" class="mt-1 block w-full">
-      <p class="text-sm text-gray-500">Max 50MB. Allowed: .jpg, .png, .pdf, .mp3, .wav</p>
+      <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-700">Name:</label>
+      {{ form.name }}
+      {{ form.name.errors }}
+    </div>
+
+    <div class="mb-4">
+      <label for="{{ form.event_type.id_for_label }}" class="block text-sm font-medium text-gray-700">Event Type:</label>
+      {{ form.event_type }}
+      {{ form.event_type.errors }}
+    </div>
+
+    <div class="mb-4">
+      <label for="{{ form.date.id_for_label }}" class="block text-sm font-medium text-gray-700">Date:</label>
+      {{ form.date }}
+      {{ form.date.errors }}
+    </div>
+
+    <div class="mb-4">
+      <label for="{{ form.remind_days_before.id_for_label }}" class="block text-sm font-medium text-gray-700">Remind Days Before:</label>
+      {{ form.remind_days_before }}
+      {{ form.remind_days_before.errors }}
+    </div>
+
+    <div class="mb-4">
+      <label for="{{ form.message.id_for_label }}" class="block text-sm font-medium text-gray-700">Message:</label>
+      {{ form.message }}
+      {{ form.message.errors }}
+    </div>
+
+    <div class="mb-4">
+      <label for="{{ form.custom_label.id_for_label }}" class="block text-sm font-medium text-gray-700">Custom Label (for Other):</label>
+      {{ form.custom_label }}
+      {{ form.custom_label.errors }}
+    </div>
+
+    <div class="mb-4">
+      <label for="{{ form.cultural_theme.id_for_label }}" class="block text-sm font-medium text-gray-700">Cultural Theme (e.g., diyas):</label>
+      {{ form.cultural_theme }}
+      {{ form.cultural_theme.errors }}
+    </div>
+
+    <div class="mb-4">
+      <label for="{{ form.highlights.id_for_label }}" class="block text-sm font-medium text-gray-700">Milestones (e.g., Year 1: Honeymoon):</label>
+      {{ form.highlights }}
+      {{ form.highlights.errors }}
+    </div>
+
+    <!-- Media upload with multiple files -->
+    <div class="mb-4">
+      <label for="id_media_files" class="block text-sm font-medium text-gray-700">Upload Media (Images/Audio, max 3):</label>
+      <!--
+        Important:
+        - name="media_files" must match your form field name exactly
+        - multiple attribute enables multiple file selection
+        - accept restricts file picker to allowed types only (UX only, server validates again)
+      -->
+      <input
+        type="file"
+        name="media_files"
+        id="id_media_files"
+        accept=".jpg,.jpeg,.png,.mp3,.wav"
+        multiple
+        class="mt-1 block w-full"
+      >
+      <p class="text-sm text-gray-500">Max 50MB for images, 10MB for audio. Allowed: .jpg, .jpeg, .png, .mp3, .wav</p>
+
       <div id="media-preview" class="mt-2"></div>
-      {% if form.instance.pk and form.instance.media_url %}
-        <p class="text-gray-600 mt-2">Current Media:</p>
-        {% if form.instance.media_type and form.instance.media_type|slice:":5" == "image" %}
-          <img src="{{ form.instance.media_url }}" alt="Event Image" class="max-w-xs rounded-lg shadow-md">
-        {% elif form.instance.media_type and form.instance.media_type|slice:":5" == "audio" %}
-          <audio controls>
-            <source src="{{ form.instance.media_url }}" type="{{ form.instance.media_type }}">
-            Your browser does not support the audio element.
-          </audio>
-        {% elif form.instance.media_type == "application/pdf" %}
-          <embed src="{{ form.instance.media_url }}" type="application/pdf" class="w-full h-64 rounded shadow" />
-        {% endif %}
-        <label class="mt-2 block">
-          <input type="checkbox" name="remove_media" class="mr-2"> Remove Media
+
+      {% if event and event.media.exists %}
+        <p class="text-gray-600 mt-2 font-semibold">Current Media:</p>
+        <div class="flex flex-wrap gap-4">
+          {% for media in event.media.all %}
+            <div class="border rounded p-2 shadow-sm max-w-xs">
+              {% if media.media_type == 'image' %}
+                <img src="{{ media.media_file.url }}" alt="Event Image" class="max-w-xs rounded-lg shadow-md">
+              {% elif media.media_type == 'audio' %}
+                <audio controls class="w-full">
+                  <source src="{{ media.media_file.url }}" type="audio/mpeg">
+                  Your browser does not support the audio element.
+                </audio>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+        <label class="mt-4 block text-red-600 font-semibold">
+          <input type="checkbox" name="remove_media" class="mr-2 align-middle"> Remove all existing media
         </label>
       {% endif %}
     </div>
+
     <div class="flex gap-4">
       <button type="submit" class="btn glow bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition shadow-md">
-        {% if form.instance.pk %}Update{% else %}Add{% endif %}
+        {% if event %}Update{% else %}Add{% endif %}
       </button>
       <a href="{% url 'event_list' %}" class="btn btn-secondary glow bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition shadow-md">Cancel</a>
     </div>
   </form>
 </div>
+
 <script src="{% static 'js/event_form.js' %}"></script>
 {% endblock %}

@@ -1,0 +1,37 @@
+<!-- reminders/templates/reminders/card_view.html -->
+{% extends "base.html" %}
+{% block content %}
+<h1>Celebration Card for {{ event.name }}</h1>
+{% if requires_password %}
+    <h2>Welcome, {{ event.name }}!</h2>
+    <form method="post">
+        {% csrf_token %}
+        <label>Password: <input type="text" name="password" required></label>
+        <button type="submit">Unlock</button>
+        {% if messages %}
+            {% for message in messages %}
+                <p style="color: red;">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+    </form>
+{% else %}
+    <h2>Page {{ page_number }}</h2>
+    {% if page %}
+        <p>{{ page.caption }}</p>
+        {% if page.image %}
+            <img src="{{ page.image.media_file }}" alt="Memory" style="max-width: 300px;">
+        {% endif %}
+        {% if page.audio %}
+            <audio controls src="{{ page.audio.media_file }}"></audio>
+        {% endif %}
+    {% else %}
+        <p>No content for this page yet.</p>
+    {% endif %}
+    {% if next_page %}
+        <a href="{% url 'reminders:card_view' event.id next_page %}">Next Page</a>
+    {% endif %}
+    {% if page_number == 5 %}
+        <button>Save this memory!</button>
+    {% endif %}
+{% endif %}
+{% endblock %}

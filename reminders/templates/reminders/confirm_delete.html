@@ -2,12 +2,59 @@
 
 {% block title %}Delete Event{% endblock %}
 
+{% block header_class %}bg-gradient-to-r from-red-500 via-red-600 to-pink-500 text-white p-6 shadow-lg{% endblock %}
+
+{% block header_content %}
+    <h1 class="text-3xl font-bold flex items-center gap-3">
+        <span class="text-2xl">⚠️</span> Delete Event
+    </h1>
+{% endblock %}
+
 {% block content %}
-<h2>Delete Event</h2>
-<p>Are you sure you want to delete "{{ event.name }}"?</p>
-<form method="post">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-danger glow">Delete</button>
-    <a href="{% url 'event_list' %}" class="btn btn-secondary glow">Cancel</a>
-</form>
+    <div class="max-w-2xl mx-auto mt-12">
+        <div class="card bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-lg">
+            <div class="p-[2px] bg-gradient-to-br from-red-500 to-pink-500 rounded-xl">
+                <div class="bg-white dark:bg-slate-800 rounded-[10px] p-8">
+                    <div class="flex flex-col items-center text-center mb-8">
+                        <div class="w-20 h-20 mb-6 flex items-center justify-center bg-red-100 dark:bg-red-900/30 rounded-full">
+                            <svg class="w-10 h-10 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">
+                            Confirm Deletion
+                        </h2>
+                        <p class="text-gray-600 dark:text-gray-300 mb-2">
+                            Are you sure you want to delete this event?
+                        </p>
+                        <p class="text-xl font-semibold text-red-600 dark:text-red-400 mb-6">
+                            "{{ event.name }}"
+                        </p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                            This action cannot be undone. All data associated with this event will be permanently removed.
+                        </p>
+
+                        <form method="post" class="w-full flex flex-col sm:flex-row justify-center gap-4">
+                            {% csrf_token %}
+                            <a href="{% url 'event_list' %}" class="order-2 sm:order-1 px-6 py-3 rounded-xl bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium transition-all duration-300 hover:shadow-md flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                                </svg>
+                                Cancel
+                            </a>
+                            <button type="submit" class="order-1 sm:order-2 group relative inline-flex items-center justify-center px-6 py-3 rounded-xl overflow-hidden bg-gradient-to-br from-red-600 to-pink-600 text-white font-medium shadow-lg hover:shadow-xl transition duration-300 ease-out hover:-translate-y-1">
+                                <span class="relative z-10 flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                    Delete Event
+                                </span>
+                                <span class="absolute inset-0 bg-gradient-to-br from-red-700 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out"></span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
