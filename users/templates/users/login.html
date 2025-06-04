@@ -2,106 +2,354 @@
 
 {% block title %}Login{% endblock %}
 
-{% block header_class %}bg-blue-600 text-white p-4{% endblock %}
+{% block header_class %}p-4{% endblock %}
 
 {% block header_content %}
-<h1 class="text-2xl font-bold flex items-center gap-2">🔐 Login to Birthday Reminder</h1>
+<h1 class="text-3xl font-bold flex items-center gap-3 text-white">
+    <span class="text-yellow-400">✨</span> Login to Birthday Reminder
+</h1>
 {% endblock %}
 
 {% block content %}
-<div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md mt-6">
-    <h2 class="text-xl font-semibold mb-4">Login</h2>
-
-    <div aria-live="polite">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="p-2 rounded mb-2 text-sm font-medium
-                            {% if message.tags == 'error' %}
-                                bg-red-100 text-red-700 border border-red-300
-                            {% elif message.tags == 'success' %}
-                                bg-green-100 text-green-700 border border-green-300
-                            {% elif message.tags == 'info' %}
-                                bg-blue-100 text-blue-700 border border-blue-300
-                            {% else %}
-                                bg-gray-100 text-gray-800 border border-gray-300
-                            {% endif %}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-    </div>
-
-    <form method="post" class="space-y-4" id="login-form">
-        {% csrf_token %}
-        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-
-        <div>
-            <label for="{{ form.username_or_email.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                Username or Email:
-            </label>
-            {{ form.username_or_email }}
-            {% if form.username_or_email.errors %}
-                <div class="text-red-600 text-sm mt-1">
-                    {{ form.username_or_email.errors }}
-                </div>
-            {% endif %}
+<div class="login-container">
+    <div class="max-w-md mx-auto glassmorphic-card p-8 rounded-2xl shadow-xl mt-8 border border-white/20 relative overflow-hidden">
+        <div class="floating-bubbles">
+            <div class="bubble"></div>
+            <div class="bubble"></div>
+            <div class="bubble"></div>
         </div>
 
-        <div>
-            <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-gray-700">Password:</label>
-            {{ form.password }}
-            {% if form.password.errors %}
-                <div class="text-red-600 text-sm mt-1">
-                    {{ form.password.errors }}
-                </div>
-            {% endif %}
-        </div>
+        <div class="relative z-10">
+            <h2 class="text-2xl font-bold mb-4 text-center bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-pink-500">Catch Me If You Can!</h2>
+            <p class="text-gray-500 text-center mb-6 text-sm">Our login button is feeling mischievous today!</p>
 
-        {% if show_captcha %}
-        <div>
-            <label for="{{ form.captcha.id_for_label }}" class="block text-sm font-medium text-gray-700">Captcha:</label>
-            {{ form.captcha }}
-            {% if form.captcha.errors %}
-                <p class="text-red-600 text-sm mt-1">{{ form.captcha.errors.0 }}</p>
-            {% endif %}
-        </div>
-        {% endif %}
+            <div aria-live="polite">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="p-3 rounded-lg mb-4 text-sm font-medium animate-pulse backdrop-blur-sm
+                                    {% if message.tags == 'error' %}
+                                        bg-red-50/80 text-red-700 border border-red-200
+                                    {% elif message.tags == 'success' %}
+                                        bg-green-50/80 text-green-700 border border-green-200
+                                    {% elif message.tags == 'info' %}
+                                        bg-blue-50/80 text-blue-700 border border-blue-200
+                                    {% else %}
+                                        bg-gray-50/80 text-gray-800 border border-gray-200
+                                    {% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
 
-        <button type="submit"
-                class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
-            Login
-        </button>
-    </form>
-
-    {% if force_verify %}
-        <div class="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded mt-4">
-            <p class="text-sm font-medium">Your account is not verified yet.</p>
-
-            <form method="post" action="{% url 'resend_verification_code' %}" class="mt-2">
+            <form method="post" class="space-y-6" id="login-form">
                 {% csrf_token %}
-                <input type="hidden" name="email" value="{{ username|default:'' }}">
-                <button type="submit"
-                        class="w-full bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition">
-                    Resend Verification Code
+                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+                <div class="form-group">
+                    <label for="{{ form.username_or_email.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        Username or Email:
+                    </label>
+                    <div class="relative">
+                        {{ form.username_or_email }}
+                        <div class="input-icon">👤</div>
+                        {% if form.username_or_email.errors %}
+                            <div class="text-red-600 text-sm mt-1">{{ form.username_or_email.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-gray-700">Password:</label>
+                    <div class="relative">
+                        {{ form.password }}
+                        <div class="input-icon">🔒</div>
+                        {% if form.password.errors %}
+                            <div class="text-red-600 text-sm mt-1">{{ form.password.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if show_captcha %}
+                <div class="form-group">
+                    <label for="{{ form.captcha.id_for_label }}" class="block text-sm font-medium text-gray-700">Captcha:</label>
+                    <div class="relative">
+                        {{ form.captcha }}
+                        {% if form.captcha.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.captcha.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <button type="submit" id="playful-button" class="w-full py-3 rounded-lg shadow-lg transition-all duration-300 playful-button" aria-label="Login to your account">
+                    <span class="button-text">Catch Me to Login!</span>
                 </button>
             </form>
 
-            <form method="get" action="{% url 'verify_email' %}" class="mt-2">
-                <button type="submit"
-                        class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
-                    Verify Email
-                </button>
-            </form>
+            {% if force_verify %}
+                <div class="bg-yellow-50/80 backdrop-blur-sm border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg mt-6">
+                    <p class="text-sm font-medium">Your account's playing hide-and-seek! Verify it first.</p>
+
+                    <form method="post" action="{% url 'resend_verification_code' %}" class="mt-3">
+                        {% csrf_token %}
+                        <input type="hidden" name="email" value="{{ username|default:'' }}">
+                        <button type="submit" class="w-full bg-yellow-600 text-white px-6 py-3 rounded-lg border-2 border-yellow-300 shadow-lg hover:bg-yellow-700 hover:scale-105 transition-all duration-300" aria-label="Resend verification code">
+                            Resend Verification Code
+                        </button>
+                    </form>
+
+                    <form method="get" action="{% url 'verify_email' %}" class="mt-3">
+                        <button type="submit" class="w-full bg-blue-500 text-white px-6 py-3 rounded-lg border-2 border-blue-300 shadow-lg hover:bg-blue-600 hover:scale-105 transition-all duration-300" aria-label="Verify your email">
+                            Verify Email
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+
+            <div class="links-container mt-6">
+                <p class="text-center text-sm">
+                    <a href="{% url 'password_reset' %}" class="fancy-link" aria-label="Reset your password">
+                        Forgot Password?
+                    </a>
+                </p>
+                <p class="mt-2 text-center text-sm">
+                    Don't have an account?
+                    <a href="{% url 'signup' %}" class="fancy-link" aria-label="Sign up for an account">
+                        Sign Up
+                    </a>
+                </p>
+            </div>
         </div>
-    {% endif %}
-
-    <p class="mt-4 text-center text-sm">
-        Forgot your password?
-        <a href="{% url 'password_reset' %}" class="text-blue-500 hover:underline">Reset Password</a>
-    </p>
-    <p class="mt-2 text-center text-sm">
-        Don’t have an account?
-        <a href="{% url 'signup' %}" class="text-blue-500 hover:underline">Sign Up</a>
-    </p>
+    </div>
 </div>
+
+<style>
+    /* Premium Glassmorphism Card */
+    .login-container {
+        perspective: 1000px;
+    }
+
+    .glassmorphic-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border-left: 4px solid #9333ea;
+        transition: all 0.5s ease;
+        transform-style: preserve-3d;
+    }
+
+    .glassmorphic-card:hover {
+        transform: translateY(-5px) rotateX(5deg);
+        box-shadow: 0 20px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Form styling */
+    .form-group {
+        position: relative;
+    }
+
+    input {
+        width: 100%;
+        padding: 12px 40px 12px 16px;
+        border-radius: 12px;
+        border: 2px solid rgba(147, 51, 234, 0.3);
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(4px);
+        transition: all 0.3s ease;
+    }
+
+    input:focus {
+        border-color: #9333ea;
+        box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.25);
+        animation: pulse 1.5s infinite;
+    }
+
+    .input-icon {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 16px;
+        opacity: 0.7;
+        transition: all 0.3s ease;
+    }
+
+    input:focus + .input-icon {
+        opacity: 1;
+        transform: translateY(-50%) scale(1.2);
+    }
+
+    /* Playful login button */
+    .playful-button {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, #9333ea, #c026d3);
+        color: white;
+        font-weight: 600;
+        font-size: 16px;
+        border: none;
+        transform-style: preserve-3d;
+    }
+
+    .playful-button:before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transform: translateX(-100%);
+    }
+
+    .playful-button:hover:before {
+        animation: shimmer 1.5s infinite;
+    }
+
+    .playful-button:hover {
+        animation: dodge 0.6s ease-out;
+    }
+
+    /* Fancy links */
+    .fancy-link {
+        position: relative;
+        color: #9333ea;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .fancy-link:after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 2px;
+        bottom: -2px;
+        left: 0;
+        background: linear-gradient(90deg, #9333ea, #c026d3);
+        transform: scaleX(0);
+        transform-origin: bottom right;
+        transition: transform 0.3s ease;
+    }
+
+    .fancy-link:hover {
+        color: #c026d3;
+    }
+
+    .fancy-link:hover:after {
+        transform: scaleX(1);
+        transform-origin: bottom left;
+    }
+
+    /* Floating bubbles animation */
+    .floating-bubbles {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .bubble {
+        position: absolute;
+        background: linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(192, 38, 211, 0.1));
+        border-radius: 50%;
+        animation: float 15s linear infinite;
+    }
+
+    .bubble:nth-child(1) {
+        width: 80px;
+        height: 80px;
+        top: 10%;
+        left: 10%;
+        animation-delay: 0s;
+        animation-duration: 20s;
+    }
+
+    .bubble:nth-child(2) {
+        width: 50px;
+        height: 50px;
+        top: 70%;
+        right: 20%;
+        animation-delay: 2s;
+        animation-duration: 17s;
+    }
+
+    .bubble:nth-child(3) {
+        width: 65px;
+        height: 65px;
+        bottom: 10%;
+        left: 30%;
+        animation-delay: 4s;
+        animation-duration: 22s;
+    }
+
+    /* Animations */
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.4); }
+        70% { box-shadow: 0 0 0 5px rgba(147, 51, 234, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(147, 51, 234, 0); }
+    }
+
+    @keyframes dodge {
+        0% { transform: translateX(0); }
+        20% { transform: translateX(20px); }
+        40% { transform: translateX(-20px); }
+        60% { transform: translateX(10px); }
+        80% { transform: translateX(-5px); }
+        100% { transform: translateX(0); }
+    }
+
+    @keyframes shimmer {
+        100% { transform: translateX(100%); }
+    }
+
+    @keyframes float {
+        0% {
+            transform: translateY(0) rotate(0deg);
+            opacity: 1;
+        }
+        100% {
+            transform: translateY(-400px) rotate(360deg);
+            opacity: 0;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const button = document.getElementById('playful-button');
+        const form = document.getElementById('login-form');
+
+        // Make button playfully avoid mouse on hover sometimes
+        button.addEventListener('mouseenter', function(e) {
+            // 50% chance to dodge
+            if (Math.random() > 0.5) {
+                const rect = button.getBoundingClientRect();
+                const btnWidth = rect.width;
+
+                // Decide direction to move (left or right)
+                const moveLeft = e.clientX > rect.left + (btnWidth / 2);
+                const xMove = moveLeft ? -80 : 80;
+
+                // Move button
+                button.style.transform = `translateX(${xMove}px)`;
+
+                // Reset after a short delay
+                setTimeout(() => {
+                    button.style.transform = 'translateX(0)';
+                }, 500);
+            }
+        });
+
+        // Always allow form submission on click (even if it dodged)
+        button.addEventListener('click', function(e) {
+            button.style.transform = 'translateX(0)';
+            form.submit();
+        });
+    });
+</script>
 {% endblock %}

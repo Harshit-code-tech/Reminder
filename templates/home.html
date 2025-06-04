@@ -1,16 +1,53 @@
 {% extends 'base.html' %}
 {% block title %}Home{% endblock %}
-{% block header_class %}bg-blue-600 text-white p-4{% endblock %}
+{% block header_class %}p-4{% endblock %}
 {% block header_content %}
-    <h1 class="text-2xl font-bold flex items-center gap-2">
-        🎉 Welcome to Birthday Reminder
+    <h1 class="text-3xl font-bold flex items-center gap-3 text-white">
+        <span class="text-yellow-400">🎉</span> Welcome to Birthday Reminder
     </h1>
 {% endblock %}
 {% block content %}
-    <div class="text-center max-w-3xl mx-auto">
-        <h2 class="text-2xl font-bold mb-4">Never Miss a Celebration!</h2>
-        <p class="mb-4">Track birthdays and anniversaries with ease.</p>
-        <a href="{% url 'signup' %}" class="inline-block bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">Sign Up</a>
-        <a href="{% url 'login' %}" class="inline-block bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 ml-2">Login</a>
+    <div class="text-center max-w-4xl mx-auto py-8">
+        <h2 class="text-4xl font-bold mb-6 text-gray-800 tracking-tight" style="text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">Never Miss a Celebration!</h2>
+        <p class="mb-6 text-lg text-gray-600 max-w-2xl mx-auto">Effortlessly track birthdays and anniversaries with our intuitive app, designed to keep your special moments front and center.</p>
+        <div class="flex justify-center gap-4 mb-12">
+            <a href="{% url 'signup' %}" class="inline-block bg-green-500 text-white px-6 py-3 rounded-lg border-2 border-[#9333ea] bg-gradient-to-r from-[rgba(147,51,234,0.1)] to-[rgba(147,51,234,0.3)] shadow-lg hover:bg-green-600 hover:scale-105 transition-all duration-300" aria-label="Sign up for Birthday Reminder">Sign Up</a>
+            <a href="{% url 'login' %}" class="inline-block bg-blue-500 text-white px-6 py-3 rounded-lg border-2 border-[#9333ea] bg-gradient-to-r from-[rgba(147,51,234,0.1)] to-[rgba(147,51,234,0.3)] shadow-lg hover:bg-blue-600 hover:scale-105 transition-all duration-300" aria-label="Log in to Birthday Reminder">Login</a>
+        </div>
+
+        <!-- Why Choose Us Section -->
+        <section class="max-w-5xl mx-auto mb-12">
+            <h3 class="text-2xl font-semibold text-gray-800 mb-6 text-left">Why Choose Us?</h3>
+            <div class="card p-6 border-l-4 border-[#9333ea] bg-white/95">
+                <p class="text-gray-600 text-left">Our app is built for reliability, simplicity, and joy. With seamless event tracking and timely reminders, we ensure you never miss a special moment. Customize your experience and celebrate with confidence, all wrapped in a sleek, user-friendly interface.</p>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="max-w-5xl mx-auto">
+            <h3 class="text-2xl font-semibold text-gray-800 mb-6 text-left">Features</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="card p-6 bg-white/95 hover:shadow-xl transition-shadow duration-300">
+                    <div class="text-yellow-400 text-3xl mb-4">📅</div>
+                    <h4 class="text-lg font-semibold text-gray-800">Event Tracking</h4>
+                    <p class="text-gray-600 text-sm">Add and manage birthdays and anniversaries with ease.</p>
+                </div>
+                <div class="card p-6 bg-white/95 hover:shadow-xl transition-shadow duration-300">
+                    <div class="text-yellow-400 text-3xl mb-4">🔔</div>
+                    <h4 class="text-lg font-semibold text-gray-800">Reminders</h4>
+                    <p class="text-gray-600 text-sm">Get timely notifications via email or app to stay prepared.</p>
+                </div>
+                <div class="card p-6 bg-white/95 hover:shadow-xl transition-shadow duration-300">
+                    <div class="text-yellow-400 text-3xl mb-4">🎨</div>
+                    <h4 class="text-lg font-semibold text-gray-800">Customization</h4>
+                    <p class="text-gray-600 text-sm">Personalize events with details and preferences.</p>
+                </div>
+                <div class="card p-6 bg-white/95 hover:shadow-xl transition-shadow duration-300">
+                    <div class="text-yellow-400 text-3xl mb-4">😊</div>
+                    <h4 class="text-lg font-semibold text-gray-800">User-Friendly</h4>
+                    <p class="text-gray-600 text-sm">Intuitive design for quick and easy setup.</p>
+                </div>
+            </div>
+        </section>
     </div>
 {% endblock %}
