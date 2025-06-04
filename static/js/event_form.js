@@ -7,7 +7,7 @@ function getCookie(name) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const mediaInput = document.querySelector('#id_media');
+    const mediaInput = document.querySelector('#id_media_files');
     const previewContainer = document.querySelector('#media-preview');
     const removeCheckbox = document.querySelector('input[name="remove_media"]');
     let previewUrl = null;
@@ -41,7 +41,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (mediaInput && previewContainer) {
         mediaInput.addEventListener('change', (event) => {
-            updatePreview(event.target.files[0]);
+            // updatePreview(event.target.files[0]);
+            previewContainer.innerHTML = '';
+            Array.from(event.target.files).slice(0, 3).forEach(file => {
+                const previewUrl = URL.createObjectURL(file);
+                if (file.type.startsWith('image/')) {
+                    const img = document.createElement('img');
+                    img.src = previewUrl;
+                    img.className = 'max-w-xs mt-2 rounded-lg shadow-md';
+                    previewContainer.appendChild(img);
+                } else if (file.type.startsWith('audio/')) {
+                    const audio = document.createElement('audio');
+                    audio.controls = true;
+                    audio.src = previewUrl;
+                    previewContainer.appendChild(audio);
+                }
+            });
         });
     }
 
