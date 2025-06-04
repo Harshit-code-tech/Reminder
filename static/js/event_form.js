@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const mediaInput = document.querySelector('#id_media_files');
     const previewContainer = document.querySelector('#media-preview');
     const removeCheckbox = document.querySelector('input[name="remove_media"]');
-    let previewUrl = null;
+
 
     function updatePreview(file) {
         if (previewUrl) {

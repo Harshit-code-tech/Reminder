@@ -85,6 +85,21 @@
                                     </p>
                                 </div>
                                 {% endif %}
+                                {% if event.media.exists %}
+                                  <div class="flex flex-wrap gap-2 mt-2">
+                                    {% for media in event.media.all %}
+                                      {% if media.media_type == 'image' %}
+                                        <img src="{{ media.media_file }}" alt="Event Image" class="w-20 h-20 object-cover rounded shadow">
+                                        <a href="{{ media.media_file }}" download data-download="media" class="text-blue-600 hover:underline">Download Image</a>
+                                      {% elif media.media_type == 'audio' %}
+                                        <audio controls class="w-32">
+                                          <source src="{{ media.media_file }}" type="audio/mpeg">
+                                        </audio>
+                                        <a href="{{ media.media_file }}" download data-download="media" class="text-blue-600 hover:underline">Download Audio</a>
+                                      {% endif %}
+                                    {% endfor %}
+                                  </div>
+                                {% endif %}
 
                                 <!-- Media content if available -->
                                 {% if event.media_url %}

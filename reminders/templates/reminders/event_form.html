@@ -72,13 +72,13 @@
         type="file"
         name="media_files"
         id="id_media_files"
-        accept=".jpg,.jpeg,.png,.mp3,.wav"
+        accept=".jpg,.jpeg,.png,.mp3,.wav,.flac"
         multiple
         class="mt-1 block w-full"
       >
       <p class="text-sm text-gray-500">Max 50MB for images, 10MB for audio. Allowed: .jpg, .jpeg, .png, .mp3, .wav</p>
 
-      <div id="media-preview" class="mt-2"></div>
+      <div id="media-preview" class="mt-2 flex flex-wrap gap-4"></div>
 
       {% if event and event.media.exists %}
         <p class="text-gray-600 mt-2 font-semibold">Current Media:</p>
@@ -86,12 +86,14 @@
           {% for media in event.media.all %}
             <div class="border rounded p-2 shadow-sm max-w-xs">
               {% if media.media_type == 'image' %}
-                <img src="{{ media.media_file.url }}" alt="Event Image" class="max-w-xs rounded-lg shadow-md">
+                <img src="{{ media.media_file }}" alt="Event Image" class="max-w-xs rounded-lg shadow-md">
+                <a href="{{ media.media_file }}" download class="block mt-2 text-blue-600 hover:underline">Download Image</a>
               {% elif media.media_type == 'audio' %}
                 <audio controls class="w-full">
-                  <source src="{{ media.media_file.url }}" type="audio/mpeg">
+                  <source src="{{ media.media_file }}" type="{{ media.media_type }}">
                   Your browser does not support the audio element.
                 </audio>
+                <a href="{{ media.media_file }}" download class="block mt-2 text-blue-600 hover:underline">Download Audio</a>
               {% endif %}
             </div>
           {% endfor %}

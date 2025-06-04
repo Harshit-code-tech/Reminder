@@ -58,27 +58,6 @@ class EventForm(forms.ModelForm):
             raise ValidationError('Event date cannot be in the past.')
         return date
 
-    # def clean_media_files(self):
-    #     # We get list of uploaded files explicitly here
-    #     media_files = self.files.getlist('media_files')
-    #     allowed_types = ['image/jpeg', 'image/png', 'audio/mpeg', 'audio/wav']
-    #     max_image_size = 50 * 1024 * 1024  # 50MB
-    #     max_audio_size = 10 * 1024 * 1024  # 10MB
-    #
-    #     if len(media_files) > 3:
-    #         raise ValidationError('Maximum 3 media files allowed.')
-    #
-    #     for file in media_files:
-    #         if file.content_type not in allowed_types:
-    #             raise ValidationError(
-    #                 f'Invalid file type: {file.name}. Allowed: .jpg, .png, .mp3, .wav'
-    #             )
-    #         if file.content_type.startswith('image') and file.size > max_image_size:
-    #             raise ValidationError(f'Image {file.name} exceeds 50MB.')
-    #         if file.content_type.startswith('audio') and file.size > max_audio_size:
-    #             raise ValidationError(f'Audio {file.name} exceeds 10MB.')
-    #
-    #     return media_files
 
     def clean(self):
         cleaned_data = super().clean()
@@ -88,7 +67,7 @@ class EventForm(forms.ModelForm):
         if len(media_files) > 3:
             raise ValidationError('Maximum 3 media files allowed.')
 
-        allowed_types = ['image/jpeg', 'image/png', 'audio/mpeg', 'audio/wav']
+        allowed_types = ['image/jpeg', 'image/png', 'audio/mpeg', 'audio/wav', 'audio/flac']
         max_image_size = 50 * 1024 * 1024
         max_audio_size = 10 * 1024 * 1024
 
