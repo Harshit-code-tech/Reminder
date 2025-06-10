@@ -1,0 +1,12 @@
+Hi {{ user.username }},
+
+{{ event.name }}’s {{ event.get_event_type_display }} is on {{ event.date|date:"F j, Y" }} (3 days away)!
+{% if event.message %}
+{{ event.message }}
+{% endif %}
+{% if event.media.exists and event.media.first.media_type == 'image' %}
+View image: {{ event.media.first.media_file }}
+{% endif %}
+
+Best,
+Birthday Reminder App

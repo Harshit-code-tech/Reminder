@@ -1,12 +1,18 @@
+<!-- self_project/Birthday/reminders/templates/emails/email_reminder.html -->
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Birthday Reminder</title>
+    <title>{{ subject_prefix }} Reminder: {{ event.name }} is in 3 days!</title>
 </head>
 <body>
-    <h1>Hi {{ username }},</h1>
-    <p>Don't forget {{ event.name }}'s birthday tomorrow on {{ event.date }}!</p>
-    <p>{{ event.description }}</p>
+    <h1>Hi {{ user.username }},</h1>
+    <p>{{ event.name }}’s {{ event.get_event_type_display }} is on {{ event.date }} (3 days away)!</p>
+    {% if event.message %}
+        <p>{{ event.message }}</p>
+    {% endif %}
+    {% if event.media.exists and event.media.first.media_type == 'image' %}
+        <img src="{{ event.media.first.media_file }}" alt="Event Image" width="200" style="max-width: 200px;">
+    {% endif %}
     <p>Best,<br>Birthday Reminder App</p>
 </body>
 </html>

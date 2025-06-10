@@ -1,7 +1,7 @@
 import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse,HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.contrib import messages
@@ -11,6 +11,7 @@ from .utils import send_upcoming_reminders
 from users.decorators import email_verified_required
 from .supabase_helpers import get_user_supabase_client
 import  uuid
+from .cron import daily_reminder_job, daily_deletion_notification_job, daily_media_cleanup_job
 
 logger = logging.getLogger('app_logger')
 
@@ -303,3 +304,13 @@ def card_view(request, event_id, page_number):
         'next_page': next_page,
     }
     return render(request, 'reminders/card_view.html', context)
+
+
+def trigger_cron_jobs(request):
+    secret = request.GET.get('secret')
+    if secret != settings.REMINDER_CRON_SECRET:
+        return HttpResponse("Invalid secret", status=403)
+    daily_reminder_job()
+    daily_deletion_notification_job()
+    daily_media_cleanup_job()
+    return HttpResponse("Cron jobs triggered")

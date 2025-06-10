@@ -22,6 +22,8 @@ class Event(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     notified = models.BooleanField(default=False)
+    deletion_notified = models.BooleanField(default=False)  # Tracks deletion
+    deletion_scheduled = models.DateTimeField(null=True, blank=True)  # Deletion date
     media_url = models.URLField(max_length=1000, blank=True, null=True)
     media_type = models.CharField(max_length=100, blank=True, null=True)
     media_path = models.CharField(max_length=512, null=True, blank=True)
@@ -34,6 +36,7 @@ class Event(models.Model):
         indexes = [
             models.Index(fields=['user', 'date']),
             models.Index(fields=['notified']),
+            models.Index(fields=['deletion_notified']),
         ]
 
     def is_expired(self):
@@ -46,7 +49,6 @@ class EventMedia(models.Model):
     MEDIA_TYPES = [
         ('image', 'Image'),
         ('audio', 'Audio'),
-        ('gif', 'GIF'),
     ]
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='media')
     media_file = models.URLField(max_length=1000)  # Supabase public URL

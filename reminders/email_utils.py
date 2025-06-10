@@ -26,36 +26,31 @@ class ReminderEmailService:
                 from_email = from_email.split('<')[1].strip('>')
 
             username = getattr(user, 'username', 'User')
-            user_email = user.profile.notification_email if user.profile.notification_email else user.email
+            user_email = user.profile.notification_email if hasattr(user, 'profile') and user.profile.notification_email else user.email
             event_name = getattr(event, 'name', 'Unknown Event')
-            event_type = event.get_event_type_display() if hasattr(event, 'get_event_type_display') else 'Event'
-            event_date = getattr(event, 'date', 'Unknown Date')
-            message = event.message or 'No special message provided.'
 
             context = {
-                'user': username,
-                'event_name': event_name,
-                'event_type': event_type,
-                'event_date': event_date,
-                'message': message
+                'user': user,
+                'username': username,
+                'event': event,
+                'subject_prefix': settings.EMAIL_SUBJECT_PREFIX,
+                'remind_days_before': event.remind_days_before
             }
             if extra_context:
                 context.update(extra_context)
 
-            template = custom_template or 'reminders/reminder.html'
+            template = custom_template or 'emails/email_reminder.html'
             html_content = render_to_string(template, context)
+            text_content = render_to_string('emails/email_reminder.txt', context)
+
+            subject = subject or f"{settings.EMAIL_SUBJECT_PREFIX} Reminder: {event_name} is in {event.remind_days_before} day{'s' if event.remind_days_before != 1 else ''}!"
 
             mail_body = {
                 "from": {"email": from_email, "name": "Birthday Reminder App"},
                 "to": [{"email": user_email, "name": username}],
-                "subject": subject or f"Upcoming Reminder: {event_name}'s {event_type} on {event_date}",
-                "text": (
-                    f"Hi {username},\n\n"
-                    f"You have an upcoming reminder for {event_name}'s {event_type} on {event_date}.\n\n"
-                    f"Message: {message}\n\n"
-                    f"Best,\nBirthday Reminder App"
-                ),
-                "html": html_content
+                "subject": subject,
+                "html": html_content,
+                "text": text_content
             }
 
             headers = {
@@ -76,7 +71,7 @@ class ReminderEmailService:
             return True
 
         except requests.RequestException as e:
-            logger.error(f"Failed to send reminder email to {user_email} for event '{event_name}': {str(e)}")
+            logger.error(f"[RequestException] Failed to send reminder email to {user_email} for event '{event_name}': {str(e)}")
             ReminderLog.objects.create(
                 user=user,
                 event=event,
@@ -86,7 +81,7 @@ class ReminderEmailService:
             return False
 
         except Exception as e:
-            logger.exception(f"Unexpected error in send_reminder_email: {str(e)}")
+            logger.exception(f"[Exception] Unexpected error in send_reminder_email for {user_email}: {str(e)}")
             ReminderLog.objects.create(
                 user=user,
                 event=event,
@@ -109,12 +104,11 @@ class ReminderEmailService:
             api_key = settings.MAILERSEND_API_KEY
             api_url = settings.MAILERSEND_API_URL
             from_email = settings.DEFAULT_FROM_EMAIL
-            if '<' in from_email:
+            if '<' in from_email and '>' in from_email:
                 from_email = from_email.split('<')[1].strip('>')
 
             username = getattr(user, 'username', 'User')
-            user_email = user.profile.notification_email if hasattr(user,
-                                                                    'profile') and user.profile.notification_email else user.email
+            user_email = user.profile.notification_email if hasattr(user, 'profile') and user.profile.notification_email else user.email
             event_name = getattr(event, 'name', 'Unknown Event')
             event_type = event.get_event_type_display() if hasattr(event, 'get_event_type_display') else 'Event'
             event_date = getattr(event, 'date', 'unknown')
@@ -125,7 +119,7 @@ class ReminderEmailService:
                 "subject": f"Media Deletion Notice for {event_name}'s {event_type}",
                 "text": (
                     f"Hi {username},\n\n"
-                    f"The media for {event_name}'s {event_type} on {event_date} will be deleted tomorrow.\n"
+                    f"The media for {event_name}'s {event_type} on {event_date} will be deleted in 2 days.\n"
                     f"Please download it from your event page if you wish to keep it.\n\n"
                     f"Best,\nEvent Reminder App"
                 )

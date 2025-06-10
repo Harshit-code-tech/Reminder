@@ -2,7 +2,8 @@ services:
   - type: web
     name: birthday-reminder
     env: python
-    buildCommand: "pip install -r requirements.txt && npm install compressorjs && python manage.py collectstatic --noinput"
+    plan: free
+    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate"
     startCommand: "gunicorn core.wsgi:application"
     envVars:
       - key: PYTHON_VERSION
@@ -25,6 +26,34 @@ services:
         fromService:
           type: env
           name: SUPABASE_JWT_SECRET
+      - fromGroup: birthday-reminder-env
     static:
       - path: /static
         folder: staticfiles
+
+  - type: cronjob
+    name: daily-reminder
+    env: python
+    plan: free
+    schedule: "0 8 * * *"
+    command: python manage.py runcrontab reminders.cron.daily_reminder_job
+    envVars:
+      - fromGroup: birthday-reminder-env
+
+  - type: cronjob
+    name: daily-deletion-notification
+    env: python
+    plan: free
+    schedule: "0 9 * * *"
+    command: python manage.py runcrontab reminders.cron.daily_deletion_notification_job
+    envVars:
+      - fromGroup: birthday-reminder-env
+
+  - type: cronjob
+    name: daily-media-cleanup
+    env: python
+    plan: free
+    schedule: "0 10 * * *"
+    command: python manage.py runcrontab reminders.cron.daily_media_cleanup_job
+    envVars:
+      - fromGroup: birthday-reminder-env

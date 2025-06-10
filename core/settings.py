@@ -141,7 +141,7 @@ SUPABASE_SERVICE_KEY = config('SUPABASE_SERVICE_KEY')
 SUPABASE_JWT_SECRET = config('SUPABASE_JWT_SECRET')
 ALLOWED_MEDIA_TYPES = ['image/jpeg', 'image/png', 'application/pdf', 'audio/mpeg', 'audio/wav', 'audio/flac']
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
-
+EMAIL_SUBJECT_PREFIX = '[Birthday Reminder App]'
 
 AUTHENTICATION_BACKENDS = [
     'users.backends.EmailOrUserModelBackend',
@@ -238,4 +238,8 @@ X_FRAME_OPTIONS = 'DENY'
 
 REMINDER_CRON_SECRET = config('REMINDER_CRON_SECRET')
 
-CRONJOBS = [('*/5 * * * *', 'reminders.cron.daily_reminder_job')]
+CRONJOBS = [
+    ('0 8 * * *', 'reminders.cron.daily_reminder_job'),
+    ('0 9 * * *', 'reminders.cron.daily_deletion_notification_job'),
+    ('0 10 * * *', 'reminders.cron.daily_media_cleanup_job'),
+]
