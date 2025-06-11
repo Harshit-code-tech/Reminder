@@ -255,7 +255,7 @@ def trigger_send_reminders(request):
         return JsonResponse({'error': 'Method not allowed'}, status=405)
     try:
         secret_token = request.POST.get('token')
-        if not secret_token or secret_token != settings.REMINDING_CRON_SECRET:
+        if not secret_token or secret_token != settings.REMINDER_CRON_SECRET:
             logger.warning("Unauthorized attempt to trigger reminders")
             return JsonResponse({'error': 'Unauthorized'}, status=403)
         send_upcoming_reminders()
@@ -284,10 +284,10 @@ def card_view(request, event_id, page_number):
     if page_number == 1:
         if request.method == 'POST':
             password = request.POST.get('password')
-            expected_password = event.name.split()[0].lower() if event.event_type in ['birthday',
+            expected_password = event.name.split()[0].lower() if event.event_type in ['birthday','other',
                                                                                       'anniversary'] else event.highlights.lower() or 'love'
             if password.lower() == expected_password:
-                return redirect('card_view', event_id=event.id, page_number=page_number)
+                return redirect('reminders:card_view', event_id=event_id, page_number=page_number)
             else:
                 messages.error(request, 'Incorrect password.')
         else:
