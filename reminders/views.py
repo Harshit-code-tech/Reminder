@@ -1,19 +1,20 @@
 import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse,HttpResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.contrib import messages
 from .models import Event, CelebrationCardPage, EventMedia
 from .forms import EventForm
-from .utils import send_upcoming_reminders
+from .utils import send_upcoming_reminders, process_bulk_import, get_csv_template
 from users.decorators import email_verified_required
 from .supabase_helpers import get_user_supabase_client
-import  uuid
+import uuid
 from .cron import daily_reminder_job, daily_deletion_notification_job, daily_media_cleanup_job
 
 logger = logging.getLogger('app_logger')
+
 
 @login_required
 @email_verified_required
@@ -40,23 +41,22 @@ def add_event(request):
             try:
                 event = form.save(commit=False)
                 event.user = request.user
-                event.save()  # Save early to get event.id
+                event.save()
 
-                files = request.FILES.getlist('media_files')  # supports multiple
+                files = request.FILES.getlist('media_files')
                 supabase = get_user_supabase_client(request)
 
                 for file in files:
-                    # Validate file
                     if file.size > settings.MAX_FILE_SIZE:
                         messages.error(request, f"File '{file.name}' exceeds 50MB limit.")
                         event.delete()
                         return redirect('event_create')
                     if file.content_type not in settings.ALLOWED_MEDIA_TYPES:
-                        messages.error(request, f"Invalid file type for '{file.name}'. Allowed: .jpg, .png, .pdf, .mp3, .wav")
+                        messages.error(request,
+                                       f"Invalid file type for '{file.name}'. Allowed: .jpg, .png, .pdf, .mp3, .wav")
                         event.delete()
                         return redirect('event_create')
 
-                    # Upload to Supabase
                     unique_suffix = uuid.uuid4().hex[:8]
                     filename = f"{unique_suffix}_{file.name}"
                     file_path = f"{request.user.supabase_id}/{event.id}/{filename}"
@@ -76,7 +76,6 @@ def add_event(request):
                         event.delete()
                         return render(request, "reminders/event_form.html", {"form": form})
 
-                    # Save EventMedia entry
                     public_url = supabase.storage.from_('event-media').get_public_url(file_path)
                     EventMedia.objects.create(
                         event=event,
@@ -107,7 +106,6 @@ def edit_event(request, event_id):
             try:
                 supabase = get_user_supabase_client(request)
 
-                # Handle deletions
                 if request.POST.get('remove_media'):
                     for media in event.media.all():
                         file_path = media.media_file
@@ -130,7 +128,6 @@ def edit_event(request, event_id):
                             logger.error(
                                 f"Cannot delete EventMedia: invalid or unsaved object for event '{event.name}'")
 
-                # Handle new uploads
                 files = request.FILES.getlist('media_files')
                 for file in files:
                     if file.size > settings.MAX_FILE_SIZE:
@@ -209,6 +206,7 @@ def delete_event(request, event_id):
             messages.error(request, f"Failed to delete event: {str(e)}")
     return render(request, "reminders/confirm_delete.html", {"event": event})
 
+
 @login_required
 @email_verified_required
 def delete_event_media(request, media_id):
@@ -218,10 +216,9 @@ def delete_event_media(request, media_id):
             supabase = get_user_supabase_client(request)
             file_path = media.media_file
             dir_path = "/".join(file_path.split('/')[:-1])
-            # Optional sanity check
             existing_files = supabase.storage.from_('event-media').list(dir_path)
             if not any(f['name'] == file_path.split('/')[-1] for f in existing_files):
-                logger.warning(f"Media already gone for event {media.name}, clearing DB fields")
+                logger.warning(f"Media already gone for event {media.event.name}, clearing DB fields")
             else:
                 supabase.storage.from_('event-media').remove([file_path])
 
@@ -230,24 +227,26 @@ def delete_event_media(request, media_id):
                 response = supabase.storage.from_('event-media').remove([file_path])
                 logger.debug(f"Supabase delete response: {response}")
                 if response is None or (isinstance(response, list) and not response):
-                    logger.error(f"Media deletion failed for event {media.id}: Invalid path or permissions")
-                    messages.error(request, f"Failed to delete media for event {media.name}.")
+                    logger.error(f"Media deletion failed for event {media.event.id}: Invalid path or permissions")
+                    messages.error(request, f"Failed to delete media for event {media.event.name}.")
                     return redirect('event_list')
-                logger.info(f"Media deleted for event {media.id} by user {request.user.username}")
+                logger.info(f"Media deleted for event {media.event.id} by user {request.user.username}")
             except Exception as e:
-                logger.error(f"Exception during media deletion for event {media.id}: {str(e)}")
-                messages.error(request, f"Media deletion failed for event {media.name}: {str(e)}")
+                logger.error(f"Exception during media deletion for event {media.event.id}: {str(e)}")
+                messages.error(request, f"Media deletion failed for event {media.event.name}: {str(e)}")
                 return redirect('event_list')
             media.media_url = None
             media.media_type = None
             media.media_file = None
             media.save()
-            messages.success(request, "Media deleted successfully!")
+            messages.success(request, "Event media deleted successfully!")
+            return redirect('event_list')
         except Exception as e:
-            messages.error(request, f"Media deletion failed: {str(e)}")
-            logger.error(f"Media deletion failed for event {media.id}: {str(e)}")
-        return redirect('event_list')
-    return redirect('event_update', media_id=media_id)
+            messages.error(request, f"Error deleting media: {str(e)}")
+            logger.error(f"Media deletion failed for event {media.event.id}: {str(e)}")
+            return redirect('event_list')
+    return redirect('event_update', event_id=media.event.id)
+
 
 @csrf_exempt
 def trigger_send_reminders(request):
@@ -256,15 +255,16 @@ def trigger_send_reminders(request):
         return JsonResponse({'error': 'Method not allowed'}, status=405)
     try:
         secret_token = request.POST.get('token')
-        if not secret_token or secret_token != settings.REMINDER_CRON_SECRET:
+        if not secret_token or secret_token != settings.REMINDING_CRON_SECRET:
             logger.warning("Unauthorized attempt to trigger reminders")
-            return JsonResponse({'error': 'Unauthorized'}, status=401)
+            return JsonResponse({'error': 'Unauthorized'}, status=403)
         send_upcoming_reminders()
         logger.info("Reminders sent successfully via trigger_send_reminders")
         return JsonResponse({'message': 'Reminders sent successfully'})
     except Exception as e:
         logger.error(f"Error in trigger_send_reminders: {str(e)}")
         return JsonResponse({'error': f'An error occurred: {str(e)}'}, status=500)
+
 
 @login_required
 @email_verified_required
@@ -284,9 +284,10 @@ def card_view(request, event_id, page_number):
     if page_number == 1:
         if request.method == 'POST':
             password = request.POST.get('password')
-            expected_password = event.name.split()[0].lower() if event.event_type in ['birthday', 'other'] else event.highlights.lower() or 'love'
+            expected_password = event.name.split()[0].lower() if event.event_type in ['birthday',
+                                                                                      'anniversary'] else event.highlights.lower() or 'love'
             if password.lower() == expected_password:
-                return redirect('reminders:card_view', event_id=event_id, page_number=page_number)
+                return redirect('card_view', event_id=event.id, page_number=page_number)
             else:
                 messages.error(request, 'Incorrect password.')
         else:
@@ -310,7 +311,37 @@ def trigger_cron_jobs(request):
     secret = request.GET.get('secret')
     if secret != settings.REMINDER_CRON_SECRET:
         return HttpResponse("Invalid secret", status=403)
+    logger.info(f"Triggering cron jobs for user {request.user.username}")
     daily_reminder_job()
     daily_deletion_notification_job()
     daily_media_cleanup_job()
     return HttpResponse("Cron jobs triggered")
+
+
+@login_required
+@email_verified_required
+def bulk_import(request):
+    if request.method == 'POST':
+        csv_file = request.FILES.get('csv_file')
+        if not csv_file or not csv_file.name.endswith('.csv'):
+            messages.error(request, 'Please upload a valid CSV file.')
+            return render(request, 'reminders/bulk_import.html')
+
+        if csv_file.size > settings.MAX_FILE_SIZE:
+            messages.error(request, f'File size exceeds {settings.MAX_FILE_SIZE // 1024 // 1024}MB.')
+            return render(request, 'reminders/bulk_import.html')
+
+        result = process_bulk_import(request.user, csv_file)
+        if result['success_count'] > 0:
+            messages.success(request, f"Imported {result['success_count']} events successfully.")
+        if result['failure_count'] > 0:
+            messages.error(request, f"Failed to import {result['failure_count']} rows: {', '.join(result['errors'])}")
+        return redirect('event_list')
+
+    return render(request, 'reminders/bulk_import.html')
+
+
+@login_required
+@email_verified_required
+def download_template(request):
+    return get_csv_template()

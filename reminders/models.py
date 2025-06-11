@@ -58,7 +58,7 @@ class EventMedia(models.Model):
     class Meta:
         constraints = [
             models.CheckConstraint(
-                check=models.Q(media_type__in=['image', 'audio', 'gif']),
+                check=models.Q(media_type__in=['image', 'audio']),
                 name='valid_media_type'
             ),
         ]
@@ -98,3 +98,15 @@ class ReminderLog(models.Model):
 
     def __str__(self):
         return f"Reminder sent to {self.user.email} for {self.event.name} at {self.email_sent_at}"
+
+
+class ImportLog(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    file_name = models.CharField(max_length=255)
+    imported_at = models.DateTimeField(auto_now_add=True)
+    success_count = models.IntegerField(default=0)
+    failure_count = models.IntegerField(default=0)
+    errors = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Import by {self.user.username} at {self.imported_at}"

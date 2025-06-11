@@ -1,11 +1,124 @@
-{% extends 'base.html' %}
-{% block content %}
+<!DOCTYPE html>
+<html>
 <head>
-    <title>Media Deletion Reminder</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Deletion Notice: {{ event.name }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #333333;
+            line-height: 1.5;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eaeaea;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #ef4444;
+            font-size: 24px;
+            margin: 0;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #111827;
+        }
+        .alert-box {
+            background-color: #fee2e2;
+            border-left: 4px solid #ef4444;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .alert-title {
+            font-weight: bold;
+            color: #ef4444;
+        }
+        .download-button {
+            display: inline-block;
+            background-color: #2563eb;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .download-button:hover {
+            background-color: #1d4ed8;
+        }
+        .media-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .media-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eaeaea;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .countdown {
+            font-weight: bold;
+            color: #ef4444;
+        }
+    </style>
 </head>
-<h1>Hi {{ user.username }},</h1>
-<p>The media for {{ event_name }}'s {{ event_type }} on {{ event_date }} will be deleted tomorrow.</p>
-<p>Please download it now if you want to keep it:</p>
-<p><a href="{{ download_url }}" style="color: #2563eb;">Download Media</a></p>
-<p>Best,<br>Birthday Reminder App</p>
-{% endblock %}
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚠️ Media Deletion Notice ⚠️</h1>
+        </div>
+
+        <div class="greeting">
+            Hi {{ user.username }},
+        </div>
+
+        <div class="alert-box">
+            <p><span class="alert-title">Important:</span> The media for <strong>{{ event.name }}</strong>'s {{ event.get_event_type_display }} 
+            (originally on <strong>{{ event.date|date:"F j, Y" }}</strong>) will be <span class="countdown">deleted in 2 days</span>.</p>
+        </div>
+
+        {% if event.media.exists and event.media.first.media_type == 'image' %}
+        <div class="media-container">
+            <img src="{{ event.media.first.media_file }}" alt="Event Media">
+        </div>
+        {% endif %}
+
+        <p>If you'd like to keep this media, please download it now by clicking the button below:</p>
+        
+        <div style="text-align: center;">
+            <a href="{{ event.media.first.media_file }}" class="download-button" download>Download Media Now</a>
+        </div>
+
+        <p style="color: #4b5563;">This is part of our regular media cleanup process for past events. Once deleted, we cannot recover this media.</p>
+
+        <div class="footer">
+            <p>Thank you,<br>Birthday Reminder App</p>
+            <p style="font-size: 12px; color: #9ca3af;">This is an automated notification from Birthday Reminder App</p>
+        </div>
+    </div>
+</body>
+</html>

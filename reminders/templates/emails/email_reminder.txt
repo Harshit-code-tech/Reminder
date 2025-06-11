@@ -1,12 +1,14 @@
 Hi {{ user.username }},
 
-{{ event.name }}’s {{ event.get_event_type_display }} is on {{ event.date|date:"F j, Y" }} (3 days away)!
-{% if event.message %}
-{{ event.message }}
-{% endif %}
+IMPORTANT: The media for {{ event.name }}'s {{ event.get_event_type_display }} (originally on {{ event.date|date:"F j, Y" }}) will be deleted in 2 days.
+
 {% if event.media.exists and event.media.first.media_type == 'image' %}
-View image: {{ event.media.first.media_file }}
+View and download your media here: {{ event.media.first.media_file }}
 {% endif %}
 
-Best,
+If you'd like to keep this media, please download it now from the URL above.
+
+This is part of our regular media cleanup process for past events. Once deleted, we cannot recover this media.
+
+Thank you,
 Birthday Reminder App

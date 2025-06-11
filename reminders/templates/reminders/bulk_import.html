@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Bulk Import Events{% endblock %}
+
+{% block header_class %}bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-6 shadow-lg{% endblock %}
+
+{% block header_content %}
+<h1 class="text-3xl font-bold flex items-center gap-3">
+    <span class="text-2xl">✨</span> Bulk Import Events
+</h1>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto mt-8">
+    <div class="card bg-white dark:bg-slate-800 rounded-lg p-8 shadow-lg">
+        <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">Upload Your Events</h2>
+        <p class="text-gray-700 dark:text-gray-400 mb-4">
+            Upload a CSV file in the specified format to add multiple events. Download the template below to ensure correct formatting. Media files must be added separately via the event edit page.
+        </p>
+        <a href="{% url 'download_template' %}" class="group inline-flex items-center gap-2 px-4 py-2 mb-4 rounded-lg bg-blue-500 dark:bg-blue-600 hover:bg-blue-600 dark:hover:bg-blue-700 text-white font-medium transition-all duration-200">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+            </svg>
+            Download CSV Template
+        </a>
+        <form method="POST" enctype="multipart/form-data" class="mt-4">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label for="csv_file" class="block text-gray-700 dark:text-gray-300 font-medium mb-2">Select CSV File</label>
+                <input type="file" id="csv_file" name="csv_file" accept=".csv" required class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-200 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            </div>
+            <button type="submit" class="bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white font-medium py-2 px-6 rounded-lg shadow-md transition duration-200">
+                Import Events
+            </button>
+        </form>
+        {% if messages %}
+        <ul class="messages mt-4">
+            {% for message in messages %}
+            <li class="{{ message.tags }} text-sm p-4 rounded-lg {% if message.tags == 'success' %}bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-200{% else %}bg-red-100 text-red-700 dark:bg-red-800 dark:text-red-200{% endif %}">
+                {{ message }}
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        <a href="{% url 'event_list' %}" class="mt-4 inline-block text-blue-600 dark:text-blue-400 hover:underline">Back to Event List</a>
+    </div>
+</div>
+{% endblock %}

@@ -28,6 +28,9 @@ class ReminderEmailService:
             username = getattr(user, 'username', 'User')
             user_email = user.profile.notification_email if hasattr(user, 'profile') and user.profile.notification_email else user.email
             event_name = getattr(event, 'name', 'Unknown Event')
+            # event_type = event.get_event_type_display() if hasattr(event, 'get_event_type_display') else 'Event'
+            # event_date = getattr(event, 'date', 'Unknown Date')
+            # message = event.message or 'No special message provided.'
 
             context = {
                 'user': user,
@@ -41,7 +44,7 @@ class ReminderEmailService:
 
             template = custom_template or 'emails/email_reminder.html'
             html_content = render_to_string(template, context)
-            text_content = render_to_string('emails/email_reminder.txt', context)
+            # text_content = render_to_string('emails/email_reminder.txt', context)
 
             subject = subject or f"{settings.EMAIL_SUBJECT_PREFIX} Reminder: {event_name} is in {event.remind_days_before} day{'s' if event.remind_days_before != 1 else ''}!"
 
@@ -49,9 +52,10 @@ class ReminderEmailService:
                 "from": {"email": from_email, "name": "Birthday Reminder App"},
                 "to": [{"email": user_email, "name": username}],
                 "subject": subject,
-                "html": html_content,
-                "text": text_content
+                "html": html_content
+                # "text": text_content
             }
+
 
             headers = {
                 "Authorization": f"Bearer {api_key}",
@@ -113,16 +117,21 @@ class ReminderEmailService:
             event_type = event.get_event_type_display() if hasattr(event, 'get_event_type_display') else 'Event'
             event_date = getattr(event, 'date', 'unknown')
 
+            context = {
+                'user': user,
+                'username': username,
+                'event': event,
+            }
+
+            html_content = render_to_string('emails/media_reminder.html', context)
+            text_content = render_to_string('emails/email_reminder.txt', context)
+
             mail_body = {
                 "from": {"email": from_email, "name": "Event Reminder"},
                 "to": [{"email": user_email, "name": username}],
                 "subject": f"Media Deletion Notice for {event_name}'s {event_type}",
-                "text": (
-                    f"Hi {username},\n\n"
-                    f"The media for {event_name}'s {event_type} on {event_date} will be deleted in 2 days.\n"
-                    f"Please download it from your event page if you wish to keep it.\n\n"
-                    f"Best,\nEvent Reminder App"
-                )
+                "html": html_content,
+                "text": text_content
             }
 
             headers = {

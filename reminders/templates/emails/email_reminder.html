@@ -1,18 +1,115 @@
-<!-- self_project/Birthday/reminders/templates/emails/email_reminder.html -->
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{{ subject_prefix }} Reminder: {{ event.name }} is in 3 days!</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ subject_prefix }} Reminder: {{ event.name }} is in {{ event.remind_days_before }} days!</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #333333;
+            line-height: 1.5;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eaeaea;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #4f46e5;
+            font-size: 24px;
+            margin: 0;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #111827;
+        }
+        .event-details {
+            background-color: #f3f4f6;
+            border-left: 4px solid #4f46e5;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .event-name {
+            font-weight: bold;
+            color: #4f46e5;
+        }
+        .event-date {
+            font-weight: bold;
+        }
+        .message {
+            margin-bottom: 25px;
+            padding: 15px 0;
+            font-style: italic;
+            color: #4b5563;
+            border-bottom: 1px solid #eaeaea;
+        }
+        .media-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .media-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eaeaea;
+            color: #6b7280;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Hi {{ user.username }},</h1>
-    <p>{{ event.name }}’s {{ event.get_event_type_display }} is on {{ event.date }} (3 days away)!</p>
-    {% if event.message %}
-        <p>{{ event.message }}</p>
-    {% endif %}
-    {% if event.media.exists and event.media.first.media_type == 'image' %}
-        <img src="{{ event.media.first.media_file }}" alt="Event Image" width="200" style="max-width: 200px;">
-    {% endif %}
-    <p>Best,<br>Birthday Reminder App</p>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Event Reminder 🎉</h1>
+        </div>
+
+        <div class="greeting">
+            Hi {{ user.username }},
+        </div>
+
+        <div class="event-details">
+            <p><span class="event-name">{{ event.name }}</span>'s {{ event.get_event_type_display }} is on
+            <span class="event-date">{{ event.date|date:"F j, Y" }}</span>
+            ({{ event.remind_days_before }} day{% if event.remind_days_before != 1 %}s{% endif %} away)!</p>
+        </div>
+
+        {% if event.message %}
+        <div class="message">
+            "{{ event.message }}"
+        </div>
+        {% endif %}
+
+        {% if event.media.exists and event.media.first.media_type == 'image' %}
+        <div class="media-container">
+            <img src="{{ event.media.first.media_file }}" alt="Event Image">
+        </div>
+        {% endif %}
+
+        <div class="footer">
+            <p>Best wishes,<br>Birthday Reminder App</p>
+            <p style="font-size: 12px; color: #9ca3af;">This is an automated reminder from Birthday Reminder App</p>
+        </div>
+    </div>
 </body>
 </html>
