@@ -13,4 +13,6 @@ urlpatterns = [
     path('trigger-cron/', views.trigger_cron_jobs, name='trigger_cron_jobs'),
     path('bulk-import/', views.bulk_import, name='bulk_import'),
     path('download-template/', views.download_template, name='download_template'),
+    path('analytics/', views.analytics, name='analytics'),
+    path('analytics/download/', views.download_analytics_report, name='download_analytics_report'),
 ]

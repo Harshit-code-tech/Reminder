@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Analytics Dashboard{% endblock %}
+
+{% block header_class %}bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-6 shadow-lg{% endblock %}
+
+{% block header_content %}
+<h1 class="text-3xl font-bold flex items-center gap-3">
+    <span class="text-2xl" aria-hidden="true">📊</span> Your Analytics Dashboard
+</h1>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto mt-8">
+    <!-- Filter Bar -->
+    <div class="card bg-white dark:bg-gray-800 rounded-xl p-6 mb-6">
+        <form method="GET" class="flex flex-col md:flex-row gap-4 items-center" aria-label="Filter analytics data">
+            <div class="flex-1">
+                <label for="start_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</label>
+                <input type="date" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" required
+                       class="mt-1 block w-full rounded-lg px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                       aria-describedby="start_date_help">
+                <span id="start_date_help" class="sr-only">Select the start date for filtering analytics data</span>
+            </div>
+            <div class="flex-1">
+                <label for="end_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">End Date</label>
+                <input type="date" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" required
+                       class="mt-1 block w-full rounded-lg px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                       aria-describedby="end_date_help">
+                <span id="end_date_help" class="sr-only">Select the end date for filtering analytics data</span>
+            </div>
+            <div class="flex items-end">
+                <button type="submit" class="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 transition focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                    Filter
+                </button>
+            </div>
+            <div class="flex items-end">
+                <a href="{% url 'download_analytics_report' %}?start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}"
+                   class="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 transition flex items-center gap-2 focus:ring-2 focus:ring-green-500 focus:outline-none"
+                   aria-label="Download analytics report as CSV">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    Download CSV
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="card bg-white dark:bg-gray-800 p-6 rounded-xl text-center">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Total Events</h3>
+            <p class="text-2xl font-bold text-purple-600">{{ analytics_data.event_stats.total|default:0 }}</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Upcoming: {{ analytics_data.event_stats.upcoming|default:0 }} | Past: {{ analytics_data.event_stats.past|default:0 }}</p>
+        </div>
+        <div class="card bg-white dark:bg-gray-800 p-6 rounded-xl text-center">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Total Reminders</h3>
+            <p class="text-2xl font-bold text-blue-600">{{ analytics_data.reminder_stats.total|default:0 }}</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Success: {{ analytics_data.reminder_stats.success|default:0 }} | Failed: {{ analytics_data.reminder_stats.failure|default:0 }}</p>
+        </div>
+        <div class="card bg-white dark:bg-gray-800 p-6 rounded-xl text-center">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Total Media Files</h3>
+            <p class="text-2xl font-bold text-green-600">{{ analytics_data.media_stats.total|default:0 }}</p>
+        </div>
+        <div class="card bg-white dark:bg-gray-800 p-6 rounded-xl text-center">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Bulk Imports</h3>
+            <p class="text-2xl font-bold text-indigo-600">{{ analytics_data.import_stats.total|default:0 }}</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Success: {{ analytics_data.import_stats.success_count|default:0 }} | Failed: {{ analytics_data.import_stats.failure_count|default:0 }}</p>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div class="card bg-white dark:bg-gray-800 p-6 rounded-xl">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Events by Type</h3>
+            <div class="relative">
+                <canvas id="eventTypePieChart" height="300" aria-label="Pie chart showing distribution of events by type"></canvas>
+                {% if not analytics_data.event_stats.type_labels %}
+                <p class="text-gray-500 dark:text-gray-400 text-center mt-4">No event type data available.</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card bg-white dark:bg-gray-800 p-6 rounded-xl">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Reminder Status</h3>
+            <div class="relative">
+                <canvas id="reminderBarChart" height="300" aria-label="Bar chart showing reminder status (success vs. failed)"></canvas>
+                {% if not analytics_data.reminder_stats.success and not analytics_data.reminder_stats.failure %}
+                <p class="text-gray-500 dark:text-gray-400 text-center mt-4">No reminder data available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Imports Table -->
+    <div class="card bg-white dark:bg-gray-800 p-6 rounded-xl">
+        <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Recent Imports</h3>
+        {% if analytics_data.import_stats.recent %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" aria-label="Recent bulk imports table">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">File Name</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Success</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Failure</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Errors</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for import_log in analytics_data.import_stats.recent %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ import_log.file_name|truncatechars:50 }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ import_log.imported_at|date:"Y-m-d H:i" }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ import_log.success_count|default:0 }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ import_log.failure_count|default:0 }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ import_log.errors|truncatechars:100|default:"None"|escape }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-gray-500 dark:text-gray-400">No recent imports found.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- JSON Data for Charts -->
+{% if analytics_data.event_stats.type_labels %}
+    {{ analytics_data.event_stats.type_labels|json_script:"event-type-labels" }}
+    {{ analytics_data.event_stats.type_counts|json_script:"event-type-counts" }}
+{% endif %}
+{% if analytics_data.reminder_stats.success or analytics_data.reminder_stats.failure %}
+    {{ analytics_data.reminder_stats.success|json_script:"reminder-success" }}
+    {{ analytics_data.reminder_stats.failure|json_script:"reminder-failure" }}
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+    // Chart theme helper
+    const getChartTheme = () => {
+        const isDarkMode = document.documentElement.classList.contains('dark');
+        return {
+            textColor: isDarkMode ? '#e2e8f0' : '#1f2937',
+            gridColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+        };
+    };
+
+    // Event Type Pie Chart
+    const eventTypeCtx = document.getElementById('eventTypePieChart').getContext('2d');
+    const eventTypeData = document.getElementById('event-type-labels') && document.getElementById('event-type-counts');
+    let eventTypeChart = null;
+    if (eventTypeData) {
+        eventTypeChart = new Chart(eventTypeCtx, {
+            type: 'doughnut',
+            data: {
+                labels: JSON.parse(document.getElementById('event-type-labels').textContent),
+                datasets: [{
+                    data: JSON.parse(document.getElementById('event-type-counts').textContent),
+                    backgroundColor: ['#ff6b6b', '#4bc0c0', '#ffcd56', '#9966ff'],
+                    borderColor: '#ffffff',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: getChartTheme().textColor
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => `${context.label}: ${context.raw}`
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Reminder Status Bar Chart
+    const reminderCtx = document.getElementById('reminderBarChart').getContext('2d');
+    const reminderSuccess = document.getElementById('reminder-success')?.textContent;
+    const reminderFailure = document.getElementById('reminder-failure')?.textContent;
+    let reminderChart = null;
+    if (reminderSuccess || reminderFailure) {
+        reminderChart = new Chart(reminderCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Success', 'Failed'],
+                datasets: [{
+                    label: 'Reminders',
+                    data: [parseInt(reminderSuccess || 0), parseInt(reminderFailure || 0)],
+                    backgroundColor: ['#4caf50', '#ef4444'],
+                    borderColor: '#ffffff',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: getChartTheme().textColor },
+                        grid: { color: getChartTheme().gridColor }
+                    },
+                    x: {
+                        ticks: { color: getChartTheme().textColor },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: { color: getChartTheme().textColor }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => `${context.label}: ${context.raw}`
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Update charts on theme change
+    const updateChartThemes = () => {
+        const theme = getChartTheme();
+        if (eventTypeChart) {
+            eventTypeChart.options.plugins.legend.labels.color = theme.textColor;
+            eventTypeChart.update();
+        }
+        if (reminderChart) {
+            reminderChart.options.scales.y.ticks.color = theme.textColor;
+            reminderChart.options.scales.x.ticks.color = theme.textColor;
+            reminderChart.options.scales.y.grid.color = theme.gridColor;
+            reminderChart.options.plugins.legend.labels.color = theme.textColor;
+            reminderChart.update();
+        }
+    };
+
+    // Observe theme changes
+    document.addEventListener('DOMContentLoaded', () => {
+        updateChartThemes();
+        const observer = new MutationObserver(() => updateChartThemes());
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    });
+</script>
+{% endblock %}

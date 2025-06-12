@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -7,12 +8,12 @@ from django.conf import settings
 from django.contrib import messages
 from .models import Event, CelebrationCardPage, EventMedia
 from .forms import EventForm
-from .utils import send_upcoming_reminders, process_bulk_import, get_csv_template
+from .utils import send_upcoming_reminders, process_bulk_import, get_csv_template, get_analytics_data
 from users.decorators import email_verified_required
 from .supabase_helpers import get_user_supabase_client
 import uuid
 from .cron import daily_reminder_job, daily_deletion_notification_job, daily_media_cleanup_job
-
+import csv
 logger = logging.getLogger('app_logger')
 
 
@@ -345,3 +346,61 @@ def bulk_import(request):
 @email_verified_required
 def download_template(request):
     return get_csv_template()
+
+@login_required
+@email_verified_required
+def analytics(request):
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    try:
+        if start_date:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+        if end_date:
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+    except ValueError:
+        messages.error(request, "Invalid date format. Use YYYY-MM-DD.")
+        start_date = end_date = None
+
+    analytics_data = get_analytics_data(request.user, start_date, end_date)
+    context = {
+        'analytics_data': analytics_data,
+        'start_date': start_date,
+        'end_date': end_date,
+    }
+    return render(request, 'reminders/analytics.html', context)
+
+@login_required
+@email_verified_required
+def download_analytics_report(request):
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    try:
+        if start_date:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+        if end_date:
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+    except ValueError:
+        return HttpResponse("Invalid date format", status=400)
+
+    analytics_data = get_analytics_data(request.user, start_date, end_date)
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="analytics_report.csv"'
+    writer = csv.writer(response)
+
+    writer.writerow(['Section', 'Metric', 'Value'])
+    writer.writerow(['Events', 'Total Events', analytics_data['event_stats']['total']])
+    for event_type in analytics_data['event_stats']['by_type']:
+        writer.writerow(['Events', f"{event_type['event_type'].capitalize()} Count", event_type['count']])
+    writer.writerow(['Events', 'Upcoming Events', analytics_data['event_stats']['upcoming']])
+    writer.writerow(['Events', 'Past Events', analytics_data['event_stats']['past']])
+    writer.writerow(['Reminders', 'Total Reminders', analytics_data['reminder_stats']['total']])
+    writer.writerow(['Reminders', 'Successful Reminders', analytics_data['reminder_stats']['success']])
+    writer.writerow(['Reminders', 'Failed Reminders', analytics_data['reminder_stats']['failure']])
+    writer.writerow(['Media', 'Total Media', analytics_data['media_stats']['total']])
+    for media_type in analytics_data['media_stats']['by_type']:
+        writer.writerow(['Media', f"{media_type['media_type'].capitalize()} Count", media_type['count']])
+    writer.writerow(['Imports', 'Total Imports', analytics_data['import_stats']['total']])
+    writer.writerow(['Imports', 'Successful Imports', analytics_data['import_stats']['success_count']])
+    writer.writerow(['Imports', 'Failed Imports', analytics_data['import_stats']['failure_count']])
+
+    return response

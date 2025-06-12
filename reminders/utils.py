@@ -1,12 +1,14 @@
 from django.utils import timezone
 from datetime import timedelta, datetime
-from .models import Event, ReminderLog, ImportLog
+from .models import Event, ReminderLog, ImportLog, EventMedia
 from .email_utils import ReminderEmailService
 import logging
 import csv
 from io import StringIO
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse
+from django.db.models import Count, Sum
+from django.utils.timezone import make_aware, is_naive
 
 logger = logging.getLogger('app_logger')
 
@@ -180,6 +182,93 @@ def get_csv_template():
     response['Content-Disposition'] = 'attachment; filename="event_import_template.csv"'
     writer = csv.writer(response)
     writer.writerow(['name', 'event_type', 'date', 'remind_days_before', 'message', 'custom_label'])
-    writer.writerow(['John Doe', 'birthday', '2025-06-12', '1', 'Happy Birthday!', 'Friend'])
-    writer.writerow(['Jane Smith', 'anniversary', '2025-06-13', '2', 'Congrats!', 'Spouse'])
+    writer.writerow(['trial', 'birthday', '2025-06-12', '1', 'Happy Birthday!', 'Friend'])
+    writer.writerow(['another trial', 'anniversary', '2025-06-13', '2', 'Congrats!', 'whoever_belongs_to'])
     return response
+
+
+def make_aware_if_naive(dt):
+    if is_naive(dt):
+        return make_aware(dt)
+    return dt
+
+
+def get_analytics_data(user, start_date=None, end_date=None):
+    try:
+        logger.info(f"Fetching analytics for user {user.username}")
+
+        events_qs = Event.objects.filter(user=user)
+        reminder_logs_qs = ReminderLog.objects.filter(user=user)
+        import_logs_qs = ImportLog.objects.filter(user=user)
+        media_qs = EventMedia.objects.filter(event__user=user)
+
+        # Convert to timezone-aware datetime
+        if start_date:
+            start_datetime = make_aware_if_naive(datetime.combine(start_date, datetime.min.time()))
+            events_qs = events_qs.filter(created_at__gte=start_datetime)
+            reminder_logs_qs = reminder_logs_qs.filter(timestamp__gte=start_datetime)
+            import_logs_qs = import_logs_qs.filter(imported_at__gte=start_datetime)
+            media_qs = media_qs.filter(uploaded_at__gte=start_datetime)
+
+        if end_date:
+            end_datetime = make_aware_if_naive(datetime.combine(end_date, datetime.max.time()))
+            events_qs = events_qs.filter(created_at__lte=end_datetime)
+            reminder_logs_qs = reminder_logs_qs.filter(timestamp__lte=end_datetime)
+            import_logs_qs = import_logs_qs.filter(imported_at__lte=end_datetime)
+            media_qs = media_qs.filter(uploaded_at__lte=end_datetime)
+
+        today = timezone.localdate()
+
+        event_type_agg = events_qs.values('event_type').annotate(count=Count('id')).order_by()
+        media_type_agg = media_qs.values('media_type').annotate(count=Count('id')).order_by()
+
+        event_stats = {
+            'total': events_qs.count(),
+            'by_type': list(event_type_agg),
+            'upcoming': events_qs.filter(date__gte=today).count(),
+            'past': events_qs.filter(date__lt=today).count(),
+            'type_labels': [item['event_type'].capitalize() for item in event_type_agg],
+            'type_counts': [item['count'] for item in event_type_agg]
+        }
+
+        reminder_stats = {
+            'total': reminder_logs_qs.count(),
+            'success': reminder_logs_qs.filter(status='success').count(),
+            'failure': reminder_logs_qs.filter(status='failure').count(),
+        }
+
+        media_stats = {
+            'total': media_qs.count(),
+            'by_type': list(media_type_agg),
+            'type_labels': [item['media_type'].capitalize() for item in media_type_agg],
+            'type_counts': [item['count'] for item in media_type_agg]
+        }
+
+        import_stats = {
+            'total': import_logs_qs.count(),
+            'recent': list(import_logs_qs.order_by('-imported_at')[:5]),
+            'success_count': import_logs_qs.aggregate(total=Sum('success_count'))['total'] or 0,
+            'failure_count': import_logs_qs.aggregate(total=Sum('failure_count'))['total'] or 0,
+        }
+
+        return {
+            'event_stats': event_stats,
+            'reminder_stats': reminder_stats,
+            'media_stats': media_stats,
+            'import_stats': import_stats,
+            'start_date': start_date,
+            'end_date': end_date,
+        }
+
+    except Exception as e:
+        logger.error(f"Error fetching analytics for user {user.username}: {str(e)}")
+        return {
+            'event_stats': {'total': 0, 'by_type': [], 'upcoming': 0, 'past': 0, 'type_labels': [], 'type_counts': []},
+            'reminder_stats': {'total': 0, 'success': 0, 'failure': 0},
+            'media_stats': {'total': 0, 'by_type': [], 'type_labels': [], 'type_counts': []},
+            'import_stats': {'total': 0, 'recent': [], 'success_count': 0, 'failure_count': 0},
+            'start_date': start_date,
+            'end_date': end_date,
+        }
+
+
