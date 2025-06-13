@@ -10,8 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const mediaInput = document.querySelector('#id_media_files');
     const previewContainer = document.querySelector('#media-preview');
     const removeCheckbox = document.querySelector('input[name="remove_media"]');
-    // const eventTypeSelect = document.getElementById('id_event_type');
-    // const recurringField = document.getElementById('recurring-field');
+    const eventTypeSelect = document.getElementById('id_event_type');
+    const recurringField = document.getElementById('recurring-field');
 
 
     function updatePreview(file) {
@@ -66,6 +66,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (removeCheckbox && previewContainer) {
         removeCheckbox.addEventListener('change', function() {
             previewContainer.style.display = this.checked ? 'none' : '';
+            if (this.checked && previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+                previewUrl = null;
+            }
         });
     }
 

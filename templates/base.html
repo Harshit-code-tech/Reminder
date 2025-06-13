@@ -349,12 +349,12 @@
                         {% if message.tags == 'error' %}
                             bg-red-50 text-red-800 border border-red-200 p-px rounded-lg py-2 px-4
                         {% elif message.tags == 'success' %}
-                        {% elif message.tags == 'info' %}
-                        {% else %}
-                        {% endif %}
-                            bg-gray-50 text-gray-800 border border-gray-200 p-px rounded-lg py-2 px-4
-                            bg-blue-50 text-blue-800 border border-blue-200 p-px rounded-lg Py-2 px-4
                             bg-green-50 text-green-800 border border-green-200 p-px rounded-lg py-2 px-4
+                        {% elif message.tags == 'info' %}
+                            bg-blue-50 text-blue-800 border border-blue-200 p-px rounded-lg Py-2 px-4
+                        {% else %}
+                            bg-gray-50 text-gray-800 border border-gray-200 p-px rounded-lg py-2 px-4
+                        {% endif %}
                     ">
                         {{ message }}
                     </div>
