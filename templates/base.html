@@ -27,15 +27,24 @@
             --shadow-light: 0 10px 15px rgba(0, 0, 0, 0.05);
             --shadow-dark: 0 10px 15px rgba(0, 0, 0, 0.2);
             --purple-glow: 0 0 20px rgba(147, 51, 234, 0.7);
+            --x: 50%;
+            --y: 50%;
         }
+
+        /* Apply transitions to all elements for smooth theme changes */
+        * {
+          transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease,
+                      box-shadow 0.5s ease, background 0.5s ease;
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
             background: var(--bg-gradient-light);
             color: var(--text-color-light);
             position: relative;
             overflow-x: hidden;
-            min-h-screen;
-            transition: background 0.5s ease, color 0.5s ease;
+            min-height: 100vh;
+            transition: background 0.8s cubic-bezier(0.4, 0, 0.2, 1), color 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
         body.dark-mode {
             background: var(--bg-gradient-dark);
@@ -106,7 +115,7 @@
             top: 0;
             z-index: 50;
             backdrop-filter: blur(10px);
-            transition: background 0.5s ease, box-shadow 0.3s ease;
+            transition: background 0.8s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
         body.dark-mode header {
             background: var(--header-gradient-dark);
@@ -164,7 +173,7 @@
         footer {
             background: var(--header-gradient-light);
             border-top: 1px solid rgba(255, 255, 255, 0.2);
-            transition: background 0.5s ease;
+            transition: background 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
         body.dark-mode footer {
             background: var(--header-gradient-dark);
@@ -227,7 +236,7 @@
             left: 50%;
             transform: translateX(-50%);
             box-shadow: 0 0 30px #fcd34d;
-            transition: all 0.7s ease;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
             overflow: hidden;
         }
         .lamp-light::before {
@@ -239,7 +248,7 @@
             height: 40px;
             border-radius: 50%;
             background: #0f172a;
-            transition: transform 0.7s ease;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
             transform: scale(0);
         }
         body.dark-mode .lamp-light {
@@ -313,7 +322,15 @@
         }
         .mode-transition.active {
             opacity: 1;
+            animation: pulse 0.8s ease-out;
         }
+
+        @keyframes pulse {
+            0% { transform: scale(0); opacity: 1; }
+            80% { transform: scale(1.5); opacity: 0.7; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
         .mode-transition.to-dark {
             background: radial-gradient(circle at var(--x) var(--y), rgba(15, 23, 42, 1) 0%, rgba(15, 23, 42, 0) 70%);
         }
@@ -332,12 +349,12 @@
                         {% if message.tags == 'error' %}
                             bg-red-50 text-red-800 border border-red-200 p-px rounded-lg py-2 px-4
                         {% elif message.tags == 'success' %}
-                            bg-green-50 text-green-800 border border-green-200 p-px rounded-lg py-2 px-4
                         {% elif message.tags == 'info' %}
-                            bg-blue-50 text-blue-800 border border-blue-200 p-px rounded-lg Py-2 px-4
                         {% else %}
-                            bg-gray-50 text-gray-800 border border-gray-200 p-px rounded-lg py-2 px-4
                         {% endif %}
+                            bg-gray-50 text-gray-800 border border-gray-200 p-px rounded-lg py-2 px-4
+                            bg-blue-50 text-blue-800 border border-blue-200 p-px rounded-lg Py-2 px-4
+                            bg-green-50 text-green-800 border border-green-200 p-px rounded-lg py-2 px-4
                     ">
                         {{ message }}
                     </div>
@@ -377,6 +394,7 @@
                         <li><a href="{% url 'login' %}" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" aria-label="Log in">Login</a></li>
                         <li><a href="{% url 'signup' %}" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" aria-label="Sign up">Sign Up</a></li>
                     {% endif %}
+
                 </ul>
             </nav>
         </div>
@@ -398,6 +416,7 @@
     </footer>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Create stars for dark mode
             const starsContainer = document.createElement('div');
             starsContainer.className = 'stars';
             document.body.appendChild(starsContainer);
@@ -411,12 +430,16 @@
                 star.style.animationDelay = `${Math.random() * 5}s`;
                 starsContainer.appendChild(star);
             }
+
+            // Apply saved theme
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark') {
                 document.body.classList.add('dark-mode');
                 const modeLabel = document.querySelector('.mode-label');
                 if (modeLabel) modeLabel.textContent = 'Night Mode';
             }
+
+            // Implement the improved theme toggle
             const lampString = document.querySelector('.lamp-string');
             if (lampString) {
                 lampString.addEventListener('click', (e) => {
@@ -424,19 +447,30 @@
                     const rect = lampString.getBoundingClientRect();
                     const x = rect.left + rect.width / 2;
                     const y = rect.top + rect.height / 2;
+
+                    // Set the origin point for the transition
                     transition.style.setProperty('--x', `${x}px`);
                     transition.style.setProperty('--y', `${y}px`);
+
+                    // Add appropriate transition class
                     transition.classList.add('active', document.body.classList.contains('dark-mode') ? 'to-light' : 'to-dark');
+
+                    // Slight delay to ensure the transition starts before class changes
                     setTimeout(() => {
                         document.body.classList.toggle('dark-mode');
                         const isDarkMode = document.body.classList.contains('dark-mode');
                         localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+
                         const modeLabel = document.querySelector('.mode-label');
                         if (modeLabel) {
                             modeLabel.textContent = isDarkMode ? 'Night Mode' : 'Day Mode';
                         }
+                    }, 100);
+
+                    // Remove transition class after animation completes
+                    setTimeout(() => {
                         transition.classList.remove('active', 'to-dark', 'to-light');
-                    }, 500);
+                    }, 800);
                 });
             }
         });

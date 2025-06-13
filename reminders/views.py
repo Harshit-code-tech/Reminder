@@ -32,6 +32,18 @@ def event_list(request):
         events = []
     return render(request, 'reminders/event_list.html', {'events': events})
 
+@login_required
+@email_verified_required
+def toggle_recurring(request, event_id):
+    if request.method == 'POST':
+        event = get_object_or_404(Event, id=event_id, user=request.user)
+        if event.event_type in ['birthday', 'anniversary']:
+            event.is_recurring = not event.is_recurring
+            event.save()
+            messages.success(request, f"Recurring {'enabled' if event.is_recurring else 'disabled'} for {event.name}")
+        else:
+            messages.error(request, "Recurring is only available for birthdays and anniversaries")
+    return redirect('event_list')
 
 @login_required
 @email_verified_required

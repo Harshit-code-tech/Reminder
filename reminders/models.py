@@ -30,6 +30,10 @@ class Event(models.Model):
     custom_label = models.CharField(max_length=100, blank=True, null=True)  # For Other category
     cultural_theme = models.BooleanField(default=False)  # For diyas in Other
     highlights = models.TextField(blank=True, null=True)  # For Anniversary milestones
+    is_recurring = models.BooleanField(
+        default=True,
+        help_text="Automatically create event for next year (birthdays/anniversaries only)."
+    )
 
 
     class Meta:
@@ -41,6 +45,12 @@ class Event(models.Model):
 
     def is_expired(self):
         return self.date < timezone.now().date()
+
+    def save(self, *args, **kwargs):
+        # Set is_recurring default based on event_type
+        if self.event_type not in ['birthday', 'anniversary']:
+            self.is_recurring = False
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.name}'s {self.get_event_type_display()} on {self.date}"

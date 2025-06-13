@@ -58,6 +58,16 @@
       {{ form.highlights }}
       {{ form.highlights.errors }}
     </div>
+    <div class="mb-4">
+      <label for="{{ form.notes.id_for_label }}" class="block text-sm font-medium text-gray-700">Notes:</label>
+      {{ form.notes }}
+      {{ form.notes.errors }}
+    </div>
+    <div class="mb-4" id="recurring-field">
+      <label for="{{ form.is_recurring.id_for_label }}" class="block text-sm font-medium text-gray-700">Recur Annually (Birthdays/Anniversaries):</label>
+      {{ form.is_recurring }}
+      {{ form.is_recurring.errors }}
+    </div>
 
     <!-- Media upload with multiple files -->
     <div class="mb-4">

@@ -44,7 +44,8 @@ class EventForm(forms.ModelForm):
             'message',
             'custom_label',
             'cultural_theme',
-            'highlights'
+            'highlights',
+            'is_recurring'
         ]
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'}),
@@ -62,7 +63,8 @@ class EventForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         media_files = self.files.getlist('media_files')
-
+        event_type = cleaned_data.get('event_type')
+        is_recurring = cleaned_data.get('is_recurring')
         # Perform all validation here
         if len(media_files) > 3:
             raise ValidationError('Maximum 3 media files allowed.')
@@ -82,6 +84,10 @@ class EventForm(forms.ModelForm):
         # Custom label logic
         if cleaned_data.get('event_type') == 'other' and not cleaned_data.get('custom_label'):
             self.add_error('custom_label', 'Custom label is required for Other events.')
+
+
+        if is_recurring and event_type not in ['birthday', 'anniversary']:
+            raise forms.ValidationError("Recurring events are only allowed for birthdays and anniversaries.")
 
         return cleaned_data
 

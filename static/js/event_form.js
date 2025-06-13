@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const mediaInput = document.querySelector('#id_media_files');
     const previewContainer = document.querySelector('#media-preview');
     const removeCheckbox = document.querySelector('input[name="remove_media"]');
+    // const eventTypeSelect = document.getElementById('id_event_type');
+    // const recurringField = document.getElementById('recurring-field');
 
 
     function updatePreview(file) {
@@ -39,9 +41,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Media preview handling - only run if elements exist
     if (mediaInput && previewContainer) {
         mediaInput.addEventListener('change', (event) => {
-            // updatePreview(event.target.files[0]);
             previewContainer.innerHTML = '';
             Array.from(event.target.files).slice(0, 3).forEach(file => {
                 const previewUrl = URL.createObjectURL(file);
@@ -60,42 +62,52 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Remove checkbox handling - only run if elements exist
     if (removeCheckbox && previewContainer) {
         removeCheckbox.addEventListener('change', function() {
             previewContainer.style.display = this.checked ? 'none' : '';
-            if (this.checked && previewUrl) {
-                URL.revokeObjectURL(previewUrl);
-                previewUrl = null;
-            }
         });
     }
 
-    // Download links (for event_list.html)
+    // Event type conditional display - only run if elements exist
+    if (eventTypeSelect && recurringField) {
+        const toggleRecurringField = () => {
+            const isRecurringType = ['birthday', 'anniversary'].includes(eventTypeSelect.value);
+            recurringField.style.display = isRecurringType ? 'block' : 'none';
+        };
+
+        toggleRecurringField();
+        eventTypeSelect.addEventListener('change', toggleRecurringField);
+    }
+
+    // Download links handling - only run if links exist
     const downloadLinks = document.querySelectorAll('a[data-download="media"]');
-    downloadLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const url = link.href;
-            const jwt = getCookie('jwt');
-            fetch(url, {
-                headers: { 'Authorization': `Bearer ${jwt}` }
-            })
-                .then(res => {
-                    if (!res.ok) throw new Error(`Download failed: ${res.status}`);
-                    return res.blob();
+    if (downloadLinks.length > 0) {
+        downloadLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const url = link.href;
+                const jwt = getCookie('jwt');
+                fetch(url, {
+                    headers: { 'Authorization': `Bearer ${jwt}` }
                 })
-                .then(blob => {
-                    const downloadUrl = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = downloadUrl;
-                    a.download = url.split('/').pop();
-                    a.click();
-                    URL.revokeObjectURL(downloadUrl);
-                })
-                .catch(err => {
-                    console.error('Download failed:', err);
-                    alert('Failed to download media.');
-                });
+                    .then(res => {
+                        if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+                        return res.blob();
+                    })
+                    .then(blob => {
+                        const downloadUrl = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = downloadUrl;
+                        a.download = url.split('/').pop();
+                        a.click();
+                        URL.revokeObjectURL(downloadUrl);
+                    })
+                    .catch(err => {
+                        console.error('Download failed:', err);
+                        alert('Failed to download media.');
+                    });
+            });
         });
-    });
+    }
 });
