@@ -34,13 +34,17 @@ class Event(models.Model):
         default=True,
         help_text="Automatically create event for next year (birthdays/anniversaries only)."
     )
-
+    is_archived = models.BooleanField(
+        default=False,
+        help_text="Mark event as archived (soft delete)."
+    )
 
     class Meta:
         indexes = [
             models.Index(fields=['user', 'date']),
             models.Index(fields=['notified']),
             models.Index(fields=['deletion_notified']),
+            models.Index(fields=['is_archived']),
         ]
 
     def is_expired(self):
@@ -120,3 +124,18 @@ class ImportLog(models.Model):
 
     def __str__(self):
         return f"Import by {self.user.username} at {self.imported_at}"
+
+class Reflection(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reflections')
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='reflections')
+    note = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'event'], name='unique_reflection_per_event')
+        ]
+
+    def __str__(self):
+        return f"Reflection for {self.event} by {self.user.username}"

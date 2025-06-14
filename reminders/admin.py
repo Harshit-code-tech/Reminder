@@ -1,7 +1,7 @@
 # reminders/admin.py
 from django.contrib import admin
 from django_q.tasks import async_task
-from .models import Event, ReminderLog, EventMedia
+from .models import Event, ReminderLog, EventMedia, Reflection
 from django.utils.html import format_html
 
 @admin.action(description='Send Reminder Emails Manually')
@@ -15,8 +15,8 @@ def check_recurring_now(modeladmin, request, queryset):
     modeladmin.message_user(request, "Recurring events task has been queued.")
 
 class EventAdmin(admin.ModelAdmin):
-    list_display = ('name', 'event_type', 'date', 'user', 'remind_days_before', 'notified', 'is_recurring')
-    list_filter = ('event_type', 'notified', 'is_recurring', 'user')
+    list_display = ('name', 'event_type', 'date', 'user', 'remind_days_before', 'notified', 'is_recurring', 'is_archived')
+    list_filter = ('event_type', 'notified', 'is_recurring', 'is_archived', 'user')
     search_fields = ('name', 'user__username')
     actions = [send_reminders_now, check_recurring_now]
 
@@ -35,6 +35,16 @@ class EventMediaAdmin(admin.ModelAdmin):
     list_filter = ('media_type',)
     search_fields = ('event__name',)
 
+class ReflectionAdmin(admin.ModelAdmin):
+    list_display = ('event', 'user', 'note_preview', 'created_at', 'updated_at')
+    list_filter = ('created_at', 'user')
+    search_fields = ('note', 'event__name', 'user__username')
+
+    def note_preview(self, obj):
+        return obj.note[:50] + '...' if len(obj.note) > 50 else obj.note
+    note_preview.short_description = 'Note'
+
 admin.site.register(Event, EventAdmin)
 admin.site.register(ReminderLog, ReminderLogAdmin)
 admin.site.register(EventMedia, EventMediaAdmin)
+admin.site.register(Reflection, ReflectionAdmin)

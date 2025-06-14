@@ -375,7 +375,8 @@
                         <li class="text-sm md:text-base text-white">Welcome, {{ user.username }}!</li>
                         <li><a href="{% url 'event_list' %}" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" aria-label="View your events">My Events</a></li>
                         <li><a href="{% url 'analytics' %}" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" aria-label="View analytics">Analytics</a></li>
-                        <li><a href="{% url 'send_daily_reminders' %}" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" aria-label="Send reminders">Send Reminders</a></li>
+<!--                        <li><a href="{% url 'send_daily_reminders' %}" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" aria-label="Send reminders">Send Reminders</a></li>-->
+                        <li><a href="{% url 'past_events' %}" class="text-gray-700 dark:text-gray-300 hover:text-purple-600">Past Events</a></li>
                         {% if user.is_superuser %}
                             <li>
                                 <a href="{% url 'admin_tools' %}" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" aria-label="Admin tools">

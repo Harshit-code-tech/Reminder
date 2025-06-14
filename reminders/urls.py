@@ -16,5 +16,9 @@ urlpatterns = [
     path('analytics/', views.analytics, name='analytics'),
     path('analytics/download/', views.download_analytics_report, name='download_analytics_report'),
     path('events/toggle-recurring/<int:event_id>/', views.toggle_recurring, name='toggle_recurring'),
+    path('past-events/', views.past_events, name='past_events'),
+    path('past-events/edit/<int:event_id>/', views.edit_past_event, name='edit_past_event'),
+    path('past-events/add-reflection/<int:event_id>/', views.add_reflection, name='add_reflection'),
+    path('past-events/download/', views.download_past_events, name='download_past_events'),
 
 ]

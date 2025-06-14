@@ -1,12 +1,14 @@
 from datetime import datetime
 import logging
+
+from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.contrib import messages
-from .models import Event, CelebrationCardPage, EventMedia
+from .models import Event, CelebrationCardPage, EventMedia, Reflection
 from .forms import EventForm
 from .utils import send_upcoming_reminders, process_bulk_import, get_csv_template, get_analytics_data
 from users.decorators import email_verified_required
@@ -21,10 +23,15 @@ logger = logging.getLogger('app_logger')
 @email_verified_required
 def event_list(request):
     try:
+        today=timezone.now().date()
         sort_by = request.GET.get('sort', 'date')
         if sort_by not in ['name', 'date']:
             sort_by = 'date'
-        events = Event.objects.filter(user=request.user).order_by(sort_by)
+        events = Event.objects.filter(
+            user=request.user,
+            date__gte=today,
+            is_archived=False
+        ).order_by(sort_by)
         logger.info(f"Fetched {events.count()} events for user {request.user.username}")
     except Exception as e:
         logger.error(f"Error fetching events for user {request.user.username}: {str(e)}")
@@ -359,11 +366,34 @@ def bulk_import(request):
 def download_template(request):
     return get_csv_template()
 
+
+
+def delete_event_media(request, event_id):
+    media_id = request.POST.get('media_id')
+    media = get_object_or_404(EventMedia, id=media_id, event_id=event_id)
+    event = media.event
+    user = event.user
+
+    # Check if event is in the past
+    if event.date < timezone.now().date():
+        send_mail(
+            subject=f"Media Removed from Past Event: {event.name}",
+            message=f"Media ({media.media_type}) was removed from your past event '{event.name}' dated {event.date}.",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=True,
+        )
+
+    media.delete()
+
+
+
 @login_required
 @email_verified_required
 def analytics(request):
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
+
     try:
         if start_date:
             start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
@@ -416,3 +446,180 @@ def download_analytics_report(request):
     writer.writerow(['Imports', 'Failed Imports', analytics_data['import_stats']['failure_count']])
 
     return response
+
+
+@login_required
+@email_verified_required
+def past_events(request):
+    try:
+        today = timezone.now().date()
+        event_type = request.GET.get('event_type', '')
+        start_date = request.GET.get('start_date', '')
+        end_date = request.GET.get('end_date', '')
+        search_query = request.GET.get('search', '')
+
+        events = Event.objects.filter(user=request.user, date__lt=today, is_archived=False)
+
+        if event_type:
+            events = events.filter(event_type=event_type)
+        if start_date:
+            events = events.filter(date__gte=start_date)
+        if end_date:
+            events = events.filter(date__lte=end_date)
+        if search_query:
+            events = events.filter(custom_label__icontains=search_query)
+
+        events = events.order_by('-date')
+        logger.info(f"Fetched {events.count()} past events for user {request.user.username}")
+    except Exception as e:
+        logger.error(f"Error fetching past events for user {request.user.username}: {str(e)}")
+        messages.error(request, "Unable to load past events. Please try again later.")
+        events = []
+
+    return render(request, 'reminders/past_events.html', {
+        'events': events,
+        'event_types': Event.EVENT_TYPES,
+        'event_type': event_type,
+        'start_date': start_date,
+        'end_date': end_date,
+        'search_query': search_query,
+    })
+
+@login_required
+@email_verified_required
+def edit_past_event(request, event_id):
+    event = get_object_or_404(Event, id=event_id, user=request.user, date__lt=timezone.now().date(), is_archived=False)
+    if request.method == 'POST':
+        form = EventForm(request.POST, request.FILES, instance=event)
+        if form.is_valid():
+            try:
+                supabase = get_user_supabase_client(request)
+
+                if request.POST.get('remove_media'):
+                    for media in event.media.all():
+                        file_path = media.media_file
+                        try:
+                            dir_path = "/".join(file_path.split('/')[:-1])
+                            existing_files = supabase.storage.from_('event-media').list(dir_path)
+                            if any(f['name'] == file_path.split('/')[-1] for f in existing_files):
+                                supabase.storage.from_('event-media').remove([file_path])
+                            if media and media.id:
+                                media.delete()
+                            else:
+                                logger.error(
+                                    f"Cannot delete EventMedia: invalid or unsaved object for event '{event.name}'")
+                            logger.info(f"Deleted media '{file_path}' for event '{event.name}'")
+                        except Exception as e:
+                            logger.warning(f"Failed to delete media {file_path}: {str(e)}")
+                            messages.error(request, f"Failed to delete media: {str(e)}")
+                            return render(request, "reminders/event_form.html", {"form": form, "event": event})
+
+                files = request.FILES.getlist('media_files')
+                for file in files:
+                    if file.size > settings.MAX_FILE_SIZE:
+                        messages.error(request, f"File '{file.name}' exceeds 50MB limit.")
+                        return render(request, "reminders/event_form.html", {"form": form, "event": event})
+                    if file.content_type not in settings.ALLOWED_MEDIA_TYPES:
+                        messages.error(request, f"Invalid file type for '{file.name}'.")
+                        return render(request, "reminders/event_form.html", {"form": form, "event": event})
+
+                    unique_suffix = uuid.uuid4().hex[:8]
+                    filename = f"{unique_suffix}_{file.name}"
+                    file_path = f"{request.user.supabase_id}/{event.id}/{filename}"
+                    response = supabase.storage.from_('event-media').upload(
+                        file_path, file.read(), file_options={"content-type": file.content_type}
+                    )
+                    if hasattr(response, 'error') and response.error:
+                        messages.error(request, f"Failed to upload '{file.name}': {response.error}")
+                        return render(request, "reminders/event_form.html", {"form": form, "event": event})
+                    elif hasattr(response, 'status_code') and response.status_code not in (200, 201):
+                        messages.error(request, f"Upload failed for '{file.name}'")
+                        return render(request, "reminders/event_form.html", {"form": form, "event": event})
+
+                    public_url = supabase.storage.from_('event-media').get_public_url(file_path)
+                    EventMedia.objects.create(
+                        event=event,
+                        media_file=public_url,
+                        media_type=file.content_type.split('/')[0],
+                    )
+
+                form.save()
+                messages.success(request, f"Past event '{event.name}' updated successfully!")
+                logger.info(f"Past event '{event.name}' updated for user {request.user.username}")
+                return redirect('past_events')
+            except Exception as e:
+                logger.error(f"Error updating past event '{event.name}': {str(e)}")
+                messages.error(request, f"Failed to update past event: {str(e)}")
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = EventForm(instance=event)
+    return render(request, 'reminders/event_form.html', {'form': form, 'event': event})
+
+@login_required
+@email_verified_required
+def add_reflection(request, event_id):
+    event = get_object_or_404(Event, id=event_id, user=request.user, date__lt=timezone.now().date(), is_archived=False)
+    reflection = event.reflections.first()
+
+    if request.method == 'GET':
+        return JsonResponse({
+            'event': {
+                'id': event.id,
+                'name': event.name,
+                'event_type_display': event.get_event_type_display(),
+                'date': event.date.strftime('%Y-%m-%d'),
+                'message': event.message or '',
+                'media': [{'media_file': m.media_file, 'media_type': m.media_type} for m in event.media.all()],
+            },
+            'reflection': {'note': reflection.note} if reflection else None,
+        })
+
+    if request.method == 'POST':
+        note = request.POST.get('note')
+        if note:
+            try:
+                Reflection.objects.update_or_create(
+                    user=request.user,
+                    event=event,
+                    defaults={'note': note}
+                )
+                logger.info(f"Reflection added for event '{event.name}' by user {request.user.username}")
+                return JsonResponse({'success': True})
+            except Exception as e:
+                logger.error(f"Error saving reflection for event '{event.name}': {str(e)}")
+                return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        return JsonResponse({'success': False, 'error': 'Reflection note cannot be empty.'}, status=400)
+
+
+
+@login_required
+@email_verified_required
+def download_past_events(request):
+    try:
+        today = timezone.now().date()
+        events = Event.objects.filter(user=request.user, date__lt=today, is_archived=False).order_by('-date')
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="past_events.csv"'
+        writer = csv.writer(response)
+        writer.writerow(['Name', 'Event Type', 'Date', 'Message', 'Custom Label', 'Reflection', 'Media Count'])
+
+        for event in events:
+            reflection = event.reflections.first()
+            writer.writerow([
+                event.name,
+                event.get_event_type_display(),
+                event.date,
+                event.message or '',
+                event.custom_label or '',
+                reflection.note if reflection else '',
+                event.media.count(),
+            ])
+
+        logger.info(f"Exported past events CSV for user {request.user.username}")
+        return response
+    except Exception as e:
+        logger.error(f"Error exporting past events CSV for user {request.user.username}: {str(e)}")
+        messages.error(request, "Unable to export past events. Please try again later.")
+        return redirect('past_events')
