@@ -15,6 +15,7 @@ urlpatterns = [
     path('bulk-import/', views.bulk_import, name='bulk_import'),
     path('download-template/', views.download_template, name='download_template'),
     path('analytics/', views.analytics, name='analytics'),
+    path('greeting-card/<int:event_id>/', views.greeting_card_view, name='greeting_card_view'),
     path('analytics/download/', views.download_analytics_report, name='download_analytics_report'),
     path('events/toggle-recurring/<int:event_id>/', views.toggle_recurring, name='toggle_recurring'),
     path('past-events/', views.past_events, name='past_events'),

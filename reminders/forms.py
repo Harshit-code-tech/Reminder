@@ -51,7 +51,24 @@ class EventForm(forms.ModelForm):
             'date': forms.DateInput(attrs={'type': 'date'}),
             'message': forms.Textarea(attrs={'rows': 4}),
             'highlights': forms.Textarea(attrs={'rows': 4}),
+            'is_recurring': forms.CheckboxInput(),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        event_type = self.initial.get('event_type') or self.data.get('event_type')
+
+        if event_type == 'other':
+            self.fields['is_recurring'].initial = False
+            self.fields['is_recurring'].widget.attrs['disabled'] = True
+
+            # 🔥 Force value to False in the data
+            if self.data:
+                mutable_data = self.data.copy()
+                mutable_data['is_recurring'] = False
+                self.data = mutable_data
+        else:
+            self.fields['is_recurring'].initial = self.instance.is_recurring if self.instance else False
 
     def clean_date(self):
         date = self.cleaned_data.get('date')

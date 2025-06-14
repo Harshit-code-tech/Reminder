@@ -1,4 +1,3 @@
-// Helper to get cookie by name
 function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
@@ -12,106 +11,109 @@ document.addEventListener('DOMContentLoaded', () => {
     const removeCheckbox = document.querySelector('input[name="remove_media"]');
     const eventTypeSelect = document.getElementById('id_event_type');
     const recurringField = document.getElementById('recurring-field');
+    const customLabelField = document.getElementById('custom-label-field');
+    let previewUrls = [];
 
-
-    function updatePreview(file) {
-        if (previewUrl) {
-            URL.revokeObjectURL(previewUrl);
-            previewUrl = null;
-        }
+    function clearPreviews() {
+        previewUrls.forEach(url => URL.revokeObjectURL(url));
+        previewUrls = [];
         previewContainer.innerHTML = '';
-        if (!file) return;
-        previewUrl = URL.createObjectURL(file);
-        if (file.type.startsWith('image/')) {
-            const img = document.createElement('img');
-            img.src = previewUrl;
-            img.className = 'max-w-xs mt-2 rounded-lg shadow-md';
-            previewContainer.appendChild(img);
-        } else if (file.type.startsWith('audio/')) {
-            const audio = document.createElement('audio');
-            audio.controls = true;
-            audio.src = previewUrl;
-            previewContainer.appendChild(audio);
-        } else if (file.type === 'application/pdf') {
-            const embed = document.createElement('embed');
-            embed.src = previewUrl;
-            embed.type = 'application/pdf';
-            embed.className = 'w-full h-64 mt-2 rounded shadow';
-            previewContainer.appendChild(embed);
-        }
     }
 
-    // Media preview handling - only run if elements exist
+    function createPreview(file) {
+        const previewUrl = URL.createObjectURL(file);
+        previewUrls.push(previewUrl);
+        const element = document.createElement(
+            file.type.startsWith('image/') ? 'img' :
+            file.type.startsWith('audio/') ? 'audio' :
+            file.type === 'application/pdf' ? 'embed' : null
+        );
+
+        if (!element) return;
+
+        element.src = previewUrl;
+        if (file.type.startsWith('image/')) {
+            element.className = 'max-w-xs mt-2 rounded-lg shadow-md';
+        } else if (file.type.startsWith('audio/')) {
+            element.controls = true;
+        } else if (file.type === 'application/pdf') {
+            element.type = 'application/pdf';
+            element.className = 'w-full h-64 mt-2 rounded shadow';
+        }
+
+        previewContainer.appendChild(element);
+    }
+
     if (mediaInput && previewContainer) {
         mediaInput.addEventListener('change', (event) => {
-            previewContainer.innerHTML = '';
-            Array.from(event.target.files).slice(0, 3).forEach(file => {
-                const previewUrl = URL.createObjectURL(file);
-                if (file.type.startsWith('image/')) {
-                    const img = document.createElement('img');
-                    img.src = previewUrl;
-                    img.className = 'max-w-xs mt-2 rounded-lg shadow-md';
-                    previewContainer.appendChild(img);
-                } else if (file.type.startsWith('audio/')) {
-                    const audio = document.createElement('audio');
-                    audio.controls = true;
-                    audio.src = previewUrl;
-                    previewContainer.appendChild(audio);
-                }
-            });
+            clearPreviews();
+            Array.from(event.target.files).slice(0, 3).forEach(createPreview);
         });
     }
 
-    // Remove checkbox handling - only run if elements exist
     if (removeCheckbox && previewContainer) {
-        removeCheckbox.addEventListener('change', function() {
-            previewContainer.style.display = this.checked ? 'none' : '';
-            if (this.checked && previewUrl) {
-                URL.revokeObjectURL(previewUrl);
-                previewUrl = null;
-            }
+        removeCheckbox.addEventListener('change', () => {
+            previewContainer.style.display = removeCheckbox.checked ? 'none' : '';
+            if (removeCheckbox.checked) clearPreviews();
         });
     }
 
-    // Event type conditional display - only run if elements exist
-    if (eventTypeSelect && recurringField) {
-        const toggleRecurringField = () => {
-            const isRecurringType = ['birthday', 'anniversary'].includes(eventTypeSelect.value);
-            recurringField.style.display = isRecurringType ? 'block' : 'none';
+    if (eventTypeSelect && recurringField && customLabelField) {
+        const toggleFields = () => {
+            const isOther = eventTypeSelect.value === 'other';
+            const isRecurringEvent = ['birthday', 'anniversary'].includes(eventTypeSelect.value);
+
+            recurringField.style.display = isRecurringEvent ? 'block' : 'none';
+            // customLabelField.style.display = isOther ? 'block' : 'none';
+
+            // Ensure recurring checkbox is properly set
+            const recurringCheckbox = recurringField.querySelector('input[type="checkbox"]');
+            if (recurringCheckbox) {
+                if (!isRecurringEvent) {
+                    recurringCheckbox.checked = false;  // force uncheck
+                    recurringCheckbox.disabled = true;  // disable input
+                } else {
+                    recurringCheckbox.disabled = false;
+                }
+            }
+
         };
 
-        toggleRecurringField();
-        eventTypeSelect.addEventListener('change', toggleRecurringField);
+        toggleFields();
+        eventTypeSelect.addEventListener('change', toggleFields);
     }
 
-    // Download links handling - only run if links exist
     const downloadLinks = document.querySelectorAll('a[data-download="media"]');
-    if (downloadLinks.length > 0) {
-        downloadLinks.forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const url = link.href;
-                const jwt = getCookie('jwt');
-                fetch(url, {
-                    headers: { 'Authorization': `Bearer ${jwt}` }
+    downloadLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const url = link.href;
+            const jwt = getCookie('jwt');
+            if (!jwt) {
+                alert('Authentication required.');
+                return;
+            }
+            fetch(url, {
+                headers: { 'Authorization': `Bearer ${jwt}` }
+            })
+                .then(res => {
+                    if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+                    return res.blob();
                 })
-                    .then(res => {
-                        if (!res.ok) throw new Error(`Download failed: ${res.status}`);
-                        return res.blob();
-                    })
-                    .then(blob => {
-                        const downloadUrl = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = downloadUrl;
-                        a.download = url.split('/').pop();
-                        a.click();
-                        URL.revokeObjectURL(downloadUrl);
-                    })
-                    .catch(err => {
-                        console.error('Download failed:', err);
-                        alert('Failed to download media.');
-                    });
-            });
+                .then(blob => {
+                    const downloadUrl = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    a.download = url.split('/').pop();
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(downloadUrl);
+                })
+                .catch(err => {
+                    console.error('Download failed:', err);
+                    alert('Failed to download media.');
+                });
         });
-    }
+    });
 });

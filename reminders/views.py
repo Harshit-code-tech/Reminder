@@ -60,6 +60,12 @@ def toggle_recurring(request, event_id):
     return redirect('event_list')
 
 @login_required
+def greeting_card_view(request, event_id):
+    event = get_object_or_404(Event, id=event_id, user=request.user)
+    return render(request, 'reminders/greeting_card.html', {'event': event})
+
+
+@login_required
 @email_verified_required
 def add_event(request):
     if request.method == 'POST':
@@ -293,45 +299,70 @@ def trigger_send_reminders(request):
         return JsonResponse({'error': f'An error occurred: {str(e)}'}, status=500)
 
 
+# @login_required
+# @email_verified_required
+# def card_view(request, event_id, page_number):
+#     event = get_object_or_404(Event, id=event_id, user=request.user)
+#     try:
+#         page = CelebrationCardPage.objects.get(event=event, page_number=page_number)
+#     except CelebrationCardPage.DoesNotExist:
+#         page = None
+#         if page_number == 1:
+#             page = CelebrationCardPage.objects.create(
+#                 event=event,
+#                 page_number=1,
+#                 caption="Welcome to your celebration card!"
+#             )
+#
+#     if page_number == 1:
+#         if request.method == 'POST':
+#             password = request.POST.get('password')
+#             expected_password = event.name.split()[0].lower() if event.event_type in ['birthday','other',
+#                                                                                       'anniversary'] else event.highlights.lower() or 'love'
+#             if password.lower() == expected_password:
+#                 return redirect('reminders:card_view', event_id=event_id, page_number=page_number)
+#             else:
+#                 messages.error(request, 'Incorrect password.')
+#         else:
+#             return render(request, 'reminders/card_view.html', {
+#                 'event': event,
+#                 'page_number': page_number,
+#                 'requires_password': True
+#             })
+#
+#     next_page = page_number + 1 if page_number < 5 else None
+#     context = {
+#         'event': event,
+#         'page': page,
+#         'page_number': page_number,
+#         'next_page': next_page,
+#     }
+#     return render(request, 'reminders/card_view.html', context)
 @login_required
 @email_verified_required
 def card_view(request, event_id, page_number):
     event = get_object_or_404(Event, id=event_id, user=request.user)
-    try:
-        page = CelebrationCardPage.objects.get(event=event, page_number=page_number)
-    except CelebrationCardPage.DoesNotExist:
-        page = None
-        if page_number == 1:
-            page = CelebrationCardPage.objects.create(
-                event=event,
-                page_number=1,
-                caption="Welcome to your celebration card!"
-            )
+    error = None
 
-    if page_number == 1:
-        if request.method == 'POST':
-            password = request.POST.get('password')
-            expected_password = event.name.split()[0].lower() if event.event_type in ['birthday','other',
-                                                                                      'anniversary'] else event.highlights.lower() or 'love'
-            if password.lower() == expected_password:
-                return redirect('reminders:card_view', event_id=event_id, page_number=page_number)
-            else:
-                messages.error(request, 'Incorrect password.')
+    if request.method == 'POST':
+        password = request.POST.get('password', '').strip().lower()
+        expected = ''
+        if event.event_type == 'birthday':
+            expected = event.name.strip().lower()
+        elif event.event_type == 'anniversary':
+            expected = event.date.strftime('%Y-%m-%d')
         else:
-            return render(request, 'reminders/card_view.html', {
-                'event': event,
-                'page_number': page_number,
-                'requires_password': True
-            })
+            expected = (event.custom_label or '').strip().lower()
 
-    next_page = page_number + 1 if page_number < 5 else None
-    context = {
+        if password == expected:
+            return redirect('greeting_card_view', event_id=event.id)
+        else:
+            error = "Incorrect password. Please try again."
+
+    return render(request, 'reminders/card_view.html', {
         'event': event,
-        'page': page,
-        'page_number': page_number,
-        'next_page': next_page,
-    }
-    return render(request, 'reminders/card_view.html', context)
+        'error': error,
+    })
 
 
 def trigger_cron_jobs(request):

@@ -1,127 +1,133 @@
-<!-- reminders/templates/reminders/event_form.html -->
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{% if event %}Edit{% else %}Add{% endif %} Event{% endblock %}
+{% block title %}{% if form.instance.pk %}Edit Event{% else %}Add Event{% endif %}{% endblock %}
+
 {% block content %}
-<div class="max-w-3xl mx-auto mt-6">
-  <h2 class="text-xl font-semibold mb-4">{% if event %}Edit{% else %}Add{% endif %} Event</h2>
-  <form method="post" enctype="multipart/form-data" style="margin-top: 20px;">
-    {% csrf_token %}
-    {{ form.non_field_errors }}
-
-    <!-- Standard form fields -->
-    <div class="mb-4">
-      <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-700">Name:</label>
-      {{ form.name }}
-      {{ form.name.errors }}
-    </div>
-
-    <div class="mb-4">
-      <label for="{{ form.event_type.id_for_label }}" class="block text-sm font-medium text-gray-700">Event Type:</label>
-      {{ form.event_type }}
-      {{ form.event_type.errors }}
-    </div>
-
-    <div class="mb-4">
-      <label for="{{ form.date.id_for_label }}" class="block text-sm font-medium text-gray-700">Date:</label>
-      {{ form.date }}
-      {{ form.date.errors }}
-    </div>
-
-    <div class="mb-4">
-      <label for="{{ form.remind_days_before.id_for_label }}" class="block text-sm font-medium text-gray-700">Remind Days Before:</label>
-      {{ form.remind_days_before }}
-      {{ form.remind_days_before.errors }}
-    </div>
-
-    <div class="mb-4">
-      <label for="{{ form.message.id_for_label }}" class="block text-sm font-medium text-gray-700">Message:</label>
-      {{ form.message }}
-      {{ form.message.errors }}
-    </div>
-
-    <div class="mb-4">
-      <label for="{{ form.custom_label.id_for_label }}" class="block text-sm font-medium text-gray-700">Custom Label (for Other):</label>
-      {{ form.custom_label }}
-      {{ form.custom_label.errors }}
-    </div>
-
-    <div class="mb-4">
-      <label for="{{ form.cultural_theme.id_for_label }}" class="block text-sm font-medium text-gray-700">Cultural Theme (e.g., diyas):</label>
-      {{ form.cultural_theme }}
-      {{ form.cultural_theme.errors }}
-    </div>
-
-    <div class="mb-4">
-      <label for="{{ form.highlights.id_for_label }}" class="block text-sm font-medium text-gray-700">Milestones (e.g., Year 1: Honeymoon):</label>
-      {{ form.highlights }}
-      {{ form.highlights.errors }}
-    </div>
-    <div class="mb-4">
-      <label for="{{ form.notes.id_for_label }}" class="block text-sm font-medium text-gray-700">Notes:</label>
-      {{ form.notes }}
-      {{ form.notes.errors }}
-    </div>
-    <div class="mb-4" id="recurring-field">
-      <label for="{{ form.is_recurring.id_for_label }}" class="block text-sm font-medium text-gray-700">Recur Annually (Birthdays/Anniversaries):</label>
-      {{ form.is_recurring }}
-      {{ form.is_recurring.errors }}
-    </div>
-
-    <!-- Media upload with multiple files -->
-    <div class="mb-4">
-      <label for="id_media_files" class="block text-sm font-medium text-gray-700">Upload Media (Images/Audio, max 3):</label>
-      <!--
-        Important:
-        - name="media_files" must match your form field name exactly
-        - multiple attribute enables multiple file selection
-        - accept restricts file picker to allowed types only (UX only, server validates again)
-      -->
-      <input
-        type="file"
-        name="media_files"
-        id="id_media_files"
-        accept=".jpg,.jpeg,.png,.mp3,.wav,.flac"
-        multiple
-        class="mt-1 block w-full"
-      >
-      <p class="text-sm text-gray-500">Max 50MB for images, 10MB for audio. Allowed: .jpg, .jpeg, .png, .mp3, .wav</p>
-
-      <div id="media-preview" class="mt-2 flex flex-wrap gap-4"></div>
-
-      {% if event and event.media.exists %}
-        <p class="text-gray-600 mt-2 font-semibold">Current Media:</p>
-        <div class="flex flex-wrap gap-4">
-          {% for media in event.media.all %}
-            <div class="border rounded p-2 shadow-sm max-w-xs">
-              {% if media.media_type == 'image' %}
-                <img src="{{ media.media_file }}" alt="Event Image" class="max-w-xs rounded-lg shadow-md">
-                <a href="{{ media.media_file }}" download class="block mt-2 text-blue-600 hover:underline">Download Image</a>
-              {% elif media.media_type == 'audio' %}
-                <audio controls class="w-full">
-                  <source src="{{ media.media_file }}" type="{{ media.media_type }}">
-                  Your browser does not support the audio element.
-                </audio>
-                <a href="{{ media.media_file }}" download class="block mt-2 text-blue-600 hover:underline">Download Audio</a>
-              {% endif %}
+<div class="max-w-2xl mx-auto card p-8 mt-8">
+    <h2 class="text-2xl font-bold mb-6">
+        {% if form.instance.pk %}Edit Event{% else %}Add New Event{% endif %}
+    </h2>
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="bg-red-100 text-red-700 p-3 rounded mb-4">
+                {{ form.non_field_errors }}
             </div>
-          {% endfor %}
+        {% endif %}
+
+        <div class="mb-4">
+            <label for="{{ form.name.id_for_label }}" class="block font-semibold mb-1">Name</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+                <div class="text-red-600 text-sm">{{ form.name.errors }}</div>
+            {% endif %}
         </div>
-        <label class="mt-4 block text-red-600 font-semibold">
-          <input type="checkbox" name="remove_media" class="mr-2 align-middle"> Remove all existing media
-        </label>
-      {% endif %}
-    </div>
 
-    <div class="flex gap-4">
-      <button type="submit" class="btn glow bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition shadow-md">
-        {% if event %}Update{% else %}Add{% endif %}
-      </button>
-      <a href="{% url 'event_list' %}" class="btn btn-secondary glow bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition shadow-md">Cancel</a>
-    </div>
-  </form>
+        <div class="mb-4">
+            <label for="{{ form.event_type.id_for_label }}" class="block font-semibold mb-1">Event Type</label>
+            {{ form.event_type }}
+            {% if form.event_type.errors %}
+                <div class="text-red-600 text-sm">{{ form.event_type.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="mb-4" id="recurring-field" style="display: none;">
+            <label for="{{ form.is_recurring.id_for_label }}" class="block font-semibold mb-1">
+                <input type="checkbox" id="{{ form.is_recurring.id_for_label }}" name="{{ form.is_recurring.name }}" {% if form.is_recurring.value %}checked{% endif %}>
+                Recurring Annually
+            </label>
+            {% if form.is_recurring.errors %}
+                <div class="text-red-600 text-sm">{{ form.is_recurring.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="mb-4" id="custom-label-field" >
+            <label for="{{ form.custom_label.id_for_label }}" class="block font-semibold mb-1">Custom Label</label>
+            {{ form.custom_label }}
+            {% if form.custom_label.errors %}
+                <div class="text itext-red-600 text-sm">{{ form.custom_label.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="mb-4">
+            <label for="{{ form.date.id_for_label }}" class="block font-semibold mb-1">Date</label>
+            {{ form.date }}
+            {% if form.date.errors %}
+                <div class="text-red-600 text-sm">{{ form.date.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="mb-4">
+            <label for="{{ form.remind_days_before.id_for_label }}" class="block font-semibold mb-1">Remind Days Before</label>
+            {{ form.remind_days_before }}
+            {% if form.remind_days_before.errors %}
+                <div class="text-red-600 text-sm">{{ form.remind_days_before.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="mb-4">
+            <label for="{{ form.message.id_for_label }}" class="block font-semibold mb-1">Message</label>
+            {{ form.message }}
+            {% if form.message.errors %}
+                <div class="text-red-600 text-sm">{{ form.message.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="mb-4">
+            <label for="{{ form.cultural_theme.id_for_label }}" class="block font-semibold mb-1">Cultural Theme</label>
+            {{ form.cultural_theme }}
+            {% if form.cultural_theme.errors %}
+                <div class="text-red-600 text-sm">{{ form.cultural_theme.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="mb-4">
+            <label for="{{ form.highlights.id_for_label }}" class="block font-semibold mb-1">Milestones / Highlights</label>
+            {{ form.highlights }}
+            {% if form.highlights.errors %}
+                <div class="text-red-600 text-sm">{{ form.highlights.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="mb-4">
+            <label for="id_media_files" class="block font-semibold mb-1">Media Files (max 3)</label>
+            <input
+                type="file"
+                name="media_files"
+                id="id_media_files"
+                accept=".jpg,.jpeg,.png,.mp3,.wav,.flac"
+                multiple
+                class="mt-1 block w-full"
+            >
+            <p class="text-sm text-gray-500">Max 50MB for images, 10MB for audio. Allowed: .jpg, .jpeg, .png, .mp3, .wav, .flac</p>
+            <div id="media-preview" class="flex gap-4 mt-2"></div>
+            {% if form.instance.pk and form.instance.media.exists %}
+                <p class="text-gray-600 mt-2 font-semibold">Current Media:</p>
+                <div class="flex flex-wrap gap-4">
+                    {% for media in form.instance.media.all %}
+                        <div class="border rounded p-2 shadow-sm max-w-xs">
+                            {% if media.media_type == 'image' %}
+                                <img src="{{ media.media_file.url }}" alt="Event Image" class="max-w-xs rounded-lg shadow-md">
+                                <a href="{{ media.media_file.url }}" download class="block mt-2 text-blue-600 hover:underline">Download Image</a>
+                            {% elif media.media_type == 'audio' %}
+                                <audio controls class="w-full">
+                                    <source src="{{ media.media_file.url }}" type="{{ media.mime_type }}">
+                                    Your browser does not support the audio element.
+                                </audio>
+                                <a href="{{ media.media_file.url }}" download class="block mt-2 text-blue-600 hover:underline">Download Audio</a>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="flex justify-end gap-4 mt-8">
+            <a href="{% url 'event_list' %}" class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-800">Cancel</a>
+            <button type="submit" class="px-6 py-2 rounded bg-purple-600 text-white font-semibold hover:bg-purple-700 shadow">Save Event</button>
+        </div>
+    </form>
 </div>
-
 <script src="{% static 'js/event_form.js' %}"></script>
 {% endblock %}

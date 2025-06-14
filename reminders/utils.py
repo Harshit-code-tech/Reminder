@@ -333,3 +333,4 @@ def get_admin_dashboard_stats():
         'recent_logs': recent_logs,
         'today': today,
     }
+

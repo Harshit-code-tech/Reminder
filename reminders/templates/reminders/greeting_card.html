@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ event.name }} - Greeting Card{% endblock %}
+
+{% block header_style %}
+<link rel="stylesheet" href="{% static 'css/greeting_card.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="card-container" data-theme="{{ event.event_type }}" data-cultural-theme="{{ event.cultural_theme|yesno:'true,false' }}">
+  <div class="card-wrapper">
+    <!-- Page indicators -->
+    <div class="page-indicator">
+      <span class="indicator active" data-page="1">●</span>
+      <span class="indicator" data-page="2">○</span>
+      <span class="indicator" data-page="3">○</span>
+      <span class="indicator" data-page="4">○</span>
+      <span class="indicator" data-page="5">○</span>
+    </div>
+    
+    <!-- Card pages -->
+    <div class="card-pages">
+      <!-- Page 1: Welcome / Password -->
+      <div class="card-page active" id="page-1">
+        <div class="diya-container"></div>
+        <div class="tree-growth tree-seedling"></div>
+        
+        <h2 class="welcome-title" data-event-type="{{ event.event_type }}">
+          {% if event.event_type == 'birthday' %}
+          Knock knock! It's a special surprise for 
+          {% elif event.event_type == 'anniversary' %}
+          A special note awaits you, 
+          {% else %}
+          {{ event.custom_label|default:"Special Message" }} for 
+          {% endif %}
+          <span class="recipient-name">{{ event.name }}</span>!
+        </h2>
+        
+        <div class="puzzle-container">
+          {% if event.event_type == 'birthday' %}
+          <div class="emoji-puzzle">🎂🎈 = ?</div>
+          {% elif event.event_type == 'anniversary' %}
+          <div class="date-puzzle">When did we say "I do"?</div>
+          {% else %}
+          <div class="emoji-puzzle">✈️😢 = ?</div>
+          {% endif %}
+        </div>
+        
+        <div class="password-container">
+          <input type="text" class="password-input" placeholder="Enter the password...">
+          <button class="unlock-button">Unlock</button>
+          <div class="password-hint">
+            <span class="hint-icon">💡</span>
+            {% if event.event_type == 'birthday' %}
+            Your name is the key!
+            {% elif event.event_type == 'anniversary' %}
+            When we said "I do"...
+            {% else %}
+            What we're celebrating today!
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Page 2: Animation/Countdown -->
+      <div class="card-page" id="page-2">
+        <div class="diya-container"></div>
+        <div class="tree-growth tree-sapling"></div>
+        
+        {% if event.event_type == 'birthday' %}
+        <h2 class="page-title">Want a gift, <span class="recipient-name">{{ event.name }}</span>?</h2>
+        <div class="countdown-container">
+          <div class="countdown">5</div>
+          <button class="action-button shake-animation">YES!</button>
+        </div>
+        <div class="gift-reveal hidden">Just kidding... Your card is the gift!</div>
+        
+        {% elif event.event_type == 'anniversary' %}
+        <h2 class="page-title">Our Journey Together</h2>
+        <div class="clock-container">
+          <div class="anniversary-clock"></div>
+          {% if event.highlights %}
+          <div class="milestone-text">{{ event.highlights|linebreaksbr }}</div>
+          {% else %}
+          <div class="milestone-text">Every moment with you is special.</div>
+          {% endif %}
+        </div>
+        
+        {% else %}
+        <h2 class="page-title">Memory Flashback</h2>
+        <div class="memory-container">
+          <div class="memory-frame teal"></div>
+          {% if event.message %}
+          <div class="memory-caption">{{ event.message }}</div>
+          {% endif %}
+        </div>
+        {% endif %}
+        
+        <div class="navigation-buttons">
+          <button class="nav-button prev">Back</button>
+          <button class="nav-button next">Next</button>
+        </div>
+      </div>
+      
+      <!-- Page 3: Memory/Media -->
+      <div class="card-page" id="page-3">
+        <div class="diya-container"></div>
+        <div class="tree-growth tree-young"></div>
+        
+        <h2 class="page-title">
+          {% if event.event_type == 'birthday' %}Memory Snapshot
+          {% elif event.event_type == 'anniversary' %}Our Special Moment
+          {% else %}Cherished Memory
+          {% endif %}
+        </h2>
+        
+        <div class="media-container">
+          {% if event.media.exists %}
+          <div class="media-display" 
+               data-event-type="{{ event.event_type }}"
+               data-media-urls="{% for media in event.media.all %}{{ media.media_file.url }}{% if not forloop.last %},{% endif %}{% endfor %}">
+            <!-- Media will be populated by JS -->
+          </div>
+          <div class="media-caption">
+            {% if event.message %}{{ event.message }}{% endif %}
+          </div>
+          {% else %}
+          <div class="placeholder-media"
+               data-event-type="{{ event.event_type }}">
+            <span class="placeholder-icon">📷</span>
+            <p>No media available</p>
+          </div>
+          {% endif %}
+        </div>
+        
+        <div class="audio-player">
+          <!-- Audio controls will be inserted by JS if audio is available -->
+        </div>
+        
+        <div class="navigation-buttons">
+          <button class="nav-button prev">Back</button>
+          <button class="nav-button next">Next</button>
+        </div>
+      </div>
+      
+      <!-- Page 4: Interactive Element -->
+      <div class="card-page" id="page-4">
+        <div class="diya-container"></div>
+        <div class="tree-growth tree-mature"></div>
+        
+        {% if event.event_type == 'birthday' %}
+        <h2 class="page-title">Make a Wish!</h2>
+        <div class="cake-container">
+          <div class="birthday-cake">
+            <div class="cake-layers">
+              <div class="cake-layer"></div>
+              <div class="cake-layer"></div>
+              <div class="cake-layer"></div>
+            </div>
+            <div class="candles">
+              <div class="candle"><div class="flame"></div></div>
+              <div class="candle"><div class="flame"></div></div>
+              <div class="candle"><div class="flame"></div></div>
+            </div>
+          </div>
+          <div class="cake-instruction">Click to blow out the candles!</div>
+        </div>
+        <div class="quote-container">
+          <blockquote class="inspiration-quote"></blockquote>
+        </div>
+        
+        {% elif event.event_type == 'anniversary' %}
+        <h2 class="page-title">One More Dance?</h2>
+        <div class="dance-container">
+          <button class="dance-button">Dance!</button>
+          <div class="dance-animation"></div>
+        </div>
+        <div class="quote-container">
+          <blockquote class="inspiration-quote"></blockquote>
+        </div>
+        
+        {% else %}
+        <h2 class="page-title">Tree of Memories</h2>
+        <div class="memory-tree-container">
+          <div class="memory-tree"></div>
+          <div class="tree-instruction">Click to plant a memory</div>
+          <div class="tree-message">
+            Our {{ event.custom_label|default:"friendship" }} grows forever.
+          </div>
+        </div>
+        <div class="quote-container">
+          <blockquote class="inspiration-quote"></blockquote>
+        </div>
+        {% endif %}
+        
+        <div class="navigation-buttons">
+          <button class="nav-button prev">Back</button>
+          <button class="nav-button next">Next</button>
+        </div>
+      </div>
+      
+      <!-- Page 5: Farewell -->
+      <div class="card-page" id="page-5">
+        <div class="diya-container"></div>
+        <div class="tree-growth tree-full"></div>
+        
+        <h2 class="page-title">
+          {% if event.event_type == 'birthday' %}
+          Happy Birthday, <span class="recipient-name">{{ event.name }}</span>!
+          {% elif event.event_type == 'anniversary' %}
+          Here's to us, <span class="recipient-name">{{ event.name }}</span>. Forever yours.
+          {% else %}
+          <span class="recipient-name">{{ event.name }}</span>, you're unforgettable.
+          {% endif %}
+        </h2>
+        
+        <div class="farewell-message">
+          {% if event.message %}
+            <p>{{ event.message }}</p>
+          {% else %}
+            {% if event.event_type == 'birthday' %}
+            <p>Wishing you a fantastic day filled with joy and laughter!</p>
+            {% elif event.event_type == 'anniversary' %}
+            <p>Every moment with you is a treasure. Here's to many more years!</p>
+            {% else %}
+            <p>Thank you for being amazing. You mean the world to me.</p>
+            {% endif %}
+          {% endif %}
+        </div>
+        
+        {% if event.reflections.exists %}
+        <div class="voice-note">
+          <div class="voice-note-player">
+            <button class="play-voice-note">Play Voice Note</button>
+            <p class="voice-note-text">{{ event.reflections.first.note }}</p>
+          </div>
+        </div>
+        {% endif %}
+        
+        <div class="final-animation"></div>
+        
+        <div class="navigation-buttons with-save">
+          <button class="nav-button prev">Back</button>
+          <button class="save-button">🎁 Save this memory!</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="card-footer">
+    <button class="save-card">📌 Save Card</button>
+  </div>
+</div>
+
+<script src="{% static 'js/greeting_card.js' %}"></script>
+{% endblock %}

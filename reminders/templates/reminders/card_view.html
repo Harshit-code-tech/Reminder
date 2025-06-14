@@ -1,37 +1,79 @@
-<!-- reminders/templates/reminders/card_view.html -->
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% block content %}
-<h1>Celebration Card for {{ event.name }}</h1>
-{% if requires_password %}
-    <h2>Welcome, {{ event.name }}!</h2>
-    <form method="post">
-        {% csrf_token %}
-        <label>Password: <input type="text" name="password" required></label>
-        <button type="submit">Unlock</button>
-        {% if messages %}
-            {% for message in messages %}
-                <p style="color: red;">{{ message }}</p>
-            {% endfor %}
-        {% endif %}
-    </form>
-{% else %}
-    <h2>Page {{ page_number }}</h2>
-    {% if page %}
-        <p>{{ page.caption }}</p>
-        {% if page.image %}
-            <img src="{{ page.image.media_file }}" alt="Memory" style="max-width: 300px;">
-        {% endif %}
-        {% if page.audio %}
-            <audio controls src="{{ page.audio.media_file }}"></audio>
-        {% endif %}
-    {% else %}
-        <p>No content for this page yet.</p>
-    {% endif %}
-    {% if next_page %}
-        <a href="{% url 'reminders:card_view' event.id next_page %}">Next Page</a>
-    {% endif %}
-    {% if page_number == 5 %}
-        <button>Save this memory!</button>
-    {% endif %}
-{% endif %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #e0e7ff 0%, #dbeafe 50%, #e0e7ff 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+        }
+        .input-field {
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        .error-message {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="gradient-bg">
+    <div class="card max-w-md w-full p-8">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">
+            {% if event.event_type == 'birthday' %}
+                Enter the name of the birthday person to unlock the card!
+            {% elif event.event_type == 'anniversary' %}
+                Enter the anniversary date (YYYY-MM-DD) to unlock the card!
+            {% else %}
+                Enter the label for this event to unlock the card!
+            {% endif %}
+        </h2>
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <input
+                type="text"
+                name="password"
+                placeholder="{% if event.event_type == 'birthday' %}Birthday person's name...{% elif event.event_type == 'anniversary' %}YYYY-MM-DD...{% else %}Event label...{% endif %}"
+                required
+                class="input-field w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"
+            >
+            <button
+                type="submit"
+                class="w-full bg-indigo-600 text-white p-3 rounded-lg hover:bg-indigo-700 transition-colors duration-300"
+            >
+                Unlock
+            </button>
+            {% if error %}
+                <div class="error-message text-red-500 text-sm text-center bg-red-100 p-2 rounded-lg">
+                    {{ error }}
+                </div>
+            {% endif %}
+        </form>
+    </div>
+</body>
+</html>
 {% endblock %}
