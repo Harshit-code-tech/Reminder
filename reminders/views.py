@@ -3,14 +3,14 @@ import logging
 
 from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required,user_passes_test
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.contrib import messages
 from .models import Event, CelebrationCardPage, EventMedia, Reflection
 from .forms import EventForm
-from .utils import send_upcoming_reminders, process_bulk_import, get_csv_template, get_analytics_data
+from .utils import send_upcoming_reminders, process_bulk_import, get_csv_template, get_analytics_data,get_admin_dashboard_stats
 from users.decorators import email_verified_required
 from .supabase_helpers import get_user_supabase_client
 import uuid
@@ -38,6 +38,13 @@ def event_list(request):
         messages.error(request, "Unable to load events. Please try again later.")
         events = []
     return render(request, 'reminders/event_list.html', {'events': events})
+
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def admin_dashboard(request):
+    stats = get_admin_dashboard_stats()
+    return render(request, 'reminders/admin_dashboard.html', context=stats)
 
 @login_required
 @email_verified_required

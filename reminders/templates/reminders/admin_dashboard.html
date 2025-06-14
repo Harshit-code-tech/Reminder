@@ -1,0 +1,431 @@
+<!-- reminders/templates/reminders/admin_dashboard.html -->
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 mb-12">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white">Admin Dashboard</h1>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">System overview and analytics for {{ today|date:"F j, Y" }}</p>
+        </div>
+        <div class="flex gap-3">
+            <button class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition shadow-sm hover:shadow-md flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refresh Data
+            </button>
+            <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition shadow-sm hover:shadow-md flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Export Report
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        <!-- Users Card -->
+        <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-gray-800 dark:to-indigo-900/30 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition group">
+            <div class="px-6 pt-6 pb-4">
+                <div class="flex items-center">
+                    <div class="p-3 bg-indigo-600 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </div>
+                    <div class="ml-5">
+                        <h2 class="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Users</h2>
+                        <div class="mt-1 flex items-baseline">
+                            <p class="text-3xl font-extrabold text-gray-900 dark:text-white">{{ total_users|default:"0"|add:0 }}</p>
+                            <p class="ml-2 text-sm font-medium text-green-600 dark:text-green-400">+5%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pb-2">
+                <div class="h-1 bg-indigo-500"></div>
+            </div>
+        </div>
+
+        <!-- Events Card -->
+        <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-gray-800 dark:to-purple-900/30 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition group">
+            <div class="px-6 pt-6 pb-4">
+                <div class="flex items-center">
+                    <div class="p-3 bg-purple-600 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <div class="ml-5">
+                        <h2 class="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Events</h2>
+                        <div class="mt-1 flex items-baseline">
+                            <p class="text-3xl font-extrabold text-gray-900 dark:text-white">{{ total_events|default:"0"|add:0 }}</p>
+                            <p class="ml-2 text-sm font-medium text-green-600 dark:text-green-400">+12%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pb-2">
+                <div class="h-1 bg-purple-500"></div>
+            </div>
+        </div>
+
+        <!-- Reflections Card -->
+        <div class="bg-gradient-to-br from-pink-50 to-pink-100 dark:from-gray-800 dark:to-pink-900/30 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition group">
+            <div class="px-6 pt-6 pb-4">
+                <div class="flex items-center">
+                    <div class="p-3 bg-pink-600 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <div class="ml-5">
+                        <h2 class="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Reflections</h2>
+                        <div class="mt-1 flex items-baseline">
+                            <p class="text-3xl font-extrabold text-gray-900 dark:text-white">{{ total_reflections|default:"0"|add:0 }}</p>
+                            <p class="ml-2 text-sm font-medium text-green-600 dark:text-green-400">+8%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pb-2">
+                <div class="h-1 bg-pink-500"></div>
+            </div>
+        </div>
+
+        <!-- Recurring Events Card -->
+        <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-gray-800 dark:to-emerald-900/30 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition group">
+            <div class="px-6 pt-6 pb-4">
+                <div class="flex items-center">
+                    <div class="p-3 bg-emerald-600 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                    </div>
+                    <div class="ml-5">
+                        <h2 class="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Recurring</h2>
+                        <div class="mt-1 flex items-baseline">
+                            <p class="text-3xl font-extrabold text-gray-900 dark:text-white">{{ recurring_events|default:"0"|add:0 }}</p>
+                            <p class="ml-2 text-sm font-medium text-green-600 dark:text-green-400">+3%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pb-2">
+                <div class="h-1 bg-emerald-500"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart and Recent Activity Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Chart Section -->
+        <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white">Analytics Overview</h2>
+                <div class="flex items-center space-x-2">
+                    <select id="chartType" class="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white text-sm px-3 py-1 outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="doughnut">Doughnut</option>
+                        <option value="bar">Bar</option>
+                        <option value="line">Line</option>
+                    </select>
+                </div>
+            </div>
+            <div class="relative h-80">
+                <canvas id="eventsChart"></canvas>
+            </div>
+            <noscript>
+                <div class="text-center py-4 px-6 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg mt-4">
+                    <p>Please enable JavaScript to view the chart.</p>
+                </div>
+            </noscript>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Recent Activity</h2>
+
+            <div class="space-y-5 overflow-y-auto max-h-[20rem] pr-2 scrollbar scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+                {% if recent_logs %}
+                    {% for log in recent_logs|slice:":7" %}
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0">
+                            {% if log.status == 'success' %}
+                            <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-green-100 dark:bg-green-800">
+                                <svg class="h-5 w-5 text-green-600 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-red-100 dark:bg-red-800">
+                                <svg class="h-5 w-5 text-red-600 dark:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                {{ log.event.name }}
+                            </p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">
+                                User: {{ log.user.username }}
+                            </p>
+                            <span class="text-xs text-gray-400 dark:text-gray-500">
+                                {{ log.timestamp|date:"M d, Y · H:i" }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="flex items-center justify-center h-40">
+                    <p class="text-gray-500 dark:text-gray-400">No recent activity available.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if recent_logs|length > 7 %}
+            <div class="mt-6">
+                <a href="#" class="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 flex items-center justify-center">
+                    View all activity
+                    <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                    </svg>
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Logs Table -->
+    <div class="mt-8 bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md overflow-hidden">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Recent Reminder Logs</h2>
+            <div class="flex items-center gap-2">
+                <button class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                </button>
+                <button class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        {% if recent_logs %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead>
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">User</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Event</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Time</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for log in recent_logs %}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{{ log.user.username }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{{ log.event.name }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if log.status == 'success' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200">
+                                Success
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200">
+                                Failed
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{{ log.timestamp|date:"Y-m-d H:i" }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-3">View</button>
+                            <button class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">Details</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="flex items-center justify-between mt-5">
+            <div class="text-sm text-gray-700 dark:text-gray-300">
+                Showing <span class="font-medium">1</span> to <span class="font-medium">{{ recent_logs|length }}</span> of <span class="font-medium">{{ recent_logs|length }}</span> logs
+            </div>
+            <div class="flex-1 flex justify-end">
+                <nav class="relative z-0 inline-flex shadow-sm -space-x-px" aria-label="Pagination">
+                    <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600">
+                        Previous
+                    </a>
+                    <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600">
+                        1
+                    </a>
+                    <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600">
+                        Next
+                    </a>
+                </nav>
+            </div>
+        </div>
+        {% else %}
+        <div class="flex items-center justify-center h-40 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+            <div class="text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p class="mt-2 text-gray-500 dark:text-gray-400">No recent logs available.</p>
+                <button class="mt-3 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition">
+                    Generate Test Data
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Chart Initialization -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Chart initialization
+    const ctx = document.getElementById('eventsChart').getContext('2d');
+    let chartInstance;
+
+    const chartData = {
+        labels: ['Users', 'Events', 'Reflections', 'Recurring Events'],
+        datasets: [{
+            data: [
+                {{ total_users|default:"0" }},
+                {{ total_events|default:"0" }},
+                {{ total_reflections|default:"0" }},
+                {{ recurring_events|default:"0" }}
+            ],
+            backgroundColor: [
+                'rgba(99, 102, 241, 0.8)',   // Indigo
+                'rgba(168, 85, 247, 0.8)',   // Purple
+                'rgba(236, 72, 153, 0.8)',   // Pink
+                'rgba(16, 185, 129, 0.8)'    // Emerald
+            ],
+            borderColor: [
+                'rgba(99, 102, 241, 1)',
+                'rgba(168, 85, 247, 1)',
+                'rgba(236, 72, 153, 1)',
+                'rgba(16, 185, 129, 1)'
+            ],
+            borderWidth: 1
+        }]
+    };
+
+    // Check dark mode
+    function isDarkMode() {
+        return document.documentElement.classList.contains('dark');
+    }
+
+    // Update chart colors based on mode
+    function updateChartColors() {
+        const isDark = isDarkMode();
+
+        chartInstance.data.datasets[0].borderColor = isDark ? [
+            'rgba(129, 140, 248, 1)',
+            'rgba(192, 132, 252, 1)',
+            'rgba(244, 114, 182, 1)',
+            'rgba(52, 211, 153, 1)'
+        ] : [
+            'rgba(99, 102, 241, 1)',
+            'rgba(168, 85, 247, 1)',
+            'rgba(236, 72, 153, 1)',
+            'rgba(16, 185, 129, 1)'
+        ];
+
+        chartInstance.options.plugins.legend.labels.color = isDark ? '#e5e7eb' : '#374151';
+        chartInstance.update();
+    }
+
+    // Create chart with initial type
+    function createChart(type = 'doughnut') {
+        const isDark = isDarkMode();
+
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        boxWidth: 12,
+                        color: isDark ? '#e5e7eb' : '#374151',
+                        font: {
+                            size: 12
+                        }
+                    }
+                }
+            }
+        };
+
+        // Additional options for bar/line charts
+        if (type === 'bar' || type === 'line') {
+            options.scales = {
+                x: {
+                    grid: {
+                        color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                    },
+                    ticks: {
+                        color: isDark ? '#e5e7eb' : '#374151'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                    },
+                    ticks: {
+                        color: isDark ? '#e5e7eb' : '#374151'
+                    }
+                }
+            };
+        }
+
+        chartInstance = new Chart(ctx, {
+            type: type,
+            data: chartData,
+            options: options
+        });
+    }
+
+    // Initial chart creation
+    createChart('doughnut');
+
+    // Handle chart type changes
+    document.getElementById('chartType').addEventListener('change', function(e) {
+        createChart(e.target.value);
+    });
+
+    // Watch for theme changes and update chart
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.attributeName === 'class' &&
+                mutation.target === document.documentElement) {
+                updateChartColors();
+            }
+        });
+    });
+
+    observer.observe(document.documentElement, { attributes: true });
+});
+</script>
+{% endblock %}

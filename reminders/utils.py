@@ -1,6 +1,6 @@
 from django.utils import timezone
 from datetime import timedelta, datetime
-from .models import Event, ReminderLog, ImportLog, EventMedia
+from .models import Event, ReminderLog, ImportLog, EventMedia, Reflection
 from .email_utils import ReminderEmailService
 import logging
 import csv
@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 from django.db.models import Count, Sum
 from django.utils.timezone import make_aware, is_naive
-
+from django.contrib.auth import get_user_model
 logger = logging.getLogger('app_logger')
 
 def send_upcoming_reminders():
@@ -272,3 +272,64 @@ def get_analytics_data(user, start_date=None, end_date=None):
         }
 
 
+
+def download_analytics_report(user, start_date=None, end_date=None):
+    try:
+        logger.info(f"Downloading analytics report for user {user.username}")
+
+        analytics_data = get_analytics_data(user, start_date, end_date)
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="analytics_report.csv"'
+        writer = csv.writer(response)
+
+        # Write header
+        writer.writerow(['Category', 'Metric', 'Value'])
+
+        # Write event stats
+        writer.writerow(['Events', 'Total', analytics_data['event_stats']['total']])
+        for item in analytics_data['event_stats']['by_type']:
+            writer.writerow(['Events', f"Type: {item['event_type'].capitalize()}", item['count']])
+        writer.writerow(['Events', 'Upcoming', analytics_data['event_stats']['upcoming']])
+        writer.writerow(['Events', 'Past', analytics_data['event_stats']['past']])
+
+        # Write reminder stats
+        writer.writerow(['Reminders', 'Total', analytics_data['reminder_stats']['total']])
+        writer.writerow(['Reminders', 'Success', analytics_data['reminder_stats']['success']])
+        writer.writerow(['Reminders', 'Failure', analytics_data['reminder_stats']['failure']])
+
+        # Write media stats
+        writer.writerow(['Media', 'Total', analytics_data['media_stats']['total']])
+        for item in analytics_data['media_stats']['by_type']:
+            writer.writerow(['Media', f"Type: {item['media_type'].capitalize()}", item['count']])
+
+        # Write import stats
+        writer.writerow(['Imports', 'Total', analytics_data['import_stats']['total']])
+        writer.writerow(['Imports', 'Success Count', analytics_data['import_stats']['success_count']])
+        writer.writerow(['Imports', 'Failure Count', analytics_data['import_stats']['failure_count']])
+
+        return response
+
+    except Exception as e:
+        logger.error(f"Error downloading analytics report for user {user.username}: {str(e)}")
+        return HttpResponse(status=500)
+
+
+
+def get_admin_dashboard_stats():
+    User = get_user_model()
+    total_users = User.objects.count()
+    total_events = Event.objects.count()
+    total_reflections = Reflection.objects.count()
+    recurring_events = Event.objects.filter(is_recurring=True).count()
+    today = timezone.localdate()
+    recent_logs = ReminderLog.objects.order_by('-timestamp')[:20]
+    # Add more metrics as needed (e.g., Redis, API usage)
+    return {
+        'total_users': total_users,
+        'total_events': total_events,
+        'total_reflections': total_reflections,
+        'recurring_events': recurring_events,
+        'recent_logs': recent_logs,
+        'today': today,
+    }
