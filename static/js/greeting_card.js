@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-  // Configuration
+  // Enhanced Configuration with more themes and quotes
   const themes = {
     'birthday': {
       password: function(name) { return name.trim().toLowerCase(); },
@@ -8,7 +8,8 @@ document.addEventListener('DOMContentLoaded', function() {
         "Another year of awesome you!",
         "Age is merely the number of years the world has been enjoying you.",
         "Shine bright today and always!",
-        "You're not getting older, you're getting better!"
+        "You're not getting older, you're getting better!",
+        "May your birthday be filled with laughter and joy!"
       ],
       confettiColors: ['#fde68a', '#fbbf24', '#f59e0b', '#d97706']
     },
@@ -19,7 +20,8 @@ document.addEventListener('DOMContentLoaded', function() {
         "The best is yet to come.",
         "Forever isn't long enough with you.",
         "Through all the seasons, my love for you grows.",
-        "Every moment with you is a blessing."
+        "Every moment with you is a blessing.",
+        "Here's to many more years of happiness together."
       ],
       confettiColors: ['#fbcfe8', '#f472b6', '#db2777', '#be185d']
     },
@@ -30,7 +32,8 @@ document.addEventListener('DOMContentLoaded', function() {
         "Keep shining your light on the world!",
         "The adventure continues!",
         "You're making a difference every day.",
-        "The best journeys are shared with friends like you."
+        "The best journeys are shared with friends like you.",
+        "Celebrating this special occasion with you!"
       ],
       confettiColors: ['#a5f3fc', '#22d3ee', '#0891b2', '#0e7490']
     }
@@ -38,206 +41,416 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Card Elements
   const cardContainer = document.querySelector('.card-container');
-  const eventType = cardContainer.dataset.theme || 'birthday';
-  const culturalTheme = cardContainer.dataset.culturalTheme === 'true';
+  const eventType = cardContainer?.dataset.theme || 'birthday';
+  const culturalTheme = cardContainer?.dataset.culturalTheme === 'true';
+  const customLabel = cardContainer?.dataset.customLabel || '';
   const cardPages = document.querySelectorAll('.card-page');
   const pageIndicators = document.querySelectorAll('.page-indicator .indicator');
   const recipientNameElements = document.querySelectorAll('.recipient-name');
-  const saveButton = document.querySelector('.save-button');
-  const saveCardButton = document.querySelector('.save-card');
 
-  // Page 1 Elements
-  const passwordInput = document.querySelector('.password-input');
-  const unlockButton = document.querySelector('.unlock-button');
-  const passwordHint = document.querySelector('.password-hint');
+  // Cache DOM elements and add error handling
+  const elements = {
+    passwordInput: document.querySelector('.password-input'),
+    unlockButton: document.querySelector('.unlock-button'),
+    passwordHint: document.querySelector('.password-hint'),
+    nextButtons: document.querySelectorAll('.nav-button.next'),
+    prevButtons: document.querySelectorAll('.nav-button.prev'),
+    saveButton: document.querySelector('.save-button'),
+    saveCardButton: document.querySelector('.save-card'),
+    shareButton: document.querySelector('.share-card'),
+    voiceNote: document.querySelector('.voice-note-text'),
+    playVoiceNote: document.querySelector('.play-voice-note')
+  };
 
-  // Page Navigation
-  const nextButtons = document.querySelectorAll('.nav-button.next');
-  const prevButtons = document.querySelectorAll('.nav-button.prev');
-
-  // Current state
+  // Current state with improved persistence
   let currentPage = 1;
   let unlocked = false;
-  let savedData = JSON.parse(localStorage.getItem('cardState')) || { leaves: [], unlocked: false };
+  const storageKey = `cardState_${window.location.pathname}`;
+  let savedData = getSavedData();
+
+  function getSavedData() {
+    try {
+      return JSON.parse(localStorage.getItem(storageKey)) || {
+        leaves: [],
+        unlocked: false,
+        lastVisited: Date.now()
+      };
+    } catch (e) {
+      console.error('Error parsing saved card data:', e);
+      return { leaves: [], unlocked: false, lastVisited: Date.now() };
+    }
+  }
+
+  function saveData(data = {}) {
+    try {
+      savedData = {...savedData, ...data, lastVisited: Date.now()};
+      localStorage.setItem(storageKey, JSON.stringify(savedData));
+      return true;
+    } catch (e) {
+      console.error('Error saving card data:', e);
+      return false;
+    }
+  }
 
   // Load saved state
   if (savedData.unlocked) {
     unlocked = true;
-    goToPage(1);
+    goToPage(savedData.lastPage || 1);
   }
 
-  // Create Diyas if cultural theme is enabled
+  // Create UI elements based on theme
   if (culturalTheme) {
     createDiyas();
   }
 
-  // Initialize quotes
+  // Initialize all interactive components
   initializeQuotes();
 
-  // Set random motivational quote
+  // Set random motivational quote with error handling
   function initializeQuotes() {
-    const quoteElements = document.querySelectorAll('.inspiration-quote');
-    const themeQuotes = themes[eventType].quotes;
+    try {
+      const quoteElements = document.querySelectorAll('.inspiration-quote');
+      const themeQuotes = themes[eventType]?.quotes || themes.birthday.quotes;
 
-    quoteElements.forEach(quoteEl => {
-      const randomQuote = themeQuotes[Math.floor(Math.random() * themeQuotes.length)];
-      quoteEl.textContent = randomQuote;
-    });
+      quoteElements.forEach(quoteEl => {
+        const randomQuote = themeQuotes[Math.floor(Math.random() * themeQuotes.length)];
+        quoteEl.textContent = randomQuote;
+      });
+    } catch (e) {
+      console.error('Error initializing quotes:', e);
+    }
   }
 
-  // Create floating diyas for cultural theme
+  // Create floating diyas with performance optimization
   function createDiyas() {
-    const diyaContainers = document.querySelectorAll('.diya-container');
+    try {
+      const diyaContainers = document.querySelectorAll('.diya-container');
+      const fragment = document.createDocumentFragment();
 
-    diyaContainers.forEach(container => {
-      for (let i = 0; i < 5; i++) {
-        const diya = document.createElement('div');
-        diya.className = 'diya';
-        diya.style.left = `${Math.random() * 80 + 10}%`;
-        diya.style.top = `${Math.random() * 80 + 10}%`;
-        diya.style.animationDelay = `${Math.random() * 2}s`;
+      diyaContainers.forEach(container => {
+        // Use fragment for better performance
+        const containerFragment = document.createDocumentFragment();
 
-        const flame = document.createElement('div');
-        flame.className = 'flame';
-        diya.appendChild(flame);
+        for (let i = 0; i < 5; i++) {
+          const diya = document.createElement('div');
+          diya.className = 'diya';
+          diya.style.left = `${Math.random() * 80 + 10}%`;
+          diya.style.top = `${Math.random() * 80 + 10}%`;
+          diya.style.animationDelay = `${Math.random() * 2}s`;
 
-        container.appendChild(diya);
-      }
-    });
+          const flame = document.createElement('div');
+          flame.className = 'flame';
+          diya.appendChild(flame);
+
+          containerFragment.appendChild(diya);
+        }
+
+        container.appendChild(containerFragment);
+      });
+    } catch (e) {
+      console.error('Error creating diyas:', e);
+    }
   }
 
-  // Handle media display
+  // Enhanced media display with lazy loading support
   function setupMediaDisplay() {
-    const mediaDisplays = document.querySelectorAll('.media-display');
+    try {
+      const mediaDisplays = document.querySelectorAll('.media-display');
 
-    mediaDisplays.forEach(display => {
-      if (display.dataset.mediaUrls) {
+      mediaDisplays.forEach(display => {
+        if (!display.dataset.mediaUrls) return;
+
         const mediaUrls = display.dataset.mediaUrls.split(',').filter(url => url.trim() !== '');
+        if (!mediaUrls.length) return;
+
         display.innerHTML = '';
+        const fragment = document.createDocumentFragment();
+
+        // Media type handling
+        const imageUrls = [];
+        const audioUrls = [];
 
         mediaUrls.forEach(url => {
-          if (url.match(/\.(jpeg|jpg|gif|png)$/i)) {
+          if (url.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
+            imageUrls.push(url);
+          } else if (url.match(/\.(mp3|wav|flac|ogg)$/i)) {
+            audioUrls.push(url);
+          }
+        });
+
+        // Handle images with lazy loading
+        if (imageUrls.length) {
+          imageUrls.forEach((url, i) => {
             const img = document.createElement('img');
             img.src = url;
             img.alt = "Event Media";
             img.className = "media-image";
-            display.appendChild(img);
-          } else if (url.match(/\.(mp3|wav|flac)$/i)) {
-            const audioPlayer = document.querySelector('.audio-player');
-            if (audioPlayer) {
-              const audio = document.createElement('audio');
-              audio.controls = true;
-              const source = document.createElement('source');
-              source.src = url;
-              audio.appendChild(source);
-              audioPlayer.appendChild(audio);
-            }
-          }
-        });
+            img.loading = "lazy"; // Add lazy loading
+            img.style.display = i > 0 ? 'none' : 'block';
+            fragment.appendChild(img);
+          });
+        }
 
+        display.appendChild(fragment);
+
+        // Add slideshow controls for multiple images
         const images = display.querySelectorAll('.media-image');
         if (images.length > 1) {
-          let currentIndex = 0;
-          images.forEach((img, i) => {
-            if (i > 0) img.style.display = 'none';
-          });
-
-          const controls = document.createElement('div');
-          controls.className = 'slideshow-controls';
-
-          const prevBtn = document.createElement('button');
-          prevBtn.className = 'slideshow-btn prev';
-          prevBtn.innerHTML = '←';
-          prevBtn.addEventListener('click', () => {
-            images[currentIndex].style.display = 'none';
-            currentIndex = (currentIndex - 1 + images.length) % images.length;
-            images[currentIndex].style.display = 'block';
-          });
-
-          const nextBtn = document.createElement('button');
-          nextBtn.className = 'slideshow-btn next';
-          nextBtn.innerHTML = '→';
-          nextBtn.addEventListener('click', () => {
-            images[currentIndex].style.display = 'none';
-            currentIndex = (currentIndex + 1) % images.length;
-            images[currentIndex].style.display = 'block';
-          });
-
-          controls.appendChild(prevBtn);
-          controls.appendChild(nextBtn);
-          display.appendChild(controls);
+          setupSlideshow(display, images);
         }
-      }
-    });
+
+        // Add audio player if audio files exist
+        if (audioUrls.length) {
+          setupAudioPlayer(audioUrls);
+        }
+      });
+    } catch (e) {
+      console.error('Error setting up media display:', e);
+    }
   }
 
-  // Page Navigation
+  // Slideshow functionality
+  function setupSlideshow(display, images) {
+    let currentIndex = 0;
+    const controls = document.createElement('div');
+    controls.className = 'slideshow-controls';
+
+    // Improved navigation with indicators
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'slideshow-btn prev';
+    prevBtn.innerHTML = '←';
+    prevBtn.setAttribute('aria-label', 'Previous image');
+
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'slideshow-btn next';
+    nextBtn.innerHTML = '→';
+    nextBtn.setAttribute('aria-label', 'Next image');
+
+    const indicators = document.createElement('div');
+    indicators.className = 'slideshow-indicators';
+
+    // Create indicator dots
+    for (let i = 0; i < images.length; i++) {
+      const dot = document.createElement('span');
+      dot.className = i === 0 ? 'indicator active' : 'indicator';
+      dot.setAttribute('data-index', i);
+      indicators.appendChild(dot);
+    }
+
+    // Add event listeners
+    prevBtn.addEventListener('click', () => {
+      showSlide(currentIndex - 1);
+    });
+
+    nextBtn.addEventListener('click', () => {
+      showSlide(currentIndex + 1);
+    });
+
+    // Indicator clicks
+    indicators.addEventListener('click', (e) => {
+      if (e.target.classList.contains('indicator')) {
+        const index = parseInt(e.target.dataset.index);
+        showSlide(index);
+      }
+    });
+
+    // Show specific slide
+    function showSlide(index) {
+      // Update index with wrapping
+      currentIndex = (index + images.length) % images.length;
+
+      // Update visibility
+      images.forEach((img, i) => {
+        img.style.display = i === currentIndex ? 'block' : 'none';
+      });
+
+      // Update indicators
+      const dots = indicators.querySelectorAll('.indicator');
+      dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i === currentIndex);
+      });
+    }
+
+    // Add touch swipe support
+    let touchStartX = 0;
+    display.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, {passive: true});
+
+    display.addEventListener('touchend', (e) => {
+      const touchEndX = e.changedTouches[0].screenX;
+      const diff = touchEndX - touchStartX;
+
+      if (diff > 50) {
+        showSlide(currentIndex - 1); // Swipe right
+      } else if (diff < -50) {
+        showSlide(currentIndex + 1); // Swipe left
+      }
+    }, {passive: true});
+
+    // Add keyboard support
+    display.setAttribute('tabindex', '0');
+    display.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') {
+        showSlide(currentIndex - 1);
+      } else if (e.key === 'ArrowRight') {
+        showSlide(currentIndex + 1);
+      }
+    });
+
+    // Assemble controls
+    controls.appendChild(prevBtn);
+    controls.appendChild(indicators);
+    controls.appendChild(nextBtn);
+    display.appendChild(controls);
+
+    // Start auto rotation if more than one image
+    if (images.length > 1) {
+      let slideshowInterval = setInterval(() => {
+        showSlide(currentIndex + 1);
+      }, 5000);
+
+      // Pause on hover/focus
+      display.addEventListener('mouseenter', () => clearInterval(slideshowInterval));
+      display.addEventListener('focus', () => clearInterval(slideshowInterval));
+
+      // Resume on mouse leave/blur
+      display.addEventListener('mouseleave', () => {
+        slideshowInterval = setInterval(() => {
+          showSlide(currentIndex + 1);
+        }, 5000);
+      });
+      display.addEventListener('blur', () => {
+        slideshowInterval = setInterval(() => {
+          showSlide(currentIndex + 1);
+        }, 5000);
+      });
+    }
+  }
+
+  // Audio player setup
+  function setupAudioPlayer(audioUrls) {
+    const audioPlayer = document.querySelector('.audio-player');
+    if (!audioPlayer) return;
+
+    audioPlayer.innerHTML = '';
+    const audio = document.createElement('audio');
+    audio.controls = true;
+
+    // Add sources
+    audioUrls.forEach(url => {
+      const source = document.createElement('source');
+      source.src = url;
+      audio.appendChild(source);
+    });
+
+    // Add custom controls if needed
+    audioPlayer.appendChild(audio);
+  }
+
+  // Improved page navigation with accessibility
   function goToPage(pageNum) {
-    if (pageNum < 1 || pageNum > cardPages.length) return;
+    if (!pageNum || pageNum < 1 || pageNum > cardPages.length) return;
     if (pageNum > 1 && !unlocked) {
       shakePasswordInput();
       return;
     }
 
     currentPage = pageNum;
+    saveData({ lastPage: currentPage });
 
+    // Update DOM
     cardPages.forEach((page, index) => {
-      page.classList.toggle('active', index + 1 === currentPage);
+      const isActive = index + 1 === currentPage;
+      page.classList.toggle('active', isActive);
+      page.setAttribute('aria-hidden', !isActive);
     });
 
     pageIndicators.forEach((indicator, index) => {
-      indicator.textContent = index + 1 === currentPage ? '●' : '○';
-      indicator.classList.toggle('active', index + 1 === currentPage);
+      const isActive = index + 1 === currentPage;
+      indicator.textContent = isActive ? '●' : '○';
+      indicator.classList.toggle('active', isActive);
+      indicator.setAttribute('aria-selected', isActive);
     });
 
+    // Initialize features for the current page
     initPage(pageNum);
   }
 
-  // Password validation
+  // Enhanced password validation with custom label support
   function validatePassword() {
-    const recipientName = recipientNameElements[0]?.textContent || '';
-    let expectedPassword;
+    try {
+      const recipientName = recipientNameElements[0]?.textContent || '';
+      const inputValue = elements.passwordInput?.value?.trim().toLowerCase() || '';
 
-    switch (eventType) {
-      case 'birthday':
-        expectedPassword = themes.birthday.password(recipientName);
-        break;
-      case 'anniversary':
-        expectedPassword = passwordInput.value.trim();
-        break;
-      case 'other':
-        const customLabel = cardContainer.dataset.customLabel || '';
-        expectedPassword = customLabel ?
+      if (!inputValue) {
+        shakePasswordInput('Please enter a password');
+        return false;
+      }
+
+      let expectedPassword;
+
+      switch (eventType) {
+        case 'birthday':
+          expectedPassword = themes.birthday.password(recipientName);
+          break;
+        case 'anniversary':
+          expectedPassword = inputValue; // Any date format is accepted
+          break;
+        case 'other':
+          expectedPassword = customLabel ?
                           themes.other.password(customLabel) :
                           themes.other.password(recipientName);
-        break;
+          break;
+      }
+
+      // For greater flexibility, accept either the expected password or the recipient's name
+      if (inputValue && (inputValue === expectedPassword || inputValue === recipientName.toLowerCase().trim())) {
+        unlocked = true;
+        saveData({ unlocked: true });
+        showConfetti();
+
+        // Animate transition
+        setTimeout(() => {
+          elements.passwordInput.classList.add('success');
+          setTimeout(() => goToPage(2), 1000);
+        }, 500);
+        return true;
+      }
+
+      shakePasswordInput('Incorrect password, please try again');
+      return false;
+    } catch (e) {
+      console.error('Error validating password:', e);
+      return false;
     }
-
-    const inputPassword = passwordInput.value.trim().toLowerCase();
-
-    if (inputPassword && (inputPassword === expectedPassword || inputPassword === recipientName.toLowerCase().trim())) {
-      unlocked = true;
-      savedData.unlocked = true;
-      localStorage.setItem('cardState', JSON.stringify(savedData));
-      showConfetti();
-      setTimeout(() => goToPage(2), 1000);
-      return true;
-    }
-
-    shakePasswordInput();
-    return false;
   }
 
-  function shakePasswordInput() {
-    passwordInput.classList.add('error');
-    passwordInput.style.animation = 'shake 0.5s ease';
+  // Improved feedback for password errors
+  function shakePasswordInput(message = null) {
+    if (!elements.passwordInput) return;
+
+    elements.passwordInput.classList.add('error');
+    elements.passwordInput.style.animation = 'shake 0.5s ease';
+
+    // Show error message if provided
+    if (message && elements.passwordHint) {
+      const originalHint = elements.passwordHint.innerHTML;
+      elements.passwordHint.innerHTML = `<span class="error-message">${message}</span>`;
+
+      // Restore original hint after delay
+      setTimeout(() => {
+        elements.passwordHint.innerHTML = originalHint;
+      }, 3000);
+    }
+
     setTimeout(() => {
-      passwordInput.style.animation = '';
-      passwordInput.classList.remove('error');
+      elements.passwordInput.style.animation = '';
+      elements.passwordInput.classList.remove('error');
     }, 500);
   }
 
-  // Birthday Countdown
+  // Page-specific setup functions
   function setupBirthdayCountdown() {
     if (eventType !== 'birthday') return;
 
@@ -251,6 +464,7 @@ document.addEventListener('DOMContentLoaded', function() {
       let count = 5;
       actionButton.style.display = 'none';
       countdownElement.textContent = count;
+      countdownElement.setAttribute('aria-live', 'assertive');
 
       const interval = setInterval(() => {
         count--;
@@ -261,114 +475,31 @@ document.addEventListener('DOMContentLoaded', function() {
           countdownElement.style.display = 'none';
           if (giftReveal) {
             giftReveal.classList.remove('hidden');
+            giftReveal.setAttribute('aria-hidden', 'false');
           }
         }
       }, 1000);
     });
   }
 
-  // Anniversary Clock
-  function setupAnniversaryClock() {
-    if (eventType !== 'anniversary') return;
-
-    const clock = document.querySelector('.anniversary-clock');
-    if (!clock) return;
-
-    const updateClock = () => {
-      const now = new Date();
-      const hours = now.getHours() % 12 || 12;
-      const minutes = now.getMinutes();
-      const seconds = now.getSeconds();
-
-      const hourDeg = (hours + minutes / 60) * 30;
-      const minuteDeg = (minutes + seconds / 60) * 6;
-      const secondDeg = seconds * 6;
-
-      const hourHand = clock.querySelector('.hour-hand');
-      const minuteHand = clock.querySelector('.minute-hand');
-      const secondHand = clock.querySelector('.second-hand');
-
-      if (hourHand) hourHand.style.transform = `rotate(${hourDeg}deg)`;
-      if (minuteHand) minuteHand.style.transform = `rotate(${minuteDeg}deg)`;
-      if (secondHand) secondHand.style.transform = `rotate(${secondDeg}deg)`;
-    };
-
-    updateClock();
-    setInterval(updateClock, 1000);
-  }
-
-  // Birthday Cake
-  function setupBirthdayCake() {
-    if (eventType !== 'birthday') return;
-
-    const cake = document.querySelector('.birthday-cake');
-    if (!cake) return;
-
-    cake.addEventListener('click', function() {
-      const flames = cake.querySelectorAll('.flame');
-      flames.forEach(flame => {
-        flame.style.opacity = '0';
-        flame.style.transform = 'scale(0)';
-      });
-
-      showSparkles(cake);
-      const instruction = document.querySelector('.cake-instruction');
-      if (instruction) {
-        instruction.textContent = 'Your wish has been made!';
-      }
-    });
-  }
-
-  // Anniversary Dance
-  function setupAnniversaryDance() {
-    if (eventType !== 'anniversary') return;
-
-    const danceButton = document.querySelector('.dance-button');
-    const danceAnimation = document.querySelector('.dance-animation');
-
-    if (!danceButton || !danceAnimation) return;
-
-    danceButton.addEventListener('click', function() {
-      danceAnimation.innerHTML = '';
-      danceButton.textContent = 'Dancing...';
-      danceButton.disabled = true;
-
-      for (let i = 0; i < 20; i++) {
-        const heart = document.createElement('div');
-        heart.textContent = '💖';
-        heart.style.position = 'absolute';
-        heart.style.fontSize = `${Math.random() * 20 + 15}px`;
-        heart.style.left = `${Math.random() * 100}%`;
-        heart.style.top = `${Math.random() * 100}%`;
-        heart.style.opacity = '0';
-        heart.style.animation = `fadeInOut ${Math.random() * 3 + 2}s ease infinite`;
-        heart.style.animationDelay = `${Math.random() * 2}s`;
-
-        danceAnimation.appendChild(heart);
-      }
-
-      setTimeout(() => {
-        danceAnimation.innerHTML = '';
-        danceButton.textContent = 'Dance Again!';
-        danceButton.disabled = false;
-      }, 5000);
-    });
-  }
-
-  // Memory Tree
+  // Enhanced memory tree with persistence
   function setupMemoryTree() {
     const tree = document.querySelector('.memory-tree');
     const treeInstruction = document.querySelector('.tree-instruction');
     if (!tree) return;
 
     // Load saved leaves
-    savedData.leaves.forEach(leaf => {
-      const leafEl = document.createElement('div');
-      leafEl.className = 'memory-leaf';
-      leafEl.style.left = `${leaf.x}px`;
-      leafEl.style.top = `${leaf.y}px`;
-      tree.appendChild(leafEl);
-    });
+    if (savedData.leaves && Array.isArray(savedData.leaves)) {
+      const fragment = document.createDocumentFragment();
+      savedData.leaves.forEach(leaf => {
+        const leafEl = document.createElement('div');
+        leafEl.className = 'memory-leaf';
+        leafEl.style.left = `${leaf.x}px`;
+        leafEl.style.top = `${leaf.y}px`;
+        fragment.appendChild(leafEl);
+      });
+      tree.appendChild(fragment);
+    }
 
     tree.addEventListener('click', function(e) {
       const rect = tree.getBoundingClientRect();
@@ -381,21 +512,39 @@ document.addEventListener('DOMContentLoaded', function() {
       leaf.style.top = `${y}px`;
       tree.appendChild(leaf);
 
-      savedData.leaves.push({ x, y });
-      localStorage.setItem('cardState', JSON.stringify(savedData));
+      // Add leaf animation
+      leaf.animate([
+        { transform: 'scale(0)', opacity: 0 },
+        { transform: 'scale(1.2)', opacity: 0.8 },
+        { transform: 'scale(1)', opacity: 1 }
+      ], {
+        duration: 500,
+        easing: 'ease-out'
+      });
 
+      // Save the leaf position
+      if (!savedData.leaves) savedData.leaves = [];
+      savedData.leaves.push({ x, y });
+      saveData(); // Save updated leaves
+
+      // Update instruction if many leaves
       if (tree.querySelectorAll('.memory-leaf').length > 5 && treeInstruction) {
         treeInstruction.textContent = 'Your tree is flourishing!';
       }
     });
   }
 
-  // Display confetti
+  // Confetti animation with requestAnimationFrame for performance
   function showConfetti() {
-    const colors = themes[eventType].confettiColors;
+    const colors = themes[eventType]?.confettiColors || themes.birthday.confettiColors;
     const container = document.getElementById('page-1');
+    if (!container) return;
 
-    for (let i = 0; i < 100; i++) {
+    const confettiPieces = [];
+    const confettiDensity = Math.min(100, window.innerWidth / 10); // Responsive density
+
+    // Create confetti pieces
+    for (let i = 0; i < confettiDensity; i++) {
       const confetti = document.createElement('div');
       confetti.className = 'confetti-piece';
       confetti.style.left = `${Math.random() * 100}%`;
@@ -404,177 +553,534 @@ document.addEventListener('DOMContentLoaded', function() {
       confetti.style.width = `${Math.random() * 10 + 5}px`;
       confetti.style.height = `${Math.random() * 10 + 5}px`;
       confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
-      confetti.style.animation = `fall ${Math.random() * 3 + 2}s ease-in forwards`;
+
+      // Store animation properties
+      confetti.speedY = Math.random() * 3 + 2;
+      confetti.speedX = Math.random() * 2 - 1;
+      confetti.rotateSpeed = Math.random() * 6 - 3;
 
       container.appendChild(confetti);
-      setTimeout(() => confetti.remove(), 5000);
-    }
-  }
-
-  // Show sparkles
-  function showSparkles(element) {
-    const rect = element.getBoundingClientRect();
-    const container = element.parentElement;
-
-    for (let i = 0; i < 30; i++) {
-      const sparkle = document.createElement('div');
-      sparkle.className = 'sparkle';
-      sparkle.style.position = 'absolute';
-      sparkle.style.left = `${rect.left + Math.random() * rect.width - 10}px`;
-      sparkle.style.top = `${rect.top + Math.random() * rect.height - 10}px`;
-      sparkle.style.width = `${Math.random() * 6 + 4}px`;
-      sparkle.style.height = sparkle.style.width;
-      sparkle.style.backgroundColor = themes[eventType].confettiColors[
-        Math.floor(Math.random() * themes[eventType].confettiColors.length)
-      ];
-      sparkle.style.borderRadius = '50%';
-      sparkle.style.boxShadow = `0 0 ${Math.random() * 10 + 5}px ${sparkle.style.backgroundColor}`;
-      sparkle.style.animation = `sparkle ${Math.random() * 1 + 1}s ease-out forwards`;
-
-      document.body.appendChild(sparkle);
-      setTimeout(() => sparkle.remove(), 2000);
-    }
-  }
-
-  // Play final farewell animation
-  function playFinalAnimation() {
-    const finalAnimation = document.querySelector('#page-5 .final-animation');
-    if (!finalAnimation) return;
-
-    if (eventType === 'birthday') {
-      for (let i = 0; i < 10; i++) {
-        const balloon = document.createElement('div');
-        balloon.textContent = '🎈';
-        balloon.style.position = 'absolute';
-        balloon.style.fontSize = `${Math.random() * 20 + 20}px`;
-        balloon.style.left = `${Math.random() * 100}%`;
-        balloon.style.bottom = `-50px`;
-        balloon.style.opacity = '0';
-        balloon.style.animation = `riseUp ${Math.random() * 3 + 4}s ease-out forwards`;
-        balloon.style.animationDelay = `${Math.random() * 2}s`;
-
-        finalAnimation.appendChild(balloon);
-        setTimeout(() => balloon.remove(), 6000);
-      }
-    } else if (eventType === 'anniversary') {
-      for (let i = 0; i < 20; i++) {
-        const heart = document.createElement('div');
-        heart.textContent = '💖';
-        heart.style.position = 'absolute';
-        heart.style.fontSize = `${Math.random() * 20 + 15}px`;
-        heart.style.left = `${Math.random() * 100}%`;
-        heart.style.top = `-50px`;
-        heart.style.opacity = '0';
-        heart.style.animation = `fallSlowly ${Math.random() * 5 + 5}s ease-in forwards`;
-        heart.style.animationDelay = `${Math.random() * 3}s`;
-
-        finalAnimation.appendChild(heart);
-        setTimeout(() => heart.remove(), 8000);
-      }
-    } else {
-      for (let i = 0; i < 50; i++) {
-        const sparkle = document.createElement('div');
-        sparkle.className = 'sparkle-final';
-        sparkle.style.position = 'absolute';
-        sparkle.style.width = `${Math.random() * 10 + 5}px`;
-        sparkle.style.height = sparkle.style.width;
-        sparkle.style.backgroundColor = themes.other.confettiColors[
-          Math.floor(Math.random() * themes.other.confettiColors.length)
-        ];
-        sparkle.style.borderRadius = '50%';
-        sparkle.style.left = `${Math.random() * 100}%`;
-        sparkle.style.top = `${Math.random() * 100}%`;
-        sparkle.style.opacity = '0';
-        sparkle.style.boxShadow = `0 0 ${Math.random() * 15 + 5}px ${sparkle.style.backgroundColor}`;
-        sparkle.style.animation = `twinkle ${Math.random() * 3 + 2}s ease infinite`;
-        sparkle.style.animationDelay = `${Math.random() * 3}s`;
-
-        finalAnimation.appendChild(sparkle);
-        setTimeout(() => sparkle.remove(), 5000);
-      }
+      confettiPieces.push({
+        element: confetti,
+        x: parseFloat(confetti.style.left),
+        y: -20,
+        speedY: confetti.speedY,
+        speedX: confetti.speedX,
+        rotate: Math.random() * 360,
+        rotateSpeed: confetti.rotateSpeed
+      });
     }
 
-    const playVoiceNoteButton = document.querySelector('.play-voice-note');
-    if (playVoiceNoteButton) {
-      playVoiceNoteButton.addEventListener('click', function() {
-        const noteText = document.querySelector('.voice-note-text');
-        if (noteText) {
-          noteText.style.display = 'block';
-          this.textContent = 'Reading...';
-          setTimeout(() => {
-            this.textContent = 'Play Voice Note';
-          }, 3000);
+    // Animate with requestAnimationFrame
+    let animationId;
+    const animate = () => {
+      confettiPieces.forEach((piece, i) => {
+        piece.y += piece.speedY;
+        piece.x += piece.speedX;
+        piece.rotate += piece.rotateSpeed;
+
+        piece.element.style.top = `${piece.y}px`;
+        piece.element.style.left = `${piece.x}%`;
+        piece.element.style.transform = `rotate(${piece.rotate}deg)`;
+
+        // Remove pieces that are out of view
+        if (piece.y > container.offsetHeight + 100) {
+          piece.element.remove();
+          confettiPieces.splice(i, 1);
         }
       });
-    }
+
+      // Continue animation if pieces remain
+      if (confettiPieces.length > 0) {
+        animationId = requestAnimationFrame(animate);
+      }
+    };
+
+    animationId = requestAnimationFrame(animate);
+
+    // Cleanup after max duration
+    setTimeout(() => {
+      cancelAnimationFrame(animationId);
+      confettiPieces.forEach(piece => piece.element.remove());
+      confettiPieces.length = 0;
+    }, 5000);
   }
 
-  // Save functionality
-  function setupSaveFunctionality() {
-    if (saveButton) {
-      saveButton.addEventListener('click', function() {
-        localStorage.setItem('cardState', JSON.stringify(savedData));
-        alert('This memory has been saved to your collection!');
-      });
+  // Anniversary clock implementation
+  function setupAnniversaryClock() {
+    if (eventType !== 'anniversary') return;
+
+    const clockContainer = document.querySelector('.anniversary-clock');
+    if (!clockContainer) return;
+
+    // Create clock face
+    const clockFace = document.createElement('div');
+    clockFace.className = 'clock-face';
+
+    // Create clock hands
+    const hourHand = document.createElement('div');
+    hourHand.className = 'clock-hand hour';
+
+    const minuteHand = document.createElement('div');
+    minuteHand.className = 'clock-hand minute';
+
+    const secondHand = document.createElement('div');
+    secondHand.className = 'clock-hand second';
+
+    // Add clock center
+    const clockCenter = document.createElement('div');
+    clockCenter.className = 'clock-center';
+
+    // Add clock markers
+    for (let i = 1; i <= 12; i++) {
+      const marker = document.createElement('div');
+      marker.className = 'clock-marker';
+      marker.textContent = i;
+      marker.style.transform = `rotate(${i * 30}deg) translateY(-40px) rotate(${-i * 30}deg)`;
+      clockFace.appendChild(marker);
     }
 
-    if (saveCardButton) {
-      saveCardButton.addEventListener('click', function() {
-        localStorage.setItem('cardState', JSON.stringify(savedData));
-        alert('Card saved! You can access it anytime from your saved cards.');
-      });
+    // Assemble clock
+    clockFace.appendChild(hourHand);
+    clockFace.appendChild(minuteHand);
+    clockFace.appendChild(secondHand);
+    clockFace.appendChild(clockCenter);
+    clockContainer.appendChild(clockFace);
+
+    // Special dates markers
+    const milestoneText = document.querySelector('.milestone-text');
+
+    // Start the clock animation
+    let animationStartTime = null;
+    let animationSpeed = 50; // 50x normal speed
+
+    function animateClock(timestamp) {
+      if (!animationStartTime) animationStartTime = timestamp;
+      const progress = (timestamp - animationStartTime) * animationSpeed;
+
+      // Convert progress to time (milliseconds to date)
+      const date = new Date(progress);
+      const seconds = date.getSeconds();
+      const minutes = date.getMinutes();
+      const hours = date.getHours() % 12;
+
+      // Update clock hands
+      secondHand.style.transform = `rotate(${(seconds * 6)}deg)`;
+      minuteHand.style.transform = `rotate(${(minutes * 6)}deg)`;
+      hourHand.style.transform = `rotate(${(hours * 30) + (minutes * 0.5)}deg)`;
+
+      // Complete one full day
+      if (progress < 86400000) { // milliseconds in a day
+        requestAnimationFrame(animateClock);
+      } else {
+        // Show final message
+        if (milestoneText) {
+          milestoneText.classList.add('highlight');
+          milestoneText.textContent = "Here's to many more years together! 💕";
+        }
+      }
     }
+
+    // Start the animation
+    requestAnimationFrame(animateClock);
   }
 
-  // Page-specific initialization
-  function initPage(pageNum) {
-    switch (pageNum) {
-      case 1:
-        if (unlockButton && passwordInput) {
-          unlockButton.addEventListener('click', validatePassword);
-          passwordInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') validatePassword();
+  // Setup anniversary dance animation
+  function setupAnniversaryDance() {
+    if (eventType !== 'anniversary') return;
+
+    const danceButton = document.querySelector('.dance-button');
+    const danceAnimation = document.querySelector('.dance-animation');
+
+    if (!danceButton || !danceAnimation) return;
+
+    danceButton.addEventListener('click', function() {
+      // Add dancing couple emoji with animation
+      danceAnimation.innerHTML = '';
+      danceAnimation.classList.add('active');
+
+      const dancers = document.createElement('div');
+      dancers.className = 'dancers';
+      dancers.textContent = '💃 🕺';
+
+      const hearts = document.createElement('div');
+      hearts.className = 'hearts';
+
+      // Create floating hearts
+      for (let i = 0; i < 15; i++) {
+        const heart = document.createElement('span');
+        heart.textContent = '❤️';
+        heart.className = 'heart';
+        heart.style.left = `${Math.random() * 80 + 10}%`;
+        heart.style.animationDuration = `${Math.random() * 2 + 2}s`;
+        heart.style.animationDelay = `${Math.random() * 3}s`;
+        hearts.appendChild(heart);
+      }
+
+      // Add music notes
+      const notes = ['🎵', '🎶', '♪', '♫', '🎼'];
+      for (let i = 0; i < 10; i++) {
+        const note = document.createElement('span');
+        note.textContent = notes[Math.floor(Math.random() * notes.length)];
+        note.className = 'music-note';
+        note.style.left = `${Math.random() * 80 + 10}%`;
+        note.style.animationDuration = `${Math.random() * 2 + 1}s`;
+        note.style.animationDelay = `${Math.random() * 2}s`;
+        hearts.appendChild(note);
+      }
+
+      danceAnimation.appendChild(dancers);
+      danceAnimation.appendChild(hearts);
+
+      // Change button text
+      danceButton.textContent = 'Keep Dancing!';
+
+      // Play dance music if Web Audio API is supported
+      try {
+        if (window.AudioContext || window.webkitAudioContext) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          const audioCtx = new AudioContext();
+
+          // Simple oscillator-based melody
+          const playNote = (frequency, startTime, duration) => {
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.type = 'sine';
+            oscillator.frequency.value = frequency;
+
+            gainNode.gain.setValueAtTime(0.3, startTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.start(startTime);
+            oscillator.stop(startTime + duration);
+          };
+
+          // Simple waltz pattern
+          const now = audioCtx.currentTime;
+          const waltzNotes = [
+            { note: 440, time: 0, duration: 0.5 },    // A4
+            { note: 493.88, time: 0.5, duration: 0.5 },  // B4
+            { note: 523.25, time: 1, duration: 0.5 },  // C5
+            { note: 440, time: 1.5, duration: 0.5 },  // A4
+            { note: 493.88, time: 2, duration: 0.5 },  // B4
+            { note: 523.25, time: 2.5, duration: 0.5 },  // C5
+          ];
+
+          waltzNotes.forEach(noteObj => {
+            playNote(noteObj.note, now + noteObj.time, noteObj.duration);
           });
         }
-        break;
-      case 2:
-        setupBirthdayCountdown();
-        setupAnniversaryClock();
-        break;
-      case 3:
-        setupMediaDisplay();
-        break;
-      case 4:
-        setupBirthdayCake();
-        setupAnniversaryDance();
-        setupMemoryTree();
-        break;
-      case 5:
-        playFinalAnimation();
-        break;
+      } catch (e) {
+        console.error('Error playing music:', e);
+      }
+    });
+  }
+
+  // Birthday cake interaction function
+  function setupBirthdayCake() {
+    if (eventType !== 'birthday') return;
+
+    const cake = document.querySelector('.birthday-cake');
+    const instruction = document.querySelector('.cake-instruction');
+
+    if (!cake) return;
+
+    // Add candles to cake
+    const candles = document.createElement('div');
+    candles.className = 'candles';
+
+    for (let i = 0; i < 5; i++) {
+      const candle = document.createElement('div');
+      candle.className = 'candle';
+
+      const flame = document.createElement('div');
+      flame.className = 'flame';
+      candle.appendChild(flame);
+
+      candles.appendChild(candle);
+    }
+
+    cake.appendChild(candles);
+
+    // Add candle blowing interaction
+    let isBurning = true;
+
+    cake.addEventListener('click', function() {
+      if (!isBurning) return;
+
+      // Add blowing animation
+      const blowAnimation = document.createElement('div');
+      blowAnimation.className = 'blow-animation';
+      cake.appendChild(blowAnimation);
+
+      // Extinguish flames
+      const flames = cake.querySelectorAll('.flame');
+      flames.forEach(flame => {
+        flame.classList.add('extinguished');
+      });
+
+      // Update instruction
+      if (instruction) {
+        instruction.textContent = 'Your wish has been made! 🌟';
+      }
+
+      isBurning = false;
+
+      // Show confetti for the wish
+      setTimeout(() => {
+        showConfetti();
+
+        // Add wish granted text
+        const wishGranted = document.createElement('div');
+        wishGranted.className = 'wish-granted';
+        wishGranted.textContent = 'Wish Granted!';
+        wishGranted.style.opacity = '0';
+        cake.appendChild(wishGranted);
+
+        // Fade in wish granted text
+        setTimeout(() => {
+          wishGranted.style.opacity = '1';
+        }, 100);
+      }, 1000);
+    });
+  }
+
+  // Final animation on the last page
+  function playFinalAnimation() {
+    const finalAnimation = document.querySelector('.final-animation');
+    if (!finalAnimation) return;
+
+    const fragment = document.createDocumentFragment();
+    let animationElements = [];
+
+    // Different animations based on event type
+    if (eventType === 'birthday') {
+      // Balloons and gifts animation
+      for (let i = 0; i < 10; i++) {
+        const balloon = document.createElement('div');
+        balloon.className = 'balloon';
+        balloon.innerHTML = '🎈';
+        balloon.style.left = `${Math.random() * 80 + 10}%`;
+        balloon.style.animationDuration = `${Math.random() * 5 + 5}s`;
+        balloon.style.animationDelay = `${Math.random() * 2}s`;
+        fragment.appendChild(balloon);
+        animationElements.push(balloon);
+      }
+
+      for (let i = 0; i < 5; i++) {
+        const gift = document.createElement('div');
+        gift.className = 'gift';
+        gift.innerHTML = '🎁';
+        gift.style.left = `${Math.random() * 80 + 10}%`;
+        gift.style.animationDuration = `${Math.random() * 3 + 3}s`;
+        gift.style.animationDelay = `${Math.random() * 2}s`;
+        fragment.appendChild(gift);
+        animationElements.push(gift);
+      }
+    } else if (eventType === 'anniversary') {
+      // Rings and hearts animation
+      const rings = document.createElement('div');
+      rings.className = 'rings';
+      rings.innerHTML = '💍 💍';
+      fragment.appendChild(rings);
+      animationElements.push(rings);
+
+      for (let i = 0; i < 15; i++) {
+        const heart = document.createElement('div');
+        heart.className = 'heart';
+        heart.innerHTML = ['❤️', '💖', '💘', '💕', '💗'][Math.floor(Math.random() * 5)];
+        heart.style.left = `${Math.random() * 80 + 10}%`;
+        heart.style.animationDuration = `${Math.random() * 4 + 4}s`;
+        heart.style.animationDelay = `${Math.random() * 3}s`;
+        fragment.appendChild(heart);
+        animationElements.push(heart);
+      }
+    } else {
+      // Stars and sparkles animation
+      for (let i = 0; i < 20; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        star.innerHTML = ['✨', '🌟', '⭐', '💫', '🌠'][Math.floor(Math.random() * 5)];
+        star.style.left = `${Math.random() * 80 + 10}%`;
+        star.style.animationDuration = `${Math.random() * 4 + 3}s`;
+        star.style.animationDelay = `${Math.random() * 2}s`;
+        fragment.appendChild(star);
+        animationElements.push(star);
+      }
+    }
+
+    finalAnimation.appendChild(fragment);
+
+    // Add remove logic to avoid memory leaks
+    setTimeout(() => {
+      animationElements.forEach(el => {
+        if (el && el.parentNode) {
+          el.parentNode.removeChild(el);
+        }
+      });
+      animationElements = [];
+    }, 10000);
+  }
+
+  // Add sharing functionality
+  function setupSharing() {
+    const shareButton = document.querySelector('.share-card');
+    if (!shareButton) return;
+
+    shareButton.addEventListener('click', async () => {
+      try {
+        // Check if Web Share API is available
+        if (navigator.share) {
+          await navigator.share({
+            title: 'My Greeting Card',
+            text: 'Check out this greeting card I made!',
+            url: window.location.href
+          });
+        } else {
+          // Fallback to clipboard copy
+          await navigator.clipboard.writeText(window.location.href);
+          showFeedback('Card link copied to clipboard!');
+        }
+      } catch (error) {
+        console.error('Error sharing:', error);
+        showFeedback('Unable to share. Please copy the URL manually.');
+      }
+    });
+  }
+
+  // Page initialization
+  function initPage(pageNum) {
+    try {
+      switch (pageNum) {
+        case 1:
+          if (elements.unlockButton && elements.passwordInput) {
+            elements.unlockButton.addEventListener('click', validatePassword);
+            elements.passwordInput.addEventListener('keypress', function(e) {
+              if (e.key === 'Enter') validatePassword();
+            });
+          }
+          break;
+        case 2:
+          setupBirthdayCountdown();
+          setupAnniversaryClock();
+          break;
+        case 3:
+          setupMediaDisplay();
+          break;
+        case 4:
+          setupBirthdayCake();
+          setupAnniversaryDance();
+          setupMemoryTree();
+          break;
+        case 5:
+          playFinalAnimation();
+          setupVoiceNotePlayer();
+          break;
+      }
+    } catch (e) {
+      console.error(`Error initializing page ${pageNum}:`, e);
     }
   }
 
-  // Event listeners for navigation
-  nextButtons.forEach(button => {
-    button.addEventListener('click', () => goToPage(currentPage + 1));
-  });
+  // Setup voice note player
+  function setupVoiceNotePlayer() {
+    if (!elements.playVoiceNote || !elements.voiceNote) return;
 
-  prevButtons.forEach(button => {
-    button.addEventListener('click', () => goToPage(currentPage - 1));
-  });
+    elements.playVoiceNote.addEventListener('click', function() {
+      elements.voiceNote.hidden = !elements.voiceNote.hidden;
 
+      if (!elements.voiceNote.hidden) {
+        this.textContent = 'Hide Reflection';
+        // Use SpeechSynthesis if available
+        if (window.speechSynthesis) {
+          const utterance = new SpeechSynthesisUtterance(elements.voiceNote.textContent);
+          speechSynthesis.speak(utterance);
+        }
+      } else {
+        this.textContent = 'Play Reflection';
+        // Stop any ongoing speech
+        if (window.speechSynthesis) {
+          speechSynthesis.cancel();
+        }
+      }
+    });
+  }
+
+  // Add event listeners for navigation
+  if (elements.nextButtons) {
+    elements.nextButtons.forEach(button => {
+      button.addEventListener('click', () => goToPage(currentPage + 1));
+    });
+  }
+
+  if (elements.prevButtons) {
+    elements.prevButtons.forEach(button => {
+      button.addEventListener('click', () => goToPage(currentPage - 1));
+    });
+  }
+
+  // Page indicator navigation
   pageIndicators.forEach((indicator, index) => {
     indicator.addEventListener('click', () => {
       if (index + 1 <= currentPage + 1) {
         goToPage(index + 1);
       }
     });
+
+    // Keyboard accessibility
+    indicator.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (index + 1 <= currentPage + 1) {
+          goToPage(index + 1);
+        }
+      }
+    });
   });
 
-  // Initialize save functionality
-  setupSaveFunctionality();
+  // Setup save functionality
+  if (elements.saveButton) {
+    elements.saveButton.addEventListener('click', function() {
+      saveData();
+      showFeedback('Memory saved successfully!');
+    });
+  }
 
-  // Initialize first page
+  if (elements.saveCardButton) {
+    elements.saveCardButton.addEventListener('click', function() {
+      saveData();
+      showFeedback('Card saved successfully!');
+    });
+  }
+
+  // Setup sharing
+  setupSharing();
+
+  // Show feedback toast message
+  function showFeedback(message) {
+    const toast = document.createElement('div');
+    toast.className = 'feedback-toast';
+    toast.textContent = message;
+    toast.setAttribute('aria-live', 'assertive');
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+    }, 10);
+
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(-20px)';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
+  // Initialize the first page
   goToPage(1);
 });
