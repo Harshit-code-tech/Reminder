@@ -1,6 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
-
+from django.views.decorators.csrf import csrf_protect
+from django.core.mail import send_mail
 from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required,user_passes_test
@@ -8,7 +9,9 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.contrib import messages
-from .models import Event, CelebrationCardPage, EventMedia, Reflection
+from django_ratelimit.decorators import ratelimit
+import json
+from .models import Event, CelebrationCardPage, EventMedia, Reflection, CardShare
 from .forms import EventForm
 from .utils import send_upcoming_reminders, process_bulk_import, get_csv_template, get_analytics_data,get_admin_dashboard_stats
 from users.decorators import email_verified_required
@@ -56,13 +59,15 @@ def toggle_recurring(request, event_id):
             event.save()
             messages.success(request, f"Recurring {'enabled' if event.is_recurring else 'disabled'} for {event.name}")
         else:
-            messages.error(request, "Recurring is only available for birthdays and anniversaries")
+            messages.error(request, "Recurring is only available for birthdays and anniversa"
+                                    "ries")
     return redirect('event_list')
 
 @login_required
+@email_verified_required
 def greeting_card_view(request, event_id):
     event = get_object_or_404(Event, id=event_id, user=request.user)
-    return render(request, 'reminders/greeting_card.html', {'event': event})
+    return render(request, 'reminders/greeting_card.html', {'event': event, 'is_owner': True})
 
 
 @login_required
@@ -299,45 +304,7 @@ def trigger_send_reminders(request):
         return JsonResponse({'error': f'An error occurred: {str(e)}'}, status=500)
 
 
-# @login_required
-# @email_verified_required
-# def card_view(request, event_id, page_number):
-#     event = get_object_or_404(Event, id=event_id, user=request.user)
-#     try:
-#         page = CelebrationCardPage.objects.get(event=event, page_number=page_number)
-#     except CelebrationCardPage.DoesNotExist:
-#         page = None
-#         if page_number == 1:
-#             page = CelebrationCardPage.objects.create(
-#                 event=event,
-#                 page_number=1,
-#                 caption="Welcome to your celebration card!"
-#             )
-#
-#     if page_number == 1:
-#         if request.method == 'POST':
-#             password = request.POST.get('password')
-#             expected_password = event.name.split()[0].lower() if event.event_type in ['birthday','other',
-#                                                                                       'anniversary'] else event.highlights.lower() or 'love'
-#             if password.lower() == expected_password:
-#                 return redirect('reminders:card_view', event_id=event_id, page_number=page_number)
-#             else:
-#                 messages.error(request, 'Incorrect password.')
-#         else:
-#             return render(request, 'reminders/card_view.html', {
-#                 'event': event,
-#                 'page_number': page_number,
-#                 'requires_password': True
-#             })
-#
-#     next_page = page_number + 1 if page_number < 5 else None
-#     context = {
-#         'event': event,
-#         'page': page,
-#         'page_number': page_number,
-#         'next_page': next_page,
-#     }
-#     return render(request, 'reminders/card_view.html', context)
+
 @login_required
 @email_verified_required
 def card_view(request, event_id, page_number):
@@ -373,6 +340,7 @@ def trigger_cron_jobs(request):
     daily_reminder_job()
     daily_deletion_notification_job()
     daily_media_cleanup_job()
+    auto_share_card()
     return HttpResponse("Cron jobs triggered")
 
 
@@ -661,3 +629,89 @@ def download_past_events(request):
         logger.error(f"Error exporting past events CSV for user {request.user.username}: {str(e)}")
         messages.error(request, "Unable to export past events. Please try again later.")
         return redirect('past_events')
+
+
+def auto_share_card():
+    """Auto-generate share links for events on their due date and email to recipient."""
+    today = timezone.now().date()
+    events = Event.objects.filter(
+        date=today,
+        recipient_email__isnull=False,
+        shares__isnull=True  # No existing share link
+    )
+    for event in events:
+        try:
+            password = CardShare.generate_random_password()
+            share = CardShare.objects.create(
+                event=event,
+                password=password,
+                expires_at=timezone.now() + timedelta(days=3),
+                is_auto_generated=True
+            )
+            share_url = f"{settings.SITE_URL}/share/{share.token}/"
+            send_mail(
+                subject=f"Greeting Card for {event.name}'s {event.get_event_type_display()}",
+                message=f"Dear {event.name},\n\nYou've received a greeting card!\nAccess it here: {share_url}\nPassword: {password}\n\nThis link expires in 3 days.\n\nBest wishes,\n{event.user.username}",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[event.recipient_email],
+                fail_silently=True
+            )
+            logger.info(f"Auto-shared card for event {event.name} to {event.recipient_email}")
+        except Exception as e:
+            logger.error(f"Failed to auto-share card for event {event.name}: {str(e)}")
+
+@login_required
+@email_verified_required
+@csrf_protect
+def generate_share_link(request, event_id):
+    if request.method == 'POST':
+        event = get_object_or_404(Event, id=event_id, user=request.user)
+        try:
+            data = json.loads(request.body)
+            password = data.get('password', '').strip()
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+        if not password:
+            return JsonResponse({'error': 'Password is required'}, status=400)
+        try:
+            share, created = CardShare.objects.get_or_create(
+                event=event,
+                defaults={
+                    'password': password,
+                    'expires_at': timezone.now() + timedelta(days=3)  # 3-day expiry
+                }
+            )
+            share_url = f"{settings.SITE_URL}/share/{share.token}/"
+            logger.info(f"Generated share link for event {event.name} by user {request.user.username}")
+            return JsonResponse({
+                'share_url': share_url,
+                'warning': 'This link will expire in 3 days. Share only if you accept the risk of expiration.'
+            })
+        except Exception as e:
+            logger.error(f"Error generating share link for event {event.name}: {str(e)}")
+            return JsonResponse({'error': str(e)}, status=500)
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+@ratelimit(key='ip', rate='10/m', block=True)
+@csrf_protect
+def public_card_view(request, token):
+    try:
+        share = get_object_or_404(CardShare, token=token)
+        if share.expires_at and share.expires_at < timezone.now():
+            logger.warning(f"Expired share token {token} accessed")
+            return render(request, 'reminders/greeting_card.html', {'error': 'This share link has expired'}, status=410)
+        if request.method == 'POST':
+            password = request.POST.get('password', '').strip()
+            if password == share.password:
+                share.view_count += 1
+                share.save()
+                logger.info(f"Public card viewed for event {share.event.name} with token {token}")
+                return render(request, 'reminders/greeting_card.html', {'event': share.event, 'is_owner': False})
+            else:
+                logger.warning(f"Invalid password for share token {token}")
+                return render(request, 'reminders/greeting_card.html', {'event': share.event, 'error': 'Incorrect password', 'is_owner': False})
+        return render(request, 'reminders/greeting_card.html', {'event': share.event, 'requires_password': True, 'is_owner': False})
+    except Exception as e:
+        logger.error(f"Error accessing public card with token {token}: {str(e)}")
+        return render(request, 'reminders/greeting_card.html', {'error': 'Invalid share link'}, status=404)

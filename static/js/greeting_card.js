@@ -1,4 +1,20 @@
 document.addEventListener('DOMContentLoaded', function() {
+
+    function getCookie(name) {
+
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+    }
   // Enhanced Configuration with more themes and quotes
   const themes = {
     'birthday': {
@@ -929,27 +945,82 @@ document.addEventListener('DOMContentLoaded', function() {
   // Add sharing functionality
   function setupSharing() {
     const shareButton = document.querySelector('.share-card');
-    if (!shareButton) return;
+    const shareModal = document.querySelector('#share-modal');
+    const generateLinkButton = document.querySelector('#generate-share-link');
+    const closeModalButton = document.querySelector('#close-share-modal');
+    const sharePasswordInput = document.querySelector('#share-password');
+    const shareUrlContainer = document.querySelector('#share-url-container');
+    const shareUrlElement = document.querySelector('#share-url');
+    const whatsappLink = document.querySelector('#whatsapp-share');
+    const twitterLink = document.querySelector('#twitter-share');
+    const emailLink = document.querySelector('#email-share');
 
-    shareButton.addEventListener('click', async () => {
-      try {
-        // Check if Web Share API is available
-        if (navigator.share) {
-          await navigator.share({
-            title: 'My Greeting Card',
-            text: 'Check out this greeting card I made!',
-            url: window.location.href
-          });
-        } else {
-          // Fallback to clipboard copy
-          await navigator.clipboard.writeText(window.location.href);
-          showFeedback('Card link copied to clipboard!');
+    if (shareButton) {
+      shareButton.addEventListener('click', () => {
+        shareModal.style.display = 'flex';
+        sharePasswordInput.focus();
+      });
+    }
+
+    if (closeModalButton) {
+      closeModalButton.addEventListener('click', () => {
+        shareModal.style.display = 'none';
+        sharePasswordInput.value = '';
+        shareUrlContainer.style.display = 'none';
+      });
+    }
+
+    if (generateLinkButton) {
+      generateLinkButton.addEventListener('click', () => {
+        const password = sharePasswordInput.value.trim();
+        if (!password) {
+          alert('Please enter a password for sharing.');
+          return;
         }
-      } catch (error) {
-        console.error('Error sharing:', error);
-        showFeedback('Unable to share. Please copy the URL manually.');
-      }
-    });
+
+        const eventId = shareButton.dataset.eventId;
+
+        const csrftoken = getCookie('csrftoken');
+        console.log("CSRF token from cookie:", csrftoken);
+
+        fetch(`/share/generate/${eventId}/`, {
+          method: 'POST',
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken
+          },
+          body: JSON.stringify({ password: password }),
+        })
+            .then(response => response.json())
+            .then(data => {
+              if (data.error) {
+                alert(`Error: ${data.error}`);
+                return;
+              }
+              const shareUrl = data.share_url;
+              shareUrlElement.textContent = shareUrl;
+              shareUrlContainer.style.display = 'block';
+              if (data.warning) {
+                alert(data.warning); // Show expiry warning
+              }
+              // whatsappLink.href = `https://api.whatsapp.com/send?text=View%20my%20card:%20${encodeURIComponent(shareUrl)}`;
+              // twitterLink.href = `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=Check%20out%20my%20greeting%20card!`;
+              emailLink.href = `mailto:?subject=Greeting%20Card&body=View%20my%20card:%20${encodeURIComponent(shareUrl)}`;
+
+              if (navigator.share) {
+                navigator.share({
+                  title: 'Greeting Card',
+                  text: 'Check out my greeting card!',
+                  url: shareUrl
+                }).catch(err => console.error('Share failed:', err));
+              }
+            })
+            .catch(err => {
+              console.error('Error generating share link:', err);
+              alert('Failed to generate share link.');
+            });
+      });
+    }
   }
 
   // Page initialization

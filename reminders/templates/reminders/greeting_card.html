@@ -7,9 +7,62 @@
 <link rel="stylesheet" href="{% static 'css/greeting_card.css' %}">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Interactive greeting card for {{ event.name }}">
+<style>
+  .share-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  .share-modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+  }
+  .share-modal-content input {
+    width: 100%;
+    padding: 8px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  .share-modal-content button {
+    padding: 8px 16px;
+    margin: 5px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .share-url-container {
+    margin-top: 10px;
+    display: none;
+  }
+  .social-links a {
+    margin: 0 5px;
+    text-decoration: none;
+    color: #333;
+  }
+  .warning-text {
+    color: #d9534f;
+    font-size: 0.9em;
+    margin-bottom: 10px;
+  }
+</style>
 {% endblock %}
 
 {% block content %}
+{% if error %}
+<div class="error-message" role="alert">{{ error }}</div>
+{% endif %}
+
 <div class="card-container"
      data-theme="{{ event.event_type }}"
      data-cultural-theme="{{ event.cultural_theme|yesno:'true,false' }}"
@@ -27,7 +80,7 @@
     <!-- Card pages -->
     <div class="card-pages">
       <!-- Page 1: Welcome / Password -->
-      <div class="card-page active" id="page-1" role="tabpanel" aria-labelledby="tab-1">
+      <div class="card-page {% if not requires_password %}active{% endif %}" id="page-1" role="tabpanel" aria-labelledby="tab-1">
         <div class="diya-container"></div>
         <div class="tree-growth tree-seedling"></div>
 
@@ -52,21 +105,20 @@
           {% endif %}
         </div>
 
+        {% if requires_password %}
         <div class="password-container">
-          <label for="password-input" class="sr-only">Password</label>
-          <input type="text" id="password-input" class="password-input" placeholder="Enter the password..." aria-required="true">
-          <button class="unlock-button" aria-label="Unlock content">Unlock</button>
+          <form method="post">
+            {% csrf_token %}
+            <label for="password-input" class="sr-only">Password</label>
+            <input type="text" id="password-input" name="password" class="password-input" placeholder="Enter the password..." aria-required="true">
+            <button type="submit" class="unlock-button" aria-label="Unlock content">Unlock</button>
+          </form>
           <div class="password-hint" aria-live="polite">
             <span class="hint-icon">💡</span>
-            {% if event.event_type == 'birthday' %}
-            Hint: The recipient's name might be the key
-            {% elif event.event_type == 'anniversary' %}
-            Hint: Enter your anniversary date
-            {% else %}
-            Hint: Think about what this event means to you both
-            {% endif %}
+            Hint: Ask the card creator for the password
           </div>
         </div>
+        {% endif %}
       </div>
 
       <!-- Page 2: Animation/Countdown -->
@@ -119,7 +171,7 @@
         <div class="media-container">
           {% if event.media.exists %}
           <div class="media-display"
-               data-media-urls="{% for media in event.media.all %}{{ media.file.url }}{% if not forloop.last %},{% endif %}{% endfor %}"
+               data-media-urls="{% for media in event.media.all %}{{ media.media_file }}{% if not forloop.last %},{% endif %}{% endfor %}"
                tabindex="0">
           </div>
           <div class="media-caption">
@@ -234,10 +286,37 @@
   </div>
 
   <div class="card-footer">
+    {% if is_owner %}
     <button class="save-card" aria-label="Save the entire card">📌 Save Card</button>
-    <button class="share-card" aria-label="Share card">🔗 Share</button>
+    <button class="share-card" data-event-id="{{ event.id }}" aria-label="Share card">🔗 Share</button>
+    {% endif %}
   </div>
 </div>
+
+<!-- Share Modal -->
+<div class="share-modal" id="share-modal">
+  <div class="share-modal-content">
+    <h3>Set Share Password</h3>
+    <p class="warning-text">Warning: This link will expire in 3 days. Only generate if you accept the risk of expiration.</p>
+    <input type="text" id="share-password" placeholder="Enter password for sharing..." aria-required="true">
+    <div>
+      <button id="generate-share-link" aria-label="Generate share link">Generate Link</button>
+      <button id="close-share-modal" aria-label="Close modal">Cancel</button>
+    </div>
+    <div class="share-url-container" id="share-url-container">
+      <p id="share-url"></p>
+      <div class="social-links">
+        <a id="whatsapp-share" href="#" target="_blank" aria-label="Share on WhatsApp">WhatsApp</a>
+        <a id="twitter-share" href="#" target="_blank" aria-label="Share on Twitter">Twitter</a>
+        <a id="email-share" href="#" aria-label="Share via Email">Email</a>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  document.cookie = "csrftoken={{ csrf_token }}; path=/";
+</script>
+
 
 <script src="{% static 'js/greeting_card.js' %}"></script>
 {% endblock %}

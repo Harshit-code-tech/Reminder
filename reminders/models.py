@@ -1,4 +1,6 @@
 # reminders/models.py
+import uuid
+
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
@@ -139,3 +141,24 @@ class Reflection(models.Model):
 
     def __str__(self):
         return f"Reflection for {self.event} by {self.user.username}"
+
+class CardShare(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='shares')
+    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    password = models.CharField(max_length=100, blank=True, null=True)
+    view_count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    is_auto_generated = models.BooleanField(default=False)  # Track auto-generated shares
+
+    def __str__(self):
+        return f"Share for {self.event} with token {self.token}"
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['token']),
+        ]
+
+    @staticmethod
+    def generate_random_password():
+        return secrets.token_urlsafe(8)  # 8 bytes for ~10-12 chars

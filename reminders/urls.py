@@ -22,5 +22,7 @@ urlpatterns = [
     path('past-events/edit/<int:event_id>/', views.edit_past_event, name='edit_past_event'),
     path('past-events/add-reflection/<int:event_id>/', views.add_reflection, name='add_reflection'),
     path('past-events/download/', views.download_past_events, name='download_past_events'),
+    # path('share/generate/<int:event_id>/', views.generate_share_link, name='generate_share_link'),
+    # path('share/<str:token>/', views.public_card_view, name='public_card_view'),
 
 ]
