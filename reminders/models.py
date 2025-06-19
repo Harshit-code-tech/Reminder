@@ -1,6 +1,8 @@
 # reminders/models.py
+import secrets
 import uuid
 
+from django.contrib.auth.hashers import check_password, make_password
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
@@ -32,14 +34,9 @@ class Event(models.Model):
     custom_label = models.CharField(max_length=100, blank=True, null=True)  # For Other category
     cultural_theme = models.BooleanField(default=False)  # For diyas in Other
     highlights = models.TextField(blank=True, null=True)  # For Anniversary milestones
-    is_recurring = models.BooleanField(
-        default=True,
-        help_text="Automatically create event for next year (birthdays/anniversaries only)."
-    )
-    is_archived = models.BooleanField(
-        default=False,
-        help_text="Mark event as archived (soft delete)."
-    )
+    is_recurring = models.BooleanField(default=True, help_text="Automatically create event for next year.")
+    is_archived = models.BooleanField(default=False, help_text="Mark event as archived.")
+    card_password = models.CharField(max_length=128, blank=True, null=True)  # Hashed password
 
     class Meta:
         indexes = [
@@ -49,14 +46,24 @@ class Event(models.Model):
             models.Index(fields=['is_archived']),
         ]
 
-    def is_expired(self):
-        return self.date < timezone.now().date()
+    def set_card_password(self, raw_password):
+        if raw_password:
+            self.card_password = make_password(raw_password)
+        else:
+            self.card_password = None
+
+    def check_card_password(self, raw_password):
+        if not self.card_password or not raw_password:
+            return False
+        return check_password(raw_password, self.card_password)
 
     def save(self, *args, **kwargs):
-        # Set is_recurring default based on event_type
         if self.event_type not in ['birthday', 'anniversary']:
             self.is_recurring = False
         super().save(*args, **kwargs)
+
+    def is_expired(self):
+        return self.date < timezone.now().date()
 
     def __str__(self):
         return f"{self.name}'s {self.get_event_type_display()} on {self.date}"
@@ -145,20 +152,29 @@ class Reflection(models.Model):
 class CardShare(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='shares')
     token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-    password = models.CharField(max_length=100, blank=True, null=True)
+    password = models.CharField(max_length=128, blank=True, null=True)  # Hashed password
     view_count = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField(null=True, blank=True)
-    is_auto_generated = models.BooleanField(default=False)  # Track auto-generated shares
+    is_auto_generated = models.BooleanField(default=False)
+
+    def set_password(self, raw_password):
+        if raw_password:
+            self.password = make_password(raw_password)
+        else:
+            self.password = None
+
+    def check_password(self, raw_password):
+        if not self.password or not raw_password:
+            return False
+        return check_password(raw_password, self.password)
 
     def __str__(self):
         return f"Share for {self.event} with token {self.token}"
 
     class Meta:
-        indexes = [
-            models.Index(fields=['token']),
-        ]
+        indexes = [models.Index(fields=['token'])]
 
     @staticmethod
     def generate_random_password():
-        return secrets.token_urlsafe(8)  # 8 bytes for ~10-12 chars
+        return secrets.token_urlsafe(8)

@@ -5,55 +5,26 @@
 
 {% block header_style %}
 <link rel="stylesheet" href="{% static 'css/greeting_card.css' %}">
+<link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Interactive greeting card for {{ event.name }}">
 <style>
-  .share-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-  }
-  .share-modal-content {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    max-width: 400px;
-    width: 90%;
-    text-align: center;
-  }
-  .share-modal-content input {
-    width: 100%;
-    padding: 8px;
-    margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-  .share-modal-content button {
-    padding: 8px 16px;
-    margin: 5px;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  .share-url-container {
-    margin-top: 10px;
-    display: none;
-  }
-  .social-links a {
-    margin: 0 5px;
-    text-decoration: none;
-    color: #333;
-  }
-  .warning-text {
-    color: #d9534f;
-    font-size: 0.9em;
-    margin-bottom: 10px;
+  .share-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+  .share-modal-content { background: white; padding: 20px; border-radius: 8px; max-width: 400px; width: 90%; text-align: center; }
+  .share-modal-content input { width: 100%; padding: 8px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; }
+  .share-modal-content button { padding: 8px 16px; margin: 5px; border-radius: 4px; cursor: pointer; }
+  .share-url-container { margin-top: 10px; display: none; }
+  .social-links a { margin: 0 5px; text-decoration: none; color: #333; }
+  .warning-text { color: #d9534f; font-size: 0.9em; margin-bottom: 10px; }
+  .password-container { display: none; position: relative; z-index: 10; }
+  .password-container.visible { display: block; }
+  .feedback-toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 10px 20px; border-radius: 5px; opacity: 0; transform: translateY(20px); transition: opacity 0.3s, transform 0.3s; z-index: 1000; }
+  .error { border: 2px solid red; }
+  .error-message { color: red; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
   }
 </style>
 {% endblock %}
@@ -80,7 +51,7 @@
     <!-- Card pages -->
     <div class="card-pages">
       <!-- Page 1: Welcome / Password -->
-      <div class="card-page {% if not requires_password %}active{% endif %}" id="page-1" role="tabpanel" aria-labelledby="tab-1">
+      <div class="card-page {% if not requires_card_password %}active{% endif %}" id="page-1" role="tabpanel" aria-labelledby="tab-1">
         <div class="diya-container"></div>
         <div class="tree-growth tree-seedling"></div>
 
@@ -105,17 +76,17 @@
           {% endif %}
         </div>
 
-        {% if requires_password %}
-        <div class="password-container">
-          <form method="post">
+        {% if requires_card_password %}
+        <div class="password-container visible">
+          <form method="post" action="{% url 'validate_card_password' event.id %}">
             {% csrf_token %}
-            <label for="password-input" class="sr-only">Password</label>
-            <input type="text" id="password-input" name="password" class="password-input" placeholder="Enter the password..." aria-required="true">
-            <button type="submit" class="unlock-button" aria-label="Unlock content">Unlock</button>
+            <label for="card-password-input" class="sr-only">Card Password</label>
+            <input type="password" id="card-password-input" name="card_password" class="password-input" placeholder="Enter the card password..." aria-required="true">
+            <button type="submit" class="unlock-button" aria-label="Unlock card content">Unlock Card</button>
           </form>
           <div class="password-hint" aria-live="polite">
             <span class="hint-icon">💡</span>
-            Hint: Ask the card creator for the password
+            Hint: Ask the card creator for the card password
           </div>
         </div>
         {% endif %}
@@ -171,24 +142,21 @@
         <div class="media-container">
           {% if event.media.exists %}
           <div class="media-display"
-               data-media-urls="{% for media in event.media.all %}{{ media.media_file }}{% if not forloop.last %},{% endif %}{% endfor %}"
+               data-media-urls="{% for media in event.media.all %}{{ media.media_file.url }}{% if not forloop.last %},{% endif %}{% endfor %}"
                tabindex="0">
           </div>
           <div class="media-caption">
             {{ event.media.first.caption|default:"Our special moments" }}
           </div>
           {% else %}
-          <div class="placeholder-media"
-               aria-label="No media available">
+          <div class="placeholder-icon" aria-label="No media available">
             <div class="placeholder-icon">📷</div>
             <div class="placeholder-text">Memories in our hearts</div>
           </div>
           {% endif %}
         </div>
 
-        <div class="audio-player" aria-label="Audio player">
-          <!-- Audio controls will be inserted by JS if audio is available -->
-        </div>
+        <div class="audio-player" aria-label="Audio player"></div>
 
         <div class="navigation-buttons">
           <button class="nav-button prev" aria-label="Previous page">Back</button>
@@ -204,9 +172,7 @@
         {% if event.event_type == 'birthday' %}
         <h2 class="page-title">Make a Wish!</h2>
         <div class="cake-container">
-          <div class="birthday-cake" tabindex="0" aria-label="Birthday cake with candles. Click to blow out candles.">
-            <!-- Cake elements added by JS -->
-          </div>
+          <div class="birthday-cake" tabindex="0" aria-label="Birthday cake with candles. Click to blow out candles."></div>
           <div class="cake-instruction" aria-live="polite">Click to blow out the candles!</div>
         </div>
         <div class="quote-container">
@@ -296,13 +262,16 @@
 <!-- Share Modal -->
 <div class="share-modal" id="share-modal">
   <div class="share-modal-content">
-    <h3>Set Share Password</h3>
-    <p class="warning-text">Warning: This link will expire in 3 days. Only generate if you accept the risk of expiration.</p>
-    <input type="text" id="share-password" placeholder="Enter password for sharing..." aria-required="true">
-    <div>
-      <button id="generate-share-link" aria-label="Generate share link">Generate Link</button>
-      <button id="close-share-modal" aria-label="Close modal">Cancel</button>
-    </div>
+    <h3>Share Your Card</h3>
+    <p class="warning-text">Warning: This link will expire in 3 days.</p>
+    <form method="post" action="{% url 'generate_share_link' event.id %}">
+      {% csrf_token %}
+      <input type="password" id="share-password" name="share_password" placeholder="Set a share password (optional)..." aria-required="false">
+      <div>
+        <button type="submit" id="generate-share-link" aria-label="Generate share link">Generate Link</button>
+        <button type="button" id="close-share-modal" aria-label="Close modal">Cancel</button>
+      </div>
+    </form>
     <div class="share-url-container" id="share-url-container">
       <p id="share-url"></p>
       <div class="social-links">
@@ -313,10 +282,9 @@
     </div>
   </div>
 </div>
+
 <script>
   document.cookie = "csrftoken={{ csrf_token }}; path=/";
 </script>
-
-
 <script src="{% static 'js/greeting_card.js' %}"></script>
 {% endblock %}
