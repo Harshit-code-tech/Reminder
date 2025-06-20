@@ -5,7 +5,7 @@ from django.core.mail import send_mail
 from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required,user_passes_test
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.contrib import messages
@@ -301,59 +301,6 @@ def trigger_send_reminders(request):
 
 
 
-# @login_required
-# @email_verified_required
-# def card_view(request, event_id, page_number):
-#     event = get_object_or_404(Event, id=event_id, user=request.user)
-#     error = None
-#
-#     if request.method == 'POST':
-#         password = request.POST.get('password', '').strip().lower()
-#         expected = ''
-#         if event.event_type == 'birthday':
-#             expected = event.name.strip().lower()
-#         elif event.event_type == 'anniversary':
-#             expected = event.date.strftime('%Y-%m-%d')
-#         else:
-#             expected = (event.custom_label or '').strip().lower()
-#
-#         if password == expected:
-#             return redirect('greeting_card_view', event_id=event.id)
-#         else:
-#             error = "Incorrect password. Please try again."
-#
-#     return render(request, 'reminders/card_view.html', {
-#         'event': event,
-#         'error': error,
-#     })
-
-@csrf_protect
-def validate_share(request, token):
-    try:
-        share = get_object_or_404(CardShare, token=token, expires_at__gt=timezone.now())
-        if share.password:
-            if request.method == 'POST':
-                password = request.POST.get('password', '').strip()
-                if share.check_password(password):
-                    request.session[f"share_access_granted_{token}"] = True
-                    share.view_count += 1
-                    share.save()
-                    return redirect('public_card_view', token=token)
-                else:
-                    return render(request, 'reminders/card_password_prompt.html', {
-                        'error': 'Incorrect share password',
-                        'token': token,
-                        'action_url': reverse('validate_share', args=[token])
-                    })
-            return render(request, 'reminders/card_password_prompt.html', {
-                'token': token,
-                'action_url': reverse('validate_share', args=[token])
-            })
-        return redirect('public_card_view', token=token)
-    except CardShare.DoesNotExist:
-        return render(request, 'reminders/error.html', {
-            'error': 'Invalid or expired share link'
-        }, status=404)
 
 def trigger_cron_jobs(request):
     secret = request.GET.get('secret')
@@ -680,17 +627,46 @@ def greeting_card_view(request, event_id):
         }
     )
 
+
+@ratelimit(key='ip', rate='10/m', block=True)
 @csrf_protect
 def validate_card_password(request, event_id):
     event = get_object_or_404(Event, id=event_id)
-    if request.method == 'POST':
-        password = request.POST.get('card_password', '').strip()
-        if event.card_password == password:
-            request.session[f"card_unlocked_{event.id}"] = True
-            return JsonResponse({'success': True})
-        else:
-            return JsonResponse({'success': False, 'error': 'Incorrect card password'})
-    return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
+
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
+
+    try:
+        data = json.loads(request.body)
+        password = data.get('card_password', '').strip().lower()
+    except Exception as e:
+        logger.error(f"Failed to parse JSON for event {event_id}: {e}")
+        return JsonResponse({'success': False, 'error': 'Invalid data'}, status=400)
+
+    is_valid = False
+
+    if event.event_type == 'birthday':
+        is_valid = password == event.name.strip().lower()
+    elif event.event_type == 'anniversary':
+        for fmt in ['%Y-%m-%d', '%m/%d/%Y', '%B %d, %Y', '%b %d, %Y']:
+            try:
+                input_date = datetime.strptime(password, fmt).date()
+                is_valid = event.check_card_password(input_date.strftime('%Y-%m-%d'))
+                if is_valid:
+                    break
+            except ValueError:
+                continue
+    else:
+        is_valid = event.check_card_password(password)
+
+    if is_valid:
+        request.session[f"card_unlocked_{event.id}"] = True
+        logger.info(f"Event {event_id}: Card password validated successfully (AJAX)")
+        return JsonResponse({'success': True})
+    else:
+        logger.warning(f"Event {event_id}: Invalid card password attempt (AJAX)")
+        return JsonResponse({'success': False, 'error': 'Incorrect card password'})
+
 
 
 def auto_share_card():
@@ -731,7 +707,14 @@ def auto_share_card():
 def generate_share_link(request, event_id):
     event = get_object_or_404(Event, id=event_id, user=request.user)
     if request.method == 'POST':
-        password = request.POST.get('share_password', '').strip()
+        if request.content_type == 'application/json':
+            try:
+                data = json.loads(request.body)
+                password = data.get('password', '').strip()
+            except Exception as e:
+                return JsonResponse({'success': False, 'error': 'Invalid data'}, status=400)
+        else:
+            password = request.POST.get('share_password', '').strip()
         try:
             share, created = CardShare.objects.get_or_create(
                 event=event,
@@ -756,6 +739,39 @@ def generate_share_link(request, event_id):
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
     return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
 
+
+
+@csrf_protect
+def validate_share(request, token):
+    try:
+        share = get_object_or_404(CardShare, token=token, expires_at__gt=timezone.now())
+        if share.password:
+            if request.method == 'POST':
+                password = request.POST.get('password', '').strip()
+                if share.check_password(password):
+                    request.session[f"share_access_granted_{token}"] = True
+                    share.view_count += 1
+                    share.save()
+                    return redirect('public_card_view', token=token)
+                else:
+                    return render(request, 'reminders/share_password_prompt.html', {
+                        'error': 'Incorrect share password',
+                        'token': token,
+                        'action_url': reverse('validate_share', args=[token])
+                    })
+            return render(request, 'reminders/share_password_prompt.html', {
+                'token': token,
+                'action_url': reverse('validate_share', args=[token])
+            })
+        return redirect('public_card_view', token=token)
+    except CardShare.DoesNotExist:
+        return render(request, 'reminders/error.html', {
+            'error': 'Invalid or expired share link'
+        }, status=404)
+
+
+
+
 @ratelimit(key='ip', rate='10/m', block=True)
 @csrf_protect
 def public_card_view(request, token):
@@ -767,12 +783,7 @@ def public_card_view(request, token):
 
     if share.expires_at and share.expires_at < timezone.now():
         logger.warning(f"Expired share token {token} accessed")
-        return render(request, 'reminders/greeting_card.html', {
-            'event': event,
-            'error': 'This share link has expired',
-            'requires_share_password': False,
-            'requires_card_password': False
-        }, status=410)
+        return render(request, 'reminders/share_expired.html', status=410)
 
     if request.method == 'POST':
         password = request.POST.get('password', '').strip()
@@ -782,7 +793,7 @@ def public_card_view(request, token):
             share.save()
         else:
             error = 'Incorrect share password'
-            return render(request, 'reminders/card_password_prompt.html', {
+            return render(request, 'reminders/share_password_prompt.html', {
                 'error': error,
                 'token': token,
                 'action_url': reverse('public_card_view', args=[token])
@@ -790,28 +801,21 @@ def public_card_view(request, token):
 
     if not request.session.get(session_key) and share.password:
         error = request.session.pop('share_error', None)
-        return render(request, 'reminders/card_password_prompt.html', {
+        return render(request, 'reminders/share_password_prompt.html', {
             'error': error,
             'token': token,
             'action_url': reverse('public_card_view', args=[token])
         })
 
-    if event.card_password and not request.session.get(card_session_key):
-        error = request.session.pop('card_error', None)
-        return render(request, 'reminders/card_password_prompt.html', {
-            'error': error,
-            'event_id': event.id,
-            'action_url': reverse('validate_card_password', args=[event.id])
-        })
+
 
     request.session[card_session_key] = True
     return render(request, 'reminders/greeting_card.html', {
         'event': event,
         'is_owner': False,
-        'requires_card_password': False,
+        'requires_card_password': True,
         'requires_share_password': False
     })
-
 
 
 

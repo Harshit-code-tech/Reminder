@@ -1,23 +1,24 @@
 document.addEventListener('DOMContentLoaded', function() {
-  // Utility to get CSRF token from cookie
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
-        }
-      }
-    }
-    return cookieValue;
-  }
 
-  // Theme configuration
+    function getCookie(name) {
+
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+    }
+  // Enhanced Configuration with more themes and quotes
   const themes = {
     'birthday': {
+      password: function(name) { return name.trim().toLowerCase(); },
       quotes: [
         "May your day be as bright as your smile!",
         "Another year of awesome you!",
@@ -29,6 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
       confettiColors: ['#fde68a', '#fbbf24', '#f59e0b', '#d97706']
     },
     'anniversary': {
+      password: function(date) { return date; },
       quotes: [
         "Love grows stronger every year!",
         "The best is yet to come.",
@@ -40,6 +42,7 @@ document.addEventListener('DOMContentLoaded', function() {
       confettiColors: ['#fbcfe8', '#f472b6', '#db2777', '#be185d']
     },
     'other': {
+      password: function(label) { return label.trim().toLowerCase(); },
       quotes: [
         "Cherish every moment of your journey!",
         "Keep shining your light on the world!",
@@ -61,11 +64,10 @@ document.addEventListener('DOMContentLoaded', function() {
   const pageIndicators = document.querySelectorAll('.page-indicator .indicator');
   const recipientNameElements = document.querySelectorAll('.recipient-name');
 
-  // Cache DOM elements
+  // Cache DOM elements and add error handling
   const elements = {
-    cardPasswordForm: document.querySelector('form[action*="validate_card_password"]'),
-    cardPasswordInput: document.querySelector('#card-password-input'),
-    passwordContainer: document.querySelector('.password-container'),
+    passwordInput: document.querySelector('.password-input'),
+    unlockButton: document.querySelector('.unlock-button'),
     passwordHint: document.querySelector('.password-hint'),
     nextButtons: document.querySelectorAll('.nav-button.next'),
     prevButtons: document.querySelectorAll('.nav-button.prev'),
@@ -73,19 +75,10 @@ document.addEventListener('DOMContentLoaded', function() {
     saveCardButton: document.querySelector('.save-card'),
     shareButton: document.querySelector('.share-card'),
     voiceNote: document.querySelector('.voice-note-text'),
-    playVoiceNote: document.querySelector('.play-voice-note'),
-    shareModal: document.querySelector('#share-modal'),
-    sharePasswordForm: document.querySelector('#share-modal form'),
-    sharePasswordInput: document.querySelector('#share-password'),
-    closeModalButton: document.querySelector('#close-share-modal'),
-    shareUrlContainer: document.querySelector('#share-url-container'),
-    shareUrlElement: document.querySelector('#share-url'),
-    whatsappLink: document.querySelector('#whatsapp-share'),
-    twitterLink: document.querySelector('#twitter-share'),
-    emailLink: document.querySelector('#email-share')
+    playVoiceNote: document.querySelector('.play-voice-note')
   };
 
-  // Current state
+  // Current state with improved persistence
   let currentPage = 1;
   let unlocked = false;
   const storageKey = `cardState_${window.location.pathname}`;
@@ -106,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function saveData(data = {}) {
     try {
-      savedData = { ...savedData, ...data, lastVisited: Date.now() };
+      savedData = {...savedData, ...data, lastVisited: Date.now()};
       localStorage.setItem(storageKey, JSON.stringify(savedData));
       return true;
     } catch (e) {
@@ -116,89 +109,25 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Load saved state
-  if (savedData.unlocked) {
-    unlocked = true;
-    goToPage(savedData.lastPage || 1);
+  if (savedData.unlocked || document.querySelector('.card-page.active')?.id !== 'page-1') {
+      unlocked = true;
+      goToPage(savedData.lastPage || 2); // Prefer lastPage or page 2
   }
 
-  // Initialize UI elements
+  // Create UI elements based on theme
   if (culturalTheme) {
     createDiyas();
   }
+
+  // Initialize all interactive components
   initializeQuotes();
-  setupPasswordPanel();
 
-  // Ensure password panel visibility
-  function setupPasswordPanel() {
-    if (!elements.passwordContainer || !elements.cardPasswordInput) return;
-    const requiresPassword = elements.passwordContainer.classList.contains('visible');
-    const cardPage = document.querySelector('#page-1');
-
-    if (requiresPassword && !unlocked) {
-      elements.passwordContainer.style.display = 'block';
-      cardPage.classList.remove('active');
-      elements.cardPasswordInput.focus();
-
-      if (elements.cardPasswordForm) {
-        elements.cardPasswordForm.addEventListener('submit', function(e) {
-          e.preventDefault();
-          const formData = new FormData(this);
-          const csrftoken = getCookie('csrftoken');
-          fetch(this.action, {
-            method: 'POST',
-            headers: { 'X-CSRFToken': csrftoken },
-            body: formData
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              unlocked = true;
-              saveData({ unlocked: true });
-              showConfetti();
-              elements.passwordContainer.style.display = 'none';
-              cardPage.classList.add('active');
-              goToPage(1);
-            } else {
-              shakePasswordInput(data.error || 'Incorrect password');
-            }
-          })
-          .catch(err => {
-            console.error('Error validating card password:', err);
-            shakePasswordInput('Validation failed');
-          });
-        });
-      }
-    } else {
-      elements.passwordContainer.style.display = 'none';
-      cardPage.classList.add('active');
-    }
-  }
-
-  // Shake password input on error
-  function shakePasswordInput(message) {
-    if (!elements.cardPasswordInput) return;
-    elements.cardPasswordInput.classList.add('error');
-    elements.cardPasswordInput.style.animation = 'shake 0.5s ease';
-
-    if (message && elements.passwordHint) {
-      const originalHint = elements.passwordHint.innerHTML;
-      elements.passwordHint.innerHTML = `<span class="error-message">${message}</span>`;
-      setTimeout(() => {
-        elements.passwordHint.innerHTML = originalHint;
-      }, 3000);
-    }
-
-    setTimeout(() => {
-      elements.cardPasswordInput.style.animation = '';
-      elements.cardPasswordInput.classList.remove('error');
-    }, 500);
-  }
-
-  // Initialize quotes
+  // Set random motivational quote with error handling
   function initializeQuotes() {
     try {
       const quoteElements = document.querySelectorAll('.inspiration-quote');
       const themeQuotes = themes[eventType]?.quotes || themes.birthday.quotes;
+
       quoteElements.forEach(quoteEl => {
         const randomQuote = themeQuotes[Math.floor(Math.random() * themeQuotes.length)];
         quoteEl.textContent = randomQuote;
@@ -208,23 +137,30 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // Create floating diyas
+  // Create floating diyas with performance optimization
   function createDiyas() {
     try {
       const diyaContainers = document.querySelectorAll('.diya-container');
+      const fragment = document.createDocumentFragment();
+
       diyaContainers.forEach(container => {
+        // Use fragment for better performance
         const containerFragment = document.createDocumentFragment();
+
         for (let i = 0; i < 5; i++) {
           const diya = document.createElement('div');
           diya.className = 'diya';
           diya.style.left = `${Math.random() * 80 + 10}%`;
           diya.style.top = `${Math.random() * 80 + 10}%`;
           diya.style.animationDelay = `${Math.random() * 2}s`;
+
           const flame = document.createElement('div');
           flame.className = 'flame';
           diya.appendChild(flame);
+
           containerFragment.appendChild(diya);
         }
+
         container.appendChild(containerFragment);
       });
     } catch (e) {
@@ -232,41 +168,57 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // Media display setup
+  // Enhanced media display with lazy loading support
   function setupMediaDisplay() {
     try {
       const mediaDisplays = document.querySelectorAll('.media-display');
+
       mediaDisplays.forEach(display => {
         if (!display.dataset.mediaUrls) return;
+
         const mediaUrls = display.dataset.mediaUrls.split(',').filter(url => url.trim() !== '');
         if (!mediaUrls.length) return;
 
         display.innerHTML = '';
         const fragment = document.createDocumentFragment();
+
+        // Media type handling
         const imageUrls = [];
         const audioUrls = [];
 
         mediaUrls.forEach(url => {
-          if (url.match(/\.(jpeg|jpg|gif|png|webp)$/i)) imageUrls.push(url);
-          else if (url.match(/\.(mp3|wav|flac|ogg)$/i)) audioUrls.push(url);
+          if (url.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
+            imageUrls.push(url);
+          } else if (url.match(/\.(mp3|wav|flac|ogg)$/i)) {
+            audioUrls.push(url);
+          }
         });
 
+        // Handle images with lazy loading
         if (imageUrls.length) {
           imageUrls.forEach((url, i) => {
             const img = document.createElement('img');
             img.src = url;
             img.alt = "Event Media";
             img.className = "media-image";
-            img.loading = "lazy";
+            img.loading = "lazy"; // Add lazy loading
             img.style.display = i > 0 ? 'none' : 'block';
             fragment.appendChild(img);
           });
         }
 
         display.appendChild(fragment);
+
+        // Add slideshow controls for multiple images
         const images = display.querySelectorAll('.media-image');
-        if (images.length > 1) setupSlideshow(display, images);
-        if (audioUrls.length) setupAudioPlayer(audioUrls);
+        if (images.length > 1) {
+          setupSlideshow(display, images);
+        }
+
+        // Add audio player if audio files exist
+        if (audioUrls.length) {
+          setupAudioPlayer(audioUrls);
+        }
       });
     } catch (e) {
       console.error('Error setting up media display:', e);
@@ -279,6 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const controls = document.createElement('div');
     controls.className = 'slideshow-controls';
 
+    // Improved navigation with indicators
     const prevBtn = document.createElement('button');
     prevBtn.className = 'slideshow-btn prev';
     prevBtn.innerHTML = '←';
@@ -292,6 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const indicators = document.createElement('div');
     indicators.className = 'slideshow-indicators';
 
+    // Create indicator dots
     for (let i = 0; i < images.length; i++) {
       const dot = document.createElement('span');
       dot.className = i === 0 ? 'indicator active' : 'indicator';
@@ -299,8 +253,16 @@ document.addEventListener('DOMContentLoaded', function() {
       indicators.appendChild(dot);
     }
 
-    prevBtn.addEventListener('click', () => showSlide(currentIndex - 1));
-    nextBtn.addEventListener('click', () => showSlide(currentIndex + 1));
+    // Add event listeners
+    prevBtn.addEventListener('click', () => {
+      showSlide(currentIndex - 1);
+    });
+
+    nextBtn.addEventListener('click', () => {
+      showSlide(currentIndex + 1);
+    });
+
+    // Indicator clicks
     indicators.addEventListener('click', (e) => {
       if (e.target.classList.contains('indicator')) {
         const index = parseInt(e.target.dataset.index);
@@ -308,38 +270,77 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
 
+    // Show specific slide
     function showSlide(index) {
+      // Update index with wrapping
       currentIndex = (index + images.length) % images.length;
-      images.forEach((img, i) => img.style.display = i === currentIndex ? 'block' : 'none');
+
+      // Update visibility
+      images.forEach((img, i) => {
+        img.style.display = i === currentIndex ? 'block' : 'none';
+      });
+
+      // Update indicators
       const dots = indicators.querySelectorAll('.indicator');
-      dots.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
+      dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i === currentIndex);
+      });
     }
 
+    // Add touch swipe support
     let touchStartX = 0;
-    display.addEventListener('touchstart', (e) => touchStartX = e.changedTouches[0].screenX, { passive: true });
-    display.addEventListener('touchend', (e) => {
-      const diff = e.changedTouches[0].screenX - touchStartX;
-      if (diff > 50) showSlide(currentIndex - 1);
-      else if (diff < -50) showSlide(currentIndex + 1);
-    }, { passive: true });
+    display.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, {passive: true});
 
+    display.addEventListener('touchend', (e) => {
+      const touchEndX = e.changedTouches[0].screenX;
+      const diff = touchEndX - touchStartX;
+
+      if (diff > 50) {
+        showSlide(currentIndex - 1); // Swipe right
+      } else if (diff < -50) {
+        showSlide(currentIndex + 1); // Swipe left
+      }
+    }, {passive: true});
+
+    // Add keyboard support
     display.setAttribute('tabindex', '0');
     display.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft') showSlide(currentIndex - 1);
-      else if (e.key === 'ArrowRight') showSlide(currentIndex + 1);
+      if (e.key === 'ArrowLeft') {
+        showSlide(currentIndex - 1);
+      } else if (e.key === 'ArrowRight') {
+        showSlide(currentIndex + 1);
+      }
     });
 
+    // Assemble controls
     controls.appendChild(prevBtn);
     controls.appendChild(indicators);
     controls.appendChild(nextBtn);
     display.appendChild(controls);
 
+    // Start auto rotation if more than one image
     if (images.length > 1) {
-      let slideshowInterval = setInterval(() => showSlide(currentIndex + 1), 5000);
+      let slideshowInterval = setInterval(() => {
+        showSlide(currentIndex + 1);
+      }, 5000);
+
+      // Pause on hover/focus
       display.addEventListener('mouseenter', () => clearInterval(slideshowInterval));
       display.addEventListener('focus', () => clearInterval(slideshowInterval));
-      display.addEventListener('mouseleave', () => slideshowInterval = setInterval(() => showSlide(currentIndex + 1), 5000));
-      display.addEventListener('blur', () => slideshowInterval = setInterval(() => showSlide(currentIndex + 1), 5000));
+
+      // Resume on mouse leave/blur
+      display.addEventListener('mouseleave', () => {
+        slideshowInterval = setInterval(() => {
+          showSlide(currentIndex + 1);
+        }, 5000);
+      });
+      display.addEventListener('blur', () => {
+        slideshowInterval = setInterval(() => {
+          showSlide(currentIndex + 1);
+        }, 5000);
+      });
     }
   }
 
@@ -347,29 +348,34 @@ document.addEventListener('DOMContentLoaded', function() {
   function setupAudioPlayer(audioUrls) {
     const audioPlayer = document.querySelector('.audio-player');
     if (!audioPlayer) return;
+
     audioPlayer.innerHTML = '';
     const audio = document.createElement('audio');
     audio.controls = true;
+
+    // Add sources
     audioUrls.forEach(url => {
       const source = document.createElement('source');
       source.src = url;
       audio.appendChild(source);
     });
+
+    // Add custom controls if needed
     audioPlayer.appendChild(audio);
   }
 
-  // Page navigation
+  // Improved page navigation with accessibility
   function goToPage(pageNum) {
     if (!pageNum || pageNum < 1 || pageNum > cardPages.length) return;
     if (pageNum > 1 && !unlocked) {
-      shakePasswordInput('Please unlock the card first');
+      shakePasswordInput();
       return;
     }
-    if (Math.abs(pageNum - currentPage) > 1) return; // Restrict to sequential navigation
 
     currentPage = pageNum;
     saveData({ lastPage: currentPage });
 
+    // Update DOM
     cardPages.forEach((page, index) => {
       const isActive = index + 1 === currentPage;
       page.classList.toggle('active', isActive);
@@ -383,41 +389,102 @@ document.addEventListener('DOMContentLoaded', function() {
       indicator.setAttribute('aria-selected', isActive);
     });
 
+    // Initialize features for the current page
     initPage(pageNum);
   }
 
-  // Page-specific initialization
-  function initPage(pageNum) {
-    try {
-      switch (pageNum) {
-        case 2:
-          setupBirthdayCountdown();
-          setupAnniversaryClock();
-          break;
-        case 3:
-          setupMediaDisplay();
-          break;
-        case 4:
-          setupBirthdayCake();
-          setupAnniversaryDance();
-          setupMemoryTree();
-          break;
-        case 5:
-          playFinalAnimation();
-          setupVoiceNotePlayer();
-          break;
+  // Enhanced password validation with custom label support
+  function validatePassword() {
+      try {
+          const recipientName = recipientNameElements[0]?.textContent || '';
+          const inputValue = elements.passwordInput?.value?.trim().toLowerCase() || '';
+          const eventId = cardContainer.dataset.eventId || ''; // Add data-event-id to card-container in HTML
+          const csrftoken = getCookie('csrftoken');
+
+          if (!inputValue) {
+              shakePasswordInput('Please enter a password');
+              return false;
+          }
+
+          fetch(`/validate-password/${eventId}/`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': csrftoken
+              },
+              body: JSON.stringify({ card_password: inputValue })
+          })
+          .then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  unlocked = true;
+                  saveData({ unlocked: true });
+                  showConfetti();
+                  elements.passwordInput.classList.add('success');
+                  setTimeout(() => goToPage(2), 1000);
+              } else {
+                  shakePasswordInput(data.error || 'Incorrect password, please try again');
+              }
+          })
+          .catch(err => {
+              console.error('Error validating password:', err);
+              shakePasswordInput('An error occurred, please try again');
+          });
+
+          return true;
+      } catch (e) {
+          console.error('Error validating password:', e);
+          return false;
       }
-    } catch (e) {
-      console.error(`Error initializing page ${pageNum}:`, e);
-    }
   }
 
-  // Birthday countdown
+  // Update event listener for unlock button
+  if (elements.unlockButton && elements.passwordInput) {
+      elements.unlockButton.addEventListener('click', (e) => {
+          e.preventDefault(); // Prevent form submission
+          validatePassword();
+      });
+      elements.passwordInput.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+              e.preventDefault(); // Prevent form submission
+              validatePassword();
+          }
+      });
+  }
+
+
+  // Improved feedback for password errors
+  function shakePasswordInput(message = null) {
+    if (!elements.passwordInput) return;
+
+    elements.passwordInput.classList.add('error');
+    elements.passwordInput.style.animation = 'shake 0.5s ease';
+
+    // Show error message if provided
+    if (message && elements.passwordHint) {
+      const originalHint = elements.passwordHint.innerHTML;
+      elements.passwordHint.innerHTML = `<span class="error-message">${message}</span>`;
+
+      // Restore original hint after delay
+      setTimeout(() => {
+        elements.passwordHint.innerHTML = originalHint;
+      }, 3000);
+    }
+
+    setTimeout(() => {
+      elements.passwordInput.style.animation = '';
+      elements.passwordInput.classList.remove('error');
+    }, 500);
+  }
+
+  // Page-specific setup functions
   function setupBirthdayCountdown() {
     if (eventType !== 'birthday') return;
+
     const countdownElement = document.querySelector('.countdown');
     const giftReveal = document.querySelector('.gift-reveal');
     const actionButton = document.querySelector('.action-button');
+
     if (!countdownElement || !actionButton) return;
 
     actionButton.addEventListener('click', function() {
@@ -425,9 +492,11 @@ document.addEventListener('DOMContentLoaded', function() {
       actionButton.style.display = 'none';
       countdownElement.textContent = count;
       countdownElement.setAttribute('aria-live', 'assertive');
+
       const interval = setInterval(() => {
         count--;
         countdownElement.textContent = count;
+
         if (count < 0) {
           clearInterval(interval);
           countdownElement.style.display = 'none';
@@ -440,12 +509,13 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Memory tree
+  // Enhanced memory tree with persistence
   function setupMemoryTree() {
     const tree = document.querySelector('.memory-tree');
     const treeInstruction = document.querySelector('.tree-instruction');
     if (!tree) return;
 
+    // Load saved leaves
     if (savedData.leaves && Array.isArray(savedData.leaves)) {
       const fragment = document.createDocumentFragment();
       savedData.leaves.forEach(leaf => {
@@ -469,31 +539,38 @@ document.addEventListener('DOMContentLoaded', function() {
       leaf.style.top = `${y}px`;
       tree.appendChild(leaf);
 
+      // Add leaf animation
       leaf.animate([
         { transform: 'scale(0)', opacity: 0 },
         { transform: 'scale(1.2)', opacity: 0.8 },
         { transform: 'scale(1)', opacity: 1 }
-      ], { duration: 500, easing: 'ease-out' });
+      ], {
+        duration: 500,
+        easing: 'ease-out'
+      });
 
+      // Save the leaf position
       if (!savedData.leaves) savedData.leaves = [];
       savedData.leaves.push({ x, y });
-      saveData();
+      saveData(); // Save updated leaves
 
+      // Update instruction if many leaves
       if (tree.querySelectorAll('.memory-leaf').length > 5 && treeInstruction) {
         treeInstruction.textContent = 'Your tree is flourishing!';
       }
     });
   }
 
-  // Confetti animation
+  // Confetti animation with requestAnimationFrame for performance
   function showConfetti() {
     const colors = themes[eventType]?.confettiColors || themes.birthday.confettiColors;
     const container = document.getElementById('page-1');
     if (!container) return;
 
     const confettiPieces = [];
-    const confettiDensity = Math.min(100, window.innerWidth / 10);
+    const confettiDensity = Math.min(100, window.innerWidth / 10); // Responsive density
 
+    // Create confetti pieces
     for (let i = 0; i < confettiDensity; i++) {
       const confetti = document.createElement('div');
       confetti.className = 'confetti-piece';
@@ -504,6 +581,7 @@ document.addEventListener('DOMContentLoaded', function() {
       confetti.style.height = `${Math.random() * 10 + 5}px`;
       confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
 
+      // Store animation properties
       confetti.speedY = Math.random() * 3 + 2;
       confetti.speedX = Math.random() * 2 - 1;
       confetti.rotateSpeed = Math.random() * 6 - 3;
@@ -520,24 +598,34 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
 
+    // Animate with requestAnimationFrame
     let animationId;
     const animate = () => {
       confettiPieces.forEach((piece, i) => {
         piece.y += piece.speedY;
         piece.x += piece.speedX;
         piece.rotate += piece.rotateSpeed;
+
         piece.element.style.top = `${piece.y}px`;
         piece.element.style.left = `${piece.x}%`;
         piece.element.style.transform = `rotate(${piece.rotate}deg)`;
+
+        // Remove pieces that are out of view
         if (piece.y > container.offsetHeight + 100) {
           piece.element.remove();
           confettiPieces.splice(i, 1);
         }
       });
-      if (confettiPieces.length > 0) animationId = requestAnimationFrame(animate);
+
+      // Continue animation if pieces remain
+      if (confettiPieces.length > 0) {
+        animationId = requestAnimationFrame(animate);
+      }
     };
 
     animationId = requestAnimationFrame(animate);
+
+    // Cleanup after max duration
     setTimeout(() => {
       cancelAnimationFrame(animationId);
       confettiPieces.forEach(piece => piece.element.remove());
@@ -545,23 +633,32 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 5000);
   }
 
-  // Anniversary clock
+  // Anniversary clock implementation
   function setupAnniversaryClock() {
     if (eventType !== 'anniversary') return;
+
     const clockContainer = document.querySelector('.anniversary-clock');
     if (!clockContainer) return;
 
+    // Create clock face
     const clockFace = document.createElement('div');
     clockFace.className = 'clock-face';
+
+    // Create clock hands
     const hourHand = document.createElement('div');
     hourHand.className = 'clock-hand hour';
+
     const minuteHand = document.createElement('div');
     minuteHand.className = 'clock-hand minute';
+
     const secondHand = document.createElement('div');
     secondHand.className = 'clock-hand second';
+
+    // Add clock center
     const clockCenter = document.createElement('div');
     clockCenter.className = 'clock-center';
 
+    // Add clock markers
     for (let i = 1; i <= 12; i++) {
       const marker = document.createElement('div');
       marker.className = 'clock-marker';
@@ -570,54 +667,73 @@ document.addEventListener('DOMContentLoaded', function() {
       clockFace.appendChild(marker);
     }
 
+    // Assemble clock
     clockFace.appendChild(hourHand);
     clockFace.appendChild(minuteHand);
     clockFace.appendChild(secondHand);
     clockFace.appendChild(clockCenter);
     clockContainer.appendChild(clockFace);
 
+    // Special dates markers
     const milestoneText = document.querySelector('.milestone-text');
+
+    // Start the clock animation
     let animationStartTime = null;
-    let animationSpeed = 50;
+    let animationSpeed = 50; // 50x normal speed
 
     function animateClock(timestamp) {
       if (!animationStartTime) animationStartTime = timestamp;
       const progress = (timestamp - animationStartTime) * animationSpeed;
+
+      // Convert progress to time (milliseconds to date)
       const date = new Date(progress);
       const seconds = date.getSeconds();
       const minutes = date.getMinutes();
       const hours = date.getHours() % 12;
 
+      // Update clock hands
       secondHand.style.transform = `rotate(${(seconds * 6)}deg)`;
       minuteHand.style.transform = `rotate(${(minutes * 6)}deg)`;
       hourHand.style.transform = `rotate(${(hours * 30) + (minutes * 0.5)}deg)`;
 
-      if (progress < 86400000) requestAnimationFrame(animateClock);
-      else if (milestoneText) {
-        milestoneText.classList.add('highlight');
-        milestoneText.textContent = "Here's to many more years together! 💕";
+      // Complete one full day
+      if (progress < 86400000) { // milliseconds in a day
+        requestAnimationFrame(animateClock);
+      } else {
+        // Show final message
+        if (milestoneText) {
+          milestoneText.classList.add('highlight');
+          milestoneText.textContent = "Here's to many more years together! 💕";
+        }
       }
     }
 
+    // Start the animation
     requestAnimationFrame(animateClock);
   }
 
-  // Anniversary dance
+  // Setup anniversary dance animation
   function setupAnniversaryDance() {
     if (eventType !== 'anniversary') return;
+
     const danceButton = document.querySelector('.dance-button');
     const danceAnimation = document.querySelector('.dance-animation');
+
     if (!danceButton || !danceAnimation) return;
 
     danceButton.addEventListener('click', function() {
+      // Add dancing couple emoji with animation
       danceAnimation.innerHTML = '';
       danceAnimation.classList.add('active');
+
       const dancers = document.createElement('div');
       dancers.className = 'dancers';
       dancers.textContent = '💃 🕺';
+
       const hearts = document.createElement('div');
       hearts.className = 'hearts';
 
+      // Create floating hearts
       for (let i = 0; i < 15; i++) {
         const heart = document.createElement('span');
         heart.textContent = '❤️';
@@ -628,6 +744,7 @@ document.addEventListener('DOMContentLoaded', function() {
         hearts.appendChild(heart);
       }
 
+      // Add music notes
       const notes = ['🎵', '🎶', '♪', '♫', '🎼'];
       for (let i = 0; i < 10; i++) {
         const note = document.createElement('span');
@@ -641,36 +758,48 @@ document.addEventListener('DOMContentLoaded', function() {
 
       danceAnimation.appendChild(dancers);
       danceAnimation.appendChild(hearts);
+
+      // Change button text
       danceButton.textContent = 'Keep Dancing!';
 
+      // Play dance music if Web Audio API is supported
       try {
         if (window.AudioContext || window.webkitAudioContext) {
           const AudioContext = window.AudioContext || window.webkitAudioContext;
           const audioCtx = new AudioContext();
+
+          // Simple oscillator-based melody
           const playNote = (frequency, startTime, duration) => {
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
+
             oscillator.type = 'sine';
             oscillator.frequency.value = frequency;
+
             gainNode.gain.setValueAtTime(0.3, startTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+
             oscillator.connect(gainNode);
             gainNode.connect(audioCtx.destination);
+
             oscillator.start(startTime);
             oscillator.stop(startTime + duration);
           };
 
+          // Simple waltz pattern
           const now = audioCtx.currentTime;
           const waltzNotes = [
-            { note: 440, time: 0, duration: 0.5 },
-            { note: 493.88, time: 0.5, duration: 0.5 },
-            { note: 523.25, time: 1, duration: 0.5 },
-            { note: 440, time: 1.5, duration: 0.5 },
-            { note: 493.88, time: 2, duration: 0.5 },
-            { note: 523.25, time: 2.5, duration: 0.5 },
+            { note: 440, time: 0, duration: 0.5 },    // A4
+            { note: 493.88, time: 0.5, duration: 0.5 },  // B4
+            { note: 523.25, time: 1, duration: 0.5 },  // C5
+            { note: 440, time: 1.5, duration: 0.5 },  // A4
+            { note: 493.88, time: 2, duration: 0.5 },  // B4
+            { note: 523.25, time: 2.5, duration: 0.5 },  // C5
           ];
 
-          waltzNotes.forEach(noteObj => playNote(noteObj.note, now + noteObj.time, noteObj.duration));
+          waltzNotes.forEach(noteObj => {
+            playNote(noteObj.note, now + noteObj.time, noteObj.duration);
+          });
         }
       } catch (e) {
         console.error('Error playing music:', e);
@@ -678,57 +807,86 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Birthday cake
+  // Birthday cake interaction function
   function setupBirthdayCake() {
     if (eventType !== 'birthday') return;
+
     const cake = document.querySelector('.birthday-cake');
     const instruction = document.querySelector('.cake-instruction');
+
     if (!cake) return;
 
+    // Add candles to cake
     const candles = document.createElement('div');
     candles.className = 'candles';
+
     for (let i = 0; i < 5; i++) {
       const candle = document.createElement('div');
       candle.className = 'candle';
+
       const flame = document.createElement('div');
       flame.className = 'flame';
       candle.appendChild(flame);
+
       candles.appendChild(candle);
     }
+
     cake.appendChild(candles);
 
+    // Add candle blowing interaction
     let isBurning = true;
+
     cake.addEventListener('click', function() {
       if (!isBurning) return;
+
+      // Add blowing animation
       const blowAnimation = document.createElement('div');
       blowAnimation.className = 'blow-animation';
       cake.appendChild(blowAnimation);
 
+      // Extinguish flames
       const flames = cake.querySelectorAll('.flame');
-      flames.forEach(flame => flame.classList.add('extinguished'));
-      if (instruction) instruction.textContent = 'Your wish has been made! 🌟';
+      flames.forEach(flame => {
+        flame.classList.add('extinguished');
+      });
+
+      // Update instruction
+      if (instruction) {
+        instruction.textContent = 'Your wish has been made! 🌟';
+      }
+
       isBurning = false;
 
+      // Show confetti for the wish
       setTimeout(() => {
         showConfetti();
+
+        // Add wish granted text
         const wishGranted = document.createElement('div');
         wishGranted.className = 'wish-granted';
         wishGranted.textContent = 'Wish Granted!';
         wishGranted.style.opacity = '0';
         cake.appendChild(wishGranted);
-        setTimeout(() => wishGranted.style.opacity = '1', 100);
+
+        // Fade in wish granted text
+        setTimeout(() => {
+          wishGranted.style.opacity = '1';
+        }, 100);
       }, 1000);
     });
   }
 
-  // Final animation
+  // Final animation on the last page
   function playFinalAnimation() {
     const finalAnimation = document.querySelector('.final-animation');
     if (!finalAnimation) return;
+
     const fragment = document.createDocumentFragment();
     let animationElements = [];
 
+    // Different animations based on event type
     if (eventType === 'birthday') {
+      // Balloons and gifts animation
       for (let i = 0; i < 10; i++) {
         const balloon = document.createElement('div');
         balloon.className = 'balloon';
@@ -739,6 +897,7 @@ document.addEventListener('DOMContentLoaded', function() {
         fragment.appendChild(balloon);
         animationElements.push(balloon);
       }
+
       for (let i = 0; i < 5; i++) {
         const gift = document.createElement('div');
         gift.className = 'gift';
@@ -750,11 +909,13 @@ document.addEventListener('DOMContentLoaded', function() {
         animationElements.push(gift);
       }
     } else if (eventType === 'anniversary') {
+      // Rings and hearts animation
       const rings = document.createElement('div');
       rings.className = 'rings';
       rings.innerHTML = '💍 💍';
       fragment.appendChild(rings);
       animationElements.push(rings);
+
       for (let i = 0; i < 15; i++) {
         const heart = document.createElement('div');
         heart.className = 'heart';
@@ -766,6 +927,7 @@ document.addEventListener('DOMContentLoaded', function() {
         animationElements.push(heart);
       }
     } else {
+      // Stars and sparkles animation
       for (let i = 0; i < 20; i++) {
         const star = document.createElement('div');
         star.className = 'star';
@@ -779,101 +941,225 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     finalAnimation.appendChild(fragment);
+
+    // Add remove logic to avoid memory leaks
     setTimeout(() => {
-      animationElements.forEach(el => el?.parentNode?.removeChild(el));
+      animationElements.forEach(el => {
+        if (el && el.parentNode) {
+          el.parentNode.removeChild(el);
+        }
+      });
       animationElements = [];
     }, 10000);
   }
 
-  // Voice note player
+  // Add sharing functionality
+  function setupSharing() {
+    const shareButton = document.querySelector('.share-card');
+    const shareModal = document.querySelector('#share-modal');
+    const generateLinkButton = document.querySelector('#generate-share-link');
+    const closeModalButton = document.querySelector('#close-share-modal');
+    const sharePasswordInput = document.querySelector('#share-password');
+    const shareUrlContainer = document.querySelector('#share-url-container');
+    const shareUrlElement = document.querySelector('#share-url');
+    const whatsappLink = document.querySelector('#whatsapp-share');
+    const twitterLink = document.querySelector('#twitter-share');
+    const emailLink = document.querySelector('#email-share');
+
+    if (shareButton) {
+      shareButton.addEventListener('click', () => {
+        shareModal.style.display = 'flex';
+        sharePasswordInput.focus();
+      });
+    }
+
+    if (closeModalButton) {
+      closeModalButton.addEventListener('click', () => {
+        shareModal.style.display = 'none';
+        sharePasswordInput.value = '';
+        shareUrlContainer.style.display = 'none';
+      });
+    }
+
+    if (generateLinkButton) {
+      generateLinkButton.addEventListener('click', () => {
+        const password = sharePasswordInput.value.trim();
+        if (!password) {
+          alert('Please enter a password for sharing.');
+          return;
+        }
+
+        const eventId = shareButton.dataset.eventId;
+        if (!eventId) {
+                alert('Error: Event ID not found.');
+                return;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+        console.log("CSRF token from cookie:", csrftoken);
+
+        fetch(`/share/generate/${eventId}/`, {
+          method: 'POST',
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken
+          },
+          body: JSON.stringify({ password: password }),
+        })
+            .then(response => response.json())
+            .then(data => {
+              if (data.error) {
+                alert(`Error: ${data.error}`);
+                return;
+              }
+              const shareUrl = data.share_url;
+              shareUrlElement.textContent = shareUrl;
+              shareUrlContainer.style.display = 'block';
+              if (data.warning) {
+                alert(data.warning); // Show expiry warning
+              }
+              whatsappLink.href = `https://api.whatsapp.com/send?text=View%20my%20card:%20${encodeURIComponent(shareUrl)}`;
+              twitterLink.href = `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=Check%20out%20my%20greeting%20card!`;
+              emailLink.href = `mailto:?subject=Greeting%20Card&body=View%20my%20card:%20${encodeURIComponent(shareUrl)}`;
+
+              if (navigator.share) {
+                navigator.share({
+                  title: 'Greeting Card',
+                  text: 'Check out my greeting card!',
+                  url: shareUrl
+                }).catch(err => console.error('Share failed:', err));
+              }
+            })
+            .catch(err => {
+              console.error('Error generating share link:', err);
+              alert('Failed to generate share link.');
+            });
+      });
+    }
+  }
+
+  // Page initialization
+  function initPage(pageNum) {
+    try {
+      switch (pageNum) {
+        case 1:
+          if (elements.unlockButton && elements.passwordInput) {
+            elements.unlockButton.addEventListener('click', validatePassword);
+            elements.passwordInput.addEventListener('keypress', function(e) {
+              if (e.key === 'Enter') validatePassword();
+            });
+          }
+          break;
+        case 2:
+          setupBirthdayCountdown();
+          setupAnniversaryClock();
+          break;
+        case 3:
+          setupMediaDisplay();
+          break;
+        case 4:
+          setupBirthdayCake();
+          setupAnniversaryDance();
+          setupMemoryTree();
+          break;
+        case 5:
+          playFinalAnimation();
+          setupVoiceNotePlayer();
+          break;
+      }
+    } catch (e) {
+      console.error(`Error initializing page ${pageNum}:`, e);
+    }
+  }
+
+  // Setup voice note player
   function setupVoiceNotePlayer() {
     if (!elements.playVoiceNote || !elements.voiceNote) return;
+
     elements.playVoiceNote.addEventListener('click', function() {
       elements.voiceNote.hidden = !elements.voiceNote.hidden;
+
       if (!elements.voiceNote.hidden) {
         this.textContent = 'Hide Reflection';
+        // Use SpeechSynthesis if available
         if (window.speechSynthesis) {
           const utterance = new SpeechSynthesisUtterance(elements.voiceNote.textContent);
           speechSynthesis.speak(utterance);
         }
       } else {
         this.textContent = 'Play Reflection';
-        if (window.speechSynthesis) speechSynthesis.cancel();
+        // Stop any ongoing speech
+        if (window.speechSynthesis) {
+          speechSynthesis.cancel();
+        }
       }
     });
   }
 
-  // Sharing functionality
-  function setupSharing() {
-    if (elements.shareButton) {
-      elements.shareButton.addEventListener('click', () => {
-        elements.shareModal.style.display = 'flex';
-        elements.sharePasswordInput?.focus();
-      });
-    }
-
-    if (elements.closeModalButton) {
-      elements.closeModalButton.addEventListener('click', () => {
-        elements.shareModal.style.display = 'none';
-        if (elements.sharePasswordInput) elements.sharePasswordInput.value = '';
-        elements.shareUrlContainer.style.display = 'none';
-      });
-    }
-
-    if (elements.sharePasswordForm) {
-      elements.sharePasswordForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        const csrftoken = getCookie('csrftoken');
-
-        fetch(this.action, {
-          method: 'POST',
-          headers: { 'X-CSRFToken': csrftoken },
-          body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            elements.shareUrlElement.textContent = data.share_url;
-            elements.shareUrlContainer.style.display = 'block';
-            elements.whatsappLink.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(data.share_url)}`;
-            elements.twitterLink.href = `https://twitter.com/intent/tweet?url=${encodeURIComponent(data.share_url)}`;
-            elements.emailLink.href = `mailto:?body=${encodeURIComponent(data.share_url)}`;
-            if (data.warning) showFeedback(data.warning);
-            if (navigator.share) {
-              navigator.share({
-                title: 'Greeting Card',
-                text: 'Check out my greeting card!',
-                url: data.share_url
-              }).catch(err => console.error('Share failed:', err));
-            }
-          } else {
-            showFeedback(data.error || 'Failed to generate share link');
-          }
-        })
-        .catch(err => {
-          console.error('Error generating share link:', err);
-          showFeedback('Failed to generate share link');
-        });
-      });
-    }
+  // Add event listeners for navigation
+  if (elements.nextButtons) {
+    elements.nextButtons.forEach(button => {
+      button.addEventListener('click', () => goToPage(currentPage + 1));
+    });
   }
 
-  // Navigation event listeners
-  elements.nextButtons.forEach(button => button.addEventListener('click', () => goToPage(currentPage + 1)));
-  elements.prevButtons.forEach(button => button.addEventListener('click', () => goToPage(currentPage - 1)));
+  if (elements.prevButtons) {
+    elements.prevButtons.forEach(button => {
+      button.addEventListener('click', () => goToPage(currentPage - 1));
+    });
+  }
 
-  // Feedback toast
+  // Page indicator navigation
+  pageIndicators.forEach((indicator, index) => {
+    indicator.addEventListener('click', () => {
+      if (index + 1 <= currentPage + 1) {
+        goToPage(index + 1);
+      }
+    });
+
+    // Keyboard accessibility
+    indicator.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (index + 1 <= currentPage + 1) {
+          goToPage(index + 1);
+        }
+      }
+    });
+  });
+
+  // Setup save functionality
+  if (elements.saveButton) {
+    elements.saveButton.addEventListener('click', function() {
+      saveData();
+      showFeedback('Memory saved successfully!');
+    });
+  }
+
+  if (elements.saveCardButton) {
+    elements.saveCardButton.addEventListener('click', function() {
+      saveData();
+      showFeedback('Card saved successfully!');
+    });
+  }
+
+  // Setup sharing
+  setupSharing();
+
+  // Show feedback toast message
   function showFeedback(message) {
     const toast = document.createElement('div');
     toast.className = 'feedback-toast';
     toast.textContent = message;
     toast.setAttribute('aria-live', 'assertive');
+
     document.body.appendChild(toast);
+
     setTimeout(() => {
       toast.style.opacity = '1';
       toast.style.transform = 'translateY(0)';
     }, 10);
+
     setTimeout(() => {
       toast.style.opacity = '0';
       toast.style.transform = 'translateY(-20px)';
@@ -881,7 +1167,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 3000);
   }
 
-  // Initialize first page
-  setupSharing();
-  goToPage(1);
+  // Initialize the first page
+  if (!savedData.unlocked && !document.querySelector('.card-page.active')?.id.includes('page-2')) {
+      goToPage(1);
+  }
 });

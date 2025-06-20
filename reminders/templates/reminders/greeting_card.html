@@ -5,7 +5,7 @@
 
 {% block header_style %}
 <link rel="stylesheet" href="{% static 'css/greeting_card.css' %}">
-<link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+<!--<link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Interactive greeting card for {{ event.name }}">
 <style>
@@ -16,8 +16,8 @@
   .share-url-container { margin-top: 10px; display: none; }
   .social-links a { margin: 0 5px; text-decoration: none; color: #333; }
   .warning-text { color: #d9534f; font-size: 0.9em; margin-bottom: 10px; }
-  .password-container { display: none; position: relative; z-index: 10; }
-  .password-container.visible { display: block; }
+
+
   .feedback-toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 10px 20px; border-radius: 5px; opacity: 0; transform: translateY(20px); transition: opacity 0.3s, transform 0.3s; z-index: 1000; }
   .error { border: 2px solid red; }
   .error-message { color: red; }
@@ -37,7 +37,9 @@
 <div class="card-container"
      data-theme="{{ event.event_type }}"
      data-cultural-theme="{{ event.cultural_theme|yesno:'true,false' }}"
-     data-custom-label="{{ event.custom_label|default:'' }}">
+     data-custom-label="{{ event.custom_label|default:'' }}"
+     data-event-id="{{ event.id }}">
+
   <div class="card-wrapper">
     <!-- Page indicators -->
     <div class="page-indicator" role="tablist" aria-label="Card Pages">
@@ -76,8 +78,8 @@
           {% endif %}
         </div>
 
-        {% if requires_card_password %}
-        <div class="password-container visible">
+<!--        {% if requires_card_password %}-->
+<!--        <div class="password-container visible">-->
           <form method="post" action="{% url 'validate_card_password' event.id %}">
             {% csrf_token %}
             <label for="card-password-input" class="sr-only">Card Password</label>
@@ -243,17 +245,17 @@
 
         <div class="final-animation" aria-hidden="true"></div>
 
-        <div class="navigation-buttons with-save">
-          <button class="nav-button prev" aria-label="Previous page">Back</button>
-          <button class="save-button" aria-label="Save memory">🎁 Save this memory!</button>
-        </div>
+<!--        <div class="navigation-buttons with-save">-->
+<!--          <button class="nav-button prev" aria-label="Previous page">Back</button>-->
+<!--          <button class="save-button" aria-label="Save memory">🎁 Save this memory!</button>-->
+<!--        </div>-->
       </div>
     </div>
   </div>
 
   <div class="card-footer">
     {% if is_owner %}
-    <button class="save-card" aria-label="Save the entire card">📌 Save Card</button>
+<!--    <button class="save-card" aria-label="Save the entire card">📌 Save Card</button>-->
     <button class="share-card" data-event-id="{{ event.id }}" aria-label="Share card">🔗 Share</button>
     {% endif %}
   </div>
@@ -261,26 +263,26 @@
 
 <!-- Share Modal -->
 <div class="share-modal" id="share-modal">
-  <div class="share-modal-content">
-    <h3>Share Your Card</h3>
-    <p class="warning-text">Warning: This link will expire in 3 days.</p>
-    <form method="post" action="{% url 'generate_share_link' event.id %}">
-      {% csrf_token %}
-      <input type="password" id="share-password" name="share_password" placeholder="Set a share password (optional)..." aria-required="false">
-      <div>
-        <button type="submit" id="generate-share-link" aria-label="Generate share link">Generate Link</button>
-        <button type="button" id="close-share-modal" aria-label="Close modal">Cancel</button>
-      </div>
-    </form>
-    <div class="share-url-container" id="share-url-container">
-      <p id="share-url"></p>
-      <div class="social-links">
-        <a id="whatsapp-share" href="#" target="_blank" aria-label="Share on WhatsApp">WhatsApp</a>
-        <a id="twitter-share" href="#" target="_blank" aria-label="Share on Twitter">Twitter</a>
-        <a id="email-share" href="#" aria-label="Share via Email">Email</a>
-      </div>
+    <div class="share-modal-content">
+        <h3>Share Your Card</h3>
+        <p class="warning-text">Warning: This link will expire in 3 days.</p>
+        <form id="share-form" onsubmit="return false;"> <!-- Prevent default submission -->
+            {% csrf_token %}
+            <input type="password" id="share-password" name="share_password" placeholder="Set a share password (optional)..." aria-required="false">
+            <div>
+                <button type="button" id="generate-share-link" aria-label="Generate share link">Generate Link</button>
+                <button type="button" id="close-share-modal" aria-label="Close modal">Cancel</button>
+            </div>
+        </form>
+        <div class="share-url-container" id="share-url-container">
+            <p id="share-url"></p>
+            <div class="social-links">
+                <a id="whatsapp-share" href="#" target="_blank" aria-label="Share on WhatsApp">WhatsApp</a>
+                <a id="twitter-share" href="#" target="_blank" aria-label="Share on Twitter">Twitter</a>
+                <a id="email-share" href="#" aria-label="Share via Email">Email</a>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
 <script>
