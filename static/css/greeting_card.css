@@ -631,6 +631,18 @@ body {
 .audio-control.paused {
   background-color: var(--accent-color);
 }
+.audio-fallback {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  padding: 10px;
+  border-radius: 4px;
+  margin-top: 10px;
+  font-size: 14px;
+}
+.audio-player-container {
+  margin-top: 20px;
+}
+
 
 /* Slideshow controls */
 .slideshow-controls {

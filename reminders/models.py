@@ -117,6 +117,7 @@ class EventMedia(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='media')
     media_file = models.URLField(max_length=1000)
     media_type = models.CharField(max_length=20, choices=MEDIA_TYPES)
+    mime_type = models.CharField(max_length=50, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

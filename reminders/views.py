@@ -118,6 +118,7 @@ def add_event(request):
                         event=event,
                         media_file=clean_url,
                         media_type='image' if file.content_type.startswith('image/') else 'audio',
+                        mime_type=file.content_type
                     )
 
                 messages.success(request, "Event created successfully!")
@@ -192,6 +193,7 @@ def edit_event(request, event_id):
                         event=event,
                         media_file=public_url,
                         media_type=file.content_type.split('/')[0],
+                        mime_type=file.content_type
                     )
 
                 form.save()
@@ -606,28 +608,46 @@ def download_past_events(request):
         messages.error(request, "Unable to export past events. Please try again later.")
         return redirect('past_events')
 
+
+
 @login_required
 @email_verified_required
 def greeting_card_view(request, event_id):
     session_key = f'card_unlocked_{event_id}'
 
     event = get_object_or_404(Event.objects.prefetch_related(
-        Prefetch('media', queryset=EventMedia.objects.filter(media_type='image')),
+        Prefetch('media', queryset=EventMedia.objects.all()),
         'reflections'
     ), id=event_id, user=request.user)
+    # Get audio media for page 4
+    audio_media = event.media.filter(media_type='audio').first()
+    audio_url = audio_media.media_file if audio_media else None
+    audio_mime_type = audio_media.mime_type if audio_media else None
+
+    # Get image media for page 3
+    images = [{'media_file': m.media_file, 'media_type': m.media_type} for m in event.media.filter(media_type='image')]
 
     requires_card_password = bool(event.card_password and not request.session.get(session_key))
     error = request.session.pop('card_error', None) if requires_card_password else None
     if not requires_card_password:
         request.session[session_key] = True
 
-    return render(request, 'reminders/greeting_card.html', {
+    context = {
         'event': event,
         'is_owner': True,
         'requires_card_password': requires_card_password,
         'requires_share_password': False,
-        'error': error
-    })
+        'error': error,
+        'audio_url': audio_url,  # For page 4 audio player
+        'audio_mime_type': audio_mime_type,
+        'images': images,  # For page 3 slideshow
+        'event_type': event.event_type,
+        'recipient_name': event.custom_label or event.name,
+        'message': event.message or '',
+    }
+    logger.info(f"Audio URL for event {event_id}: {audio_url}, MIME type: {audio_mime_type}")
+    return render(request, 'reminders/greeting_card.html', context)
+
 
 
 
@@ -788,7 +808,7 @@ def public_card_view(request, token):
     card_session_key = f"card_unlocked_{share.event.id}"
 
     event = get_object_or_404(Event.objects.prefetch_related(
-        Prefetch('media', queryset=EventMedia.objects.filter(media_type='image')),
+        Prefetch('media', queryset=EventMedia.objects.all()),
         'reflections'
     ), id=share.event.id)
 
@@ -815,14 +835,28 @@ def public_card_view(request, token):
     # All checks passed
     request.session[session_key] = True
     request.session[card_session_key] = True
+    # Get audio media for page 4
+    audio_media = event.media.filter(media_type='audio').first()
+    audio_url = audio_media.media_file if audio_media else None
+    audio_mime_type = audio_media.mime_type if audio_media else None
 
-    return render(request, 'reminders/greeting_card.html', {
+    # Get image media for page 3
+    images = [{'media_file': m.media_file, 'media_type': m.media_type} for m in event.media.filter(media_type='image')]
+
+    context = {
         'event': event,
         'is_owner': False,
         'requires_card_password': bool(event.card_password),
         'requires_share_password': False,
-        'token': token
-    })
-
+        'token': token,
+        'audio_url': audio_url,  # For page 4 audio player
+        'audio_mime_type': audio_mime_type,
+        'images': images,  # For page 3 slideshow
+        'event_type': event.event_type,
+        'recipient_name': event.custom_label or event.name,
+        'message': event.message or '',
+    }
+    logger.info(f"Audio URL for event {share.event.id}: {audio_url}, MIME type: {audio_mime_type}")
+    return render(request, 'reminders/greeting_card.html', context)
 
 

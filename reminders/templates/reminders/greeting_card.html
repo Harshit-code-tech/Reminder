@@ -5,28 +5,34 @@
 
 {% block header_style %}
 <link rel="stylesheet" href="{% static 'css/greeting_card.css' %}">
-<!--<link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Interactive greeting card for {{ event.name }}">
-<style>
-  .share-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
-  .share-modal-content { background: white; padding: 20px; border-radius: 8px; max-width: 400px; width: 90%; text-align: center; }
-  .share-modal-content input { width: 100%; padding: 8px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; }
-  .share-modal-content button { padding: 8px 16px; margin: 5px; border-radius: 4px; cursor: pointer; }
-  .share-url-container { margin-top: 10px; display: none; }
-  .social-links a { margin: 0 5px; text-decoration: none; color: #333; }
-  .warning-text { color: #d9534f; font-size: 0.9em; margin-bottom: 10px; }
-
-
-  .feedback-toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 10px 20px; border-radius: 5px; opacity: 0; transform: translateY(20px); transition: opacity 0.3s, transform 0.3s; z-index: 1000; }
-  .error { border: 2px solid red; }
-  .error-message { color: red; }
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-    20%, 40%, 60%, 80% { transform: translateX(5px); }
-  }
-</style>
+<!--<style>-->
+<!--  .share-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }-->
+<!--  .share-modal-content { background: white; padding: 20px; border-radius: 8px; max-width: 400px; width: 90%; text-align: center; }-->
+<!--  .share-modal-content input { width: 100%; padding: 8px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; }-->
+<!--  .share-modal-content button { padding: 8px 16px; margin: 5px; border-radius: 4px; cursor: pointer; }-->
+<!--  .share-url-container { margin-top: 10px; display: none; }-->
+<!--  .social-links a { margin: 0 5px; text-decoration: none; color: #333; }-->
+<!--  .warning-text { color: #d9534f; font-size: 0.9em; margin-bottom: 10px; }-->
+<!--  .feedback-toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 10px 20px; border-radius: 5px; opacity: 0; transform: translateY(20px); transition: opacity 0.3s, transform 0.3s; z-index: 1000; }-->
+<!--  .error { border: 2px solid red; }-->
+<!--  .error-message { color: red; }-->
+<!--  @keyframes shake {-->
+<!--    0%, 100% { transform: translateX(0); }-->
+<!--    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }-->
+<!--    20%, 40%, 60%, 80% { transform: translateX(5px); }-->
+<!--  }-->
+<!--  /* New styles for audio player and quote */-->
+<!--  .audio-player-container { margin-top: 20px; padding: 10px; border: 2px solid #f59e0b; border-radius: 8px; text-align: center; display: none; }-->
+<!--  .audio-player-container audio { width: 100%; margin-top: 10px; }-->
+<!--  .audio-control { padding: 8px 16px; border-radius: 4px; cursor: pointer; background: #f59e0b; color: white; border: none; }-->
+<!--  .quote-container { margin-top: 20px; padding: 15px; background: rgba(255, 255, 255, 0.9); border-left: 5px solid #f59e0b; font-style: italic; display: none; animation: fadeIn 1s ease-in; }-->
+<!--  @keyframes fadeIn {-->
+<!--    from { opacity: 0; transform: translateY(10px); }-->
+<!--    to { opacity: 1; transform: translateY(0); }-->
+<!--  }-->
+<!--</style>-->
 {% endblock %}
 
 {% block content %}
@@ -37,8 +43,11 @@
 <div class="card-container"
      data-theme="{{ event.event_type }}"
      data-cultural-theme="{{ event.cultural_theme|yesno:'true,false' }}"
+     data-recipient-name="{{ recipient_name }}"
      data-custom-label="{{ event.custom_label|default:'' }}"
-     data-event-id="{{ event.id }}">
+     data-event-id="{{ event.id }}"
+     data-audio-url="{% for media in event.media.all %}{% if media.media_type == 'audio' %}{{ media.media_file|urlencode }}{% endif %}{% endfor %}">
+
 
   <div class="card-wrapper">
     <!-- Page indicators -->
@@ -50,6 +59,8 @@
       <span class="indicator" data-page="5" role="tab" aria-selected="false" tabindex="0">○</span>
     </div>
 
+    <!-- Card pages -->
+    <div class="card-pages">
     <!-- Card pages -->
     <div class="card-pages">
       <!-- Page 1: Welcome / Password -->
@@ -94,11 +105,11 @@
         {% endif %}
       </div>
 
+
       <!-- Page 2: Animation/Countdown -->
       <div class="card-page" id="page-2" role="tabpanel" aria-labelledby="tab-2" aria-hidden="true">
         <div class="diya-container"></div>
         <div class="tree-growth tree-sapling"></div>
-
         {% if event.event_type == 'birthday' %}
         <h2 class="page-title">Want a gift, <span class="recipient-name">{{ event.name }}</span>?</h2>
         <div class="countdown-container">
@@ -106,7 +117,6 @@
           <button class="action-button shake-animation" aria-label="Start countdown">YES!</button>
         </div>
         <div class="gift-reveal hidden" aria-hidden="true">Just kidding... Your card is the gift!</div>
-
         {% elif event.event_type == 'anniversary' %}
         <h2 class="page-title">Our Journey Together</h2>
         <div class="clock-container">
@@ -114,7 +124,6 @@
           <div class="milestone-text" aria-live="polite">{{ event.highlights|linebreaksbr }}</div>
           <div class="milestone-text">Every moment with you is special.</div>
         </div>
-
         {% else %}
         <h2 class="page-title">Memory Flashback</h2>
         <div class="memory-container">
@@ -122,65 +131,55 @@
           <div class="memory-caption">{{ event.message }}</div>
         </div>
         {% endif %}
-
         <div class="navigation-buttons">
           <button class="nav-button prev" aria-label="Previous page">Back</button>
           <button class="nav-button next" aria-label="Next page">Next</button>
         </div>
       </div>
 
-        <!-- Page 3: Memory/Media -->
-        <div class="card-page active" id="page-3" role="tabpanel" aria-labelledby="tab-3">
-            <div class="diya-container"></div>
-            <div class="tree-growth tree-young"></div>
-
-            <h2 class="page-title">
-                {% if event.event_type == 'birthday' %}Memory Snapshot
-                {% elif event.event_type == 'anniversary' %}Our Story
-                {% else %}Special Moments
-                {% endif %}
-            </h2>
-
-            <div class="media-container">
-                <div class="media-display"
-                     data-media-urls="{% for media in event.media.all %}{% if media.media_type == 'image' %}{{ media.media_file|urlencode }}{% if not forloop.last %},{% endif %}{% endif %}{% endfor %}"
-                     data-fallback-url="{% static 'images/nature.jpg' %}"
-                     tabindex="0">
-                </div>
-
-                <div class="media-caption">
-                    {% if event.media.exists %}
-                        {{ event.media.first.caption|default:"Our special moments" }}
-                    {% else %}
-                        A moment inspired by nature
-                    {% endif %}
-                </div>
-
-                {% if event.media.all|length > 1 %}
-                    <div class="slideshow-controls">
-                        <button class="slideshow-btn prev" aria-label="Previous image">←</button>
-                        <div class="slideshow-indicators"></div>
-                        <button class="slideshow-btn next" aria-label="Next image">→</button>
-                    </div>
-                {% endif %}
-
-                <!-- 🎵 Calming Background Audio -->
-                <audio id="calming-sound" loop>
-                    <source src="{% static 'audio/Whispering Wind.mp3' %}" type="audio/mpeg">
-                    Your browser does not support the audio element.
-                </audio>
-
-                <!-- 🎛️ Audio Control Button -->
-                <button class="audio-control" aria-label="Toggle calming sound">Pause Sound</button>
-            </div>
-
-            <div class="navigation-buttons">
-                <button class="nav-button prev" aria-label="Previous page">Back</button>
-                <button class="nav-button next" aria-label="Next page">Next</button>
-            </div>
+      <!-- Page 3: Memory/Media -->
+      <div class="card-page" id="page-3" role="tabpanel" aria-labelledby="tab-3" aria-hidden="true">
+        <div class="diya-container"></div>
+        <div class="tree-growth tree-young"></div>
+        <h2 class="page-title">
+          {% if event.event_type == 'birthday' %}Memory Snapshot
+          {% elif event.event_type == 'anniversary' %}Our Story
+          {% else %}Special Moments
+          {% endif %}
+        </h2>
+        <div class="media-container">
+          <div class="media-display"
+               data-media-urls="{% for media in event.media.all %}{% if media.media_type == 'image' %}{{ media.media_file|urlencode }}{% if not forloop.last %},{% endif %}{% endif %}{% endfor %}"
+               data-fallback-url="{% static 'images/nature.jpg' %}"
+               tabindex="0">
+          </div>
+          <div class="media-caption">
+            {% if event.media.exists %}
+            {{ event.media.first.caption|default:"Our special moments" }}
+            {% else %}
+            A moment inspired by nature
+            {% endif %}
+          </div>
+          {% if event.media.all|length > 1 %}
+          <div class="slideshow-controls">
+            <button class="slideshow-btn prev" aria-label="Previous image">←</button>
+            <div class="slideshow-indicators"></div>
+            <button class="slideshow-btn next" aria-label="Next image">→</button>
+          </div>
+          {% endif %}
+          <audio id="calming-sound" loop>
+            <source src="{% static 'audio/Whispering Wind.mp3' %}" type="audio/mpeg">
+            Your browser does not support the audio element.
+          </audio>
+          <button class="audio-control" aria-label="Toggle calming sound">Pause Sound</button>
         </div>
+        <div class="navigation-buttons">
+          <button class="nav-button prev" aria-label="Previous page">Back</button>
+          <button class="nav-button next" aria-label="Next page">Next</button>
+        </div>
+      </div>
 
-      <!-- Page 4: Interactive Element -->
+       <!-- Page 4: Interactive Element -->
       <div class="card-page" id="page-4" role="tabpanel" aria-labelledby="tab-4" aria-hidden="true">
         <div class="diya-container"></div>
         <div class="tree-growth tree-mature"></div>
@@ -191,7 +190,22 @@
           <div class="birthday-cake" tabindex="0" aria-label="Birthday cake with candles. Click to blow out candles."></div>
           <div class="cake-instruction" aria-live="polite">Click to blow out the candles!</div>
         </div>
-        <div class="quote-container">
+        <div class="audio-player-container" id="audio-player-birthday" {% if not audio_url %}style="display: none;"{% endif %}>
+          <audio id="user-audio-birthday" aria-label="User-uploaded audio message" controls>
+          {% if audio_url %}
+          <source src="{{ audio_url }}" type="audio/mpeg">
+          <source src="{{ audio_url }}" type="audio/flac">
+          <source src="{{ audio_url }}" type="audio/wav">
+          <source src="{{ audio_url }}" type="audio/ogg">
+          <source src="{{ audio_url }}" type="audio/aac">
+          {% endif %}
+          <div class="audio-fallback" role="alert">
+            Your browser does not support the audio element or the provided audio formats. Please use a modern browser like Chrome, Firefox, or Safari.
+          </div>
+          </audio>
+          <button class="audio-control" aria-label="Play audio message">Play Special Message</button>
+        </div>
+        <div class="quote-container" id="fallback-quote-birthday" {% if audio_url %}style="display: none;"{% endif %}>
           <blockquote class="inspiration-quote" aria-live="polite"></blockquote>
         </div>
 
@@ -201,7 +215,22 @@
           <button class="dance-button" aria-label="Start dance animation">Dance!</button>
           <div class="dance-animation" aria-live="polite"></div>
         </div>
-        <div class="quote-container">
+        <div class="audio-player-container" id="audio-player-anniversary" {% if not audio_url %}style="display: none;"{% endif %}>
+          <audio id="user-audio-anniversary" aria-label="User-uploaded audio message" controls>
+            {% if audio_url %}
+            <source src="{{ audio_url }}" type="audio/mpeg">
+            <source src="{{ audio_url }}" type="audio/flac">
+            <source src="{{ audio_url }}" type="audio/wav">
+            <source src="{{ audio_url }}" type="audio/ogg">
+            <source src="{{ audio_url }}" type="audio/aac">
+            {% endif %}
+            <div class="audio-fallback" role="alert">
+              Your browser does not support the audio element or the provided audio formats. Please use a modern browser like Chrome, Firefox, or Safari.
+            </div>
+          </audio>
+          <button class="audio-control" aria-label="Hear Our Song">Hear Our Song</button>
+        </div>
+        <div class="quote-container" id="fallback-quote-anniversary" {% if audio_url %}style="display: none;"{% endif %}>
           <blockquote class="inspiration-quote" aria-live="polite"></blockquote>
         </div>
 
@@ -214,22 +243,36 @@
             {{ event.message|default:"Each click represents a moment we've shared." }}
           </div>
         </div>
-        <div class="quote-container">
+        <div class="audio-player-container" id="audio-player-{{ event.event_type }}" {% if not audio_url %}style="display: none;"{% endif %}>
+          <audio id="user-audio-{{ event.event_type }}" aria-label="User-uploaded audio message" controls>
+            {% if audio_url %}
+            <source src="{{ audio_url }}" type="audio/mpeg">
+            <source src="{{ audio_url }}" type="audio/flac">
+            <source src="{{ audio_url }}" type="audio/wav">
+            <source src="{{ audio_url }}" type="audio/ogg">
+            <source src="{{ audio_url }}" type="audio/aac">
+            {% endif %}
+            <div class="audio-fallback" role="alert">
+              Your browser does not support the audio element or the provided audio formats. Please use a modern browser like Chrome, Firefox, or Safari.
+            </div>
+          </audio>
+          <button class="audio-control" aria-label="Listen to Our Memory">Listen to Our Memory</button>
+        </div>
+        <div class="quote-container" id="fallback-quote-{{ event.event_type }}" {% if audio_url %}style="display: none;"{% endif %}>
           <blockquote class="inspiration-quote" aria-live="polite"></blockquote>
         </div>
         {% endif %}
-
         <div class="navigation-buttons">
           <button class="nav-button prev" aria-label="Previous page">Back</button>
           <button class="nav-button next" aria-label="Next page">Next</button>
         </div>
       </div>
 
+
       <!-- Page 5: Farewell -->
       <div class="card-page" id="page-5" role="tabpanel" aria-labelledby="tab-5" aria-hidden="true">
         <div class="diya-container"></div>
         <div class="tree-growth tree-full"></div>
-
         <h2 class="page-title">
           {% if event.event_type == 'birthday' %}
           Happy Birthday, <span class="recipient-name">{{ event.name }}</span>!
@@ -239,7 +282,6 @@
           <span class="recipient-name">{{ event.name }}</span>, you're unforgettable.
           {% endif %}
         </h2>
-
         <div class="farewell-message">
           {% if event.message %}
           {{ event.message|linebreaksbr }}
@@ -247,7 +289,6 @@
           Wishing you joy and happiness today and always.
           {% endif %}
         </div>
-
         {% if event.reflections.exists %}
         <div class="voice-note">
           <div class="voice-note-player">
@@ -256,20 +297,13 @@
           </div>
         </div>
         {% endif %}
-
         <div class="final-animation" aria-hidden="true"></div>
-
-<!--        <div class="navigation-buttons with-save">-->
-<!--          <button class="nav-button prev" aria-label="Previous page">Back</button>-->
-<!--          <button class="save-button" aria-label="Save memory">🎁 Save this memory!</button>-->
-<!--        </div>-->
       </div>
     </div>
   </div>
 
   <div class="card-footer">
     {% if is_owner %}
-<!--    <button class="save-card" aria-label="Save the entire card">📌 Save Card</button>-->
     <button class="share-card" data-event-id="{{ event.id }}" aria-label="Share card">🔗 Share</button>
     {% endif %}
   </div>
@@ -277,26 +311,26 @@
 
 <!-- Share Modal -->
 <div class="share-modal" id="share-modal">
-    <div class="share-modal-content">
-        <h3>Share Your Card</h3>
-        <p class="warning-text">Warning: This link will expire in 3 days.</p>
-        <form id="share-form" onsubmit="return false;"> <!-- Prevent default submission -->
-            {% csrf_token %}
-            <input type="password" id="share-password" name="share_password" placeholder="Set a share password (optional)..." aria-required="false">
-            <div>
-                <button type="button" id="generate-share-link" aria-label="Generate share link">Generate Link</button>
-                <button type="button" id="close-share-modal" aria-label="Close modal">Cancel</button>
-            </div>
-        </form>
-        <div class="share-url-container" id="share-url-container">
-            <p id="share-url"></p>
-            <div class="social-links">
-                <a id="whatsapp-share" href="#" target="_blank" aria-label="Share on WhatsApp">WhatsApp</a>
-                <a id="twitter-share" href="#" target="_blank" aria-label="Share on Twitter">Twitter</a>
-                <a id="email-share" href="#" aria-label="Share via Email">Email</a>
-            </div>
-        </div>
+  <div class="share-modal-content">
+    <h3>Share Your Card</h3>
+    <p class="warning-text">Warning: This link will expire in 3 days.</p>
+    <form id="share-form" onsubmit="return false;">
+      {% csrf_token %}
+      <input type="password" id="share-password" name="share_password" placeholder="Set a share password (optional)..." aria-required="false">
+      <div>
+        <button type="button" id="generate-share-link" aria-label="Generate share link">Generate Link</button>
+        <button type="button" id="close-share-modal" aria-label="Close modal">Cancel</button>
+      </div>
+    </form>
+    <div class="share-url-container" id="share-url-container">
+      <p id="share-url"></p>
+      <div class="social-links">
+        <a id="whatsapp-share" href="#" target="_blank" aria-label="Share on WhatsApp">WhatsApp</a>
+        <a id="twitter-share" href="#" target="_blank" aria-label="Share on Twitter">Twitter</a>
+        <a id="email-share" href="#" aria-label="Share via Email">Email</a>
+      </div>
     </div>
+  </div>
 </div>
 
 <script>
