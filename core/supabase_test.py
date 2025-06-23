@@ -183,15 +183,15 @@ def delete_file(viewer_token, path, viewer_id):
 
 def rls_test():
     try:
-        u1, _ = User.objects.get_or_create(username="harshit", email="unknownhai517@gmail.com", defaults={"password": "!Password@123"})
-        u2, _ = User.objects.get_or_create(username="raj", email="harshitghosh6@gmail.com", defaults={"password": "!Password@123"})
+        u1, _ = User.objects.get_or_create(username="harshit", email="test_example1@gmail.com", defaults={"password": "!Password@123"})
+        u2, _ = User.objects.get_or_create(username="raj", email="test_example2@gmail.com", defaults={"password": "!Password@123"})
     except Exception as e:
         logger.error(f"[USER] Exception during user creation: {e}")
         return
 
     try:
-        u1_token = get_real_jwt("unknownhai517@gmail.com", "!Password@123")
-        u2_token = get_real_jwt("harshitghosh6@gmail.com", "!Password@123")
+        u1_token = get_real_jwt("test_example1@gmail.com", "!Password@123")
+        u2_token = get_real_jwt("test_example2@gmail.com", "!Password@123")
         u1_sub = get_sub_from_token(u1_token)
         u2_sub = get_sub_from_token(u2_token)
     except Exception as e:
