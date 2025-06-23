@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 import logging
+
+from django.db.models import Prefetch
 from django.views.decorators.csrf import csrf_protect
 from django.core.mail import send_mail
 from django.utils import timezone
@@ -86,8 +88,7 @@ def add_event(request):
                         event.delete()
                         return redirect('event_create')
                     if file.content_type not in settings.ALLOWED_MEDIA_TYPES:
-                        messages.error(request,
-                                       f"Invalid file type for '{file.name}'. Allowed: .jpg, .png, .pdf, .mp3, .wav")
+                        messages.error(request, f"Invalid file type for '{file.name}'. Allowed: .jpg, .png, .mp3, .wav")
                         event.delete()
                         return redirect('event_create')
 
@@ -111,10 +112,12 @@ def add_event(request):
                         return render(request, "reminders/event_form.html", {"form": form})
 
                     public_url = supabase.storage.from_('event-media').get_public_url(file_path)
+                    # Remove trailing '?' from URL
+                    clean_url = public_url.rstrip('?')
                     EventMedia.objects.create(
                         event=event,
-                        media_file=public_url,
-                        media_type=file.content_type.split('/')[0],
+                        media_file=clean_url,
+                        media_type='image' if file.content_type.startswith('image/') else 'audio',
                     )
 
                 messages.success(request, "Event created successfully!")
@@ -282,6 +285,7 @@ def delete_event_media(request, media_id):
     return redirect('event_update', event_id=media.event.id)
 
 
+
 @csrf_exempt
 def trigger_send_reminders(request):
     if request.method != 'POST':
@@ -344,6 +348,7 @@ def download_template(request):
 
 
 
+
 def delete_event_media(request, event_id):
     media_id = request.POST.get('media_id')
     media = get_object_or_404(EventMedia, id=media_id, event_id=event_id)
@@ -361,6 +366,7 @@ def delete_event_media(request, event_id):
         )
 
     media.delete()
+
 
 
 
@@ -603,29 +609,26 @@ def download_past_events(request):
 @login_required
 @email_verified_required
 def greeting_card_view(request, event_id):
-    event = get_object_or_404(Event, id=event_id, user=request.user)
-    requires_card_password = bool(event.card_password)
-    session_key = f"card_unlocked_{event_id}"
-    error = None
+    session_key = f'card_unlocked_{event_id}'
 
-    if requires_card_password and not request.session.get(session_key):
-        error = request.session.pop('card_error', None)
-    else:
+    event = get_object_or_404(Event.objects.prefetch_related(
+        Prefetch('media', queryset=EventMedia.objects.filter(media_type='image')),
+        'reflections'
+    ), id=event_id, user=request.user)
+
+    requires_card_password = bool(event.card_password and not request.session.get(session_key))
+    error = request.session.pop('card_error', None) if requires_card_password else None
+    if not requires_card_password:
         request.session[session_key] = True
 
-    print(f"Card Password Required: {event.card_password}")
+    return render(request, 'reminders/greeting_card.html', {
+        'event': event,
+        'is_owner': True,
+        'requires_card_password': requires_card_password,
+        'requires_share_password': False,
+        'error': error
+    })
 
-    return render(
-        request,
-        'reminders/greeting_card.html',
-        {
-            'event': event,
-            'is_owner': True,
-            'requires_card_password': requires_card_password,
-            'requires_share_password': False,
-            'error': error
-        }
-    )
 
 
 @ratelimit(key='ip', rate='10/m', block=True)
@@ -638,7 +641,7 @@ def validate_card_password(request, event_id):
 
     try:
         data = json.loads(request.body)
-        password = data.get('card_password', '').strip().lower()
+        password = data.get('card_password', '').strip()
     except Exception as e:
         logger.error(f"Failed to parse JSON for event {event_id}: {e}")
         return JsonResponse({'success': False, 'error': 'Invalid data'}, status=400)
@@ -646,7 +649,7 @@ def validate_card_password(request, event_id):
     is_valid = False
 
     if event.event_type == 'birthday':
-        is_valid = password == event.name.strip().lower()
+        is_valid = password == event.name.strip()
     elif event.event_type == 'anniversary':
         for fmt in ['%Y-%m-%d', '%m/%d/%Y', '%B %d, %Y', '%b %d, %Y']:
             try:
@@ -776,45 +779,49 @@ def validate_share(request, token):
 @csrf_protect
 def public_card_view(request, token):
     share = get_object_or_404(CardShare, token=token)
-    event = share.event
-    session_key = f"share_access_granted_{token}"
-    card_session_key = f"card_unlocked_{event.id}"
-    error = None
 
     if share.expires_at and share.expires_at < timezone.now():
         logger.warning(f"Expired share token {token} accessed")
         return render(request, 'reminders/share_expired.html', status=410)
 
-    if request.method == 'POST':
-        password = request.POST.get('password', '').strip()
-        if share.check_password(password):
-            request.session[session_key] = True
-            share.view_count += 1
-            share.save()
+    session_key = f"share_access_granted_{token}"
+    card_session_key = f"card_unlocked_{share.event.id}"
+
+    event = get_object_or_404(Event.objects.prefetch_related(
+        Prefetch('media', queryset=EventMedia.objects.filter(media_type='image')),
+        'reflections'
+    ), id=share.event.id)
+
+    if share.password and not request.session.get(session_key):
+        if request.method == 'POST':
+            password = request.POST.get('password', '').strip()
+            if share.check_password(password):
+                request.session[session_key] = True
+                share.view_count += 1
+                share.save()
+            else:
+                return render(request, 'reminders/share_password_prompt.html', {
+                    'error': 'Incorrect share password',
+                    'token': token,
+                    'action_url': reverse('public_card_view', args=[token])
+                })
         else:
-            error = 'Incorrect share password'
             return render(request, 'reminders/share_password_prompt.html', {
-                'error': error,
+                'error': request.session.pop('share_error', None),
                 'token': token,
                 'action_url': reverse('public_card_view', args=[token])
             })
 
-    if not request.session.get(session_key) and share.password:
-        error = request.session.pop('share_error', None)
-        return render(request, 'reminders/share_password_prompt.html', {
-            'error': error,
-            'token': token,
-            'action_url': reverse('public_card_view', args=[token])
-        })
-
-
-
+    # All checks passed
+    request.session[session_key] = True
     request.session[card_session_key] = True
+
     return render(request, 'reminders/greeting_card.html', {
         'event': event,
         'is_owner': False,
-        'requires_card_password': True,
-        'requires_share_password': False
+        'requires_card_password': bool(event.card_password),
+        'requires_share_password': False,
+        'token': token
     })
 
 

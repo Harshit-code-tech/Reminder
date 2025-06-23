@@ -15,6 +15,20 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       return cookieValue;
     }
+
+    try {
+        const activePage = document.querySelector('.page.active');
+        if (activePage) {
+            activePage.style.display = 'block';
+            console.log('Active page set to visible:', activePage.id);
+        } else {
+            console.warn('No active page found');
+        }
+    } catch (e) {
+        console.error('Error initializing greeting card:', e);
+    }
+
+
   // Enhanced Configuration with more themes and quotes
   const themes = {
     'birthday': {
@@ -168,181 +182,178 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+
+
   // Enhanced media display with lazy loading support
-  function setupMediaDisplay() {
-    try {
-      const mediaDisplays = document.querySelectorAll('.media-display');
+  function setupMediaDisplays() {
+      try {
+            console.log('Initializing media display');
+            const mediaDisplays = document.querySelectorAll('.media-display');
+            if (!mediaDisplays.length) {
+                console.warn('No media-display elements found');
+                return;
+            }
+            mediaDisplays.forEach(display => {
+                console.log('data-media-urls:', display.dataset.mediaUrls);
+                if (!display.dataset.mediaUrls && !display.dataset.fallbackUrl) {
+                    console.warn('No media URLs or fallback URL');
+                    return;
+                }
+                // Clean trailing '?' from URLs
+                let mediaUrls = display.dataset.mediaUrls
+                    ? display.dataset.mediaUrls.split(',').map(url => url.trim().replace(/\?$/, '')).filter(url => url)
+                    : [];
+                const fallbackUrl = display.dataset.fallbackUrl || 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e';
+                if (!mediaUrls.length) {
+                    console.log('Using fallback URL:', fallbackUrl);
+                    mediaUrls = [fallbackUrl];
+                }
+                display.innerHTML = '';
+                const fragment = document.createDocumentFragment();
+                const caption = display.parentElement.querySelector('.media-caption')?.textContent || 'Event media';
+                const eventName = document.querySelector('.recipient-name')?.textContent || 'event';
+                mediaUrls.forEach((url, i) => {
+                    try {
+                        const img = document.createElement('img');
+                        img.src = decodeURIComponent(url);
+                        img.alt = `${caption} for ${eventName}`;
+                        img.className = 'media-image';
+                        img.loading = 'lazy';
+                        img.style.display = i > 0 ? 'none' : 'block';
+                        img.onerror = () => console.error(`Failed to load image: ${url}`);
+                        img.onload = () => console.log(`Loaded image: ${url}`);
+                        fragment.appendChild(img);
+                    } catch (e) {
+                        console.error(`Error creating image for URL ${url}:`, e);
+                    }
+                });
+                display.appendChild(fragment);
+                const images = display.querySelectorAll('.media-image');
+                if (images.length > 1) {
+                    setupSlideshow(display, images);
+                }
+            });
+      } catch (e) {
+            console.error('Error setting up media display:', e);
+      }
 
-      mediaDisplays.forEach(display => {
-        if (!display.dataset.mediaUrls) return;
 
-        const mediaUrls = display.dataset.mediaUrls.split(',').filter(url => url.trim() !== '');
-        if (!mediaUrls.length) return;
 
-        display.innerHTML = '';
-        const fragment = document.createDocumentFragment();
 
-        // Media type handling
-        const imageUrls = [];
-        const audioUrls = [];
-
-        mediaUrls.forEach(url => {
-          if (url.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
-            imageUrls.push(url);
-          } else if (url.match(/\.(mp3|wav|flac|ogg)$/i)) {
-            audioUrls.push(url);
-          }
-        });
-
-        // Handle images with lazy loading
-        if (imageUrls.length) {
-          imageUrls.forEach((url, i) => {
-            const img = document.createElement('img');
-            img.src = url;
-            img.alt = "Event Media";
-            img.className = "media-image";
-            img.loading = "lazy"; // Add lazy loading
-            img.style.display = i > 0 ? 'none' : 'block';
-            fragment.appendChild(img);
-          });
-        }
-
-        display.appendChild(fragment);
-
-        // Add slideshow controls for multiple images
-        const images = display.querySelectorAll('.media-image');
-        if (images.length > 1) {
-          setupSlideshow(display, images);
-        }
-
-        // Add audio player if audio files exist
-        if (audioUrls.length) {
-          setupAudioPlayer(audioUrls);
-        }
-      });
-    } catch (e) {
-      console.error('Error setting up media display:', e);
-    }
   }
 
-  // Slideshow functionality
+
   function setupSlideshow(display, images) {
-    let currentIndex = 0;
-    const controls = document.createElement('div');
-    controls.className = 'slideshow-controls';
+      try {
+            console.log('Initializing slideshow with', images.length, 'images');
+            let currentIndex = 0;
+            const mediaContainer = display.parentElement; // Place controls in .media-container
+            const controls = document.createElement('div');
+            controls.className = 'slideshow-controls';
 
-    // Improved navigation with indicators
-    const prevBtn = document.createElement('button');
-    prevBtn.className = 'slideshow-btn prev';
-    prevBtn.innerHTML = '←';
-    prevBtn.setAttribute('aria-label', 'Previous image');
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'slideshow-btn prev';
+            prevBtn.innerHTML = '←';
+            prevBtn.setAttribute('aria-label', 'Previous image');
 
-    const nextBtn = document.createElement('button');
-    nextBtn.className = 'slideshow-btn next';
-    nextBtn.innerHTML = '→';
-    nextBtn.setAttribute('aria-label', 'Next image');
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'slideshow-btn next';
+            nextBtn.innerHTML = '→';
+            nextBtn.setAttribute('aria-label', 'Next image');
 
-    const indicators = document.createElement('div');
-    indicators.className = 'slideshow-indicators';
+            const indicators = document.createElement('div');
+            indicators.className = 'slideshow-indicators';
 
-    // Create indicator dots
-    for (let i = 0; i < images.length; i++) {
-      const dot = document.createElement('span');
-      dot.className = i === 0 ? 'indicator active' : 'indicator';
-      dot.setAttribute('data-index', i);
-      indicators.appendChild(dot);
-    }
+            // Create indicator dots
+            for (let i = 0; i < images.length; i++) {
+                const dot = document.createElement('span');
+                dot.className = i === 0 ? 'indicator active' : 'indicator';
+                dot.setAttribute('data-index', i);
+                indicators.appendChild(dot);
+            }
 
-    // Add event listeners
-    prevBtn.addEventListener('click', () => {
-      showSlide(currentIndex - 1);
-    });
+            function showSlide(index) {
+                try {
+                    currentIndex = (index + images.length) % images.length;
+                    images.forEach((img, i) => {
+                        img.style.display = i === currentIndex ? 'block' : 'none';
+                    });
+                    const dots = indicators.querySelectorAll('.indicator');
+                    dots.forEach((dot, i) => {
+                        dot.classList.toggle('active', i === currentIndex);
+                    });
+                    console.log('Showing slide:', currentIndex);
+                } catch (e) {
+                    console.error('Error in showSlide:', e);
+                }
+            }
 
-    nextBtn.addEventListener('click', () => {
-      showSlide(currentIndex + 1);
-    });
+            prevBtn.addEventListener('click', () => showSlide(currentIndex - 1));
+            nextBtn.addEventListener('click', () => showSlide(currentIndex + 1));
+            indicators.addEventListener('click', (e) => {
+                if (e.target.classList.contains('indicator')) {
+                    const index = parseInt(e.target.dataset.index);
+                    showSlide(index);
+                }
+            });
 
-    // Indicator clicks
-    indicators.addEventListener('click', (e) => {
-      if (e.target.classList.contains('indicator')) {
-        const index = parseInt(e.target.dataset.index);
-        showSlide(index);
+            // Touch swipe support
+            let touchStartX = 0;
+            display.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+            display.addEventListener('touchend', (e) => {
+                const touchEndX = e.changedTouches[0].screenX;
+                const diff = touchEndX - touchStartX;
+                if (diff > 50) {
+                    showSlide(currentIndex - 1);
+                } else if (diff < -50) {
+                    showSlide(currentIndex + 1);
+                }
+            }, { passive: true });
+
+            // Keyboard support
+            display.setAttribute('tabindex', '0');
+            display.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') {
+                    showSlide(currentIndex - 1);
+                } else if (e.key === 'ArrowRight') {
+                    showSlide(currentIndex + 1);
+                }
+            });
+
+            // Assemble controls
+            controls.appendChild(prevBtn);
+            controls.appendChild(indicators);
+            controls.appendChild(nextBtn);
+            mediaContainer.appendChild(controls); // Append to .media-container
+
+            // Auto-rotation
+            if (images.length > 1) {
+                let slideshowInterval = setInterval(() => {
+                    showSlide(currentIndex + 1);
+                }, 5000);
+                display.addEventListener('mouseenter', () => clearInterval(slideshowInterval));
+                display.addEventListener('focus', () => clearInterval(slideshowInterval));
+                display.addEventListener('mouseleave', () => {
+                    slideshowInterval = setInterval(() => {
+                        showSlide(currentIndex + 1);
+                    }, 5000);
+                });
+                display.addEventListener('blur', () => {
+                    slideshowInterval = setInterval(() => {
+                        showSlide(currentIndex + 1);
+                    }, 5000);
+                });
+            }
+      } catch (e) {
+            console.error('Error in setupSlideshow:', e);
       }
-    });
 
-    // Show specific slide
-    function showSlide(index) {
-      // Update index with wrapping
-      currentIndex = (index + images.length) % images.length;
-
-      // Update visibility
-      images.forEach((img, i) => {
-        img.style.display = i === currentIndex ? 'block' : 'none';
-      });
-
-      // Update indicators
-      const dots = indicators.querySelectorAll('.indicator');
-      dots.forEach((dot, i) => {
-        dot.classList.toggle('active', i === currentIndex);
-      });
-    }
-
-    // Add touch swipe support
-    let touchStartX = 0;
-    display.addEventListener('touchstart', (e) => {
-      touchStartX = e.changedTouches[0].screenX;
-    }, {passive: true});
-
-    display.addEventListener('touchend', (e) => {
-      const touchEndX = e.changedTouches[0].screenX;
-      const diff = touchEndX - touchStartX;
-
-      if (diff > 50) {
-        showSlide(currentIndex - 1); // Swipe right
-      } else if (diff < -50) {
-        showSlide(currentIndex + 1); // Swipe left
-      }
-    }, {passive: true});
-
-    // Add keyboard support
-    display.setAttribute('tabindex', '0');
-    display.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft') {
-        showSlide(currentIndex - 1);
-      } else if (e.key === 'ArrowRight') {
-        showSlide(currentIndex + 1);
-      }
-    });
-
-    // Assemble controls
-    controls.appendChild(prevBtn);
-    controls.appendChild(indicators);
-    controls.appendChild(nextBtn);
-    display.appendChild(controls);
-
-    // Start auto rotation if more than one image
-    if (images.length > 1) {
-      let slideshowInterval = setInterval(() => {
-        showSlide(currentIndex + 1);
-      }, 5000);
-
-      // Pause on hover/focus
-      display.addEventListener('mouseenter', () => clearInterval(slideshowInterval));
-      display.addEventListener('focus', () => clearInterval(slideshowInterval));
-
-      // Resume on mouse leave/blur
-      display.addEventListener('mouseleave', () => {
-        slideshowInterval = setInterval(() => {
-          showSlide(currentIndex + 1);
-        }, 5000);
-      });
-      display.addEventListener('blur', () => {
-        slideshowInterval = setInterval(() => {
-          showSlide(currentIndex + 1);
-        }, 5000);
-      });
-    }
   }
+
+
+
 
   // Audio player setup
   function setupAudioPlayer(audioUrls) {
@@ -1039,37 +1050,65 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Page initialization
-  function initPage(pageNum) {
-    try {
-      switch (pageNum) {
-        case 1:
-          if (elements.unlockButton && elements.passwordInput) {
-            elements.unlockButton.addEventListener('click', validatePassword);
-            elements.passwordInput.addEventListener('keypress', function(e) {
-              if (e.key === 'Enter') validatePassword();
-            });
+   function initPage(pageNum) {
+      try {
+          const calmingSound = document.getElementById('calming-sound');
+          const audioControl = document.querySelector('.audio-control');
+
+          // Stop audio when leaving page 3
+          if (currentPage === 3 && pageNum !== 3 && calmingSound) {
+              calmingSound.pause();
+              calmingSound.currentTime = 0;
+              if (audioControl) audioControl.textContent = 'Play Sound';
+              audioControl.classList.remove('paused');
           }
-          break;
-        case 2:
-          setupBirthdayCountdown();
-          setupAnniversaryClock();
-          break;
-        case 3:
-          setupMediaDisplay();
-          break;
-        case 4:
-          setupBirthdayCake();
-          setupAnniversaryDance();
-          setupMemoryTree();
-          break;
-        case 5:
-          playFinalAnimation();
-          setupVoiceNotePlayer();
-          break;
+
+          switch (pageNum) {
+              case 1:
+                  if (elements.unlockButton && elements.passwordInput) {
+                      elements.unlockButton.addEventListener('click', validatePassword);
+                      elements.passwordInput.addEventListener('keypress', function(e) {
+                          if (e.key === 'Enter') validatePassword();
+                      });
+                  }
+                  break;
+              case 2:
+                  setupBirthdayCountdown();
+                  setupAnniversaryClock();
+                  break;
+              case 3:
+                  setupMediaDisplays();
+                  if (calmingSound && audioControl) {
+                      calmingSound.volume = 0.5; // Lower volume for subtlety
+                      calmingSound.play().catch(e => console.error('Audio playback failed:', e));
+                      audioControl.textContent = 'Pause Sound';
+                      audioControl.classList.add('paused');
+                      audioControl.addEventListener('click', () => {
+                          if (calmingSound.paused) {
+                              calmingSound.play();
+                              audioControl.textContent = 'Pause Sound';
+                              audioControl.classList.add('paused');
+                          } else {
+                              calmingSound.pause();
+                              audioControl.textContent = 'Play Sound';
+                              audioControl.classList.remove('paused');
+                          }
+                      });
+                  }
+                  break;
+              case 4:
+                  setupBirthdayCake();
+                  setupAnniversaryDance();
+                  setupMemoryTree();
+                  break;
+              case 5:
+                  playFinalAnimation();
+                  setupVoiceNotePlayer();
+                  break;
+          }
+      } catch (e) {
+          console.error(`Error initializing page ${pageNum}:`, e);
       }
-    } catch (e) {
-      console.error(`Error initializing page ${pageNum}:`, e);
-    }
   }
 
   // Setup voice note player

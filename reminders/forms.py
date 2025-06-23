@@ -1,4 +1,3 @@
-# reminders/forms.py
 from django import forms
 from .models import Event
 from django.core.exceptions import ValidationError
@@ -11,10 +10,16 @@ class EventForm(forms.ModelForm):
         ('other', 'Other')
     ]
 
-    # This is NOT a model field — it's for multiple uploads in the form only
-    media_files = forms.FileField(
+    # Separate fields for images and audio
+    image_files = forms.FileField(
         required=False,
-        label="Upload Media Files (Max 3)"
+        label="Upload Images for Slideshow (Page 3)",
+
+    )
+    audio_files = forms.FileField(
+        required=False,
+        label="Upload Audio for Voice Message (Page 4)",
+
     )
 
     custom_label = forms.CharField(
@@ -61,8 +66,6 @@ class EventForm(forms.ModelForm):
         if event_type == 'other':
             self.fields['is_recurring'].initial = False
             self.fields['is_recurring'].widget.attrs['disabled'] = True
-
-            # 🔥 Force value to False in the data
             if self.data:
                 mutable_data = self.data.copy()
                 mutable_data['is_recurring'] = False
@@ -76,35 +79,37 @@ class EventForm(forms.ModelForm):
             raise ValidationError('Event date cannot be in the past.')
         return date
 
-
     def clean(self):
         cleaned_data = super().clean()
-        media_files = self.files.getlist('media_files')
+        image_files = self.files.getlist('image_files')
+        audio_files = self.files.getlist('audio_files')
         event_type = cleaned_data.get('event_type')
         is_recurring = cleaned_data.get('is_recurring')
-        # Perform all validation here
-        if len(media_files) > 3:
-            raise ValidationError('Maximum 3 media files allowed.')
 
-        allowed_types = ['image/jpeg', 'image/png', 'audio/mpeg', 'audio/wav', 'audio/flac']
-        max_image_size = 50 * 1024 * 1024
-        max_audio_size = 10 * 1024 * 1024
-
-        for file in media_files:
-            if file.content_type not in allowed_types:
-                raise ValidationError(f'Invalid file type: {file.name}')
-            if file.content_type.startswith('image') and file.size > max_image_size:
+        # Validate images
+        allowed_image_types = ['image/jpeg', 'image/png']
+        max_image_size = 50 * 1024 * 1024  # 50MB
+        for file in image_files:
+            if file.content_type not in allowed_image_types:
+                raise ValidationError(f'Invalid image type: {file.name}. Allowed: JPG, PNG')
+            if file.size > max_image_size:
                 raise ValidationError(f'Image {file.name} exceeds 50MB.')
-            if file.content_type.startswith('audio') and file.size > max_audio_size:
-                raise ValidationError(f'Audio {file.name} exceeds 10MB.')
+
+        # Validate audio
+        allowed_audio_types = ['audio/mpeg', 'audio/wav', 'audio/flac']
+        max_audio_size = 50 * 1024 * 1024  # 50MB (aligned with views.py)
+        for file in audio_files:
+            if file.content_type not in allowed_audio_types:
+                raise ValidationError(f'Invalid audio type: {file.name}. Allowed: MP3, WAV, FLAC')
+            if file.size > max_audio_size:
+                raise ValidationError(f'Audio {file.name} exceeds 50MB.')
 
         # Custom label logic
-        if cleaned_data.get('event_type') == 'other' and not cleaned_data.get('custom_label'):
+        if event_type == 'other' and not cleaned_data.get('custom_label'):
             self.add_error('custom_label', 'Custom label is required for Other events.')
 
-
+        # Recurring event logic
         if is_recurring and event_type not in ['birthday', 'anniversary']:
-            raise forms.ValidationError("Recurring events are only allowed for birthdays and anniversaries.")
+            raise ValidationError("Recurring events are only allowed for birthdays and anniversaries.")
 
         return cleaned_data
-

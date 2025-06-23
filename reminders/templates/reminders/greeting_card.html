@@ -129,42 +129,56 @@
         </div>
       </div>
 
-      <!-- Page 3: Memory/Media -->
-      <div class="card-page" id="page-3" role="tabpanel" aria-labelledby="tab-3" aria-hidden="true">
-        <div class="diya-container"></div>
-        <div class="tree-growth tree-young"></div>
+        <!-- Page 3: Memory/Media -->
+        <div class="card-page active" id="page-3" role="tabpanel" aria-labelledby="tab-3">
+            <div class="diya-container"></div>
+            <div class="tree-growth tree-young"></div>
 
-        <h2 class="page-title">
-          {% if event.event_type == 'birthday' %}Memory Snapshot
-          {% elif event.event_type == 'anniversary' %}Our Story
-          {% else %}Special Moments
-          {% endif %}
-        </h2>
+            <h2 class="page-title">
+                {% if event.event_type == 'birthday' %}Memory Snapshot
+                {% elif event.event_type == 'anniversary' %}Our Story
+                {% else %}Special Moments
+                {% endif %}
+            </h2>
 
-        <div class="media-container">
-          {% if event.media.exists %}
-          <div class="media-display"
-               data-media-urls="{% for media in event.media.all %}{{ media.media_file.url }}{% if not forloop.last %},{% endif %}{% endfor %}"
-               tabindex="0">
-          </div>
-          <div class="media-caption">
-            {{ event.media.first.caption|default:"Our special moments" }}
-          </div>
-          {% else %}
-          <div class="placeholder-icon" aria-label="No media available">
-            <div class="placeholder-icon">📷</div>
-            <div class="placeholder-text">Memories in our hearts</div>
-          </div>
-          {% endif %}
+            <div class="media-container">
+                <div class="media-display"
+                     data-media-urls="{% for media in event.media.all %}{% if media.media_type == 'image' %}{{ media.media_file|urlencode }}{% if not forloop.last %},{% endif %}{% endif %}{% endfor %}"
+                     data-fallback-url="{% static 'images/nature.jpg' %}"
+                     tabindex="0">
+                </div>
+
+                <div class="media-caption">
+                    {% if event.media.exists %}
+                        {{ event.media.first.caption|default:"Our special moments" }}
+                    {% else %}
+                        A moment inspired by nature
+                    {% endif %}
+                </div>
+
+                {% if event.media.all|length > 1 %}
+                    <div class="slideshow-controls">
+                        <button class="slideshow-btn prev" aria-label="Previous image">←</button>
+                        <div class="slideshow-indicators"></div>
+                        <button class="slideshow-btn next" aria-label="Next image">→</button>
+                    </div>
+                {% endif %}
+
+                <!-- 🎵 Calming Background Audio -->
+                <audio id="calming-sound" loop>
+                    <source src="{% static 'audio/Whispering Wind.mp3' %}" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
+
+                <!-- 🎛️ Audio Control Button -->
+                <button class="audio-control" aria-label="Toggle calming sound">Pause Sound</button>
+            </div>
+
+            <div class="navigation-buttons">
+                <button class="nav-button prev" aria-label="Previous page">Back</button>
+                <button class="nav-button next" aria-label="Next page">Next</button>
+            </div>
         </div>
-
-        <div class="audio-player" aria-label="Audio player"></div>
-
-        <div class="navigation-buttons">
-          <button class="nav-button prev" aria-label="Previous page">Back</button>
-          <button class="nav-button next" aria-label="Next page">Next</button>
-        </div>
-      </div>
 
       <!-- Page 4: Interactive Element -->
       <div class="card-page" id="page-4" role="tabpanel" aria-labelledby="tab-4" aria-hidden="true">

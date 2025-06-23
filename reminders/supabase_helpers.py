@@ -4,7 +4,7 @@ from django.conf import settings
 import requests
 import logging
 import time
-import jwt  # pip install PyJWT
+import jwt
 
 logger = logging.getLogger('app_logger')
 
