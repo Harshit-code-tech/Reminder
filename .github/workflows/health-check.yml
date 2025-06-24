@@ -1,7 +1,7 @@
 name: Health Check
 on:
   schedule:
-    - cron: '0 */6 * * *'  # Every 10 minutes
+    - cron: '0 */6 * * *'  # Every 6 hours
   workflow_dispatch:
 jobs:
   health:

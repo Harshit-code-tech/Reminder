@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 import logging
 
 from django.db.models import Prefetch
+from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_protect
 from django.core.mail import send_mail
 from django.utils import timezone
@@ -303,16 +304,16 @@ def trigger_send_reminders(request):
 
 
 
-def trigger_cron_jobs(request):
-    secret = request.GET.get('secret')
-    if secret != settings.REMINDER_CRON_SECRET:
-        return HttpResponse("Invalid secret", status=403)
-    logger.info(f"Triggering cron jobs for user {request.user.username}")
-    daily_reminder_job()
-    daily_deletion_notification_job()
-    daily_media_cleanup_job()
-    auto_share_card()
-    return HttpResponse("Cron jobs triggered")
+# def trigger_cron_jobs(request):
+#     secret = request.GET.get('secret')
+#     if secret != settings.REMINDER_CRON_SECRET:
+#         return HttpResponse("Invalid secret", status=403)
+#     logger.info(f"Triggering cron jobs for user {request.user.username}")
+#     daily_reminder_job()
+#     daily_deletion_notification_job()
+#     daily_media_cleanup_job()
+#     auto_share_card()
+#     return HttpResponse("Cron jobs triggered")
 
 
 @login_required
@@ -744,6 +745,21 @@ def auto_share_card():
                 share.delete()  # Delete the share if email fails
         except Exception as e:
             logger.error(f"Error in auto-sharing card for event {event.id}: {str(e)}")
+
+
+
+@csrf_exempt
+def trigger_auto_share_card(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    secret_token = request.POST.get('token')
+    if not secret_token or secret_token != settings.REMINDER_CRON_SECRET:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    try:
+        auto_share_card()
+        return JsonResponse({'message': 'Auto-share card triggered successfully'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 @login_required

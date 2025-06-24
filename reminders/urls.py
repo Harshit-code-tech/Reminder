@@ -22,4 +22,5 @@ urlpatterns = [
     path('past-events/edit/<int:event_id>/', views.edit_past_event, name='edit_past_event'),
     path('past-events/add-reflection/<int:event_id>/', views.add_reflection, name='add_reflection'),
     path('past-events/download/', views.download_past_events, name='download_past_events'),
+    path('trigger-auto-share/', views.trigger_auto_share_card, name='trigger_auto_share_card'),
 ]
