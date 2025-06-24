@@ -17,6 +17,8 @@ jobs:
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
       SUPABASE_JWT_SECRET: ${{ secrets.SUPABASE_JWT_SECRET }}
+      UPSTASH_REDIS_URL: ${{ secrets.UPSTASH_REDIS_URL }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
