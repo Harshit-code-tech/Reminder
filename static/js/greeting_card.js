@@ -169,27 +169,32 @@ document.addEventListener('DOMContentLoaded', function() {
     // Create Floating Diyas
     // Generates animated diyas for cultural theme with performance optimization
     function createDiyas() {
-        try {
-            const diyaContainers = document.querySelectorAll('.diya-container');
-            const fragment = document.createDocumentFragment();
-            diyaContainers.forEach(container => {
-                const containerFragment = document.createDocumentFragment();
-                for (let i = 0; i < 5; i++) {
-                    const diya = document.createElement('div');
-                    diya.className = 'diya';
-                    diya.style.left = `${Math.random() * 80 + 10}%`;
-                    diya.style.top = `${Math.random() * 80 + 10}%`;
-                    diya.style.animationDelay = `${Math.random() * 2}s`;
-                    const flame = document.createElement('div');
-                    flame.className = 'flame';
-                    diya.appendChild(flame);
-                    containerFragment.appendChild(diya);
-                }
-                container.appendChild(containerFragment);
-            });
-        } catch (e) {
-            console.error('Error creating diyas:', e);
-        }
+            try {
+                const diyaContainers = document.querySelectorAll('.diya-container');
+                diyaContainers.forEach(container => {
+                    const fragment = document.createDocumentFragment();
+                    const positions = [
+                        { left: '10px', top: '10px' },  // Top-left
+                        { left: 'calc(100% - 40px)', top: '10px' }, // Top-right
+                        { left: '10px', top: 'calc(100% - 40px)' }, // Bottom-left
+                        { left: 'calc(100% - 40px)', top: 'calc(100% - 40px)' } // Bottom-right
+                    ];
+                    positions.forEach(pos => {
+                        const diya = document.createElement('div');
+                        diya.className = 'diya';
+                        diya.style.left = pos.left;
+                        diya.style.top = pos.top;
+                        diya.style.animationDelay = `${Math.random() * 2}s`; // Preserve animation delay from jscode2
+                        const flame = document.createElement('div');
+                        flame.className = 'flame';
+                        diya.appendChild(flame);
+                        fragment.appendChild(diya);
+                    });
+                    container.appendChild(fragment);
+                });
+            } catch (e) {
+                console.error('Error creating diyas:', e);
+            }
     }
 
     // Setup Media Displays
@@ -748,7 +753,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         }
-        requestAnimationFrame(animateClock);
     }
 
     // Setup Anniversary Dance

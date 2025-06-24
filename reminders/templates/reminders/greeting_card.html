@@ -7,32 +7,6 @@
 <link rel="stylesheet" href="{% static 'css/greeting_card.css' %}">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Interactive greeting card for {{ event.name }}">
-<!--<style>-->
-<!--  .share-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }-->
-<!--  .share-modal-content { background: white; padding: 20px; border-radius: 8px; max-width: 400px; width: 90%; text-align: center; }-->
-<!--  .share-modal-content input { width: 100%; padding: 8px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; }-->
-<!--  .share-modal-content button { padding: 8px 16px; margin: 5px; border-radius: 4px; cursor: pointer; }-->
-<!--  .share-url-container { margin-top: 10px; display: none; }-->
-<!--  .social-links a { margin: 0 5px; text-decoration: none; color: #333; }-->
-<!--  .warning-text { color: #d9534f; font-size: 0.9em; margin-bottom: 10px; }-->
-<!--  .feedback-toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 10px 20px; border-radius: 5px; opacity: 0; transform: translateY(20px); transition: opacity 0.3s, transform 0.3s; z-index: 1000; }-->
-<!--  .error { border: 2px solid red; }-->
-<!--  .error-message { color: red; }-->
-<!--  @keyframes shake {-->
-<!--    0%, 100% { transform: translateX(0); }-->
-<!--    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }-->
-<!--    20%, 40%, 60%, 80% { transform: translateX(5px); }-->
-<!--  }-->
-<!--  /* New styles for audio player and quote */-->
-<!--  .audio-player-container { margin-top: 20px; padding: 10px; border: 2px solid #f59e0b; border-radius: 8px; text-align: center; display: none; }-->
-<!--  .audio-player-container audio { width: 100%; margin-top: 10px; }-->
-<!--  .audio-control { padding: 8px 16px; border-radius: 4px; cursor: pointer; background: #f59e0b; color: white; border: none; }-->
-<!--  .quote-container { margin-top: 20px; padding: 15px; background: rgba(255, 255, 255, 0.9); border-left: 5px solid #f59e0b; font-style: italic; display: none; animation: fadeIn 1s ease-in; }-->
-<!--  @keyframes fadeIn {-->
-<!--    from { opacity: 0; transform: translateY(10px); }-->
-<!--    to { opacity: 1; transform: translateY(0); }-->
-<!--  }-->
-<!--</style>-->
 {% endblock %}
 
 {% block content %}
@@ -48,7 +22,6 @@
      data-event-id="{{ event.id }}"
      data-audio-url="{% for media in event.media.all %}{% if media.media_type == 'audio' %}{{ media.media_file|urlencode }}{% endif %}{% endfor %}">
 
-
   <div class="card-wrapper">
     <!-- Page indicators -->
     <div class="page-indicator" role="tablist" aria-label="Card Pages">
@@ -59,8 +32,6 @@
       <span class="indicator" data-page="5" role="tab" aria-selected="false" tabindex="0">○</span>
     </div>
 
-    <!-- Card pages -->
-    <div class="card-pages">
     <!-- Card pages -->
     <div class="card-pages">
       <!-- Page 1: Welcome / Password -->
@@ -89,8 +60,8 @@
           {% endif %}
         </div>
 
-<!--        {% if requires_card_password %}-->
-<!--        <div class="password-container visible">-->
+        {% if requires_card_password %}
+        <div class="password-container visible">
           <form method="post" action="{% url 'validate_card_password' event.id %}">
             {% csrf_token %}
             <label for="card-password-input" class="sr-only">Card Password</label>
@@ -104,7 +75,6 @@
         </div>
         {% endif %}
       </div>
-
 
       <!-- Page 2: Animation/Countdown -->
       <div class="card-page" id="page-2" role="tabpanel" aria-labelledby="tab-2" aria-hidden="true">
@@ -125,10 +95,9 @@
           <div class="milestone-text">Every moment with you is special.</div>
         </div>
         {% else %}
-        <h2 class="page-title">Memory Flashback</h2>
-        <div class="memory-container">
-          <div class="memory-frame teal"></div>
-          <div class="memory-caption">{{ event.message }}</div>
+        <h2 class="page-title">Inspiration for You</h2>
+        <div class="quote-container">
+          <blockquote class="inspiration-quote" aria-live="polite"></blockquote>
         </div>
         {% endif %}
         <div class="navigation-buttons">
@@ -179,7 +148,7 @@
         </div>
       </div>
 
-       <!-- Page 4: Interactive Element -->
+      <!-- Page 4: Interactive Element -->
       <div class="card-page" id="page-4" role="tabpanel" aria-labelledby="tab-4" aria-hidden="true">
         <div class="diya-container"></div>
         <div class="tree-growth tree-mature"></div>
@@ -267,7 +236,6 @@
           <button class="nav-button next" aria-label="Next page">Next</button>
         </div>
       </div>
-
 
       <!-- Page 5: Farewell -->
       <div class="card-page" id="page-5" role="tabpanel" aria-labelledby="tab-5" aria-hidden="true">
