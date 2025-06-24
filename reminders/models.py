@@ -1,4 +1,3 @@
-# reminders/models.py
 import secrets
 import uuid
 from datetime import datetime
@@ -14,7 +13,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
-
 
 class Event(models.Model):
     EVENT_TYPES = [
@@ -43,6 +41,8 @@ class Event(models.Model):
     is_recurring = models.BooleanField(default=True, help_text="Automatically create event for next year.")
     is_archived = models.BooleanField(default=False, help_text="Mark event as archived.")
     card_password = models.CharField(max_length=128, blank=True, null=True)
+    recipient_email = models.EmailField(blank=True, null=True, help_text="Email address of the card recipient.")
+    auto_share_enabled = models.BooleanField(default=True, help_text="Automatically share card with recipient on event date.")
 
     class Meta:
         indexes = [
@@ -75,6 +75,8 @@ class Event(models.Model):
             raise ValidationError("Name is required for Birthday events.")
         if self.event_type == 'other' and not self.custom_label:
             raise ValidationError("Custom label is required for 'Other' events.")
+        if self.recipient_email and not self.recipient_email.strip():
+            raise ValidationError("Recipient email cannot be empty if provided.")
 
     def save(self, *args, **kwargs):
         """Override save to auto-set card_password and recurring flag."""
@@ -108,7 +110,6 @@ class Event(models.Model):
     def __str__(self):
         return f"{self.name}'s {self.get_event_type_display()} on {self.date}"
 
-
 class EventMedia(models.Model):
     MEDIA_TYPES = [
         ('image', 'Image'),
@@ -128,7 +129,6 @@ class EventMedia(models.Model):
     def __str__(self):
         return f"{self.media_type} for {self.event}"
 
-
 class CelebrationCardPage(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='card_pages')
     page_number = models.IntegerField(validators=[MinValueValidator(1)])
@@ -146,7 +146,6 @@ class CelebrationCardPage(models.Model):
     def __str__(self):
         return f"Page {self.page_number} for {self.event}"
 
-
 class ReminderLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
@@ -163,7 +162,6 @@ class ReminderLog(models.Model):
     def __str__(self):
         return f"Reminder sent to {self.user.email} for {self.event.name} at {self.email_sent_at}"
 
-
 class ImportLog(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     file_name = models.CharField(max_length=255)
@@ -174,7 +172,6 @@ class ImportLog(models.Model):
 
     def __str__(self):
         return f"Import by {self.user.username} at {self.imported_at}"
-
 
 class Reflection(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reflections')
@@ -190,7 +187,6 @@ class Reflection(models.Model):
 
     def __str__(self):
         return f"Reflection for {self.event} by {self.user.username}"
-
 
 class CardShare(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='shares')

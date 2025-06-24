@@ -6,12 +6,15 @@ function getCookie(name) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const mediaInput = document.querySelector('#id_media_files');
+    const imageInput = document.querySelector('#id_image_files');
+    const audioInput = document.querySelector('#id_audio_files');
     const previewContainer = document.querySelector('#media-preview');
     const removeCheckbox = document.querySelector('input[name="remove_media"]');
     const eventTypeSelect = document.getElementById('id_event_type');
     const recurringField = document.getElementById('recurring-field');
     const customLabelField = document.getElementById('custom-label-field');
+    const recipientEmailInput = document.getElementById('id_recipient_email');
+    const form = document.querySelector('form');
     let previewUrls = [];
 
     function clearPreviews() {
@@ -25,8 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
         previewUrls.push(previewUrl);
         const element = document.createElement(
             file.type.startsWith('image/') ? 'img' :
-            file.type.startsWith('audio/') ? 'audio' :
-            file.type === 'application/pdf' ? 'embed' : null
+            file.type.startsWith('audio/') ? 'audio' : null
         );
 
         if (!element) return;
@@ -36,18 +38,19 @@ document.addEventListener('DOMContentLoaded', () => {
             element.className = 'max-w-xs mt-2 rounded-lg shadow-md';
         } else if (file.type.startsWith('audio/')) {
             element.controls = true;
-        } else if (file.type === 'application/pdf') {
-            element.type = 'application/pdf';
-            element.className = 'w-full h-64 mt-2 rounded shadow';
+            element.className = 'mt-2';
         }
 
         previewContainer.appendChild(element);
     }
 
-    if (mediaInput && previewContainer) {
-        mediaInput.addEventListener('change', (event) => {
+    if (imageInput && audioInput && previewContainer) {
+        imageInput.addEventListener('change', (event) => {
             clearPreviews();
             Array.from(event.target.files).slice(0, 3).forEach(createPreview);
+        });
+        audioInput.addEventListener('change', (event) => {
+            Array.from(event.target.files).slice(0, 1).forEach(createPreview);
         });
     }
 
@@ -64,23 +67,30 @@ document.addEventListener('DOMContentLoaded', () => {
             const isRecurringEvent = ['birthday', 'anniversary'].includes(eventTypeSelect.value);
 
             recurringField.style.display = isRecurringEvent ? 'block' : 'none';
-            // customLabelField.style.display = isOther ? 'block' : 'none';
 
-            // Ensure recurring checkbox is properly set
             const recurringCheckbox = recurringField.querySelector('input[type="checkbox"]');
             if (recurringCheckbox) {
                 if (!isRecurringEvent) {
-                    recurringCheckbox.checked = false;  // force uncheck
-                    recurringCheckbox.disabled = true;  // disable input
+                    recurringCheckbox.checked = false;
+                    recurringCheckbox.disabled = true;
                 } else {
                     recurringCheckbox.disabled = false;
                 }
             }
-
         };
 
         toggleFields();
         eventTypeSelect.addEventListener('change', toggleFields);
+    }
+
+    if (recipientEmailInput) {
+        form.addEventListener('submit', (event) => {
+            if (recipientEmailInput.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmailInput.value)) {
+                event.preventDefault();
+                alert('Please enter a valid email address for the recipient.');
+                recipientEmailInput.focus();
+            }
+        });
     }
 
     const downloadLinks = document.querySelectorAll('a[data-download="media"]');

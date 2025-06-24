@@ -75,7 +75,7 @@
             </div>
         </div>
 
-        <!-- Recurring & Custom Label Fields -->
+        <!-- Recurring, Custom Label, and Auto-Share Fields -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Recurring Field -->
             <div class="form-group transition-colors duration-300 hover:shadow-md rounded-lg p-4 bg-gray-50/80 dark:bg-slate-700/90 border border-gray-200 dark:border-slate-600 backdrop-blur-sm" id="recurring-field">
@@ -98,13 +98,48 @@
                     <span class="flex items-center gap-2">
                         <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                    </svg>
+                    Custom Label
+                </span>
+            </label>
+            {{ form.custom_label }}
+            {% if form.custom_label.errors %}
+                <div class="text-red-600 dark:text-red-400 text-sm mt-1">{{ form.custom_label.errors }}</div>
+            {% endif %}
+            </div>
+        </div>
+
+        <!-- Recipient Email and Auto-Share Fields -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Recipient Email Field -->
+            <div class="form-group transition-colors duration-300 hover:shadow-md rounded-lg p-4 bg-gray-50/80 dark:bg-slate-700/90 border border-gray-200 dark:border-slate-600 backdrop-blur-sm">
+                <label for="id_recipient_email" class="block font-semibold mb-2 text-gray-700 dark:text-gray-200">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                         </svg>
-                        Custom Label
+                        Recipient Email
                     </span>
                 </label>
-                {{ form.custom_label }}
-                {% if form.custom_label.errors %}
-                    <div class="text-red-600 dark:text-red-400 text-sm mt-1">{{ form.custom_label.errors }}</div>
+                {{ form.recipient_email }}
+                {% if form.recipient_email.errors %}
+                    <div class="text-red-600 dark:text-red-400 text-sm mt-1">{{ form.recipient_email.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Auto-Share Enabled Field -->
+            <div class="form-group transition-colors duration-300 hover:shadow-md rounded-lg p-4 bg-gray-50/80 dark:bg-slate-700/90 border border-gray-200 dark:border-slate-600 backdrop-blur-sm">
+                <label for="id_auto_share_enabled" class="flex items-center gap-2 font-semibold text-gray-700 dark:text-gray-200">
+                    <input type="checkbox" id="id_auto_share_enabled" name="{{ form.auto_share_enabled.name }}"
+                           class="w-5 h-5 text-purple-600 rounded border-gray-300 focus:ring-purple-500 dark:focus:ring-purple-400 dark:border-slate-500 dark:bg-slate-800" checked>
+                    <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 12.684a4 4 0 015.632 0m0 0a4 4 0 015.632 0m-5.632 0l-1.414-1.414m1.414 1.414l1.414 1.414M3 12a9 9 0 0118 0"></path>
+                    </svg>
+                    Auto-Share Card
+                </label>
+                <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Automatically send the greeting card to the recipient on the event date.</p>
+                {% if form.auto_share_enabled.errors %}
+                    <div class="text-red-600 dark:text-red-400 text-sm mt-1">{{ form.auto_share_enabled.errors }}</div>
                 {% endif %}
             </div>
         </div>
@@ -176,27 +211,26 @@
             {% endif %}
         </div>
 
-        <!-- Media Files Field -->
+        <!-- Media Files Fields -->
         <div class="form-group transition-colors duration-300 hover:shadow-md rounded-lg p-4 bg-gray-50/80 dark:bg-slate-700/90 border border-gray-200 dark:border-slate-600 backdrop-blur-sm">
-            <label for="id_media_files" class="block font-semibold mb-2 text-gray-700 dark:text-gray-200">
+            <label for="id_image_files" class="block font-semibold mb-2 text-gray-700 dark:text-gray-200">
                 <span class="flex items-center gap-2">
                     <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                     </svg>
-                    Media Files (max 3)
+                    Images for Slideshow (max 3)
                 </span>
             </label>
-
             <div class="mt-2 relative">
                 <input
                     type="file"
-                    name="media_files"
-                    id="id_media_files"
-                    accept=".jpg,.jpeg,.png,.mp3,.wav,.flac"
+                    name="image_files"
+                    id="id_image_files"
+                    accept=".jpg,.jpeg,.png"
                     multiple
                     class="hidden"
                 >
-                <label for="id_media_files" class="cursor-pointer flex items-center justify-center p-4 border-2 border-dashed border-purple-300 dark:border-purple-500 bg-white dark:bg-slate-800 rounded-lg hover:border-purple-500 dark:hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-slate-700 transition-all">
+                <label for="id_image_files" class="cursor-pointer flex items-center justify-center p-4 border-2 border-dashed border-purple-300 dark:border-purple-500 bg-white dark:bg-slate-800 rounded-lg hover:border-purple-500 dark:hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-slate-700 transition-all">
                     <div class="text-center">
                         <svg class="mx-auto h-12 w-12 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
@@ -205,48 +239,100 @@
                             <span class="font-medium text-purple-600 dark:text-purple-400 hover:text-purple-500">Click to upload</span> or drag and drop
                         </p>
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            JPG, PNG or audio files (max 3)
+                            JPG, PNG (max 3)
                         </p>
                     </div>
                 </label>
             </div>
-
-            <div id="media-preview" class="flex flex-wrap gap-4 mt-3"></div>
-
-            {% if form.instance.pk and form.instance.media.exists %}
-                <div class="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
-                    <p class="text-gray-700 dark:text-gray-300 mb-3 font-semibold flex items-center">
-                        <svg class="w-5 h-5 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        Current Files
-                    </p>
-                    <div class="flex flex-wrap gap-4">
-                        {% for media in form.instance.media.all %}
-                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden relative group">
-                                {% if media.is_image %}
-                                    <img src="{{ media.file.url }}" alt="Event media" class="h-24 w-24 object-cover">
-                                {% else %}
-                                    <div class="h-24 w-24 flex items-center justify-center bg-gray-100 dark:bg-slate-700">
-                                        <svg class="w-10 h-10 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
-                                        </svg>
-                                    </div>
-                                {% endif %}
-                                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                    <a href="{{ media.file.url }}" target="_blank" class="text-white hover:text-purple-300 mx-2 transition-colors">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                        </svg>
-                                    </a>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                </div>
+            {% if form.image_files.errors %}
+                <div class="text-red-600 dark:text-red-400 text-sm mt-1">{{ form.image_files.errors }}</div>
             {% endif %}
         </div>
+
+        <div class="form-group transition-colors duration-300 hover:shadow-md rounded-lg p-4 bg-gray-50/80 dark:bg-slate-700/90 border border-gray-200 dark:border-slate-600 backdrop-blur-sm">
+            <label for="id_audio_files" class="block font-semibold mb-2 text-gray-700 dark:text-gray-200">
+                <span class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
+                    </svg>
+                    Audio for Voice Message
+                </span>
+            </label>
+            <div class="mt-2 relative">
+                <input
+                    type="file"
+                    name="audio_files"
+                    id="id_audio_files"
+                    accept=".mp3,.wav,.flac"
+                    multiple
+                    class="hidden"
+                >
+                <label for="id_audio_files" class="cursor-pointer flex items-center justify-center p-4 border-2 border-dashed border-purple-300 dark:border-purple-500 bg-white dark:bg-slate-800 rounded-lg hover:border-purple-500 dark:hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-slate-700 transition-all">
+                    <div class="text-center">
+                        <svg class="mx-auto h-12 w-12 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                            <span class="font-medium text-purple-600 dark:text-purple-400 hover:text-purple-500">Click to upload</span> or drag and drop
+                        </p>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            MP3, WAV, FLAC
+                        </p>
+                    </div>
+                </label>
+            </div>
+            {% if form.audio_files.errors %}
+                <div class="text-red-600 dark:text-red-400 text-sm mt-1">{{ form.audio_files.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div id="media-preview" class="flex flex-wrap gap-4 mt-3"></div>
+
+        {% if form.instance.pk and form.instance.media.exists %}
+            <div class="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
+                <p class="text-gray-700 dark:text-gray-300 mb-3 font-semibold flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Current Files
+                </p>
+                <div class="flex flex-wrap gap-4">
+                    {% for media in form.instance.media.all %}
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden relative group">
+                            {% if media.media_type == 'image' %}
+                                <img src="{{ media.media_file }}" alt="Event media" class="h-24 w-24 object-cover">
+                            {% else %}
+                                <div class="h-24 w-24 flex items-center justify-center bg-gray-100 dark:bg-slate-700">
+                                    <svg class="w-10 h-10 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
+                                    </svg>
+                                </div>
+                            {% endif %}
+                            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <a href="{{ media.media_file }}" target="_blank" class="text-white hover:text-purple-300 mx-2 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        {% if form.instance.pk %}
+            <div class="form-group transition-colors duration-300 hover:shadow-md rounded-lg p-4 bg-gray-50/80 dark:bg-slate-700/90 border border-gray-200 dark:border-slate-600 backdrop-blur-sm">
+                <label class="flex items-center gap-2 font-semibold text-gray-700 dark:text-gray-200">
+                    <input type="checkbox" name="remove_media" class="w-5 h-5 text-purple-600 rounded border-gray-300 focus:ring-purple-500 dark:focus:ring-purple-400 dark:border-slate-500 dark:bg-slate-800">
+                    <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Remove Existing Media
+                </label>
+            </div>
+        {% endif %}
 
         <div class="flex justify-end gap-4 mt-10">
             <a href="{% url 'event_list' %}" class="relative px-6 py-3 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors shadow-sm hover:shadow-md flex items-center overflow-hidden group">
@@ -267,73 +353,7 @@
     </form>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Show recurring field by default
-        document.getElementById('recurring-field').style.display = 'block';
-
-        const inputs = document.querySelectorAll('input[type="text"], input[type="date"], input[type="number"], textarea, select');
-
-        // Apply styling to form inputs for both light and dark mode
-        inputs.forEach(input => {
-            input.classList.add('w-full', 'rounded-lg', 'border-gray-300', 'dark:border-gray-600', 'bg-white',
-                              'dark:bg-slate-800', 'text-gray-800', 'dark:text-gray-100', 'focus:ring-2',
-                              'focus:ring-purple-500', 'focus:border-purple-500', 'dark:focus:ring-purple-400',
-                              'dark:focus:border-purple-400', 'shadow-sm', 'transition-colors', 'px-3', 'py-2');
-
-            // Add hover effect
-            input.addEventListener('mouseenter', () => {
-                input.classList.add('border-purple-300', 'dark:border-purple-500');
-            });
-
-            input.addEventListener('mouseleave', () => {
-                if (document.activeElement !== input) {
-                    input.classList.remove('border-purple-300', 'dark:border-purple-500');
-                }
-            });
-
-            // Add focus styles
-            input.addEventListener('focus', () => {
-                input.closest('.form-group').classList.add('ring-1', 'ring-purple-500', 'dark:ring-purple-400', 'bg-white/95', 'dark:bg-slate-700/95');
-            });
-
-            input.addEventListener('blur', () => {
-                input.closest('.form-group').classList.remove('ring-1', 'ring-purple-500', 'dark:ring-purple-400', 'bg-white/95', 'dark:bg-slate-700/95');
-            });
-        });
-
-        // Special styling for textarea to make it more spacious
-        const textareas = document.querySelectorAll('textarea');
-        textareas.forEach(textarea => {
-            textarea.style.minHeight = '120px';
-            textarea.classList.add('resize-y');
-        });
-
-        // Special styling for select elements
-        const selects = document.querySelectorAll('select');
-        selects.forEach(select => {
-            select.classList.add('pr-8'); // Add padding for drop arrow
-
-            // Create a custom style for select boxes
-            select.classList.add('appearance-none', 'bg-no-repeat', 'bg-right');
-            select.style.backgroundImage = 'url("data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3e%3cpath stroke=\'%238b5cf6\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3e%3c/svg%3e")';
-            select.style.backgroundSize = '20px 20px';
-        });
-
-        // Add hover effect to form fields
-        const formGroups = document.querySelectorAll('.form-group');
-        formGroups.forEach(group => {
-            group.addEventListener('mouseenter', () => {
-                // Add subtle glow effect on hover
-                group.style.boxShadow = '0 0 15px rgba(139, 92, 246, 0.15)';
-            });
-
-            group.addEventListener('mouseleave', () => {
-                group.style.boxShadow = '';
-            });
-        });
-    });
-</script>
+<script src="{% static 'js/event_form.js' %}"></script>
 
 <style>
     /* Additional custom styles for premium look */
@@ -408,7 +428,7 @@
     }
 
     body:not(.dark-mode) input:focus,
-    body:not(.dark-mode) select:focus,
+    body:not(.-dark-mode) select:focus,
     body:not(.dark-mode) textarea:focus {
         border-color: #8b5cf6 !important;
         box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2) !important;

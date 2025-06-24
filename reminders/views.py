@@ -79,8 +79,8 @@ def add_event(request):
                 event.user = request.user
                 event.save()
 
-                files = request.FILES.getlist('media_files')
                 supabase = get_user_supabase_client(request)
+                files = request.FILES.getlist('image_files') + request.FILES.getlist('audio_files')
 
                 for file in files:
                     if file.size > settings.MAX_FILE_SIZE:
@@ -88,7 +88,7 @@ def add_event(request):
                         event.delete()
                         return redirect('event_create')
                     if file.content_type not in settings.ALLOWED_MEDIA_TYPES:
-                        messages.error(request, f"Invalid file type for '{file.name}'. Allowed: .jpg, .png, .mp3, .wav")
+                        messages.error(request, f"Invalid file type for '{file.name}'. Allowed: .jpg, .png, .mp3, .wav, .flac")
                         event.delete()
                         return redirect('event_create')
 
@@ -112,7 +112,6 @@ def add_event(request):
                         return render(request, "reminders/event_form.html", {"form": form})
 
                     public_url = supabase.storage.from_('event-media').get_public_url(file_path)
-                    # Remove trailing '?' from URL
                     clean_url = public_url.rstrip('?')
                     EventMedia.objects.create(
                         event=event,
@@ -132,7 +131,6 @@ def add_event(request):
     else:
         form = EventForm()
     return render(request, "reminders/event_form.html", {"form": form})
-
 
 @login_required
 @email_verified_required
@@ -160,19 +158,16 @@ def edit_event(request, event_id):
                             logger.info(f"Deleted media '{file_path}' for event '{event.name}'")
                         except Exception as e:
                             logger.warning(f"Failed to delete media {file_path}: {str(e)}")
-                        if media and media.id:
-                            media.delete()
-                        else:
-                            logger.error(
-                                f"Cannot delete EventMedia: invalid or unsaved object for event '{event.name}'")
+                            messages.error(request, f"Failed to delete media: {str(e)}")
+                            return render(request, "reminders/event_form.html", {"form": form, "event": event})
 
-                files = request.FILES.getlist('media_files')
+                files = request.FILES.getlist('image_files') + request.FILES.getlist('audio_files')
                 for file in files:
                     if file.size > settings.MAX_FILE_SIZE:
                         messages.error(request, f"File '{file.name}' exceeds 50MB limit.")
                         return render(request, "reminders/event_form.html", {"form": form, "event": event})
                     if file.content_type not in settings.ALLOWED_MEDIA_TYPES:
-                        messages.error(request, f"Invalid file type for '{file.name}'.")
+                        messages.error(request, f"Invalid file type for '{file.name}'. Allowed: .jpg, .png, .mp3, .wav, .flac")
                         return render(request, "reminders/event_form.html", {"form": form, "event": event})
 
                     unique_suffix = uuid.uuid4().hex[:8]
@@ -192,7 +187,7 @@ def edit_event(request, event_id):
                     EventMedia.objects.create(
                         event=event,
                         media_file=public_url,
-                        media_type=file.content_type.split('/')[0],
+                        media_type='image' if file.content_type.startswith('image/') else 'audio',
                         mime_type=file.content_type
                     )
 
@@ -697,31 +692,58 @@ def auto_share_card():
     events = Event.objects.filter(
         date=today,
         recipient_email__isnull=False,
-        shares__isnull=True
+        auto_share_enabled=True,
+        shares__isnull=True,
+        is_archived=False
     )
     for event in events:
         try:
+            # Skip if no recipient email
+            if not event.recipient_email:
+                logger.info(f"Skipping auto-share for event {event.id}: No recipient email")
+                continue
+
+            # Generate a random password for the share link
             password = CardShare.generate_random_password()
             share = CardShare.objects.create(
                 event=event,
+                token=str(uuid.uuid4()),
                 expires_at=timezone.now() + timedelta(days=3),
                 is_auto_generated=True
             )
             share.set_password(password)
             share.save()
-            # Use SHARE_VALIDATION_BASE_URL for external validation
+
+            # Generate the share URL
             validation_base_url = getattr(settings, 'SHARE_VALIDATION_BASE_URL', settings.SITE_URL)
-            share_url = f"{validation_base_url}/validate-share/{share.token}/"
-            send_mail(
-                subject=f"Greeting Card for {event.name}'s {event.get_event_type_display()}",
-                message=f"Dear {event.name},\n\nYou've received a greeting card!\nAccess it here: {share_url}\nPassword: {password}\n\nThis link expires in 3 days.\n\nBest wishes,\n{event.user.username}",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[event.recipient_email],
-                fail_silently=True
-            )
-            logger.info(f"Auto-shared card for event {event.name} to {event.recipient_email}")
+            share_url = f"{validation_base_url.rstrip('/')}/validate-share/{share.token}/"
+
+            # Send email to the recipient
+            subject = f"Greeting Card for {event.name}'s {event.get_event_type_display()}"
+            template_name = 'emails/auto_share_card.html'
+            context = {
+                'recipient_name': event.name,
+                'sender_name': event.user.username,
+                'event_type': event.get_event_type_display(),
+                'share_url': share_url,
+                'password': password,
+                'expires_days': 3
+            }
+            try:
+                send_mail(
+                    subject=subject,
+                    message='',  # Plain text message is empty as we use HTML
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[event.recipient_email],
+                    html_message=render_to_string(template_name, context),
+                    fail_silently=False
+                )
+                logger.info(f"Auto-shared card for event {event.id} to {event.recipient_email}")
+            except Exception as e:
+                logger.error(f"Failed to send auto-share email for event {event.id}: {str(e)}")
+                share.delete()  # Delete the share if email fails
         except Exception as e:
-            logger.error(f"Failed to auto-share card for event {event.name}: {str(e)}")
+            logger.error(f"Error in auto-sharing card for event {event.id}: {str(e)}")
 
 
 @login_required
