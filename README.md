@@ -1,4 +1,4 @@
-# Birthday & Anniversary Reminder App
+# Reminder App
 
 Welcome! This is a modern Django web app to help you remember and celebrate birthdays, anniversaries, and special events. It’s designed for ease of use, beautiful sharing, and powerful reminders.
 
