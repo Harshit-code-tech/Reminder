@@ -20,6 +20,7 @@ jobs:
       UPSTASH_REDIS_URL: ${{ secrets.UPSTASH_REDIS_URL }}
       REMINDER_CRON_SECRET: ${{ secrets.REMINDER_CRON_SECRET }}
 
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
