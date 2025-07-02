@@ -230,6 +230,7 @@
         .lamp-container:hover {
             transform: scale(0.9);
             filter: brightness(1.1) drop-shadow(0 0 10px rgba(245, 158, 11, 0.5));
+        }
         .lamp-wrapper {
             display: flex;
             flex-direction: column;
@@ -368,19 +369,37 @@
             pointer-events: none;
             z-index: 1000;
             opacity: 0;
-            transition: opacity 0.8s ease;
+            transition: opacity 0.5s ease;
         }
         .mode-transition.active {
             opacity: 1;
             animation: pulse 0.8s ease-out;
         }
 
-        @keyframes pulse {
-            0% { transform: scale(0); opacity: 1; }
-            80% { transform: scale(1.5); opacity: 0.7; }
-            100% { transform: scale(2); opacity: 0; }
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: -150%;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            background: linear-gradient(90deg,
+                        rgba(255, 255, 255, 0) 0%,
+                        rgba(255, 255, 255, 0.2) 50%,
+                        rgba(255, 255, 255, 0) 100%);
+            z-index: 1001;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
         }
-
+        body.animating::after {
+            opacity: 1;
+            animation: shimmer 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes shimmer {
+            0% { left: -150%; }
+            100% { left: 150%; }
+        }
 
         .mode-transition.to-dark {
             background: radial-gradient(circle at var(--x) var(--y),
@@ -390,7 +409,6 @@
                         rgba(30, 41, 59, 0) 100%);
             animation: expandTransition 1.2s cubic-bezier(0.19, 1, 0.22, 1);
         }
-
         .mode-transition.to-light {
             background: radial-gradient(circle at var(--x) var(--y),
                         rgba(255, 255, 255, 0.98) 0%,
@@ -399,6 +417,12 @@
                         rgba(224, 231, 255, 0) 100%);
             animation: expandTransition 1.2s cubic-bezier(0.19, 1, 0.22, 1);
         }
+        @keyframes expandTransition {
+            0% { transform: scale(0.1); opacity: 0; }
+            30% { opacity: 1; }
+            100% { transform: scale(4); opacity: 0; }
+        }
+
 
         /* Responsive breakpoints */
         @media (max-width: 768px) {
@@ -431,19 +455,6 @@
                 padding: 0 1rem;
             }
         }
-        @keyframes expandTransition {
-            0% {
-                transform: scale(0.1);
-                opacity: 0;
-            }
-            30% {
-                opacity: 1;
-            }
-            100% {
-                transform: scale(4);
-                opacity: 0;
-            }
-        }
 
         /* Enhanced responsive lamp positioning */
         @media (max-width: 640px) {
@@ -461,34 +472,6 @@
                 transform: scale(0.5);
             }
         }
-
-        body::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: -150%;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            background: linear-gradient(90deg,
-                        rgba(255, 255, 255, 0) 0%,
-                        rgba(255, 255, 255, 0.2) 50%,
-                        rgba(255, 255, 255, 0) 100%);
-            z-index: 1001;
-            pointer-events: none;
-            transition: opacity 0.5s ease;
-        }
-
-        body.animating::after {
-            opacity: 1;
-            animation: shimmer 1.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        @keyframes shimmer {
-            0% { left: -150%; }
-            100% { left: 150%; }
-        }
-
 
         @media (min-width: 769px) and (max-width: 1024px) {
             .lamp-container {
@@ -666,7 +649,7 @@
         <span class="mode-label">Day Mode</span>
     </div>
     <div class="mode-transition"></div>
-    <div class="light-beam"></div>
+
 
     <main class="container mx-auto flex-grow p-4 md:p-6 lg:p-8">
         {% block content %}
@@ -757,7 +740,7 @@
 
                 lampString.addEventListener('click', (e) => {
                     const transition = document.querySelector('.mode-transition');
-                    const lightBeam = document.querySelector('.light-beam');
+
                     const rect = lampString.getBoundingClientRect();
                     const x = rect.left + rect.width / 2;
                     const y = rect.top + rect.height / 2;
@@ -766,20 +749,13 @@
                     transition.style.setProperty('--x', `${x}px`);
                     transition.style.setProperty('--y', `${y}px`);
 
-                    // Position the light beam
-                    lightBeam.style.top = `${y}px`;
-                    lightBeam.style.left = `${x}px`;
+
 
                     // Add appropriate transition class
                     const isDarkMode = document.body.classList.contains('dark-mode');
                     transition.classList.add('active', isDarkMode ? 'to-light' : 'to-dark');
-
                     document.body.classList.add('animating');
 
-                    // if (!isDarkMode) {
-                    //     // Activate light beam when switching to dark mode
-                    //     lightBeam.classList.add('active');
-                    // }
 
                     // Slight delay to ensure the transition starts before class changes
                     setTimeout(() => {
@@ -791,12 +767,12 @@
                         if (modeLabel) {
                             modeLabel.textContent = newDarkMode ? 'Night Mode' : 'Day Mode';
                         }
-                    }, 300);
+                    }, 100);
 
-                    // Remove transition class and light beam after animation completes
+                    // Remove transition class after animation completes
                     setTimeout(() => {
                         transition.classList.remove('active', 'to-dark', 'to-light');
-                        lightBeam.classList.remove('active');
+
 
                         // Remove pulling classes
                         lampString.classList.remove('pulling');
@@ -820,7 +796,7 @@
                     setTimeout(() => {
                         lampString.classList.remove('pulling');
                         lampWrapper.classList.remove('pulling');
-                    }, 1500);
+                    }, 800);
                 });
             }
 
