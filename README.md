@@ -22,6 +22,7 @@ Welcome! This is a modern Django web app to help you remember and celebrate birt
 - **Privacy Controls:** Password-protected cards and secure sharing.
 - **Secure Sharing:** Expiring token-based share links with auto-renewal support.
 - **Timezone Support:** Reminders and automation are scheduled with UTC+5:30 (IST) awareness.
+- **Responsive Design:** Works seamlessly on mobile, tablet, and desktop.
 
 ---
 
@@ -104,4 +105,3 @@ Feedback is welcome!
 - 🐛 **GitHub Issues:** [Open an issue](https://github.com/Harshit-code-tech/birthday-reminder/issues)
 
 ---
-
