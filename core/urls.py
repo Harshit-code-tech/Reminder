@@ -6,6 +6,7 @@ from reminders.views import (
     generate_share_link,
     validate_share,
     validate_card_password,
+    get_event_highlights,
 )
 
 urlpatterns = [
@@ -19,4 +20,5 @@ urlpatterns = [
     path('share/generate/<int:event_id>/', generate_share_link, name='generate_share_link'),
     path('validate-share/<uuid:token>/', validate_share, name='validate_share'),
     path('validate-password/<int:event_id>/', validate_card_password, name='validate_card_password'),
+    path('get_event_highlights/<int:event_id>/', get_event_highlights, name='get_event_highlights'),
 ]

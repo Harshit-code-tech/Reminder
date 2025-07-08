@@ -8,7 +8,7 @@ from django.core.mail import send_mail
 from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required,user_passes_test
-from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
+from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.contrib import messages
@@ -634,6 +634,7 @@ def greeting_card_view(request, event_id):
         'requires_card_password': requires_card_password,
         'requires_share_password': False,
         'error': error,
+        'highlights': event.highlights or '',
         'audio_url': audio_url,  # For page 4 audio player
         'audio_mime_type': audio_mime_type,
         'images': images,  # For page 3 slideshow
@@ -645,7 +646,13 @@ def greeting_card_view(request, event_id):
     return render(request, 'reminders/greeting_card.html', context)
 
 
-
+@login_required
+def get_event_highlights(request, event_id):
+    try:
+        event = Event.objects.get(pk=event_id)
+        return JsonResponse({'highlights': event.highlights or ""})
+    except Event.DoesNotExist:
+        raise Http404("Event not found")
 
 @ratelimit(key='ip', rate='10/m', block=True)
 @csrf_protect

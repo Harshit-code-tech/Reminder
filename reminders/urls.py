@@ -10,7 +10,6 @@ urlpatterns = [
     path('delete/<int:event_id>/', views.delete_event, name='event_delete'),
     path('send-daily-reminders/', trigger_send_reminders, name='send_daily_reminders'),
     path('media/delete/<int:event_id>/', views.delete_event_media, name='delete_event_media'),
-    # path('trigger-cron/', views.trigger_cron_jobs, name='trigger_cron_jobs'),
     path('bulk-import/', views.bulk_import, name='bulk_import'),
     path('download-template/', views.download_template, name='download_template'),
     path('analytics/', views.analytics, name='analytics'),

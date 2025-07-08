@@ -566,37 +566,197 @@ document.addEventListener('DOMContentLoaded', function() {
             elements.passwordInput.classList.remove('error');
         }, 500);
     }
+    // Function to setup the evasive "YES!" button
+    function setupEvasiveButton() {
+        const yesButton = document.querySelector('#evasive-yes-button');
+        if (!yesButton) return;
 
-    // Setup Birthday Countdown
-    // Implements a countdown timer for birthday gift reveal
-    function setupBirthdayCountdown() {
-        if (eventType !== 'birthday') return;
-        const countdownElement = document.querySelector('.countdown');
-        const giftReveal = document.querySelector('.gift-reveal');
-        const actionButton = document.querySelector('.action-button');
-        if (!countdownElement || !actionButton) return;
-        actionButton.addEventListener('click', function() {
-            let count = 5;
-            actionButton.style.display = 'none';
-            countdownElement.textContent = count;
-            countdownElement.setAttribute('aria-live', 'assertive');
-            const interval = setInterval(() => {
-                count--;
-                countdownElement.textContent = count;
-                if (count < 0) {
-                    clearInterval(interval);
-                    countdownElement.style.display = 'none';
-                    if (giftReveal) {
-                        giftReveal.classList.remove('hidden');
-                        giftReveal.setAttribute('aria-hidden', 'false');
-                    }
-                }
-            }, 1000);
+        yesButton.addEventListener('mouseenter', function (e) {
+            if (!e.shiftKey) {
+                // Calculate random movement within a reasonable range
+                const maxMove = 100; // Max pixels to move
+                const moveX = (Math.random() * maxMove * 2 - maxMove) + 'px';
+                const moveY = (Math.random() * maxMove * 2 - maxMove) + 'px';
+                yesButton.style.setProperty('--move-x', moveX);
+                yesButton.style.setProperty('--move-y', moveY);
+                yesButton.classList.add('moving');
+            } else {
+                yesButton.classList.remove('moving');
+                yesButton.style.setProperty('--move-x', '0px');
+                yesButton.style.setProperty('--move-y', '0px');
+            }
+        });
+
+        yesButton.addEventListener('mouseleave', function () {
+            yesButton.classList.remove('moving');
+            yesButton.style.setProperty('--move-x', '0px');
+            yesButton.style.setProperty('--move-y', '0px');
+        });
+
+        yesButton.addEventListener('click', function (e) {
+            if (!e.shiftKey) {
+                e.preventDefault(); // Prevent click if Shift isn't held
+                return;
+            }
+            // Proceed with countdown (existing logic)
+            startCountdown();
         });
     }
 
+    // Setup Birthday Countdown
+
+    function startCountdown() {
+        const countdownElement = document.querySelector('.countdown');
+        // const giftReveal = document.querySelector('.gift-reveal');
+        const yesButton = document.querySelector('#evasive-yes-button');
+        if (!countdownElement || !yesButton) return;
+
+        let count = 5;
+        yesButton.style.display = 'none';
+        countdownElement.textContent = count;
+        countdownElement.setAttribute('aria-live', 'assertive');
+        const interval = setInterval(() => {
+            count--;
+            countdownElement.textContent = count;
+            if (count < 0) {
+                clearInterval(interval);
+                countdownElement.style.display = 'none';
+                showMilestonePopup();
+            }
+        }, 1000);
+    }
+    // Function to show milestone popup
+    function showMilestonePopup() {
+        // Prevent multiple popups
+        if (document.querySelector('.milestone-popup')) return;
+
+        const eventId = document.querySelector('.card-container').dataset.eventId;
+        fetch(`/get_event_highlights/${eventId}/`, {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to fetch highlights');
+            return response.json();
+        })
+        .then(data => {
+            // Check if highlights exist
+            if (!data.highlights || data.highlights.trim() === '') {
+                const popup = document.createElement('div');
+                popup.className = 'milestone-popup';
+                popup.setAttribute('role', 'dialog');
+                popup.setAttribute('aria-labelledby', 'popup-title');
+                popup.innerHTML = `
+                    <div class="milestone-popup-content">
+                        <h3 id="popup-title">No Milestones</h3>
+                        <p>No special milestones or highlights were added for this event.</p>
+                        <button class="close-popup" aria-label="Close popup">Close</button>
+                    </div>
+                `;
+                document.body.appendChild(popup);
+            } else {
+                const popup = document.createElement('div');
+                popup.className = 'milestone-popup';
+                popup.setAttribute('role', 'dialog');
+                popup.setAttribute('aria-labelledby', 'popup-title');
+                popup.innerHTML = `
+                    <div class="milestone-popup-content">
+                        <h3 id="popup-title">Special Milestones</h3>
+                        <p>${data.highlights.replace(/\n/g, '<br>')}</p>
+                        <button class="close-popup" aria-label="Close popup">Close</button>
+                    </div>
+                `;
+                document.body.appendChild(popup);
+            }
+
+            // Style and position popup
+            const popup = document.querySelector('.milestone-popup');
+            popup.style.position = 'fixed';
+            popup.style.top = '50%';
+            popup.style.left = '50%';
+            popup.style.transform = 'translate(-50%, -50%)';
+            popup.style.background = 'rgba(255, 255, 255, 0.9)';
+            popup.style.padding = '20px';
+            popup.style.borderRadius = '10px';
+            popup.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+            popup.style.zIndex = '1000';
+            popup.style.maxWidth = '400px';
+            popup.style.textAlign = 'center';
+
+            // Focus the popup for accessibility
+            popup.focus();
+
+            // Trap focus within popup
+            const focusableElements = popup.querySelectorAll('button, [tabindex="0"]');
+            const firstElement = focusableElements[0];
+            const lastElement = focusableElements[focusableElements.length - 1];
+
+            popup.addEventListener('keydown', function trapFocus(e) {
+                if (e.key === 'Tab') {
+                    if (e.shiftKey && document.activeElement === firstElement) {
+                        e.preventDefault();
+                        lastElement.focus();
+                    } else if (!e.shiftKey && document.activeElement === lastElement) {
+                        e.preventDefault();
+                        firstElement.focus();
+                    }
+                }
+            });
+
+            // Close button functionality
+            popup.querySelector('.close-popup').addEventListener('click', () => {
+                popup.remove();
+            });
+
+            // Close on Escape key
+            document.addEventListener('keydown', function handler(e) {
+                if (e.key === 'Escape') {
+                    popup.remove();
+                    document.removeEventListener('keydown', handler);
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching highlights:', error);
+            const popup = document.createElement('div');
+            popup.className = 'milestone-popup';
+            popup.setAttribute('role', 'dialog');
+            popup.setAttribute('aria-labelledby', 'popup-title');
+            popup.innerHTML = `
+                <div class="milestone-popup-content">
+                    <h3 id="popup-title">Error</h3>
+                    <p>Unable to load milestones. Please try again later.</p>
+                    <button class="close-popup" aria-label="Close popup">Close</button>
+                </div>
+            `;
+            document.body.appendChild(popup);
+            popup.style.position = 'fixed';
+            popup.style.top = '50%';
+            popup.style.left = '50%';
+            popup.style.transform = 'translate(-50%, -50%)';
+            popup.style.background = 'rgba(255, 255, 255, 0.9)';
+            popup.style.padding = '20px';
+            popup.style.borderRadius = '10px';
+            popup.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+            popup.style.zIndex = '1000';
+            popup.style.maxWidth = '400px';
+            popup.style.textAlign = 'center';
+            popup.focus();
+            popup.querySelector('.close-popup').addEventListener('click', () => {
+                popup.remove();
+            });
+        });
+    }
+    // Update setup function to include evasive button
+    function setupBirthdayCountdown() {
+        setupEvasiveButton();
+    }
+
+
     // Setup Memory Tree
-    // Allows users to add persistent memory leaves to a tree
+
     function setupMemoryTree() {
         const tree = document.querySelector('.memory-tree');
         const treeInstruction = document.querySelector('.tree-instruction');
@@ -1058,6 +1218,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     break;
                 case 2:
                     setupBirthdayCountdown();
+
                     setupAnniversaryClock();
                     break;
                 case 3:

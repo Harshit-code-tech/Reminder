@@ -83,10 +83,17 @@
         {% if event.event_type == 'birthday' %}
         <h2 class="page-title">Want a gift, <span class="recipient-name">{{ event.name }}</span>?</h2>
         <div class="countdown-container">
+
           <div class="countdown" aria-live="assertive">5</div>
-          <button class="action-button shake-animation" aria-label="Start countdown">YES!</button>
+
+          <div class="countdown-hint" aria-live="polite">
+            <span class="hint-icon">💡</span>
+            Hint: Click "YES!" to start the countdown!
+          </div>
+          <button id="evasive-yes-button" class="action-button shake-animation" aria-label="Start countdown">YES!</button>
+
         </div>
-        <div class="gift-reveal hidden" aria-hidden="true">Just kidding... Your card is the gift!</div>
+
         {% elif event.event_type == 'anniversary' %}
         <h2 class="page-title">Our Journey Together</h2>
         <div class="clock-container">
@@ -101,8 +108,8 @@
         </div>
         {% endif %}
         <div class="navigation-buttons">
-          <button class="nav-button prev" aria-label="Previous page">Back</button>
-          <button class="nav-button next" aria-label="Next page">Next</button>
+          <button id="nav-prev-page2" class="nav-button prev" aria-label="Previous page" aria-controls="page-1">Back</button>
+          <button id="nav-next-page2" class="nav-button next" aria-label="Next page" aria-controls="page-3">Next</button>
         </div>
       </div>
 
@@ -143,8 +150,8 @@
           <button class="audio-control" aria-label="Toggle calming sound">Pause Sound</button>
         </div>
         <div class="navigation-buttons">
-          <button class="nav-button prev" aria-label="Previous page">Back</button>
-          <button class="nav-button next" aria-label="Next page">Next</button>
+          <button id="nav-prev-page3" class="nav-button prev" aria-label="Previous page" aria-controls="page-2">Back</button>
+          <button id="nav-next-page3" class="nav-button next" aria-label="Next page" aria-controls="page-4">Next</button>
         </div>
       </div>
 
@@ -232,8 +239,8 @@
         </div>
         {% endif %}
         <div class="navigation-buttons">
-          <button class="nav-button prev" aria-label="Previous page">Back</button>
-          <button class="nav-button next" aria-label="Next page">Next</button>
+          <button id="nav-prev-page4" class="nav-button prev" aria-label="Previous page" aria-controls="page-3">Back</button>
+          <button id="nav-next-page4" class="nav-button next" aria-label="Next page" aria-controls="page-5">Next</button>
         </div>
       </div>
 
