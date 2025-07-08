@@ -569,48 +569,117 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 500);
     }
     // Function to setup the evasive "YES!" button
-    function setupEvasiveButton() {
-        const yesButton = document.querySelector('#evasive-yes-button');
-        if (!yesButton) return;
+    // function setupEvasiveButton() {
+    //     const yesButton = document.querySelector('#evasive-yes-button');
+    //     if (!yesButton) return;
+    //
+    //     yesButton.addEventListener('mouseenter', function (e) {
+    //         if (!e.shiftKey) {
+    //             // Calculate random movement within a reasonable range
+    //             const maxMove = 100; // Max pixels to move
+    //             const moveX = (Math.random() * maxMove * 2 - maxMove) + 'px';
+    //             const moveY = (Math.random() * maxMove * 2 - maxMove) + 'px';
+    //             yesButton.style.setProperty('--move-x', moveX);
+    //             yesButton.style.setProperty('--move-y', moveY);
+    //             yesButton.classList.add('moving');
+    //         } else {
+    //             yesButton.classList.remove('moving');
+    //             yesButton.style.setProperty('--move-x', '0px');
+    //             yesButton.style.setProperty('--move-y', '0px');
+    //         }
+    //     });
+    //
+    //     yesButton.addEventListener('mouseleave', function () {
+    //         yesButton.classList.remove('moving');
+    //         yesButton.style.setProperty('--move-x', '0px');
+    //         yesButton.style.setProperty('--move-y', '0px');
+    //     });
+    //
+    //     yesButton.addEventListener('click', function (e) {
+    //         if (!e.shiftKey) {
+    //             e.preventDefault(); // Prevent click if Shift isn't held
+    //             return;
+    //         }
+    //         // Proceed with countdown (existing logic)
+    //         startCountdown();
+    //     });
+    // }
 
-        yesButton.addEventListener('mouseenter', function (e) {
-            if (!e.shiftKey) {
-                // Calculate random movement within a reasonable range
-                const maxMove = 100; // Max pixels to move
-                const moveX = (Math.random() * maxMove * 2 - maxMove) + 'px';
-                const moveY = (Math.random() * maxMove * 2 - maxMove) + 'px';
-                yesButton.style.setProperty('--move-x', moveX);
-                yesButton.style.setProperty('--move-y', moveY);
-                yesButton.classList.add('moving');
-            } else {
-                yesButton.classList.remove('moving');
-                yesButton.style.setProperty('--move-x', '0px');
-                yesButton.style.setProperty('--move-y', '0px');
+    function setupSliderUnlock() {
+        const sliderTrack = document.querySelector('.slider-track');
+        const sliderThumb = document.querySelector('.slider-thumb');
+        const yesButton = document.getElementById('yes-unlocked-button');
+        let isDragging = false, startX = 0, currentX = 0, maxMove = 0;
+
+        if (!sliderTrack || !sliderThumb || !yesButton) return;
+
+        maxMove = sliderTrack.offsetWidth - sliderThumb.offsetWidth;
+
+        function onDragStart(e) {
+            isDragging = true;
+            startX = (e.touches ? e.touches[0].clientX : e.clientX) - sliderThumb.offsetLeft;
+            document.addEventListener('mousemove', onDragMove);
+            document.addEventListener('touchmove', onDragMove, {passive: false});
+            document.addEventListener('mouseup', onDragEnd);
+            document.addEventListener('touchend', onDragEnd);
+        }
+
+        function onDragMove(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            currentX = (e.touches ? e.touches[0].clientX : e.clientX) - startX;
+            currentX = Math.max(0, Math.min(currentX, maxMove));
+            sliderThumb.style.left = currentX + 'px';
+            if (currentX >= maxMove - 5) unlockYesButton();
+        }
+
+        function onDragEnd() {
+            if (!isDragging) return;
+            if (currentX < maxMove - 5) {
+                sliderThumb.style.left = '0px';
+            }
+            isDragging = false;
+            document.removeEventListener('mousemove', onDragMove);
+            document.removeEventListener('touchmove', onDragMove);
+            document.removeEventListener('mouseup', onDragEnd);
+            document.removeEventListener('touchend', onDragEnd);
+        }
+
+        function unlockYesButton() {
+            sliderTrack.classList.add('unlocked');
+            sliderThumb.style.left = maxMove + 'px';
+            setTimeout(() => {
+                sliderTrack.style.display = 'none';
+                yesButton.style.display = 'inline-block';
+            }, 300);
+        }
+
+        sliderThumb.addEventListener('mousedown', onDragStart);
+        sliderThumb.addEventListener('touchstart', onDragStart, {passive: false});
+        // Optional: Keyboard accessibility
+        sliderThumb.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+                currentX = Math.min(currentX + 20, maxMove);
+                sliderThumb.style.left = currentX + 'px';
+                if (currentX >= maxMove - 5) unlockYesButton();
+            }
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+                currentX = Math.max(currentX - 20, 0);
+                sliderThumb.style.left = currentX + 'px';
             }
         });
 
-        yesButton.addEventListener('mouseleave', function () {
-            yesButton.classList.remove('moving');
-            yesButton.style.setProperty('--move-x', '0px');
-            yesButton.style.setProperty('--move-y', '0px');
-        });
-
-        yesButton.addEventListener('click', function (e) {
-            if (!e.shiftKey) {
-                e.preventDefault(); // Prevent click if Shift isn't held
-                return;
-            }
-            // Proceed with countdown (existing logic)
-            startCountdown();
-        });
+        // YES! button click starts countdown
+        yesButton.addEventListener('click', startCountdown);
     }
+
 
     // Setup Birthday Countdown
 
     function startCountdown() {
         const countdownElement = document.querySelector('.countdown');
         // const giftReveal = document.querySelector('.gift-reveal');
-        const yesButton = document.querySelector('#evasive-yes-button');
+        const yesButton = document.getElementById('yes-unlocked-button');
         if (!countdownElement || !yesButton) return;
 
         let count = 5;
@@ -753,7 +822,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     // Update setup function to include evasive button
     function setupBirthdayCountdown() {
-        setupEvasiveButton();
+        setupSliderUnlock();
     }
 
 

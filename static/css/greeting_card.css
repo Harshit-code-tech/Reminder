@@ -590,7 +590,54 @@ body {
     cursor: pointer;
     transition: background 0.3s;
 }
-
+.slider-unlock-container {
+  margin: 2em auto 1em auto;
+  width: 90%;
+  max-width: 320px;
+  user-select: none;
+}
+.slider-track {
+  position: relative;
+  background: #e5e7eb;
+  border-radius: 30px;
+  height: 48px;
+  width: 100%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  display: flex;
+  align-items: center;
+}
+.slider-thumb {
+  position: absolute;
+  left: 0;
+  top: 4px;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  cursor: pointer;
+  transition: background 0.2s;
+  z-index: 2;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.slider-thumb:after {
+  content: '👉';
+  font-size: 1.5em;
+}
+.slider-label {
+  width: 100%;
+  text-align: center;
+  color: #6b7280;
+  font-size: 1.1em;
+  pointer-events: none;
+  z-index: 1;
+}
+.slider-track.unlocked {
+  background: #bbf7d0;
+}
 .close-popup:hover {
     background: linear-gradient(to right, #553c9a, #3b4cca);
 }

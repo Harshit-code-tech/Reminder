@@ -92,8 +92,12 @@
             (<em>if you can</em> 😈).<br>
             <span style="font-size: 0.95em;">Tip: Hold <kbd>Shift</kbd> and try clicking it!</span>
           </div>
-          <button id="evasive-yes-button" class="action-button shake-animation" aria-label="Start countdown">YES!</button>
-
+          <div class ="slider-unlock-container">
+            <div class="slider-track">
+                <div class="slider-thumb" tabindex="0" aria-label="Slide to unlock Yes"></div>
+                <span class="slider-label">Slide to unlock <b>YES!</b></span>
+            </div>
+          <button id="yes-unlocked-button" class="action-button" style="display:none;" aria-label="Start countdown">YES!</button>
         </div>
 
         {% elif event.event_type == 'anniversary' %}
