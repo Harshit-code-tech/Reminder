@@ -535,61 +535,14 @@ body {
   max-width: 300px;
   margin: 2rem auto;
 }
-#evasive-yes-button {
-    position: relative;
-    transition: transform 0.2s fade-in-out;
-}
-#evasive-yes-button.moving {
-    transform: translate(var(0), var(0));
-}
+/*#evasive-yes-button {*/
+/*    position: relative;*/
+/*    transition: transform 0.2s fade-in-out;*/
+/*}*/
+/*#evasive-yes-button.moving {*/
+/*    transform: translate(var(0), var(0));*/
+/*}*/
 
-.milestone-popup {
-    position: fixed;
-    z-index: 1000;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    max-width: 400px;
-    width: 90%; /* Responsive width for mobile */
-    text-align: center;
-    outline: none; /* For accessibility focus */
-}
-
-.milestone-popup-content h3 {
-    font-size: 1.5rem;
-    color: #6b46c1;
-    margin-bottom: 10px;
-}
-
-.milestone-popup-content p {
-    font-size: 1rem;
-    color: #333;
-    margin-bottom: 15px;
-}
-.corner-hint {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: rgba(255,255,255,0.85);
-  color: #6b7280;
-  font-size: 0.95rem;
-  padding: 0.4em 0.8em;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-  z-index: 20;
-  pointer-events: none;
-  user-select: none;
-}
-.close-popup {
-    padding: 8px 16px;
-    background: linear-gradient(to right, #6b46c1, #4c51bf);
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background 0.3s;
-}
 .slider-unlock-container {
   margin: 2em auto 1em auto;
   width: 90%;
@@ -638,6 +591,54 @@ body {
 .slider-track.unlocked {
   background: #bbf7d0;
 }
+.milestone-popup {
+    position: fixed;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    max-width: 400px;
+    width: 90%; /* Responsive width for mobile */
+    text-align: center;
+    outline: none; /* For accessibility focus */
+}
+
+.milestone-popup-content h3 {
+    font-size: 1.5rem;
+    color: #6b46c1;
+    margin-bottom: 10px;
+}
+
+.milestone-popup-content p {
+    font-size: 1rem;
+    color: #333;
+    margin-bottom: 15px;
+}
+.corner-hint {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(255,255,255,0.85);
+  color: #6b7280;
+  font-size: 0.95rem;
+  padding: 0.4em 0.8em;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  z-index: 20;
+  pointer-events: none;
+  user-select: none;
+}
+.close-popup {
+    padding: 8px 16px;
+    background: linear-gradient(to right, #6b46c1, #4c51bf);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
 .close-popup:hover {
     background: linear-gradient(to right, #553c9a, #3b4cca);
 }
@@ -1777,10 +1778,17 @@ body {
   height: 100%;
   pointer-events: none;
   z-index: 5;
-  background-color: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(5px);
+  background: linear-gradient(120deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
   opacity: 0;
   animation: fadeIn 1s forwards 0.5s;
+  transition: background 0.5s;
+
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes fadeIn {
