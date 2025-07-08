@@ -261,12 +261,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const controls = document.createElement('div');
             controls.className = 'slideshow-controls';
             const prevBtn = document.createElement('button');
-            prevBtn.className = 'slideshow-btn prev';
-            prevBtn.innerHTML = '←';
+            prevBtn.className = 'slideshow-btn prev nav-button prev';
+            prevBtn.innerHTML = '← Back';
             prevBtn.setAttribute('aria-label', 'Previous image');
+
+
             const nextBtn = document.createElement('button');
-            nextBtn.className = 'slideshow-btn next';
-            nextBtn.innerHTML = '→';
+            nextBtn.className = 'slideshow-btn next nav-button next';
+            nextBtn.innerHTML = 'Next →';
             nextBtn.setAttribute('aria-label', 'Next image');
             const indicators = document.createElement('div');
             indicators.className = 'slideshow-indicators';
