@@ -646,7 +646,7 @@ def greeting_card_view(request, event_id):
     return render(request, 'reminders/greeting_card.html', context)
 
 
-@login_required
+@csrf_exempt
 def get_event_highlights(request, event_id):
     try:
         event = Event.objects.get(pk=event_id)
