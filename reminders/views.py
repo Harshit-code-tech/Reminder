@@ -672,7 +672,8 @@ def validate_card_password(request, event_id):
     is_valid = False
 
     if event.event_type == 'birthday':
-        is_valid = password == event.name.strip()
+        is_valid = password.lower() == event.name.strip().lower()
+
     elif event.event_type == 'anniversary':
         for fmt in ['%Y-%m-%d', '%m/%d/%Y', '%B %d, %Y', '%b %d, %Y']:
             try:
