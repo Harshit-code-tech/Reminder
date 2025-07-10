@@ -83,24 +83,20 @@
         {% if event.event_type == 'birthday' %}
         <h2 class="page-title">Want a gift, <span class="recipient-name">{{ event.name }}</span>?</h2>
         <div class="countdown-container">
-
           <div class="countdown" aria-live="assertive">5</div>
-
           <div class="countdown-hint" aria-live="polite">
             <span class="hint-icon">💡</span>
             <strong>Hint:</strong> Click <b>"YES!"</b> to start the countdown
             (<em>if you can</em> 😈).<br>
-
           </div>
-          <div class ="slider-unlock-container">
+          <div class="slider-unlock-container">
             <div class="slider-track">
-                <div class="slider-thumb" tabindex="0" aria-label="Slide to unlock Yes"></div>
-                <span class="slider-label">Slide to unlock <b>YES!</b></span>
+              <div class="slider-thumb" tabindex="0" aria-label="Slide to unlock Yes"></div>
+              <span class="slider-label">Slide to unlock <b>YES!</b></span>
             </div>
-            </div>
+          </div>
           <button id="yes-unlocked-button" class="action-button" style="display:none;" aria-label="Start countdown">YES!</button>
         </div>
-
         {% elif event.event_type == 'anniversary' %}
         <h2 class="page-title">Our Journey Together</h2>
         <div class="clock-container">
@@ -114,9 +110,9 @@
           <blockquote class="inspiration-quote" aria-live="polite"></blockquote>
         </div>
         {% endif %}
-        <div class="slideshow-controls">
-          <button class="nav-button prev">← Back</button>
-          <button class="nav-button next">Next →</button>
+        <div class="page-controls">
+          <button class="nav-button prev" aria-label="Go to previous page">← Back</button>
+          <button class="nav-button next" aria-label="Go to next page">Next →</button>
         </div>
       </div>
 
@@ -144,11 +140,6 @@
             {% endif %}
           </div>
           {% if event.media.all|length > 1 %}
-          <div class="slideshow-controls">
-            <button class="slideshow-btn prev" aria-label="Previous image">←</button>
-            <div class="slideshow-indicators"></div>
-            <button class="slideshow-btn next" aria-label="Next image">→</button>
-          </div>
           {% endif %}
           <audio id="calming-sound" loop>
             <source src="{% static 'audio/Whispering Wind.mp3' %}" type="audio/mpeg">
@@ -156,9 +147,9 @@
           </audio>
           <button class="audio-control" aria-label="Toggle calming sound">Pause Sound</button>
         </div>
-        <div class="slideshow-controls">
-          <button class="nav-button prev">← Back</button>
-          <button class="nav-button next">Next →</button>
+        <div class="page-controls">
+          <button class="nav-button prev" aria-label="Go to previous page">← Back</button>
+          <button class="nav-button next" aria-label="Go to next page">Next →</button>
         </div>
       </div>
 
@@ -166,7 +157,6 @@
       <div class="card-page" id="page-4" role="tabpanel" aria-labelledby="tab-4" aria-hidden="true">
         <div class="diya-container"></div>
         <div class="tree-growth tree-mature"></div>
-
         {% if event.event_type == 'birthday' %}
         <h2 class="page-title">Make a Wish!</h2>
         <div class="cake-container">
@@ -191,7 +181,6 @@
         <div class="quote-container" id="fallback-quote-birthday" {% if audio_url %}style="display: none;"{% endif %}>
           <blockquote class="inspiration-quote" aria-live="polite"></blockquote>
         </div>
-
         {% elif event.event_type == 'anniversary' %}
         <h2 class="page-title">One More Dance?</h2>
         <div class="dance-container">
@@ -216,7 +205,6 @@
         <div class="quote-container" id="fallback-quote-anniversary" {% if audio_url %}style="display: none;"{% endif %}>
           <blockquote class="inspiration-quote" aria-live="polite"></blockquote>
         </div>
-
         {% else %}
         <h2 class="page-title">Tree of Memories</h2>
         <div class="memory-tree-container">
@@ -245,9 +233,9 @@
           <blockquote class="inspiration-quote" aria-live="polite"></blockquote>
         </div>
         {% endif %}
-        <div class="slideshow-controls">
-          <button class="nav-button prev">← Back</button>
-          <button class="nav-button next">Next →</button>
+        <div class="page-controls">
+          <button class="nav-button prev" aria-label="Go to previous page">← Back</button>
+          <button class="nav-button next" aria-label="Go to next page">Next →</button>
         </div>
       </div>
 

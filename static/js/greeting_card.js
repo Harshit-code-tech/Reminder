@@ -256,19 +256,21 @@ document.addEventListener('DOMContentLoaded', function() {
     function setupSlideshow(display, images) {
         try {
             console.log('Initializing slideshow with', images.length, 'images');
+            const oldControls = display.parentElement.querySelector('.slideshow-controls');
+            if (oldControls) oldControls.remove();
             let currentIndex = 0;
             const mediaContainer = display.parentElement;
             const controls = document.createElement('div');
             controls.className = 'slideshow-controls';
             const prevBtn = document.createElement('button');
             prevBtn.className = 'slideshow-btn prev nav-button prev';
-            prevBtn.innerHTML = '← Back';
+            prevBtn.innerHTML = '← ';
             prevBtn.setAttribute('aria-label', 'Previous image');
 
 
             const nextBtn = document.createElement('button');
             nextBtn.className = 'slideshow-btn next nav-button next';
-            nextBtn.innerHTML = 'Next →';
+            nextBtn.innerHTML = '→';
             nextBtn.setAttribute('aria-label', 'Next image');
             const indicators = document.createElement('div');
             indicators.className = 'slideshow-indicators';
