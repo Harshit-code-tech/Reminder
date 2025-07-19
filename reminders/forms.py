@@ -7,6 +7,7 @@ class EventForm(forms.ModelForm):
     EVENT_TYPES = [
         ('birthday', 'Birthday'),
         ('anniversary', 'Anniversary'),
+        ('raksha_bandhan', 'Raksha Bandhan'),
         ('other', 'Other')
     ]
 
@@ -120,7 +121,7 @@ class EventForm(forms.ModelForm):
             self.add_error('custom_label', 'Custom label is required for Other events.')
 
         # Recurring event logic
-        if is_recurring and event_type not in ['birthday', 'anniversary']:
+        if is_recurring and event_type not in ['birthday', 'anniversary','raksha_bandhan']:
             raise ValidationError("Recurring events are only allowed for birthdays and anniversaries.")
 
         # Recipient email validation

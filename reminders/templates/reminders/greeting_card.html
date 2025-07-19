@@ -6,7 +6,7 @@
 {% block header_style %}
 <link rel="stylesheet" href="{% static 'css/greeting_card.css' %}">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Interactive greeting card for {{ event.name }}">
+<meta name="description" content="Interactive Greeting Card for {{ event.name }}">
 {% endblock %}
 
 {% block content %}
@@ -43,7 +43,9 @@
           {% if event.event_type == 'birthday' %}
           Knock knock! It's a special surprise for
           {% elif event.event_type == 'anniversary' %}
-          A special note awaits you,
+          A special note awaits you;
+          {% elif event.event_type == 'raksha_bandhan' %}
+          Where Threads Tell Stories
           {% else %}
           A message awaits you,
           {% endif %}
@@ -54,7 +56,9 @@
           {% if event.event_type == 'birthday' %}
           <div class="emoji-puzzle">🎂🎈 = ?</div>
           {% elif event.event_type == 'anniversary' %}
-          <div class="date-puzzle">When did we say "I do"?</div>
+          <div class="date-puzzle">When did we say, "I do"?</div>
+          {% elif event.event_type == 'raksha_bandhan' %}
+          <div class="data-puzzle">What protects, binds, and means home?</div>
           {% else %}
           <div class="emoji-puzzle">✈️😢 = ?</div>
           {% endif %}
@@ -68,11 +72,38 @@
             <input type="password" id="card-password-input" name="card_password" class="password-input" placeholder="Enter the card password..." aria-required="true">
             <button type="submit" class="unlock-button" aria-label="Unlock card content">Unlock Card</button>
           </form>
+
           <div class="password-hint" aria-live="polite">
             <span class="hint-icon">💡</span>
-            Hint: Your Name Your Password
+            Hint:
+            {% if event.event_type == 'birthday' %}
+            <strong>The name</strong> that brings smiles every year.
+            {% elif event.event_type == 'anniversary' %}
+              When did<strong> we</strong>begin this journey?
+            {% elif event.event_type == 'raksha_bandhan' %}
+            <strong>What protects, binds, and means home?</strong>
+            {% else %}
+            The one <strong>word</strong> that defines this memory
+            {% endif %}
           </div>
-        </div>
+          <div class="password-hint" id="password-hint" style="display:none;">
+            <strong>Can’t crack it?</strong>Here is something that might help: " <span id="reveal-password" class="blurred-password" tabindex="0">Click to reveal password</span>"
+          </div>
+          <span id="actual-password" style="display:none;">{{ password_text }}</span>
+
+          <style>
+            .blurred-password {
+              filter: blur(6px);
+              cursor: pointer;
+              user-select: none;
+              transition: filter 0.3s;
+            }
+            .blurred-password.unblur {
+              filter: none;
+            }
+          </style>
+
+
         {% endif %}
       </div>
 

@@ -18,6 +18,7 @@ class Event(models.Model):
     EVENT_TYPES = [
         ('birthday', 'Birthday'),
         ('anniversary', 'Anniversary'),
+        ('raksha_bandhan', 'Raksha Bandhan'),
         ('other', 'Other'),
     ]
 
@@ -40,7 +41,7 @@ class Event(models.Model):
     highlights = models.TextField(blank=True, null=True)
     is_recurring = models.BooleanField(default=True, help_text="Automatically create event for next year.")
     is_archived = models.BooleanField(default=False, help_text="Mark event as archived.")
-    card_password = models.CharField(max_length=128, blank=True, null=True)
+    card_password = models.CharField(max_length=128, blank=True, null=True, help_text="Hashed password for card access.")
     recipient_email = models.EmailField(blank=True, null=True, help_text="Email address of the card recipient.")
     auto_share_enabled = models.BooleanField(default=True, help_text="Automatically share card with recipient on event date.")
 
@@ -54,49 +55,93 @@ class Event(models.Model):
 
     def set_card_password(self, raw_password):
         """Set the hashed card password."""
-        if raw_password:
+        if raw_password and raw_password.strip():
             self.card_password = make_password(raw_password.strip())
-            logger.debug(f"[Event: {self.event_type}] Card password set.")
+            logger.debug(f"[Event: {self.event_type} ID: {self.id}] Card password set successfully.")
         else:
             self.card_password = None
-            logger.debug(f"[Event: {self.event_type}] No card password set.")
+            logger.debug(f"[Event: {self.event_type} ID: {self.id}] No card password set (empty or invalid input).")
 
     def check_card_password(self, raw_password):
         """Check if the provided password matches the hashed card password."""
-        if not self.card_password or not raw_password:
-            logger.debug("Card password check failed due to missing input.")
+        if not self.card_password or not raw_password or not raw_password.strip():
+            logger.debug(f"[Event: {self.event_type} ID: {self.id}] Card password check failed: Missing password or input.")
             return False
         return check_password(raw_password.strip(), self.card_password)
+
+    def get_raw_card_password(self):
+        """Compute the raw (unhashed) password for the event based on its type."""
+        if self.event_type == 'birthday':
+            return self.name.strip().lower() if self.name else ''
+        elif self.event_type == 'anniversary':
+            return self.date.strftime('%Y-%m-%d') if self.date else ''
+        elif self.event_type == 'raksha_bandhan':
+            return 'bandhan'
+        elif self.event_type == 'other':
+            return self.custom_label.strip() if self.custom_label else ''
+        return ''
 
     def clean(self):
         """Validate model fields before saving."""
         super().clean()
-        if self.event_type == 'birthday' and not self.name:
-            raise ValidationError("Name is required for Birthday events.")
-        if self.event_type == 'other' and not self.custom_label:
-            raise ValidationError("Custom label is required for 'Other' events.")
+        if self.event_type == 'birthday' and (not self.name or not self.name.strip()):
+            raise ValidationError("Name is required and cannot be empty for Birthday events.")
+        if self.event_type == 'raksha_bandhan' and (not self.name or not self.name.strip()):
+            raise ValidationError("Name is required and cannot be empty for Raksha Bandhan events.")
+        if self.event_type == 'other' and (not self.custom_label or not self.custom_label.strip()):
+            raise ValidationError("Custom label is required and cannot be empty for 'Other' events.")
         if self.recipient_email and not self.recipient_email.strip():
             raise ValidationError("Recipient email cannot be empty if provided.")
 
     def save(self, *args, **kwargs):
         """Override save to auto-set card_password and recurring flag."""
-        if self.event_type not in ['birthday', 'anniversary']:
+        # Set recurring flag based on event type
+        if self.event_type not in ['birthday', 'anniversary', 'raksha_bandhan']:
             self.is_recurring = False
 
         # Auto-set card password if not already set
         if not self.card_password:
-            if self.event_type == 'birthday':
-                if not self.name:
-                    raise ValidationError("Name is required for Birthday events.")
-                self.set_card_password(self.name)
-            elif self.event_type == 'anniversary' and self.date:
-                self.set_card_password(self.date.strftime('%Y-%m-%d'))
-            elif self.event_type == 'other':
-                if not self.custom_label:
-                    raise ValidationError("Custom label is required for 'Other' events.")
-                self.set_card_password(self.custom_label)
+            password_handlers = {
+                'birthday': lambda: self._set_birthday_password(),
+                'anniversary': lambda: self._set_anniversary_password(),
+                'raksha_bandhan': lambda: self._set_raksha_bandhan_password(),
+                'other': lambda: self._set_other_password()
+            }
+
+            handler = password_handlers.get(self.event_type)
+            if handler:
+                try:
+                    handler()
+                    logger.debug(f"[Event: {self.event_type} ID: {self.id}] Auto-set card password during save.")
+                except ValidationError as e:
+                    logger.error(f"[Event: {self.event_type} ID: {self.id}] Failed to set card password: {str(e)}")
+                    raise
 
         super().save(*args, **kwargs)
+
+    def _set_birthday_password(self):
+        """Set password for birthday events."""
+        if not self.name or not self.name.strip():
+            raise ValidationError("Name is required and cannot be empty for Birthday events.")
+        self.set_card_password(self.name)
+
+    def _set_anniversary_password(self):
+        """Set password for anniversary events."""
+        if not self.date:
+            raise ValidationError("Date is required for Anniversary events.")
+        self.set_card_password(self.date.strftime('%Y-%m-%d'))
+
+    def _set_raksha_bandhan_password(self):
+        """Set password for Raksha Bandhan events."""
+        if not self.name or not self.name.strip():
+            raise ValidationError("Name is required and cannot be empty for Raksha Bandhan events.")
+        self.set_card_password("bandhan")
+
+    def _set_other_password(self):
+        """Set password for other events."""
+        if not self.custom_label or not self.custom_label.strip():
+            raise ValidationError("Custom label is required and cannot be empty for 'Other' events.")
+        self.set_card_password(self.custom_label)
 
     def is_expired(self):
         """Check if the event date has passed."""
@@ -110,6 +155,7 @@ class Event(models.Model):
     def __str__(self):
         return f"{self.name}'s {self.get_event_type_display()} on {self.date}"
 
+# Rest of the models (EventMedia, CelebrationCardPage, ReminderLog, ImportLog, Reflection, CardShare) remain unchanged
 class EventMedia(models.Model):
     MEDIA_TYPES = [
         ('image', 'Image'),

@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize Active Page
     // Sets the initial active page to visible and logs its status
     try {
-        const activePage = document.querySelector('.page.active');
+        const activePage = document.querySelector('.card-page.active');
         if (activePage) {
             activePage.style.display = 'block';
             console.log('Active page set to visible:', activePage.id);
@@ -31,6 +31,52 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     } catch (e) {
         console.error('Error initializing greeting card:', e);
+    }
+
+    // Password Hint and Reveal Logic
+    // Tracks incorrect attempts and handles password reveal
+    const passwordForm = document.querySelector('.password-container form');
+    const passwordHint = document.querySelector('#password-hint');
+    const revealPassword = document.querySelector('#reveal-password');
+    const actualPassword = document.querySelector('#actual-password');
+    const errorMessage = document.querySelector('.error-message');
+    let incorrectAttempts = parseInt(localStorage.getItem('incorrectAttempts') || '0');
+
+    // Check for error message on page load and increment attempts
+    if (errorMessage && errorMessage.textContent.trim()) {
+        incorrectAttempts++;
+        localStorage.setItem('incorrectAttempts', incorrectAttempts);
+        if (incorrectAttempts >= 1 && passwordHint) {
+            passwordHint.style.display = 'block';
+        }
+    }
+
+    // Handle form submission to track attempts
+    if (passwordForm) {
+        passwordForm.addEventListener('submit', (e) => {
+            // Increment attempts before submission
+            incorrectAttempts++;
+            localStorage.setItem('incorrectAttempts', incorrectAttempts);
+        });
+    }
+
+    // Handle click to reveal password
+    if (revealPassword && actualPassword) {
+        revealPassword.addEventListener('click', () => {
+            revealPassword.textContent = actualPassword.textContent;
+            revealPassword.classList.add('unblur');
+            revealPassword.setAttribute('aria-label', 'Password revealed');
+        });
+
+        // Allow keyboard activation for accessibility
+        revealPassword.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                revealPassword.textContent = actualPassword.textContent;
+                revealPassword.classList.add('unblur');
+                revealPassword.setAttribute('aria-label', 'Password revealed');
+            }
+        });
     }
 
     // Enhanced Configuration with Themes and Quotes
@@ -59,6 +105,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 "Here's to many more years of happiness together."
             ],
             confettiColors: ['#fbcfe8', '#f472b6', '#db2777', '#be185d']
+        },
+        'raksha_bandhan': {
+            password: function() { return 'bandhan'; },
+            quotes: [
+                "A bond of love and protection, forever cherished.",
+                "Happy Raksha Bandhan! Ties that last a lifetime.",
+                "May our bond grow stronger with each passing year.",
+                "Rakhi: A thread that binds hearts together.",
+                "Celebrating the beautiful bond of siblings.",
+                "Wishing you joy and togetherness on Raksha Bandhan!"
+            ],
+            confettiColors: ['#fbbf24', '#f59e0b', '#a7f3d0', '#f472b6']
         },
         'other': {
             password: function(label) { return label.trim().toLowerCase(); },
@@ -169,32 +227,32 @@ document.addEventListener('DOMContentLoaded', function() {
     // Create Floating Diyas
     // Generates animated diyas for cultural theme with performance optimization
     function createDiyas() {
-            try {
-                const diyaContainers = document.querySelectorAll('.diya-container');
-                diyaContainers.forEach(container => {
-                    const fragment = document.createDocumentFragment();
-                    const positions = [
-                        { left: '10px', top: '10px' },  // Top-left
-                        { left: 'calc(100% - 40px)', top: '10px' }, // Top-right
-                        { left: '10px', top: 'calc(100% - 40px)' }, // Bottom-left
-                        { left: 'calc(100% - 40px)', top: 'calc(100% - 40px)' } // Bottom-right
-                    ];
-                    positions.forEach(pos => {
-                        const diya = document.createElement('div');
-                        diya.className = 'diya';
-                        diya.style.left = pos.left;
-                        diya.style.top = pos.top;
-                        diya.style.animationDelay = `${Math.random() * 2}s`; // Preserve animation delay from jscode2
-                        const flame = document.createElement('div');
-                        flame.className = 'flame';
-                        diya.appendChild(flame);
-                        fragment.appendChild(diya);
-                    });
-                    container.appendChild(fragment);
+        try {
+            const diyaContainers = document.querySelectorAll('.diya-container');
+            diyaContainers.forEach(container => {
+                const fragment = document.createDocumentFragment();
+                const positions = [
+                    { left: '10px', top: '10px' },  // Top-left
+                    { left: 'calc(100% - 40px)', top: '10px' }, // Top-right
+                    { left: '10px', top: 'calc(100% - 40px)' }, // Bottom-left
+                    { left: 'calc(100% - 40px)', top: 'calc(100% - 40px)' } // Bottom-right
+                ];
+                positions.forEach(pos => {
+                    const diya = document.createElement('div');
+                    diya.className = 'diya';
+                    diya.style.left = pos.left;
+                    diya.style.top = pos.top;
+                    diya.style.animationDelay = `${Math.random() * 2}s`;
+                    const flame = document.createElement('div');
+                    flame.className = 'flame';
+                    diya.appendChild(flame);
+                    fragment.appendChild(diya);
                 });
-            } catch (e) {
-                console.error('Error creating diyas:', e);
-            }
+                container.appendChild(fragment);
+            });
+        } catch (e) {
+            console.error('Error creating diyas:', e);
+        }
     }
 
     // Setup Media Displays
@@ -266,8 +324,6 @@ document.addEventListener('DOMContentLoaded', function() {
             prevBtn.className = 'slideshow-btn prev nav-button prev';
             prevBtn.innerHTML = '← ';
             prevBtn.setAttribute('aria-label', 'Previous image');
-
-
             const nextBtn = document.createElement('button');
             nextBtn.className = 'slideshow-btn next nav-button next';
             nextBtn.innerHTML = '→';
@@ -469,7 +525,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-
     // Navigate to Page
     // Updates the active page with accessibility attributes
     function goToPage(pageNum) {
@@ -484,6 +539,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const isActive = index + 1 === currentPage;
             page.classList.toggle('active', isActive);
             page.setAttribute('aria-hidden', !isActive);
+            page.style.display = isActive ? 'block' : 'none';
         });
         pageIndicators.forEach((indicator, index) => {
             const isActive = index + 1 === currentPage;
@@ -519,10 +575,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.success) {
                     unlocked = true;
                     saveData({ unlocked: true });
+                    localStorage.removeItem('incorrectAttempts'); // Reset attempts on success
                     showConfetti();
                     elements.passwordInput.classList.add('success');
                     setTimeout(() => goToPage(2), 1000);
                 } else {
+                    incorrectAttempts++;
+                    localStorage.setItem('incorrectAttempts', incorrectAttempts);
+                    if (incorrectAttempts >= 1 && passwordHint) {
+                        passwordHint.style.display = 'block';
+                    }
                     shakePasswordInput(data.error || 'Incorrect password, please try again');
                 }
             })
@@ -570,42 +632,6 @@ document.addEventListener('DOMContentLoaded', function() {
             elements.passwordInput.classList.remove('error');
         }, 500);
     }
-    // Function to setup the evasive "YES!" button
-    // function setupEvasiveButton() {
-    //     const yesButton = document.querySelector('#evasive-yes-button');
-    //     if (!yesButton) return;
-    //
-    //     yesButton.addEventListener('mouseenter', function (e) {
-    //         if (!e.shiftKey) {
-    //             // Calculate random movement within a reasonable range
-    //             const maxMove = 100; // Max pixels to move
-    //             const moveX = (Math.random() * maxMove * 2 - maxMove) + 'px';
-    //             const moveY = (Math.random() * maxMove * 2 - maxMove) + 'px';
-    //             yesButton.style.setProperty('--move-x', moveX);
-    //             yesButton.style.setProperty('--move-y', moveY);
-    //             yesButton.classList.add('moving');
-    //         } else {
-    //             yesButton.classList.remove('moving');
-    //             yesButton.style.setProperty('--move-x', '0px');
-    //             yesButton.style.setProperty('--move-y', '0px');
-    //         }
-    //     });
-    //
-    //     yesButton.addEventListener('mouseleave', function () {
-    //         yesButton.classList.remove('moving');
-    //         yesButton.style.setProperty('--move-x', '0px');
-    //         yesButton.style.setProperty('--move-y', '0px');
-    //     });
-    //
-    //     yesButton.addEventListener('click', function (e) {
-    //         if (!e.shiftKey) {
-    //             e.preventDefault(); // Prevent click if Shift isn't held
-    //             return;
-    //         }
-    //         // Proceed with countdown (existing logic)
-    //         startCountdown();
-    //     });
-    // }
 
     function setupSliderUnlock() {
         const sliderTrack = document.querySelector('.slider-track');
@@ -658,7 +684,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         sliderThumb.addEventListener('mousedown', onDragStart);
         sliderThumb.addEventListener('touchstart', onDragStart, {passive: false});
-        // Optional: Keyboard accessibility
         sliderThumb.addEventListener('keydown', function(e) {
             if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
                 currentX = Math.min(currentX + 20, maxMove);
@@ -671,16 +696,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // YES! button click starts countdown
         yesButton.addEventListener('click', startCountdown);
     }
 
-
-    // Setup Birthday Countdown
-
     function startCountdown() {
         const countdownElement = document.querySelector('.countdown');
-        // const giftReveal = document.querySelector('.gift-reveal');
         const yesButton = document.getElementById('yes-unlocked-button');
         if (!countdownElement || !yesButton) return;
 
@@ -698,9 +718,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 1000);
     }
-    // Function to show milestone popup
+
     function showMilestonePopup() {
-        // Prevent multiple popups
         if (document.querySelector('.milestone-popup')) return;
 
         const eventId = document.querySelector('.card-container').dataset.eventId;
@@ -715,7 +734,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return response.json();
         })
         .then(data => {
-            // Check if highlights exist
             if (!data.highlights || data.highlights.trim() === '') {
                 const popup = document.createElement('div');
                 popup.className = 'milestone-popup';
@@ -744,7 +762,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.body.appendChild(popup);
             }
 
-            // Style and position popup
             const popup = document.querySelector('.milestone-popup');
             popup.style.position = 'fixed';
             popup.style.top = '50%';
@@ -758,10 +775,8 @@ document.addEventListener('DOMContentLoaded', function() {
             popup.style.maxWidth = '400px';
             popup.style.textAlign = 'center';
 
-            // Focus the popup for accessibility
             popup.focus();
 
-            // Trap focus within popup
             const focusableElements = popup.querySelectorAll('button, [tabindex="0"]');
             const firstElement = focusableElements[0];
             const lastElement = focusableElements[focusableElements.length - 1];
@@ -778,12 +793,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            // Close button functionality
             popup.querySelector('.close-popup').addEventListener('click', () => {
                 popup.remove();
             });
 
-            // Close on Escape key
             document.addEventListener('keydown', function handler(e) {
                 if (e.key === 'Escape') {
                     popup.remove();
@@ -822,13 +835,10 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-    // Update setup function to include evasive button
+
     function setupBirthdayCountdown() {
         setupSliderUnlock();
     }
-
-
-    // Setup Memory Tree
 
     function setupMemoryTree() {
         const tree = document.querySelector('.memory-tree');
@@ -1251,7 +1261,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     whatsappLink.href = `https://api.whatsapp.com/send?text=View%20my%20card:%20${encodeURIComponent(shareUrl)}`;
                     twitterLink.href = `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=Check%20out%20my%20greeting%20card!`;
-                    emailLink.href = `mailto:?subject=Greeting%20Card&body=View%20my%20card:%20${encodeURIComponent(shareUrl)}`; // Updated for descriptiveness
+                    emailLink.href = `mailto:?subject=Greeting%20Card&body=View%20my%20card:%20${encodeURIComponent(shareUrl)}`;
                     if (navigator.share) {
                         navigator.share({
                             title: 'Greeting Card',
@@ -1291,7 +1301,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     break;
                 case 2:
                     setupBirthdayCountdown();
-
                     setupAnniversaryClock();
                     break;
                 case 3:

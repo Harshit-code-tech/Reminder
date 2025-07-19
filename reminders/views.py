@@ -59,12 +59,12 @@ def admin_dashboard(request):
 def toggle_recurring(request, event_id):
     if request.method == 'POST':
         event = get_object_or_404(Event, id=event_id, user=request.user)
-        if event.event_type in ['birthday', 'anniversary']:
+        if event.event_type in ['birthday', 'anniversary','raksha_bandhan']:
             event.is_recurring = not event.is_recurring
             event.save()
             messages.success(request, f"Recurring {'enabled' if event.is_recurring else 'disabled'} for {event.name}")
         else:
-            messages.error(request, "Recurring is only available for birthdays and anniversa"
+            messages.error(request, "Recurring is only available for birthdays, Raksha Bandhan and anniversa"
                                     "ries")
     return redirect('event_list')
 
@@ -605,6 +605,18 @@ def download_past_events(request):
         return redirect('past_events')
 
 
+# Helper function to compute password_text based on event type
+def get_password_text(event):
+    if event.event_type == 'birthday':
+        return event.name.strip().lower()
+    elif event.event_type == 'anniversary':
+        return event.date.strftime('%Y-%m-%d')
+    elif event.event_type == 'raksha_bandhan':
+        return 'bandhan'
+    else:
+        return event.card_password or ''
+
+
 
 @login_required
 @email_verified_required
@@ -628,6 +640,9 @@ def greeting_card_view(request, event_id):
     if not requires_card_password:
         request.session[session_key] = True
 
+    # Compute password_text for the template
+    password_text = get_password_text(event)
+
     context = {
         'event': event,
         'is_owner': True,
@@ -641,8 +656,9 @@ def greeting_card_view(request, event_id):
         'event_type': event.event_type,
         'recipient_name': event.custom_label or event.name,
         'message': event.message or '',
+        'password_text': password_text,  # Added for reveal password feature
     }
-    logger.info(f"Audio URL for event {event_id}: {audio_url}, MIME type: {audio_mime_type}")
+    logger.info(f"Rendering greeting card for event {event_id}: Audio URL={audio_url}, MIME type={audio_mime_type}")
     return render(request, 'reminders/greeting_card.html', context)
 
 
@@ -660,22 +676,31 @@ def validate_card_password(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
     if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
+        logger.warning(f"Invalid request method for validate_card_password: {request.method}")
+        request.session['card_error'] = 'Invalid request method'
+        return redirect('greeting_card_view', event_id=event_id)
 
     try:
-        data = json.loads(request.body)
-        password = data.get('card_password', '').strip()
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+            password = data.get('card_password', '').strip()
+        else:
+            password = request.POST.get('card_password', '').strip()
     except Exception as e:
-        logger.error(f"Failed to parse JSON for event {event_id}: {e}")
-        return JsonResponse({'success': False, 'error': 'Invalid data'}, status=400)
+        logger.error(f"Failed to parse input for event {event_id}: {e}")
+        if request.content_type == 'application/json':
+            return JsonResponse({'success': False, 'error': 'Invalid data'}, status=400)
+        request.session['card_error'] = 'Invalid data'
+        return redirect('greeting_card_view', event_id=event_id)
 
     is_valid = False
+    input_pw = password.lower()
 
     if event.event_type == 'birthday':
-        is_valid = password.lower() == event.name.strip().lower()
-
+        is_valid = input_pw == event.name.strip().lower()
     elif event.event_type == 'anniversary':
-        for fmt in ['%Y-%m-%d', '%m/%d/%Y', '%B %d, %Y', '%b %d, %Y']:
+        date_formats = ['%Y-%m-%d', '%d-%m-%Y', '%m/%d/%Y', '%B %d, %Y', '%b %d, %Y']
+        for fmt in date_formats:
             try:
                 input_date = datetime.strptime(password, fmt).date()
                 is_valid = event.check_card_password(input_date.strftime('%Y-%m-%d'))
@@ -683,16 +708,24 @@ def validate_card_password(request, event_id):
                     break
             except ValueError:
                 continue
+    elif event.event_type == 'raksha_bandhan':
+        is_valid = input_pw == 'bandhan'
     else:
-        is_valid = event.check_card_password(password)
+        is_valid = event.check_card_password(input_pw)
 
     if is_valid:
         request.session[f"card_unlocked_{event.id}"] = True
-        logger.info(f"Event {event_id}: Card password validated successfully (AJAX)")
-        return JsonResponse({'success': True})
+        if request.content_type == 'application/json':
+            logger.info(f"Event {event_id}: Card password validated successfully (AJAX)")
+            return JsonResponse({'success': True})
+        logger.info(f"Event {event_id}: Card password validated successfully (form)")
+        return redirect('greeting_card_view', event_id=event_id)
     else:
-        logger.warning(f"Event {event_id}: Invalid card password attempt (AJAX)")
-        return JsonResponse({'success': False, 'error': 'Incorrect card password'})
+        logger.warning(f"Event {event_id}: Invalid card password attempt")
+        if request.content_type == 'application/json':
+            return JsonResponse({'success': False, 'error': 'Incorrect card password'})
+        request.session['card_error'] = 'Incorrect card password'
+        return redirect('greeting_card_view', event_id=event_id)
 
 
 
@@ -889,6 +922,9 @@ def public_card_view(request, token):
     # Get image media for page 3
     images = [{'media_file': m.media_file, 'media_type': m.media_type} for m in event.media.filter(media_type='image')]
 
+    # Compute password_text for the template
+    password_text = get_password_text(event)
+
     context = {
         'event': event,
         'is_owner': False,
@@ -901,8 +937,9 @@ def public_card_view(request, token):
         'event_type': event.event_type,
         'recipient_name': event.custom_label or event.name,
         'message': event.message or '',
+        'password_text': password_text,  # Added for reveal password feature
     }
-    logger.info(f"Audio URL for event {share.event.id}: {audio_url}, MIME type: {audio_mime_type}")
+    logger.info(f"Rendering public card for event {share.event.id}: Audio URL={audio_url}, MIME type={audio_mime_type}")
     return render(request, 'reminders/greeting_card.html', context)
 
 
