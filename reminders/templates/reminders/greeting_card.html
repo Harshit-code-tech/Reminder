@@ -90,9 +90,24 @@
             <strong>Can’t crack it?</strong>Here is something that might help: " <span id="reveal-password" class="blurred-password" tabindex="0">Click to reveal password</span>"
           </div>
           <span id="actual-password" style="display:none;">{{ password_text }}</span>
-        </div> <!-- Close password-container -->
+
+          <style>
+            .blurred-password {
+              filter: blur(6px);
+              cursor: pointer;
+              user-select: none;
+              transition: filter 0.3s;
+            }
+            .blurred-password.unblur {
+              filter: none;
+            }
+          </style>
+        </div>
+
+
         {% endif %}
       </div>
+
 
       <!-- Page 2: Animation/Countdown -->
       <div class="card-page" id="page-2" role="tabpanel" aria-labelledby="tab-2" aria-hidden="true">
@@ -160,7 +175,7 @@
           {% if event.media.all|length > 1 %}
           {% endif %}
           <audio id="calming-sound" loop>
-            <source src="{% static 'audio/Whispering Wind.mp3'%\}" type="audio/mpeg">
+            <source src="{% static 'audio/Whispering Wind.mp3' %}" type="audio/mpeg">
             Your browser does not support the audio element.
           </audio>
           <button class="audio-control" aria-label="Toggle calming sound">Pause Sound</button>
