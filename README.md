@@ -54,7 +54,7 @@ Welcome! This is a modern Django web app to help you remember and celebrate birt
 
 1. **Clone the repo:**
     ```sh
-    git clone https://github.com/Harshit-code-tech/birthday-reminder.git
+    git clone git clone https://github.com/Harshit-code-tech/Reminder.git
     cd birthday-reminder
     ```
 
