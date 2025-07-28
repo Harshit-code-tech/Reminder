@@ -1,20 +1,34 @@
-{% extends 'base.html' %}
+
+<!DOCTYPE html>
 {% load static %}
+<html lang="en">
 
-{% block title %}{{ event.name }} - Greeting Card{% endblock %}
+<head>
 
-{% block header_style %}
-<link rel="stylesheet" href="{% static 'css/greeting_card.css' %}">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Interactive Greeting Card for {{ event.name }}">
-{% endblock %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Interactive Greeting Card for {{ event.name }}">
+  <title>{{ event.name }} - Greeting Card</title>
+  <link rel="stylesheet" href="{% static 'css/greeting_card.css' %}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Interactive Greeting Card for {{ event.name }}">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
 
-{% block content %}
-{% if error %}
-<div class="error-message" role="alert">{{ error }}</div>
-{% endif %}
 
-<div class="card-container"
+
+<body class="bg-gradient-to-br from-blue-50 to-purple-100 min-h-screen flex items-center justify-center p-4 font-sans">
+  {% if error %}
+  <div class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-100 text-red-700 p-4 rounded-lg shadow-lg" role="alert">
+    {{ error }}
+  </div>
+  {% endif %}
+
+  <div class="card-container max-w-3xl w-full bg-white rounded-2xl shadow-2xl p-6 relative event-{{ event.event_type }}"
      data-theme="{{ event.event_type }}"
      data-cultural-theme="{{ event.cultural_theme|yesno:'true,false' }}"
      data-recipient-name="{{ recipient_name }}"
@@ -32,6 +46,8 @@
       <span class="indicator" data-page="5" role="tab" aria-selected="false" tabindex="0">○</span>
     </div>
 
+
+
     <!-- Card pages -->
     <div class="card-pages">
       <!-- Page 1: Welcome / Password -->
@@ -39,28 +55,41 @@
         <div class="diya-container"></div>
         <div class="tree-growth tree-seedling"></div>
 
-        <h2 class="welcome-title" data-event-type="{{ event.event_type }}">
+        <h2 class="welcome-title" data-event-type="{{ event.event_type }}"style="font-size: 1.5em;">
+          ✨ A Special Surprise Awaits ✨<br>
           {% if event.event_type == 'birthday' %}
-          Knock knock! It's a special surprise for
+          🎉 Surprise for <span class="recipient-name font-bold text-blue-600">{{ event.name }}</span>!
           {% elif event.event_type == 'anniversary' %}
-          A special note awaits you;
+          💞 A Love Note for <span class="recipient-name font-bold text-pink-600">{{ event.name }}</span>
           {% elif event.event_type == 'raksha_bandhan' %}
-          Where Threads Tell Stories
+
+         🧵 Threads of Stories for <span class="recipient-name font-bold text-purple-600">{{ event.name }}</span>
           {% else %}
-          A message awaits you,
+          ✨ A Special Message for <span class="recipient-name font-bold text-green-600">{{ event.name }}</span>
           {% endif %}
-          <span class="recipient-name">{{ event.name }}</span>!
+
         </h2>
 
         <div class="puzzle-container">
           {% if event.event_type == 'birthday' %}
-          <div class="emoji-puzzle">🎂🎈 = ?</div>
+          <div class="emoji-puzzle" style="font-size: 0.9em;">🎉 + 💝 = Pure Joy!</div>
           {% elif event.event_type == 'anniversary' %}
-          <div class="date-puzzle">When did we say, "I do"?</div>
+          <div class="date-puzzle" style="font-size: 0.9em;">What is the date that marks another year of our journey together?</div>
           {% elif event.event_type == 'raksha_bandhan' %}
-          <div class="data-puzzle">What protects, binds, and means home?</div>
+<!--          <div class="data-puzzle" style="font-size: 0.9em;">What protects, binds, and means home?</div>-->
+            <div class="rakhi-intro-text mt-4 text-center text-yellow-100 px-6">
+              <h3 class="text-2xl font-bold text-yellow-200">राखी का बंधन</h3>
+              <p class="italic text-sm mt-1">Sacred Bond of Raksha Bandhan</p>
+
+              <blockquote class="shloka-container mt-2 text-sm">
+                "येन बद्धो बलि राजा दानवेन्द्रो महाबलः"<br>
+                <span class="text-xs block">(The sacred thread that bound the mighty King Bali...)</span>
+              </blockquote>
+            </div>
+
+
           {% else %}
-          <div class="emoji-puzzle">✈️😢 = ?</div>
+          <div class="emoji-puzzle" style="font-size: 0.9em;">✈️😢 = ?</div>
           {% endif %}
         </div>
 
@@ -69,7 +98,13 @@
           <form method="post" action="{% url 'validate_card_password' event.id %}">
             {% csrf_token %}
             <label for="card-password-input" class="sr-only">Card Password</label>
-            <input type="password" id="card-password-input" name="card_password" class="password-input" placeholder="Enter the card password..." aria-required="true">
+            <input type="password"
+                id="card-password-input"
+                name="card_password"
+                class="password-input"
+                placeholder="{% if event.event_type == 'raksha_bandhan' %}पवित्र शब्द दर्ज करें (Enter the Sacred Word){% else %}Enter the card password...{% endif %}"
+                aria-required="true">
+
             <button type="submit" class="unlock-button" aria-label="Unlock card content">Unlock Card</button>
           </form>
 
@@ -81,7 +116,8 @@
             {% elif event.event_type == 'anniversary' %}
               When did<strong> we</strong>begin this journey?
             {% elif event.event_type == 'raksha_bandhan' %}
-            <strong>What protects, binds, and means home?</strong>
+            <strong>बहन का रिश्ता...</strong><br>Hint: The relationship that this festival celebrates 💝
+
             {% else %}
             The one <strong>word</strong> that defines this memory
             {% endif %}
@@ -110,44 +146,45 @@
 
 
       <!-- Page 2: Animation/Countdown -->
-      <div class="card-page" id="page-2" role="tabpanel" aria-labelledby="tab-2" aria-hidden="true">
-        <div class="diya-container"></div>
-        <div class="tree-growth tree-sapling"></div>
-        {% if event.event_type == 'birthday' %}
-        <h2 class="page-title">Want a gift, <span class="recipient-name">{{ event.name }}</span>?</h2>
-        <div class="countdown-container">
-          <div class="countdown" aria-live="assertive">5</div>
-          <div class="countdown-hint" aria-live="polite">
-            <span class="hint-icon">💡</span>
-            <strong>Hint:</strong> Click <b>"YES!"</b> to start the countdown
-            (<em>if you can</em> 😈).<br>
-          </div>
-          <div class="slider-unlock-container">
-            <div class="slider-track">
-              <div class="slider-thumb" tabindex="0" aria-label="Slide to unlock Yes"></div>
-              <span class="slider-label">Slide to unlock <b>YES!</b></span>
+            <!-- Page 2: Animation/Countdown -->
+        <div class="card-page" id="page-2" role="tabpanel" aria-labelledby="tab-2" aria-hidden="true">
+          <div class="diya-container"></div>
+          <div class="tree-growth tree-sapling"></div>
+          {% if event.event_type == 'birthday' %}
+          <h2 class="page-title">Want a gift, <span class="recipient-name">{{ event.name }}</span>?</h2>
+          <div class="countdown-container">
+            <div class="countdown" aria-live="assertive">5</div>
+            <div class="countdown-hint" aria-live="polite">
+              <span class="hint-icon">💡</span>
+              <strong>Hint:</strong> Click <b>"YES!"</b> to start the countdown
+              (<em>if you can</em> 😈).<br>
             </div>
+            <div class="slider-unlock-container">
+              <div class="slider-track">
+                <div class="slider-thumb" tabindex="0" aria-label="Slide to unlock Yes"></div>
+                <span class="slider-label">Slide to unlock <b>YES!</b></span>
+              </div>
+            </div>
+            <button id="yes-unlocked-button" class="action-button" style="display:none;" aria-label="Start countdown">YES!</button>
           </div>
-          <button id="yes-unlocked-button" class="action-button" style="display:none;" aria-label="Start countdown">YES!</button>
+          {% elif event.event_type == 'anniversary' %}
+          <h2 class="page-title">Our Journey Together</h2>
+          <div class="clock-container">
+            <div class="anniversary-clock" aria-label="Anniversary clock showing our journey"></div>
+            <div class="milestone-text" aria-live="polite">{{ event.highlights|linebreaksbr }}</div>
+            <div class="milestone-text">Every moment with you is special.</div>
+          </div>
+          {% else %}
+          <h2 class="page-title">Inspiration for You</h2>
+          <div class="quote-container">
+            <blockquote class="inspiration-quote" aria-live="polite"></blockquote>
+          </div>
+          {% endif %}
+          <div class="page-controls">
+            <button class="nav-button prev" aria-label="Go to previous page">← Back</button>
+            <button class="nav-button next" aria-label="Go to next page">Next →</button>
+          </div>
         </div>
-        {% elif event.event_type == 'anniversary' %}
-        <h2 class="page-title">Our Journey Together</h2>
-        <div class="clock-container">
-          <div class="anniversary-clock" aria-label="Anniversary clock showing our journey"></div>
-          <div class="milestone-text" aria-live="polite">{{ event.highlights|linebreaksbr }}</div>
-          <div class="milestone-text">Every moment with you is special.</div>
-        </div>
-        {% else %}
-        <h2 class="page-title">Inspiration for You</h2>
-        <div class="quote-container">
-          <blockquote class="inspiration-quote" aria-live="polite"></blockquote>
-        </div>
-        {% endif %}
-        <div class="page-controls">
-          <button class="nav-button prev" aria-label="Go to previous page">← Back</button>
-          <button class="nav-button next" aria-label="Go to next page">Next →</button>
-        </div>
-      </div>
 
       <!-- Page 3: Memory/Media -->
       <div class="card-page" id="page-3" role="tabpanel" aria-labelledby="tab-3" aria-hidden="true">
@@ -305,11 +342,12 @@
     </div>
   </div>
 
-  <div class="card-footer">
+
+</div>
+<div class="card-footer">
     {% if is_owner %}
     <button class="share-card" data-event-id="{{ event.id }}" aria-label="Share card">🔗 Share</button>
     {% endif %}
-  </div>
 </div>
 
 <!-- Share Modal -->
@@ -340,4 +378,6 @@
   document.cookie = "csrftoken={{ csrf_token }}; path=/";
 </script>
 <script src="{% static 'js/greeting_card.js' %}"></script>
-{% endblock %}
+
+</body>
+</html>

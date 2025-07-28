@@ -942,4 +942,3 @@ def public_card_view(request, token):
     logger.info(f"Rendering public card for event {share.event.id}: Audio URL={audio_url}, MIME type={audio_mime_type}")
     return render(request, 'reminders/greeting_card.html', context)
 
-

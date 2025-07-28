@@ -2,6 +2,150 @@
 // Initializes the greeting card application once the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', function() {
 
+
+    // Get event type from card container
+    const cardContainer = document.querySelector('.card-container');
+    const eventType = cardContainer ? cardContainer.classList[1].replace('event-', '') : 'birthday';
+    console.log('Event type detected:', eventType);
+
+    // Apply event-specific initializations
+    initializeEventSpecificBehavior(eventType);
+
+    /**
+     * Initialize event-specific behavior based on event type
+     * @param {string} eventType - The type of event (birthday, anniversary, raksha_bandhan, other)
+     */
+    function initializeEventSpecificBehavior(eventType) {
+        console.log('Initializing event-specific behavior for:', eventType);
+
+        // Common elements that might need event-specific styling
+        const pageIndicators = document.querySelectorAll('.indicator');
+        const navButtons = document.querySelectorAll('.nav-button');
+        const pageTitles = document.querySelectorAll('.page-title');
+
+        // Event-specific animations and effects
+        switch(eventType) {
+            case 'birthday':
+                // Add birthday-specific animations
+                addFloatingBalloons();
+                enhanceBirthdayCake();
+                break;
+
+            case 'anniversary':
+                // Add anniversary-specific animations
+                addFloatingHearts();
+                enhanceAnniversaryElements();
+                break;
+
+
+
+            case 'other':
+                // Add generic animations for other event types
+                addGenericAnimations();
+                break;
+
+            default:
+                console.log('No specific behavior for event type:', eventType);
+        }
+    }
+
+    /**
+     * Add floating balloon animations for birthday events
+     */
+    function addFloatingBalloons() {
+        const container = document.querySelector('.card-container');
+        if (!container) return;
+
+        // Create balloon elements
+        for (let i = 0; i < 5; i++) {
+            const balloon = document.createElement('div');
+            balloon.className = 'floating-balloon';
+            balloon.style.left = `${Math.random() * 90}%`;
+            balloon.style.animationDelay = `${Math.random() * 5}s`;
+            balloon.style.backgroundColor = getRandomBalloonColor();
+            container.appendChild(balloon);
+        }
+    }
+
+    /**
+     * Get a random balloon color
+     * @returns {string} A random color for balloons
+     */
+    function getRandomBalloonColor() {
+        const colors = ['#ff6b6b', '#ffa5a5', '#ffd166', '#06d6a0', '#118ab2'];
+        return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    /**
+     * Enhance the birthday cake with additional animations
+     */
+    function enhanceBirthdayCake() {
+        const cake = document.querySelector('.birthday-cake');
+        if (!cake) return;
+
+        cake.classList.add('enhanced');
+
+        // Add glow effect to candles
+        const candles = document.createElement('div');
+        candles.className = 'cake-candles';
+        cake.appendChild(candles);
+    }
+
+    /**
+     * Add floating heart animations for anniversary events
+     */
+    function addFloatingHearts() {
+        const container = document.querySelector('.card-container');
+        if (!container) return;
+
+        // Create heart elements
+        for (let i = 0; i < 7; i++) {
+            const heart = document.createElement('div');
+            heart.className = 'floating-heart';
+            heart.style.left = `${Math.random() * 90}%`;
+            heart.style.animationDelay = `${Math.random() * 5}s`;
+            heart.innerHTML = '❤️';
+            heart.style.opacity = 0.7;
+            container.appendChild(heart);
+        }
+    }
+
+    /**
+     * Enhance anniversary-specific elements
+     */
+    function enhanceAnniversaryElements() {
+        const danceContainer = document.querySelector('.dance-container');
+        if (!danceContainer) return;
+
+        danceContainer.classList.add('enhanced');
+
+        // Add special effects to dance button
+        const danceButton = danceContainer.querySelector('.dance-button');
+        if (danceButton) {
+            danceButton.classList.add('glowing');
+        }
+    }
+
+
+    /**
+     * Add generic animations for other event types
+     */
+    function addGenericAnimations() {
+        const container = document.querySelector('.card-container');
+        if (!container) return;
+
+        // Create generic decorative elements
+        for (let i = 0; i < 5; i++) {
+            const decoration = document.createElement('div');
+            decoration.className = 'generic-decoration';
+            decoration.style.left = `${Math.random() * 90}%`;
+            decoration.style.top = `${Math.random() * 90}%`;
+            decoration.style.animationDelay = `${Math.random() * 5}s`;
+            decoration.innerHTML = '✨';
+            container.appendChild(decoration);
+        }
+    }
+
     // Utility Function: Get Cookie Value
     // Retrieves a specific cookie by name from document.cookie
     function getCookie(name) {
@@ -106,18 +250,7 @@ document.addEventListener('DOMContentLoaded', function() {
             ],
             confettiColors: ['#fbcfe8', '#f472b6', '#db2777', '#be185d']
         },
-        'raksha_bandhan': {
-            password: function() { return 'bandhan'; },
-            quotes: [
-                "A bond of love and protection, forever cherished.",
-                "Happy Raksha Bandhan! Ties that last a lifetime.",
-                "May our bond grow stronger with each passing year.",
-                "Rakhi: A thread that binds hearts together.",
-                "Celebrating the beautiful bond of siblings.",
-                "Wishing you joy and togetherness on Raksha Bandhan!"
-            ],
-            confettiColors: ['#fbbf24', '#f59e0b', '#a7f3d0', '#f472b6']
-        },
+
         'other': {
             password: function(label) { return label.trim().toLowerCase(); },
             quotes: [
@@ -134,8 +267,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Card Element Selection
     // Caches DOM elements for the card and extracts dataset attributes
-    const cardContainer = document.querySelector('.card-container');
-    const eventType = cardContainer?.dataset.theme || 'birthday';
+
     const culturalTheme = cardContainer?.dataset.culturalTheme === 'true';
     const customLabel = cardContainer?.dataset.customLabel || '';
     const cardPages = document.querySelectorAll('.card-page');
@@ -308,6 +440,166 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error setting up media display:', e);
         }
     }
+    function setupThemeSystem() {
+        // Create theme toggle button in a fixed position
+        const themeToggle = document.createElement('button');
+        themeToggle.className = 'theme-toggle';
+        themeToggle.setAttribute('aria-label', 'Toggle dark mode');
+        themeToggle.innerHTML = `
+            <div class="theme-toggle-wrapper">
+                <div class="theme-icon sun">
+
+                    <div class="sun-core"></div>
+                </div>
+                <div class="theme-icon moon">
+                    <div class="moon-body"></div>
+                    <div class="moon-crater moon-crater-1"></div>
+                    <div class="moon-crater moon-crater-2"></div>
+                    <div class="moon-crater moon-crater-3"></div>
+                </div>
+                <div class="toggle-background"></div>
+            </div>
+        `;
+        document.body.appendChild(themeToggle);
+
+        // Get preferred color scheme from localStorage or system preference
+        const prefersDarkMode = window.matchMedia('(prefers-color-scheme: light)').matches;
+        const savedTheme = localStorage.getItem('cardTheme');
+        const isDarkMode = savedTheme ? savedTheme === 'dark' : prefersDarkMode;
+
+        // Apply saved theme on load
+        if (isDarkMode) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+
+        // Update toggle button appearance
+        updateToggleState(isDarkMode);
+        addBackgroundEffects();
+
+        // Handle toggle click
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+            // Add transition class for smooth color transitions
+            document.documentElement.classList.add('theme-transition');
+
+            // Set the new theme
+            document.documentElement.setAttribute('data-theme', newTheme);
+
+            // Remove transition class after transition completes
+            // Animate the toggle
+            themeToggle.classList.add('theme-toggle-active');
+            setTimeout(() => {
+                themeToggle.classList.remove('theme-toggle-active');
+            }, 700);
+
+            // Update background effects
+            updateBackgroundEffects(newTheme);
+
+            // Remove transition class after transition completes
+            setTimeout(() => {
+                document.documentElement.classList.remove('theme-transition');
+            }, 800);
+
+            // Save preference
+            localStorage.setItem('cardTheme', newTheme);
+
+            // Update toggle appearance
+            updateToggleState(newTheme === 'dark');
+        });
+
+        // Listen for system preference changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            // Only update if user hasn't set a preference
+            if (!localStorage.getItem('cardTheme')) {
+                const newTheme = e.matches ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', newTheme);
+                updateToggleState(e.matches);
+                updateBackgroundEffects(newTheme);
+            }
+        });
+
+        // Update toggle button appearance
+        function updateToggleState(isDark) {
+            const toggleWrapper = themeToggle.querySelector('.theme-toggle-wrapper');
+
+            if (isDark) {
+                toggleWrapper.classList.add('dark-mode');
+                toggleWrapper.classList.remove('light-mode');
+                themeToggle.setAttribute('aria-pressed', 'true');
+            } else {
+                toggleWrapper.classList.add('light-mode');
+                toggleWrapper.classList.remove('dark-mode');
+                themeToggle.setAttribute('aria-pressed', 'false');
+            }
+        }
+
+        // Add animated background elements
+        function addBackgroundEffects() {
+            const backgroundEffects = document.createElement('div');
+            backgroundEffects.className = 'background-effects';
+
+            // Create stars for dark mode
+            const starsContainer = document.createElement('div');
+            starsContainer.className = 'stars-container';
+            for (let i = 0; i < 50; i++) {
+                const star = document.createElement('div');
+                star.className = 'star-bg';
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.animationDelay = `${Math.random() * 5}s`;
+                star.style.animationDuration = `${3 + Math.random() * 7}s`;
+                starsContainer.appendChild(star);
+            }
+
+            // Create clouds for light mode
+            const cloudsContainer = document.createElement('div');
+            cloudsContainer.className = 'clouds-container';
+            for (let i = 0; i < 5; i++) {
+                const cloud = document.createElement('div');
+                cloud.className = 'cloud-bg';
+                cloud.style.left = `${Math.random() * 100}%`;
+                cloud.style.top = `${Math.random() * 40}%`;
+                cloud.style.animationDelay = `${Math.random() * 20}s`;
+                cloud.style.animationDuration = `${30 + Math.random() * 30}s`;
+                cloud.style.opacity = `${0.2 + Math.random() * 0.3}`;
+                cloud.style.transform = `scale(${0.5 + Math.random() * 0.5})`;
+                cloudsContainer.appendChild(cloud);
+            }
+
+            backgroundEffects.appendChild(starsContainer);
+            backgroundEffects.appendChild(cloudsContainer);
+            document.body.insertBefore(backgroundEffects, document.body.firstChild);
+
+            // Set initial state based on theme
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            updateBackgroundEffects(currentTheme);
+        }
+
+        // Update background effects based on theme
+        function updateBackgroundEffects(theme) {
+            const starsContainer = document.querySelector('.stars-container');
+            const cloudsContainer = document.querySelector('.clouds-container');
+
+            if (theme === 'dark') {
+                starsContainer.style.opacity = '1';
+                cloudsContainer.style.opacity = '0';
+            } else {
+                starsContainer.style.opacity = '0';
+                cloudsContainer.style.opacity = '1';
+            }
+        }
+        // Add rotation effect during transition
+        toggleWrapper.style.transform = `rotate(${isDark ? '180deg' : '0deg'})`;
+    }
+
+    // Add theme setup to window load
+    window.addEventListener('DOMContentLoaded', () => {
+        setupThemeSystem();
+    });
 
     // Setup Slideshow
     // Initializes slideshow with navigation controls and touch/keyboard support
@@ -1077,6 +1369,101 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Thread of memories
+    function setupTimeline() {
+        try {
+            const timelineContainer = document.querySelector('.timeline');
+            if (!timelineContainer) {
+                console.log('No timeline container found on page 2');
+                return;
+            }
+
+            // First check if we have milestones
+            const milestones = document.querySelectorAll('.milestone');
+
+            // Then check for memory thread items
+            const memoryThreadItems = document.querySelectorAll('.memory-thread-item');
+
+            if (!milestones.length && !memoryThreadItems.length) {
+                console.log('No milestones or memory thread items found in timeline');
+                return;
+            }
+
+            // Click-to-expand description for milestones
+            if (milestones.length > 0) {
+                milestones.forEach(milestone => {
+                    const content = milestone.querySelector('.milestone-content');
+                    if (!content) return;
+                    content.addEventListener('click', () => {
+                        const description = content.querySelector('p');
+                        if (!description) return;
+                        if (description.classList.contains('line-clamp-3')) {
+                            description.classList.remove('line-clamp-3');
+                            description.setAttribute('aria-expanded', 'true');
+                        } else {
+                            description.classList.add('line-clamp-3');
+                            description.setAttribute('aria-expanded', 'false');
+                        }
+                    });
+                });
+            }
+
+            // Handle memory thread items separately if they exist
+            if (memoryThreadItems.length > 0) {
+                memoryThreadItems.forEach(item => {
+                    const content = item.querySelector('.memory-content');
+                    if (!content) return;
+                    content.addEventListener('click', () => {
+                        const description = content.querySelector('p');
+                        if (!description) return;
+                        if (description.classList.contains('line-clamp-3')) {
+                            description.classList.remove('line-clamp-3');
+                            description.setAttribute('aria-expanded', 'true');
+                        } else {
+                            description.classList.add('line-clamp-3');
+                            description.setAttribute('aria-expanded', 'false');
+                        }
+                    });
+                });
+            }
+
+            // Fade-in animation on page 2 visibility
+            const page2 = document.getElementById('page-2');
+            const observer = new IntersectionObserver(entries => {
+                if (entries[0].isIntersecting) {
+                    // Animate milestones if they exist
+                    if (milestones.length > 0) {
+                        milestones.forEach((milestone, index) => {
+                            setTimeout(() => {
+                                milestone.classList.add('animate-fade-in');
+                            }, index * 100);
+                        });
+                    }
+
+                    // Animate memory thread items if they exist
+                    if (memoryThreadItems.length > 0) {
+                        memoryThreadItems.forEach((item, index) => {
+                            setTimeout(() => {
+                                item.classList.add('animate-fade-in');
+                            }, index * 100);
+                        });
+                    }
+
+                    observer.unobserve(page2);
+                }
+            }, { threshold: 0.5 });
+
+            observer.observe(page2);
+
+            console.log('Timeline setup complete with',
+                        milestones.length, 'milestones and',
+                        memoryThreadItems.length, 'memory thread items');
+        } catch (e) {
+            console.error('Error setting up timeline:', e);
+        }
+    }
+
 
     // Setup Birthday Cake
     // Implements candle-blowing interaction with confetti
