@@ -29,12 +29,14 @@
   {% endif %}
 
   <div class="card-container max-w-3xl w-full bg-white rounded-2xl shadow-2xl p-6 relative event-{{ event.event_type }}"
-     data-theme="{{ event.event_type }}"
-     data-cultural-theme="{{ event.cultural_theme|yesno:'true,false' }}"
-     data-recipient-name="{{ recipient_name }}"
-     data-custom-label="{{ event.custom_label|default:'' }}"
-     data-event-id="{{ event.id }}"
-     data-audio-url="{% for media in event.media.all %}{% if media.media_type == 'audio' %}{{ media.media_file|urlencode }}{% endif %}{% endfor %}">
+       data-theme="{{ event.event_type }}"
+       data-cultural-theme="{{ event.cultural_theme|yesno:'true,false' }}"
+       data-recipient-name="{{ recipient_name }}"
+       data-custom-label="{{ event.custom_label|default:'' }}"
+       data-event-id="{{ event.id }}"
+       data-thread-of-memories="{{ has_thread_of_memories|yesno:'true,false' }}"
+       data-memories="{{ thread_of_memories_data}}"
+       data-audio-url="{% for media in event.media.all %}{% if media.media_type == 'audio' %}{{ media.media_file|urlencode }}{% endif %}{% endfor %}">
 
   <div class="card-wrapper">
     <!-- Page indicators -->
@@ -61,9 +63,7 @@
           🎉 Surprise for <span class="recipient-name font-bold text-blue-600">{{ event.name }}</span>!
           {% elif event.event_type == 'anniversary' %}
           💞 A Love Note for <span class="recipient-name font-bold text-pink-600">{{ event.name }}</span>
-          {% elif event.event_type == 'raksha_bandhan' %}
 
-         🧵 Threads of Stories for <span class="recipient-name font-bold text-purple-600">{{ event.name }}</span>
           {% else %}
           ✨ A Special Message for <span class="recipient-name font-bold text-green-600">{{ event.name }}</span>
           {% endif %}
@@ -75,17 +75,7 @@
           <div class="emoji-puzzle" style="font-size: 0.9em;">🎉 + 💝 = Pure Joy!</div>
           {% elif event.event_type == 'anniversary' %}
           <div class="date-puzzle" style="font-size: 0.9em;">What is the date that marks another year of our journey together?</div>
-          {% elif event.event_type == 'raksha_bandhan' %}
-<!--          <div class="data-puzzle" style="font-size: 0.9em;">What protects, binds, and means home?</div>-->
-            <div class="rakhi-intro-text mt-4 text-center text-yellow-100 px-6">
-              <h3 class="text-2xl font-bold text-yellow-200">राखी का बंधन</h3>
-              <p class="italic text-sm mt-1">Sacred Bond of Raksha Bandhan</p>
 
-              <blockquote class="shloka-container mt-2 text-sm">
-                "येन बद्धो बलि राजा दानवेन्द्रो महाबलः"<br>
-                <span class="text-xs block">(The sacred thread that bound the mighty King Bali...)</span>
-              </blockquote>
-            </div>
 
 
           {% else %}
@@ -102,7 +92,7 @@
                 id="card-password-input"
                 name="card_password"
                 class="password-input"
-                placeholder="{% if event.event_type == 'raksha_bandhan' %}पवित्र शब्द दर्ज करें (Enter the Sacred Word){% else %}Enter the card password...{% endif %}"
+                placeholder="Enter the card password..."
                 aria-required="true">
 
             <button type="submit" class="unlock-button" aria-label="Unlock card content">Unlock Card</button>
@@ -115,8 +105,7 @@
             <strong>The name</strong> that brings smiles every year.
             {% elif event.event_type == 'anniversary' %}
               When did<strong> we</strong>begin this journey?
-            {% elif event.event_type == 'raksha_bandhan' %}
-            <strong>बहन का रिश्ता...</strong><br>Hint: The relationship that this festival celebrates 💝
+
 
             {% else %}
             The one <strong>word</strong> that defines this memory

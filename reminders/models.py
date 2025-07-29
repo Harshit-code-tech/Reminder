@@ -18,7 +18,7 @@ class Event(models.Model):
     EVENT_TYPES = [
         ('birthday', 'Birthday'),
         ('anniversary', 'Anniversary'),
-        ('raksha_bandhan', 'Raksha Bandhan'),
+
         ('other', 'Other'),
     ]
 
@@ -38,6 +38,7 @@ class Event(models.Model):
     media_path = models.CharField(max_length=512, null=True, blank=True)
     custom_label = models.CharField(max_length=100, blank=True, null=True)
     cultural_theme = models.BooleanField(default=False)
+    thread_of_memories = models.TextField(blank=True, null=True)
     highlights = models.TextField(blank=True, null=True)
     is_recurring = models.BooleanField(default=True, help_text="Automatically create event for next year.")
     is_archived = models.BooleanField(default=False, help_text="Mark event as archived.")
@@ -75,8 +76,7 @@ class Event(models.Model):
             return self.name.strip().lower() if self.name else ''
         elif self.event_type == 'anniversary':
             return self.date.strftime('%Y-%m-%d') if self.date else ''
-        elif self.event_type == 'raksha_bandhan':
-            return 'bandhan'
+
         elif self.event_type == 'other':
             return self.custom_label.strip() if self.custom_label else ''
         return ''
@@ -86,8 +86,6 @@ class Event(models.Model):
         super().clean()
         if self.event_type == 'birthday' and (not self.name or not self.name.strip()):
             raise ValidationError("Name is required and cannot be empty for Birthday events.")
-        if self.event_type == 'raksha_bandhan' and (not self.name or not self.name.strip()):
-            raise ValidationError("Name is required and cannot be empty for Raksha Bandhan events.")
         if self.event_type == 'other' and (not self.custom_label or not self.custom_label.strip()):
             raise ValidationError("Custom label is required and cannot be empty for 'Other' events.")
         if self.recipient_email and not self.recipient_email.strip():
@@ -96,7 +94,7 @@ class Event(models.Model):
     def save(self, *args, **kwargs):
         """Override save to auto-set card_password and recurring flag."""
         # Set recurring flag based on event type
-        if self.event_type not in ['birthday', 'anniversary', 'raksha_bandhan']:
+        if self.event_type not in ['birthday', 'anniversary']:
             self.is_recurring = False
 
         # Auto-set card password if not already set
@@ -104,7 +102,7 @@ class Event(models.Model):
             password_handlers = {
                 'birthday': lambda: self._set_birthday_password(),
                 'anniversary': lambda: self._set_anniversary_password(),
-                'raksha_bandhan': lambda: self._set_raksha_bandhan_password(),
+
                 'other': lambda: self._set_other_password()
             }
 
@@ -131,11 +129,7 @@ class Event(models.Model):
             raise ValidationError("Date is required for Anniversary events.")
         self.set_card_password(self.date.strftime('%Y-%m-%d'))
 
-    def _set_raksha_bandhan_password(self):
-        """Set password for Raksha Bandhan events."""
-        if not self.name or not self.name.strip():
-            raise ValidationError("Name is required and cannot be empty for Raksha Bandhan events.")
-        self.set_card_password("bandhan")
+
 
     def _set_other_password(self):
         """Set password for other events."""

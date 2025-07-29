@@ -2541,32 +2541,6 @@ h2, h3, .page-title {
   }
 }
 
-.decorative-rakhi {
-  position: absolute;
-  width: 60px;
-  height: 60px;
-  background-image: url('/static/images/rakhi.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  z-index: 10;
-}
-
-.rakhi-decoration {
-  position: absolute;
-  font-size: 20px;
-  animation: spin 10s linear infinite;
-  z-index: 1;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
 .generic-decoration {
   position: absolute;
   font-size: 20px;
@@ -2631,10 +2605,7 @@ h2, h3, .page-title {
   }
 }
 
-.memory-tree.rakhi-themed {
-  background-image: linear-gradient(to bottom, #f8edeb, #fae1dd);
-  border: 2px solid #e63946;
-}
+
 
 /* Birthday Event Styles */
 .event-birthday {
@@ -2708,41 +2679,6 @@ h2, h3, .page-title {
   background-color: var(--secondary-color);
 }
 
-/* Raksha Bandhan Event Styles */
-.event-raksha_bandhan {
-  --primary-color: #e63946;
-  --secondary-color: #f1a9a0;
-  --accent-color: #f9c74f;
-  --background-color: #f8edeb;
-  --card-color: #ffffff;
-  --shadow-color: rgba(230, 57, 70, 0.2);
-  --font-primary: 'Lobster', cursive;
-  --font-secondary: 'Roboto', sans-serif;
-  background-image: linear-gradient(to bottom right, #f8edeb, #fae1dd);
-}
-
-.event-raksha_bandhan .card-page {
-  background-image: url('/static/images/rakhi-bg.png');
-  background-size: 200px;
-  background-repeat: repeat;
-  background-position: center;
-  background-blend-mode: overlay;
-}
-
-.event-raksha_bandhan .page-title, 
-.event-raksha_bandhan .welcome-title {
-  color: var(--primary-color);
-  text-shadow: 2px 2px 4px rgba(230, 57, 70, 0.1);
-}
-
-.event-raksha_bandhan .nav-button {
-  background-color: var(--primary-color);
-  color: white;
-}
-
-.event-raksha_bandhan .nav-button:hover {
-  background-color: var(--secondary-color);
-}
 
 /* Other Event Styles */
 .event-other {
@@ -2780,3 +2716,119 @@ h2, h3, .page-title {
   background-color: var(--secondary-color);
 }
 
+
+
+/* Thread of Memories Styles */
+.thread-of-memories-container {
+  position: relative;
+  width: 80%;
+  margin: 40px auto;
+  min-height: 100px;
+  padding: 20px 0;
+}
+
+.thread-line {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+  border-radius: 2px;
+  z-index: 1;
+}
+
+.memory-point {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  background-color: var(--accent-color);
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  z-index: 2;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.memory-point:hover {
+  transform: translate(-50%, -50%) scale(1.2);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+}
+
+.memory-popup {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 200px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  padding: 15px;
+  z-index: 10;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.memory-popup.hidden {
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px);
+  pointer-events: none;
+}
+
+.memory-popup h4 {
+  font-size: 0.8rem;
+  color: var(--primary-color);
+  margin-bottom: 5px;
+}
+
+.memory-popup h3 {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+  color: var(--text-color);
+}
+
+.memory-popup p {
+  font-size: 0.9rem;
+  color: var(--secondary-text);
+}
+
+/* Animation for memory points */
+@keyframes pulse {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.1); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+.memory-point:nth-child(odd) {
+  animation: pulse 3s infinite;
+}
+
+/* Memory entry form styles */
+.memory-entry {
+  transition: all 0.3s ease;
+}
+
+.memory-entry:hover {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+#add-memory-btn {
+  transition: all 0.2s ease;
+}
+
+#add-memory-btn:hover {
+  transform: translateY(-2px);
+}
+
+.remove-memory-btn {
+  opacity: 0.7;
+  transition: all 0.2s ease;
+}
+
+.remove-memory-btn:hover {
+  opacity: 1;
+}

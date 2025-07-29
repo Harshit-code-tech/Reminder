@@ -59,12 +59,12 @@ def admin_dashboard(request):
 def toggle_recurring(request, event_id):
     if request.method == 'POST':
         event = get_object_or_404(Event, id=event_id, user=request.user)
-        if event.event_type in ['birthday', 'anniversary','raksha_bandhan']:
+        if event.event_type in ['birthday', 'anniversary']:
             event.is_recurring = not event.is_recurring
             event.save()
             messages.success(request, f"Recurring {'enabled' if event.is_recurring else 'disabled'} for {event.name}")
         else:
-            messages.error(request, "Recurring is only available for birthdays, Raksha Bandhan and anniversa"
+            messages.error(request, "Recurring is only available for birthdays, anniversary"
                                     "ries")
     return redirect('event_list')
 
@@ -611,8 +611,7 @@ def get_password_text(event):
         return event.name.strip().lower()
     elif event.event_type == 'anniversary':
         return event.date.strftime('%Y-%m-%d')
-    elif event.event_type == 'raksha_bandhan':
-        return 'bandhan'
+
     else:
         return event.card_password or ''
 
@@ -643,13 +642,46 @@ def greeting_card_view(request, event_id):
     # Compute password_text for the template
     password_text = get_password_text(event)
 
+    thread_of_memories_data = []
+    if event.thread_of_memories:
+        try:
+            # Parse thread of memories from text field
+            memories = [m.strip() for m in event.thread_of_memories.split('\n') if m.strip()]
+
+            for i in range(0, len(memories), 2):
+                if i + 1 < len(memories):
+                    # Extract year and title from first line
+                    header = memories[i]
+                    description = memories[i + 1]
+
+                    year = ""
+                    title = header
+
+                    # Try to extract year if it's in the format "YEAR: Title"
+                    if ":" in header:
+                        year_part, title_part = header.split(":", 1)
+                        if year_part.strip().isdigit():
+                            year = year_part.strip()
+                            title = title_part.strip()
+
+                    thread_of_memories_data.append({
+                        "year": year,
+                        "title": title,
+                        "description": description
+                    })
+        except Exception as e:
+            logger.error(f"Error parsing thread of memories: {e}")
+            thread_of_memories_data = []
+
     context = {
         'event': event,
         'is_owner': True,
         'requires_card_password': requires_card_password,
         'requires_share_password': False,
         'error': error,
+        'has_thread_of_memories': bool(thread_of_memories_data) and len(thread_of_memories_data) >= 2,
         'highlights': event.highlights or '',
+        'thread_of_memories_data': json.dumps(thread_of_memories_data),
         'audio_url': audio_url,  # For page 4 audio player
         'audio_mime_type': audio_mime_type,
         'images': images,  # For page 3 slideshow
@@ -708,8 +740,7 @@ def validate_card_password(request, event_id):
                     break
             except ValueError:
                 continue
-    elif event.event_type == 'raksha_bandhan':
-        is_valid = input_pw == 'bandhan'
+
     else:
         is_valid = event.check_card_password(input_pw)
 

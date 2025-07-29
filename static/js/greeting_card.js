@@ -5,16 +5,98 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Get event type from card container
     const cardContainer = document.querySelector('.card-container');
+    const hasThreadOfMemories = cardContainer && cardContainer.dataset.threadOfMemories === 'true';
+    if (hasThreadOfMemories) {
+        initializeThreadOfMemories();
+    }
+
+    /**
+     * Initialize the Thread of Memories visualization
+     */
+    function initializeThreadOfMemories() {
+        let memoriesData = [];
+        try {
+            const memoriesStr = cardContainer.dataset.memories || "[]";
+            console.log('Attempting to parse JSON:', memoriesStr);
+            memoriesData = JSON.parse(memoriesStr);
+            console.log('Parsed memories data:', memoriesData);
+        } catch (e) {
+            console.error('Invalid JSON in data-memories:', e);
+            return;
+        }
+
+        if (!Array.isArray(memoriesData) || memoriesData.length < 2) {
+            console.log('Not enough memories to display thread');
+            return;
+        }
+
+        // Create the thread container
+        const threadContainer = document.createElement('div');
+        threadContainer.className = 'thread-of-memories-container';
+
+        // Create the thread line
+        const threadLine = document.createElement('div');
+        threadLine.className = 'thread-line';
+        threadContainer.appendChild(threadLine);
+
+        // Add memory points along the thread
+        memoriesData.forEach((memory, index) => {
+            const memoryPoint = document.createElement('div');
+            memoryPoint.className = 'memory-point';
+            memoryPoint.style.left = `${(index / (memoriesData.length - 1)) * 100}%`;
+
+            // Create popup for each memory
+            const memoryPopup = document.createElement('div');
+            memoryPopup.className = 'memory-popup hidden';
+            memoryPopup.innerHTML = `
+                <h4>${memory.year || ''}</h4>
+                <h3>${memory.title || 'Memory'}</h3>
+                <p>${memory.description || ''}</p>
+            `;
+
+            // Toggle popup on hover/click
+            memoryPoint.addEventListener('mouseenter', () => {
+                memoryPopup.classList.remove('hidden');
+            });
+
+            memoryPoint.addEventListener('mouseleave', () => {
+                memoryPopup.classList.add('hidden');
+            });
+
+            // For mobile support
+            memoryPoint.addEventListener('click', () => {
+                document.querySelectorAll('.memory-popup').forEach(popup => {
+                    if (popup !== memoryPopup) {
+                        popup.classList.add('hidden');
+                    }
+                });
+                memoryPopup.classList.toggle('hidden');
+            });
+
+            memoryPoint.appendChild(memoryPopup);
+            threadContainer.appendChild(memoryPoint);
+        });
+
+        // Add thread container to the card
+        const memoryPage = document.querySelector('.card-page[data-memory-page="true"]');
+        if (memoryPage) {
+            memoryPage.appendChild(threadContainer);
+        } else {
+            // Fallback to adding it to the third page
+            const thirdPage = document.querySelector('#page-3');
+            if (thirdPage) {
+                thirdPage.appendChild(threadContainer);
+            }
+        }
+    }
+
+
     const eventType = cardContainer ? cardContainer.classList[1].replace('event-', '') : 'birthday';
     console.log('Event type detected:', eventType);
 
     // Apply event-specific initializations
     initializeEventSpecificBehavior(eventType);
 
-    /**
-     * Initialize event-specific behavior based on event type
-     * @param {string} eventType - The type of event (birthday, anniversary, raksha_bandhan, other)
-     */
     function initializeEventSpecificBehavior(eventType) {
         console.log('Initializing event-specific behavior for:', eventType);
 
