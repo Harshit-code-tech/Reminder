@@ -698,7 +698,9 @@ def greeting_card_view(request, event_id):
 def get_event_highlights(request, event_id):
     try:
         event = Event.objects.get(pk=event_id)
-        return JsonResponse({'highlights': event.highlights or ""})
+        return JsonResponse({'highlights': event.highlights or "",
+                             "thread_of_memories": event.thread_of_memories or "",
+                             })
     except Event.DoesNotExist:
         raise Http404("Event not found")
 

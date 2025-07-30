@@ -1097,6 +1097,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (document.querySelector('.milestone-popup')) return;
 
         const eventId = document.querySelector('.card-container').dataset.eventId;
+
         fetch(`/get_event_highlights/${eventId}/`, {
             method: 'GET',
             headers: {
@@ -1108,40 +1109,43 @@ document.addEventListener('DOMContentLoaded', function() {
             return response.json();
         })
         .then(data => {
-            if (!data.highlights || data.highlights.trim() === '') {
-                const popup = document.createElement('div');
-                popup.className = 'milestone-popup';
-                popup.setAttribute('role', 'dialog');
-                popup.setAttribute('aria-labelledby', 'popup-title');
-                popup.innerHTML = `
-                    <div class="milestone-popup-content">
-                        <h3 id="popup-title">No Milestones</h3>
-                        <p>No special milestones or highlights were added for this event.</p>
-                        <button class="close-popup" aria-label="Close popup">Close</button>
-                    </div>
+            let content = '';
+
+            if (data.highlights && data.highlights.trim() !== '') {
+                content = `
+                    <h3 id="popup-title">Special Milestones</h3>
+                    <p>${data.highlights.replace(/\n/g, '<br>')}</p>
                 `;
-                document.body.appendChild(popup);
+            } else if (data.thread_of_memories && data.thread_of_memories.trim() !== '') {
+                content = `
+                    <h3 id="popup-title">Thread of Memories</h3>
+                    <p>${data.thread_of_memories.replace(/\n/g, '<br>')}</p>
+                `;
             } else {
-                const popup = document.createElement('div');
-                popup.className = 'milestone-popup';
-                popup.setAttribute('role', 'dialog');
-                popup.setAttribute('aria-labelledby', 'popup-title');
-                popup.innerHTML = `
-                    <div class="milestone-popup-content">
-                        <h3 id="popup-title">Special Milestones</h3>
-                        <p>${data.highlights.replace(/\n/g, '<br>')}</p>
-                        <button class="close-popup" aria-label="Close popup">Close</button>
-                    </div>
+                content = `
+                    <h3 id="popup-title">No Milestones</h3>
+                    <p>No special milestones or memories were added for this event.</p>
                 `;
-                document.body.appendChild(popup);
             }
 
-            const popup = document.querySelector('.milestone-popup');
+            const popup = document.createElement('div');
+            popup.className = 'milestone-popup';
+            popup.setAttribute('role', 'dialog');
+            popup.setAttribute('aria-labelledby', 'popup-title');
+            popup.innerHTML = `
+                <div class="milestone-popup-content">
+                    ${content}
+                    <button class="close-popup" aria-label="Close popup">Close</button>
+                </div>
+            `;
+            document.body.appendChild(popup);
+
+            // Style popup
             popup.style.position = 'fixed';
             popup.style.top = '50%';
             popup.style.left = '50%';
             popup.style.transform = 'translate(-50%, -50%)';
-            popup.style.background = 'rgba(255, 255, 255, 0.9)';
+            popup.style.background = 'rgba(255, 255, 255, 0.95)';
             popup.style.padding = '20px';
             popup.style.borderRadius = '10px';
             popup.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
@@ -1151,6 +1155,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             popup.focus();
 
+            // Trap focus inside popup
             const focusableElements = popup.querySelectorAll('button, [tabindex="0"]');
             const firstElement = focusableElements[0];
             const lastElement = focusableElements[focusableElements.length - 1];
@@ -1192,11 +1197,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             `;
             document.body.appendChild(popup);
+
+            // Style popup
             popup.style.position = 'fixed';
             popup.style.top = '50%';
             popup.style.left = '50%';
             popup.style.transform = 'translate(-50%, -50%)';
-            popup.style.background = 'rgba(255, 255, 255, 0.9)';
+            popup.style.background = 'rgba(255, 255, 255, 0.95)';
             popup.style.padding = '20px';
             popup.style.borderRadius = '10px';
             popup.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
@@ -1204,11 +1211,13 @@ document.addEventListener('DOMContentLoaded', function() {
             popup.style.maxWidth = '400px';
             popup.style.textAlign = 'center';
             popup.focus();
+
             popup.querySelector('.close-popup').addEventListener('click', () => {
                 popup.remove();
             });
         });
     }
+
 
     function setupBirthdayCountdown() {
         setupSliderUnlock();
