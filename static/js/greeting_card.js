@@ -5,19 +5,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Get event type from card container
     const cardContainer = document.querySelector('.card-container');
-    const hasThreadOfMemories = cardContainer && cardContainer.dataset.threadOfMemories === 'true';
-    if (hasThreadOfMemories) {
-        initializeThreadOfMemories();
-    }
+
 
     /**
      * Initialize the Thread of Memories visualization
      */
     function initializeThreadOfMemories() {
+
+        const existingContainer = document.querySelector('.thread-of-memories-container');
+        if (existingContainer) {
+            console.log('Thread of memories already initialized, skipping...');
+            return;
+        }
         let memoriesData = [];
         try {
             const memoriesStr = cardContainer.dataset.memories || "[]";
             console.log('Attempting to parse JSON:', memoriesStr);
+            if (!memoriesStr || memoriesStr.trim() === '' || memoriesStr === 'null') {
+                console.log('No memories data available');
+                return;
+            }
             memoriesData = JSON.parse(memoriesStr);
             console.log('Parsed memories data:', memoriesData);
         } catch (e) {
@@ -30,9 +37,17 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+
+
         // Create the thread container
         const threadContainer = document.createElement('div');
         threadContainer.className = 'thread-of-memories-container';
+        const page2 = document.querySelector('#page-2');
+        if (!page2) {
+            console.error('Page 2 not found for thread of memories');
+            return;
+        }
+        page2.appendChild(threadContainer);
 
         // Create the thread line
         const threadLine = document.createElement('div');
@@ -43,52 +58,117 @@ document.addEventListener('DOMContentLoaded', function() {
         memoriesData.forEach((memory, index) => {
             const memoryPoint = document.createElement('div');
             memoryPoint.className = 'memory-point';
-            memoryPoint.style.left = `${(index / (memoriesData.length - 1)) * 100}%`;
+            memoryPoint.style.left = `${10 + (index / Math.max(memoriesData.length - 1, 1)) * 80}%`;
+
 
             // Create popup for each memory
             const memoryPopup = document.createElement('div');
             memoryPopup.className = 'memory-popup hidden';
             memoryPopup.innerHTML = `
-                <h4>${memory.year || ''}</h4>
-                <h3>${memory.title || 'Memory'}</h3>
-                <p>${memory.description || ''}</p>
+                <h4 class="popup-year">${memory.year || 'Memory'}</h4>
+                <h3 class="popup-title">${memory.title || 'Special Moment'}</h3>
+                <p class="popup-description">${memory.description || 'A cherished memory'}</p>
             `;
 
             // Toggle popup on hover/click
             memoryPoint.addEventListener('mouseenter', () => {
-                memoryPopup.classList.remove('hidden');
-            });
-
-            memoryPoint.addEventListener('mouseleave', () => {
-                memoryPopup.classList.add('hidden');
-            });
-
-            // For mobile support
-            memoryPoint.addEventListener('click', () => {
+                // Hide all other popups
                 document.querySelectorAll('.memory-popup').forEach(popup => {
                     if (popup !== memoryPopup) {
+                        popup.style.opacity = '0';
                         popup.classList.add('hidden');
                     }
                 });
-                memoryPopup.classList.toggle('hidden');
+                memoryPopup.classList.remove('hidden');
+                memoryPopup.style.opacity = '1';
+            });
+
+            memoryPoint.addEventListener('mouseleave', () => {
+                memoryPopup.style.opacity = '0';
+                setTimeout(() => {
+                    memoryPopup.classList.add('hidden');
+                }, 300);
+            });
+
+            // For mobile support
+            memoryPoint.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.memory-popup').forEach(popup => {
+                    if (popup !== memoryPopup) {
+                        popup.style.opacity = '0';
+                        popup.classList.add('hidden');
+                    }
+                });
+
+                const isHidden = memoryPopup.classList.contains('hidden');
+                if (isHidden) {
+                    memoryPopup.classList.remove('hidden');
+                    memoryPopup.style.opacity = '1';
+                } else {
+                    memoryPopup.style.opacity = '0';
+                    setTimeout(() => {
+                        memoryPopup.classList.add('hidden');
+                    }, 300);
+                }
+            });
+
+            // Add hover effect to memory point
+            memoryPoint.addEventListener('mouseenter', () => {
+                memoryPoint.style.transform = 'translate(-50%, -50%) scale(1.2)';
+                memoryPoint.style.borderColor = '#8b5cf6';
+            });
+
+            memoryPoint.addEventListener('mouseleave', () => {
+                memoryPoint.style.transform = 'translate(-50%, -50%) scale(1)';
+                memoryPoint.style.borderColor = '#3b82f6';
             });
 
             memoryPoint.appendChild(memoryPopup);
             threadContainer.appendChild(memoryPoint);
         });
 
+        // // Add thread container to page 2 specifically
+        // const page2Content = page2.querySelector('.page-title');
+        // if (page2Content) {
+        //     page2Content.insertAdjacentElement('afterend', threadContainer);
+        // } else {
+        //     page2.appendChild(threadContainer);
+        // }
+
         // Add thread container to the card
-        const memoryPage = document.querySelector('.card-page[data-memory-page="true"]');
-        if (memoryPage) {
-            memoryPage.appendChild(threadContainer);
+        // const memoryPage = document.querySelector('.card-page[data-memory-page="true"]');
+        // if (memoryPage) {
+        //     memoryPage.appendChild(threadContainer);
+        // } else {
+        //     // Fallback to adding it to the third page
+        //     const thirdPage = document.querySelector('#page-2');
+        //     if (thirdPage) {
+        //         thirdPage.appendChild(threadContainer);
+        //     }
+        // }
+        const page2Content = page2.querySelector('.page-title');
+        if (page2Content) {
+            page2Content.insertAdjacentElement('afterend', threadContainer);
         } else {
-            // Fallback to adding it to the third page
-            const thirdPage = document.querySelector('#page-3');
-            if (thirdPage) {
-                thirdPage.appendChild(threadContainer);
-            }
+            page2.appendChild(threadContainer);
         }
+
+        // Close popups when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.memory-point')) {
+                document.querySelectorAll('.memory-popup').forEach(popup => {
+                    popup.style.opacity = '0';
+                    setTimeout(() => {
+                        popup.classList.add('hidden');
+                    }, 300);
+                });
+            }
+        });
+
+        console.log('Thread of memories initialized successfully on page 2');
+
     }
+
 
 
     const eventType = cardContainer ? cardContainer.classList[1].replace('event-', '') : 'birthday';
@@ -101,9 +181,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Initializing event-specific behavior for:', eventType);
 
         // Common elements that might need event-specific styling
-        const pageIndicators = document.querySelectorAll('.indicator');
-        const navButtons = document.querySelectorAll('.nav-button');
-        const pageTitles = document.querySelectorAll('.page-title');
 
         // Event-specific animations and effects
         switch(eventType) {
@@ -1089,6 +1166,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 clearInterval(interval);
                 countdownElement.style.display = 'none';
                 showMilestonePopup();
+
             }
         }, 1000);
     }
@@ -1141,17 +1219,21 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.appendChild(popup);
 
             // Style popup
-            popup.style.position = 'fixed';
-            popup.style.top = '50%';
-            popup.style.left = '50%';
-            popup.style.transform = 'translate(-50%, -50%)';
-            popup.style.background = 'rgba(255, 255, 255, 0.95)';
-            popup.style.padding = '20px';
-            popup.style.borderRadius = '10px';
-            popup.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
-            popup.style.zIndex = '1000';
-            popup.style.maxWidth = '400px';
-            popup.style.textAlign = 'center';
+            popup.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(10px);
+                padding: 20px;
+                border-radius: 10px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                z-index: 1000;
+                max-width: 400px;
+                text-align: center;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            `;
 
             popup.focus();
 
@@ -1199,17 +1281,19 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.appendChild(popup);
 
             // Style popup
-            popup.style.position = 'fixed';
-            popup.style.top = '50%';
-            popup.style.left = '50%';
-            popup.style.transform = 'translate(-50%, -50%)';
-            popup.style.background = 'rgba(255, 255, 255, 0.95)';
-            popup.style.padding = '20px';
-            popup.style.borderRadius = '10px';
-            popup.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
-            popup.style.zIndex = '1000';
-            popup.style.maxWidth = '400px';
-            popup.style.textAlign = 'center';
+            popup.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(255, 255, 255, 0.95);
+                padding: 20px;
+                border-radius: 10px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                z-index: 1000;
+                max-width: 400px;
+                text-align: center;
+            `;
             popup.focus();
 
             popup.querySelector('.close-popup').addEventListener('click', () => {
@@ -1460,6 +1544,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
 
     // Thread of memories
     function setupTimeline() {
@@ -1780,6 +1865,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 case 2:
                     setupBirthdayCountdown();
                     setupAnniversaryClock();
+                    setupTimeline();
+                    const hasThreadOfMemories = cardContainer && cardContainer.dataset.threadOfMemories === 'true';
+                    if (hasThreadOfMemories) {
+                        initializeThreadOfMemories();
+                    }
+
                     break;
                 case 3:
                     setupMediaDisplays();

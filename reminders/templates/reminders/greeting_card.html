@@ -160,7 +160,11 @@
           <h2 class="page-title">Our Journey Together</h2>
           <div class="clock-container">
             <div class="anniversary-clock" aria-label="Anniversary clock showing our journey"></div>
-            <div class="milestone-text" aria-live="polite">{{ event.highlights|linebreaksbr }}</div>
+            {% if has_thread_of_memories %}
+              <div class="thread-of-memories-container" id="thread-of-memories"></div>
+            {% else %}
+              <div class="milestone-text" aria-live="polite">{{ highlights|linebreaksbr }}</div>
+            {% endif %}
             <div class="milestone-text">Every moment with you is special.</div>
           </div>
           {% else %}
