@@ -127,29 +127,13 @@ document.addEventListener('DOMContentLoaded', function() {
             threadContainer.appendChild(memoryPoint);
         });
 
-        // // Add thread container to page 2 specifically
-        // const page2Content = page2.querySelector('.page-title');
-        // if (page2Content) {
-        //     page2Content.insertAdjacentElement('afterend', threadContainer);
-        // } else {
-        //     page2.appendChild(threadContainer);
-        // }
 
-        // Add thread container to the card
-        // const memoryPage = document.querySelector('.card-page[data-memory-page="true"]');
-        // if (memoryPage) {
-        //     memoryPage.appendChild(threadContainer);
-        // } else {
-        //     // Fallback to adding it to the third page
-        //     const thirdPage = document.querySelector('#page-2');
-        //     if (thirdPage) {
-        //         thirdPage.appendChild(threadContainer);
-        //     }
-        // }
-        const page2Content = page2.querySelector('.page-title');
-        if (page2Content) {
-            page2Content.insertAdjacentElement('afterend', threadContainer);
+        // Insert the thread container after the page title on page 2
+        const page2Title = page2.querySelector('.page-title');
+        if (page2Title) {
+            page2Title.insertAdjacentElement('afterend', threadContainer);
         } else {
+            // Fallback: append to page 2
             page2.appendChild(threadContainer);
         }
 
@@ -1162,14 +1146,71 @@ document.addEventListener('DOMContentLoaded', function() {
         const interval = setInterval(() => {
             count--;
             countdownElement.textContent = count;
-            if (count < 0) {
+           if (count < 0) {
                 clearInterval(interval);
                 countdownElement.style.display = 'none';
-                showMilestonePopup();
 
+                // Check if we have thread of memories or should show milestone popup
+                const hasThreadOfMemories = cardContainer && cardContainer.dataset.threadOfMemories === 'true';
+
+                if (hasThreadOfMemories) {
+                    showThreadOfMemories();
+                } else {
+                    showMilestonePopup();
+                }
             }
         }, 1000);
     }
+
+    function showThreadOfMemories() {
+        console.log('Showing thread of memories after countdown');
+
+        // Remove any existing thread container
+        const existingThread = document.querySelector('.thread-of-memories-container');
+        if (existingThread) {
+            existingThread.remove();
+        }
+
+        // Initialize the thread of memories on page 2
+        initializeThreadOfMemories();
+
+        // Add some visual feedback that the thread is now active
+        const threadContainer = document.querySelector('.thread-of-memories-container');
+        if (threadContainer) {
+            // Add a gentle glow effect to indicate it's newly activated
+            threadContainer.style.animation = 'threadActivated 2s ease-in-out';
+
+            // Add the animation keyframes if they don't exist
+            if (!document.querySelector('#thread-activation-styles')) {
+                const style = document.createElement('style');
+                style.id = 'thread-activation-styles';
+                style.textContent = `
+                    @keyframes threadActivated {
+                        0% { 
+                            transform: scale(0.95);
+                            opacity: 0.7;
+                            box-shadow: 0 0 0 rgba(139, 92, 246, 0);
+                        }
+                        50% { 
+                            transform: scale(1.02);
+                            opacity: 1;
+                            box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+                        }
+                        100% { 
+                            transform: scale(1);
+                            opacity: 1;
+                            box-shadow: 0 0 0 rgba(139, 92, 246, 0);
+                        }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            // Show a brief instruction
+            showFeedback('✨ Your thread of memories is now active! Hover over the dots to explore.');
+        }
+    }
+
 
     function showMilestonePopup() {
         if (document.querySelector('.milestone-popup')) return;
@@ -1194,15 +1235,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     <h3 id="popup-title">Special Milestones</h3>
                     <p>${data.highlights.replace(/\n/g, '<br>')}</p>
                 `;
-            } else if (data.thread_of_memories && data.thread_of_memories.trim() !== '') {
-                content = `
-                    <h3 id="popup-title">Thread of Memories</h3>
-                    <p>${data.thread_of_memories.replace(/\n/g, '<br>')}</p>
-                `;
             } else {
                 content = `
                     <h3 id="popup-title">No Milestones</h3>
-                    <p>No special milestones or memories were added for this event.</p>
+                    <p>No special milestones were added for this event.</p>
                 `;
             }
 
@@ -1866,10 +1902,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     setupBirthdayCountdown();
                     setupAnniversaryClock();
                     setupTimeline();
-                    const hasThreadOfMemories = cardContainer && cardContainer.dataset.threadOfMemories === 'true';
-                    if (hasThreadOfMemories) {
-                        initializeThreadOfMemories();
-                    }
+
 
                     break;
                 case 3:
