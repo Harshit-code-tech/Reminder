@@ -147,6 +147,7 @@ class EventForm(forms.ModelForm):
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'}),
             'message': forms.Textarea(attrs={'rows': 4}),
+            'highlights': forms.Textarea(attrs={'rows': 4}),
             'is_recurring': forms.CheckboxInput(),
             'auto_share_enabled': forms.CheckboxInput(),
         }
@@ -256,7 +257,7 @@ class EventForm(forms.ModelForm):
 
         # Recurring event logic
         is_recurring = cleaned_data.get('is_recurring')
-        if is_recurring and event_type not in ['birthday', 'anniversary', 'raksha_bandhan']:
+        if is_recurring and event_type not in ['birthday', 'anniversary']:
             raise ValidationError("Recurring events are only allowed for birthdays, anniversaries, and Raksha Bandhan.")
 
         # Recipient email validation

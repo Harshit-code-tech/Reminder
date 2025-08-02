@@ -244,43 +244,80 @@ def delete_event(request, event_id):
 @login_required
 @email_verified_required
 def delete_event_media(request, media_id):
+    """
+    Deletes an event media file from Supabase and updates the database record.
+    - Handles both full URLs and Supabase paths.
+    - Logs all actions with detailed information.
+    - Sends email notification if media was deleted from a past event.
+    - Keeps EventMedia row but clears fields instead of deleting record.
+    """
     media = get_object_or_404(EventMedia, id=media_id, event__user=request.user)
+    event = media.event
+
     if request.method == 'POST' and media.media_file:
         try:
             supabase = get_user_supabase_client(request)
             file_path = media.media_file
+
+            # ✅ Handle full URLs (extract path part)
+            if file_path.startswith('http'):
+                from urllib.parse import urlparse
+                parsed = urlparse(file_path)
+                file_path = parsed.path.lstrip('/')
+
+            # ✅ Check if file exists before attempting deletion
             dir_path = "/".join(file_path.split('/')[:-1])
             existing_files = supabase.storage.from_('event-media').list(dir_path)
-            if not any(f['name'] == file_path.split('/')[-1] for f in existing_files):
-                logger.warning(f"Media already gone for event {media.event.name}, clearing DB fields")
+            file_name = file_path.split('/')[-1]
+            if not any(f['name'] == file_name for f in existing_files):
+                logger.warning(f"Media already missing for event {event.name}. Clearing DB fields only.")
             else:
-                supabase.storage.from_('event-media').remove([file_path])
+                logger.debug(f"Attempting to delete file: {file_path}")
+                try:
+                    response = supabase.storage.from_('event-media').remove([file_path])
+                    logger.debug(f"Supabase delete response: {response}")
 
-            logger.debug(f"Attempting to delete file at path: {file_path}")
-            try:
-                response = supabase.storage.from_('event-media').remove([file_path])
-                logger.debug(f"Supabase delete response: {response}")
-                if response is None or (isinstance(response, list) and not response):
-                    logger.error(f"Media deletion failed for event {media.event.id}: Invalid path or permissions")
-                    messages.error(request, f"Failed to delete media for event {media.event.name}.")
+                    if response is None or (isinstance(response, list) and not response):
+                        logger.error(f"Deletion failed for event {event.id}: Invalid path or permissions")
+                        messages.error(request, f"Failed to delete media for event '{event.name}'.")
+                        return redirect('event_list')
+
+                    logger.info(f"Media deleted from Supabase for event {event.id} by user {request.user.username}")
+
+                except Exception as e:
+                    logger.error(f"Exception during media deletion for event {event.id}: {str(e)}")
+                    messages.error(request, f"Media deletion failed for '{event.name}': {str(e)}")
                     return redirect('event_list')
-                logger.info(f"Media deleted for event {media.event.id} by user {request.user.username}")
-            except Exception as e:
-                logger.error(f"Exception during media deletion for event {media.event.id}: {str(e)}")
-                messages.error(request, f"Media deletion failed for event {media.event.name}: {str(e)}")
-                return redirect('event_list')
+
+            # ✅ Clear fields but keep record
             media.media_url = None
             media.media_type = None
             media.media_file = None
             media.save()
+
+            # ✅ Send notification if past event
+            if event.date < timezone.now().date():
+                try:
+                    send_mail(
+                        subject=f"Media Removed from Past Event: {event.name}",
+                        message=f"Media was removed from your past event '{event.name}' dated {event.date}.",
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[request.user.email],
+                        fail_silently=True,
+                    )
+                    logger.info(f"Notification email sent for media deletion on past event {event.id}")
+                except Exception as e:
+                    logger.error(f"Failed to send notification email for event {event.id}: {str(e)}")
+
             messages.success(request, "Event media deleted successfully!")
             return redirect('event_list')
-        except Exception as e:
-            messages.error(request, f"Error deleting media: {str(e)}")
-            logger.error(f"Media deletion failed for event {media.event.id}: {str(e)}")
-            return redirect('event_list')
-    return redirect('event_update', event_id=media.event.id)
 
+        except Exception as e:
+            messages.error(request, f"Unexpected error deleting media: {str(e)}")
+            logger.error(f"Media deletion failed for event {event.id}: {str(e)}")
+            return redirect('event_list')
+
+    return redirect('event_update', event_id=event.id)
 
 
 @csrf_exempt
@@ -691,10 +728,12 @@ def greeting_card_view(request, event_id):
         'password_text': password_text,  # Added for reveal password feature
         # Raksha Bandhan specific context
         'is_raksha_bandhan': event.event_type == 'raksha_bandhan',
-        'raksha_bandhan_theme': event.raksha_bandhan_theme if event.event_type == 'raksha_bandhan' else None,
-        'sibling_relationship': event.sibling_relationship if event.event_type == 'raksha_bandhan' else None,
-        'sacred_promises': event.sacred_promises if event.event_type == 'raksha_bandhan' else None,
-        'rakhi_ceremony_notes': event.rakhi_ceremony_notes if event.event_type == 'raksha_bandhan' else None,
+        'raksha_bandhan_theme': event.raksha_bandhan_theme if event.event_type == 'raksha_bandhan' else 'traditional',
+        'sibling_relationship': event.sibling_relationship if event.event_type == 'raksha_bandhan' else 'Beloved Sibling',
+        'sacred_promises': event.sacred_promises if event.event_type == 'raksha_bandhan' else '',
+        'sacred_promises_list': event.get_promises_list() if event.event_type == 'raksha_bandhan' else [],
+        'rakhi_ceremony_notes': event.rakhi_ceremony_notes if event.event_type == 'raksha_bandhan' else '',
+        'memory_data_parsed': thread_of_memories_data,
 
     }
     logger.info(f"Rendering greeting card for event {event_id}: Audio URL={audio_url}, MIME type={audio_mime_type}")

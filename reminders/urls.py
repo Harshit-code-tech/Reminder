@@ -12,6 +12,7 @@ urlpatterns = [
 
     # Media management
     path('media/delete/<int:media_id>/', views.delete_event_media, name='delete_event_media'),
+    path('delete/<int:event_id>/', views.delete_event, name='event_delete'),
 
     # Bulk operations
     path('bulk-import/', views.bulk_import, name='bulk_import'),
