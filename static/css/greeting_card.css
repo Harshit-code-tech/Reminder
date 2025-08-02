@@ -2621,7 +2621,7 @@ h2, h3, .page-title {
 }
 
 .event-birthday .card-page {
-  background-image: url('/static/images/confetti-bg.png');
+  /*background-image: url('/static/images/confetti-bg.png');*/
   background-size: 200px;
   background-repeat: repeat;
   background-position: center;
@@ -2657,7 +2657,7 @@ h2, h3, .page-title {
 }
 
 .event-anniversary .card-page {
-  background-image: url('/static/images/hearts-bg.png');
+  /*background-image: url('/static/images/hearts-bg.png');*/
   background-size: 200px;
   background-repeat: repeat;
   background-position: center;
@@ -2694,7 +2694,7 @@ h2, h3, .page-title {
 }
 
 .event-other .card-page {
-  background-image: url('/static/images/abstract-bg.png');
+  /*background-image: url('/static/images/abstract-bg.png');*/
   background-size: 200px;
   background-repeat: repeat;
   background-position: center;

@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 import logging
-
 from django.db.models import Prefetch
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_protect
@@ -611,7 +610,8 @@ def get_password_text(event):
         return event.name.strip().lower()
     elif event.event_type == 'anniversary':
         return event.date.strftime('%Y-%m-%d')
-
+    elif event.event_type == 'raksha_bandhan':
+        return 'rakhi'
     else:
         return event.card_password or ''
 
@@ -689,6 +689,13 @@ def greeting_card_view(request, event_id):
         'recipient_name': event.custom_label or event.name,
         'message': event.message or '',
         'password_text': password_text,  # Added for reveal password feature
+        # Raksha Bandhan specific context
+        'is_raksha_bandhan': event.event_type == 'raksha_bandhan',
+        'raksha_bandhan_theme': event.raksha_bandhan_theme if event.event_type == 'raksha_bandhan' else None,
+        'sibling_relationship': event.sibling_relationship if event.event_type == 'raksha_bandhan' else None,
+        'sacred_promises': event.sacred_promises if event.event_type == 'raksha_bandhan' else None,
+        'rakhi_ceremony_notes': event.rakhi_ceremony_notes if event.event_type == 'raksha_bandhan' else None,
+
     }
     logger.info(f"Rendering greeting card for event {event_id}: Audio URL={audio_url}, MIME type={audio_mime_type}")
     return render(request, 'reminders/greeting_card.html', context)
@@ -742,6 +749,11 @@ def validate_card_password(request, event_id):
                     break
             except ValueError:
                 continue
+
+    elif event.event_type == 'raksha_bandhan':
+        # Accept multiple valid answers for Raksha Bandhan
+        valid_answers = ['rakhi', 'thread', 'bond', 'राखी', 'धागा']
+        is_valid = input_pw in valid_answers
 
     else:
         is_valid = event.check_card_password(input_pw)
@@ -971,7 +983,45 @@ def public_card_view(request, token):
         'recipient_name': event.custom_label or event.name,
         'message': event.message or '',
         'password_text': password_text,  # Added for reveal password feature
+        # Raksha Bandhan specific context
+        'is_raksha_bandhan': event.event_type == 'raksha_bandhan',
+        'raksha_bandhan_theme': event.raksha_bandhan_theme if event.event_type == 'raksha_bandhan' else None,
+        'sibling_relationship': event.sibling_relationship if event.event_type == 'raksha_bandhan' else None,
+        'sacred_promises': event.sacred_promises if event.event_type == 'raksha_bandhan' else None,
+        'rakhi_ceremony_notes': event.rakhi_ceremony_notes if event.event_type == 'raksha_bandhan' else None,
+
     }
     logger.info(f"Rendering public card for event {share.event.id}: Audio URL={audio_url}, MIME type={audio_mime_type}")
     return render(request, 'reminders/greeting_card.html', context)
 
+
+@csrf_exempt
+def get_raksha_bandhan_data(request, event_id):
+    """Get Raksha Bandhan specific data for the frontend"""
+    try:
+        event = Event.objects.get(pk=event_id, event_type='raksha_bandhan')
+
+        # Parse sacred promises into array
+        promises = []
+        if event.sacred_promises:
+            promises = [p.strip() for p in event.sacred_promises.split('\n') if p.strip()]
+
+        return JsonResponse({
+            'raksha_bandhan_theme': event.raksha_bandhan_theme or 'traditional',
+            'sibling_relationship': event.sibling_relationship or 'Beloved Sibling',
+            'sacred_promises': promises,
+            'rakhi_ceremony_notes': event.rakhi_ceremony_notes or '',
+            'thread_of_memories': event.thread_of_memories or '',
+            'highlights': event.highlights or '',
+        })
+    except Event.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Raksha Bandhan event not found'
+        }, status=404)
+    except Exception as e:
+        logger.error(f"Error fetching Raksha Bandhan data for event {event_id}: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Internal server error'
+        }, status=500)

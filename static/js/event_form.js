@@ -18,6 +18,217 @@ document.addEventListener('DOMContentLoaded', () => {
     const memoryTypeRadios = document.querySelectorAll('input[name="memory_display_type"]');
     const highlightsSection = document.getElementById('highlights-section');
     const threadOfMemoriesSection = document.getElementById('thread-of-memories-section');
+        const sections = document.querySelectorAll('.form-section');
+    const progressBar = document.querySelector('.progress-bar');
+    const nextButtons = document.querySelectorAll('.next-section-btn');
+    const prevButtons = document.querySelectorAll('.prev-section-btn');
+    let currentSection = 0;
+
+    function updateProgressBar() {
+        const progress = ((currentSection + 1) / sections.length) * 100;
+        progressBar.style.width = `${progress}%`;
+    }
+
+    function showSection(index) {
+        sections.forEach((section, idx) => {
+            section.classList.toggle('hidden', idx !== index);
+        });
+        currentSection = index;
+        updateProgressBar();
+    }
+
+    nextButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            if (currentSection < sections.length - 1) {
+                showSection(currentSection + 1);
+            }
+        });
+    });
+
+    prevButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            if (currentSection > 0) {
+                showSection(currentSection - 1);
+            }
+        });
+    });
+
+    // Initialize progress bar
+    updateProgressBar();
+
+    // Enhanced image previews
+    const imagePreviewContainer = document.querySelector('.image-preview-container');
+
+    if (imageInput && imagePreviewContainer) {
+        imageInput.addEventListener('change', (event) => {
+            imagePreviewContainer.innerHTML = '';
+            Array.from(event.target.files).slice(0, 3).forEach(file => {
+                const previewUrl = URL.createObjectURL(file);
+
+                const previewDiv = document.createElement('div');
+                previewDiv.className = 'relative group';
+
+                const img = document.createElement('img');
+                img.src = previewUrl;
+                img.className = 'h-32 w-auto object-cover rounded-lg border border-gray-200 dark:border-gray-700';
+
+                const removeBtn = document.createElement('button');
+                removeBtn.innerHTML = '×';
+                removeBtn.className = 'absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity';
+
+                previewDiv.appendChild(img);
+                previewDiv.appendChild(removeBtn);
+                imagePreviewContainer.appendChild(previewDiv);
+            });
+        });
+    }
+
+    // Audio preview
+    const audioPreviewContainer = document.querySelector('.audio-preview-container');
+
+    if (audioInput && audioPreviewContainer) {
+        audioInput.addEventListener('change', (event) => {
+            audioPreviewContainer.innerHTML = '';
+            Array.from(event.target.files).slice(0, 1).forEach(file => {
+                const previewUrl = URL.createObjectURL(file);
+
+                const audioContainer = document.createElement('div');
+                audioContainer.className = 'p-3 rounded-lg border border-purple-200 dark:border-purple-800 bg-white dark:bg-slate-800';
+
+                const audio = document.createElement('audio');
+                audio.controls = true;
+                audio.className = 'w-full';
+                audio.src = previewUrl;
+
+                const filename = document.createElement('p');
+                filename.className = 'text-xs text-gray-500 dark:text-gray-400 mt-1 truncate';
+                filename.textContent = file.name;
+
+                audioContainer.appendChild(audio);
+                audioContainer.appendChild(filename);
+                audioPreviewContainer.appendChild(audioContainer);
+            });
+        });
+    }
+
+    // Feedback widget
+    const feedbackToggle = document.querySelector('.feedback-toggle');
+    const feedbackForm = document.querySelector('.feedback-form');
+    const ratingButtons = document.querySelectorAll('.rating-btn');
+    const submitFeedback = document.querySelector('.submit-feedback');
+
+    if (feedbackToggle && feedbackForm) {
+        feedbackToggle.addEventListener('click', () => {
+            feedbackForm.classList.toggle('hidden');
+        });
+
+        ratingButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                ratingButtons.forEach(b => b.classList.remove('text-yellow-500'));
+                btn.classList.add('text-yellow-500');
+            });
+        });
+
+        submitFeedback.addEventListener('click', () => {
+            const rating = document.querySelector('.rating-btn.text-yellow-500')?.dataset.rating;
+            const comment = document.querySelector('.feedback-form textarea').value;
+
+            if (rating) {
+                // Here you'd send feedback to the server
+                console.log('Feedback:', { rating, comment });
+
+                // Feedback animation and message
+                feedbackForm.innerHTML = '<p class="text-green-600 dark:text-green-400 font-semibold py-3 text-center">Thank you for your feedback!</p>';
+
+                // Hide the form after delay
+                setTimeout(() => {
+                    feedbackForm.classList.add('hidden');
+                    setTimeout(() => {
+                        // Reset the form
+                        feedbackForm.innerHTML = document.querySelector('.feedback-form').innerHTML;
+                    }, 500);
+                }, 2000);
+            }
+        });
+    }
+
+    // Form validation enhancement
+
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const nameInput = document.querySelector('#id_name');
+            const dateInput = document.querySelector('#id_date');
+
+            let isValid = true;
+
+            if (!nameInput.value.trim()) {
+                isValid = false;
+                highlightField(nameInput, 'Name is required');
+            }
+
+            if (!dateInput.value) {
+                isValid = false;
+                highlightField(dateInput, 'Date is required');
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+                showSection(0); // Go back to first section
+            }
+        });
+    }
+
+    function highlightField(field, message) {
+        field.classList.add('border-red-500');
+        field.classList.add('bg-red-50');
+
+        const errorMsg = document.createElement('p');
+        errorMsg.className = 'text-red-600 text-xs mt-1';
+        errorMsg.textContent = message;
+
+        const parent = field.parentElement;
+        const existingError = parent.querySelector('.text-red-600');
+
+        if (!existingError) {
+            parent.appendChild(errorMsg);
+        }
+
+        field.addEventListener('focus', function() {
+            field.classList.remove('border-red-500');
+            field.classList.remove('bg-red-50');
+            const error = parent.querySelector('.text-red-600');
+            if (error) error.remove();
+        }, { once: true });
+    }
+
+    // Animated background for form
+    const formContainer = document.querySelector('.max-w-3xl');
+    if (formContainer) {
+        formContainer.style.position = 'relative';
+        formContainer.style.zIndex = '1';
+
+        const bg = document.createElement('div');
+        bg.classList.add('animated-bg');
+        bg.style.position = 'absolute';
+        bg.style.top = '0';
+        bg.style.left = '0';
+        bg.style.width = '100%';
+        bg.style.height = '100%';
+        bg.style.zIndex = '-1';
+        bg.style.opacity = '0.5';
+        bg.style.background = 'linear-gradient(135deg, rgba(167, 139, 250, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)';
+
+        formContainer.prepend(bg);
+
+        document.addEventListener('mousemove', (e) => {
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+
+            bg.style.background = `linear-gradient(135deg,
+                rgba(167, 139, 250, ${0.05 + x * 0.1}) ${0 + y * 10}%,
+                rgba(139, 92, 246, ${0.05 + y * 0.1}) ${90 + x * 10}%)`;
+        });
+    }
 
 
     let previewUrls = [];
