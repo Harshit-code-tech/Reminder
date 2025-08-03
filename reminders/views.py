@@ -1009,6 +1009,37 @@ def public_card_view(request, token):
     # Compute password_text for the template
     password_text = get_password_text(event)
 
+    # Parse thread of memories
+    thread_of_memories_data = []
+    if event.thread_of_memories:
+        try:
+            # Parse thread of memories from text field
+            memories = [m.strip() for m in event.thread_of_memories.split('\n') if m.strip()]
+            for i in range(0, len(memories), 2):
+                if i + 1 < len(memories):
+                    # Extract year and title from first line
+                    header = memories[i]
+                    description = memories[i + 1]
+
+                    year = ""
+                    title = header
+
+                    # Try to extract year if it's in the format "YEAR: Title"
+                    if ":" in header:
+                        year_part, title_part = header.split(":", 1)
+                        if year_part.strip().isdigit():
+                            year = year_part.strip()
+                            title = title_part.strip()
+
+                    thread_of_memories_data.append({
+                        "year": year,
+                        "title": title,
+                        "description": description
+                    })
+        except Exception as e:
+            logger.error(f"Error parsing thread of memories for event {event.id}: {str(e)}")
+            thread_of_memories_data = []
+
     context = {
         'event': event,
         'is_owner': False,
@@ -1021,6 +1052,11 @@ def public_card_view(request, token):
         'event_type': event.event_type,
         'recipient_name': event.custom_label or event.name,
         'message': event.message or '',
+        # Thread of Memories context
+        'has_thread_of_memories': bool(thread_of_memories_data) and len(thread_of_memories_data) >= 2,
+        'thread_of_memories_data': json.dumps(thread_of_memories_data),
+        'memory_data_parsed': thread_of_memories_data,
+        'highlights': event.highlights or '',
         'password_text': password_text,  # Added for reveal password feature
         # Raksha Bandhan specific context
         'is_raksha_bandhan': event.event_type == 'raksha_bandhan',

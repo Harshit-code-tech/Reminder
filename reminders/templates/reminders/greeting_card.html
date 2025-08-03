@@ -1,17 +1,13 @@
-
 <!DOCTYPE html>
 {% load static %}
 <html lang="en">
 
 <head>
-
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Interactive Greeting Card for {{ event.name }}">
   <title>{{ event.name }} - Greeting Card</title>
   <link rel="stylesheet" href="{% static 'css/greeting_card.css' %}">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Interactive Greeting Card for {{ event.name }}">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,142 +15,193 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
+<body class="min-h-screen flex items-center justify-center p-4 font-sans overflow-hidden">
+  <!-- Background Elements -->
+  <div class="background-effects">
+    <div class="stars-container"></div>
+    <div class="clouds-container"></div>
+  </div>
 
+  <!-- Theme Toggle Button -->
+  <div class="theme-toggle-container">
+    <button class="theme-toggle" aria-label="Toggle dark mode" aria-pressed="false">
+      <div class="toggle-track">
+        <div class="toggle-thumb">
+          <div class="sun-icon">
+            <div class="sun-rays"></div>
+            <div class="sun-core"></div>
+          </div>
+          <div class="moon-icon">
+            <div class="moon-body"></div>
+            <div class="moon-crater crater-1"></div>
+            <div class="moon-crater crater-2"></div>
+            <div class="moon-crater crater-3"></div>
+          </div>
+        </div>
+      </div>
+    </button>
+  </div>
 
-<body class="bg-gradient-to-br from-blue-50 to-purple-100 min-h-screen flex items-center justify-center p-4 font-sans">
+  <!-- Vertical Navigation Sidebar -->
+  <nav class="page-navigator" role="navigation" aria-label="Card Pages Navigation">
+    <div class="nav-item active" data-page="1" tabindex="0" role="button" aria-label="Welcome Page">
+      <i class="fas fa-home"></i>
+      <span class="nav-tooltip">Welcome</span>
+    </div>
+    <div class="nav-item" data-page="2" tabindex="0" role="button" aria-label="Animation Page">
+      <i class="fas fa-play-circle"></i>
+      <span class="nav-tooltip">Animation</span>
+    </div>
+    <div class="nav-item" data-page="3" tabindex="0" role="button" aria-label="Memories Page">
+      <i class="fas fa-camera"></i>
+      <span class="nav-tooltip">Memories</span>
+    </div>
+    <div class="nav-item" data-page="4" tabindex="0" role="button" aria-label="Interactive Page">
+      <i class="fas fa-magic"></i>
+      <span class="nav-tooltip">Interactive</span>
+    </div>
+    <div class="nav-item" data-page="5" tabindex="0" role="button" aria-label="Farewell Page">
+      <i class="fas fa-heart"></i>
+      <span class="nav-tooltip">Farewell</span>
+    </div>
+  </nav>
+
   {% if error %}
-  <div class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-100 text-red-700 p-4 rounded-lg shadow-lg" role="alert">
+  <div class="error-alert" role="alert">
     {{ error }}
   </div>
   {% endif %}
 
-  <div class="card-container max-w-3xl w-full bg-white rounded-2xl shadow-2xl p-6 relative event-{{ event.event_type }}"
+  <!-- Main Card Container -->
+  <div class="card-container"
        data-theme="{{ event.event_type }}"
        data-cultural-theme="{{ event.cultural_theme|yesno:'true,false' }}"
        data-recipient-name="{{ recipient_name }}"
        data-custom-label="{{ event.custom_label|default:'' }}"
        data-event-id="{{ event.id }}"
        data-thread-of-memories="{{ has_thread_of_memories|yesno:'true,false' }}"
-       data-memories="{{ thread_of_memories_data}}"
+       data-memories="{{ thread_of_memories_data }}"
        data-audio-url="{% for media in event.media.all %}{% if media.media_type == 'audio' %}{{ media.media_file|urlencode }}{% endif %}{% endfor %}">
 
-  <div class="card-wrapper">
-    <!-- Page indicators -->
-    <div class="page-indicator" role="tablist" aria-label="Card Pages">
-      <span class="indicator active" data-page="1" role="tab" aria-selected="true" tabindex="0">●</span>
-      <span class="indicator" data-page="2" role="tab" aria-selected="false" tabindex="0">○</span>
-      <span class="indicator" data-page="3" role="tab" aria-selected="false" tabindex="0">○</span>
-      <span class="indicator" data-page="4" role="tab" aria-selected="false" tabindex="0">○</span>
-      <span class="indicator" data-page="5" role="tab" aria-selected="false" tabindex="0">○</span>
+    <!-- CSS Diya Decorations -->
+    <div class="diya-decorations">
+      <div class="diya top-left">
+        <div class="diya-base"></div>
+        <div class="diya-flame"></div>
+      </div>
+      <div class="diya top-right">
+        <div class="diya-base"></div>
+        <div class="diya-flame"></div>
+      </div>
+      <div class="diya bottom-left">
+        <div class="diya-base"></div>
+        <div class="diya-flame"></div>
+      </div>
+      <div class="diya bottom-right">
+        <div class="diya-base"></div>
+        <div class="diya-flame"></div>
+      </div>
     </div>
 
+    <!-- CSS Tree Growth Animation -->
+    <div class="tree-animation">
+      <div class="tree-trunk"></div>
+      <div class="tree-leaves"></div>
+      <div class="tree-flowers"></div>
+    </div>
 
-
-    <!-- Card pages -->
+    <!-- Card Pages -->
     <div class="card-pages">
       <!-- Page 1: Welcome / Password -->
-      <div class="card-page {% if not requires_card_password %}active{% endif %}" id="page-1" role="tabpanel" aria-labelledby="tab-1">
-        <div class="diya-container"></div>
-        <div class="tree-growth tree-seedling"></div>
-
-        <h2 class="welcome-title" data-event-type="{{ event.event_type }}"style="font-size: 1.5em;">
-          ✨ A Special Surprise Awaits ✨<br>
-          {% if event.event_type == 'birthday' %}
-          🎉 Surprise for <span class="recipient-name font-bold text-blue-600">{{ event.name }}</span>!
-          {% elif event.event_type == 'anniversary' %}
-          💞 A Love Note for <span class="recipient-name font-bold text-pink-600">{{ event.name }}</span>
-
-          {% else %}
-          ✨ A Special Message for <span class="recipient-name font-bold text-green-600">{{ event.name }}</span>
-          {% endif %}
-
-        </h2>
-
-        <div class="puzzle-container">
-          {% if event.event_type == 'birthday' %}
-          <div class="emoji-puzzle" style="font-size: 0.9em;">🎉 + 💝 = Pure Joy!</div>
-          {% elif event.event_type == 'anniversary' %}
-          <div class="date-puzzle" style="font-size: 0.9em;">What is the date that marks another year of our journey together?</div>
-
-
-
-          {% else %}
-          <div class="emoji-puzzle" style="font-size: 0.9em;">✈️😢 = ?</div>
-          {% endif %}
-        </div>
-
-        {% if requires_card_password %}
-        <div class="password-container visible">
-          <form method="post" action="{% url 'validate_card_password' event.id %}">
-            {% csrf_token %}
-            <label for="card-password-input" class="sr-only">Card Password</label>
-            <input type="password"
-                id="card-password-input"
-                name="card_password"
-                class="password-input"
-                placeholder="Enter the card password..."
-                aria-required="true">
-
-            <button type="submit" class="unlock-button" aria-label="Unlock card content">Unlock Card</button>
-          </form>
-
-          <div class="password-hint" aria-live="polite">
-            <span class="hint-icon">💡</span>
-            Hint:
+      <div class="card-page {% if not requires_card_password %}active{% endif %}" id="page-1" role="tabpanel" aria-labelledby="nav-1">
+        <div class="page-content">
+          <h2 class="welcome-title" data-event-type="{{ event.event_type }}">
+            ✨ A Special Surprise Awaits ✨<br>
             {% if event.event_type == 'birthday' %}
-            <strong>The name</strong> that brings smiles every year.
+            🎉 Surprise for <span class="recipient-name">{{ event.name }}</span>!
             {% elif event.event_type == 'anniversary' %}
-              When did<strong> we</strong>begin this journey?
-
-
+            💞 A Love Note for <span class="recipient-name">{{ event.name }}</span>
             {% else %}
-            The one <strong>word</strong> that defines this memory
+            ✨ A Special Message for <span class="recipient-name">{{ event.name }}</span>
+            {% endif %}
+          </h2>
+
+          <div class="puzzle-container">
+            {% if event.event_type == 'birthday' %}
+            <div class="emoji-puzzle">🎉 + 💝 = Pure Joy!</div>
+            {% elif event.event_type == 'anniversary' %}
+            <div class="date-puzzle">What is the date that marks another year of our journey together?</div>
+            {% else %}
+            <div class="emoji-puzzle">✈️😢 = ?</div>
             {% endif %}
           </div>
-          <div class="password-hint" id="password-hint" style="display:none;">
-            <strong>Can’t crack it?</strong>Here is something that might help: " <span id="reveal-password" class="blurred-password" tabindex="0">Click to reveal password</span>"
+
+          {% if requires_card_password %}
+          <div class="password-container">
+            <form method="post" action="{% url 'validate_card_password' event.id %}">
+              {% csrf_token %}
+              <div class="input-group">
+                <label for="card-password-input" class="sr-only">Card Password</label>
+                <input type="password"
+                    id="card-password-input"
+                    name="card_password"
+                    class="password-input"
+                    placeholder="Enter the card password..."
+                    aria-required="true">
+                <button type="submit" class="unlock-button" aria-label="Unlock card content">
+                  <i class="fas fa-unlock"></i>
+                  Unlock
+                </button>
+              </div>
+            </form>
+
+            <div class="password-hint" aria-live="polite">
+              <span class="hint-icon">💡</span>
+              Hint:
+              {% if event.event_type == 'birthday' %}
+              <strong>The name</strong> that brings smiles every year.
+              {% elif event.event_type == 'anniversary' %}
+              When did <strong>we</strong> begin this journey?
+              {% elif event.event_type == 'raksha_bandhan' %}
+              The <strong>symbol</strong> of our bond (e.g., rakhi, thread, or bond).
+              {% else %}
+              The one <strong>word</strong> that defines this memory
+              {% endif %}
+            </div>
+
+            <div class="password-hint {% if not error %}hidden{% endif %}" id="password-hint">
+              <strong>Can't crack it?</strong> Here's something that might help:
+              <span id="reveal-password" class="reveal-button" tabindex="0" role="button" aria-label="Reveal password">Click to reveal password</span>
+            </div>
+            <span id="actual-password" class="hidden">{{ password_text }}</span>
           </div>
-          <span id="actual-password" style="display:none;">{{ password_text }}</span>
-
-          <style>
-            .blurred-password {
-              filter: blur(6px);
-              cursor: pointer;
-              user-select: none;
-              transition: filter 0.3s;
-            }
-            .blurred-password.unblur {
-              filter: none;
-            }
-          </style>
+          {% endif %}
         </div>
-
-
-        {% endif %}
       </div>
 
-
       <!-- Page 2: Animation/Countdown -->
-
-        <div class="card-page" id="page-2" role="tabpanel" aria-labelledby="tab-2" aria-hidden="true">
-          <div class="diya-container"></div>
-          <div class="tree-growth tree-sapling"></div>
+      <div class="card-page" id="page-2" role="tabpanel" aria-labelledby="nav-2">
+        <div class="page-content">
           {% if event.event_type == 'birthday' %}
           <h2 class="page-title">Want a gift, <span class="recipient-name">{{ event.name }}</span>?</h2>
           <div class="countdown-container">
             <div class="countdown" aria-live="assertive">5</div>
             <div class="countdown-hint" aria-live="polite">
               <span class="hint-icon">💡</span>
-              <strong>Hint:</strong> Click <b>"YES!"</b> to start the countdown
-              (<em>if you can</em> 😈).<br>
+              <strong>Hint:</strong> Slide to unlock <b>"YES!"</b> to start the countdown!
             </div>
             <div class="slider-unlock-container">
               <div class="slider-track">
-                <div class="slider-thumb" tabindex="0" aria-label="Slide to unlock Yes"></div>
+                <div class="slider-thumb" tabindex="0" aria-label="Slide to unlock Yes">
+                  <i class="fas fa-arrow-right"></i>
+                </div>
                 <span class="slider-label">Slide to unlock <b>YES!</b></span>
               </div>
             </div>
-            <button id="yes-unlocked-button" class="action-button" style="display:none;" aria-label="Start countdown">YES!</button>
+            <button id="yes-unlocked-button" class="action-button hidden" aria-label="Start countdown">
+              <i class="fas fa-gift"></i>
+              YES!
+            </button>
           </div>
           {% elif event.event_type == 'anniversary' %}
           <h2 class="page-title">Our Journey Together</h2>
@@ -169,85 +216,79 @@
             <blockquote class="inspiration-quote" aria-live="polite"></blockquote>
           </div>
           {% endif %}
-          <div class="page-controls">
-            <button class="nav-button prev" aria-label="Go to previous page">← Back</button>
-            <button class="nav-button next" aria-label="Go to next page">Next →</button>
-          </div>
         </div>
+      </div>
 
       <!-- Page 3: Memory/Media -->
-      <div class="card-page" id="page-3" role="tabpanel" aria-labelledby="tab-3" aria-hidden="true">
-        <div class="diya-container"></div>
-        <div class="tree-growth tree-young"></div>
-        <h2 class="page-title">
-          {% if event.event_type == 'birthday' %}Memory Snapshot
-          {% elif event.event_type == 'anniversary' %}Our Story
-          {% else %}Special Moments
-          {% endif %}
-        </h2>
-        <div class="media-container">
-          <div class="media-display"
-               data-media-urls="{% for media in event.media.all %}{% if media.media_type == 'image' %}{{ media.media_file|urlencode }}{% if not forloop.last %},{% endif %}{% endif %}{% endfor %}"
-               data-fallback-url="{% static 'images/nature.jpg' %}"
-               tabindex="0">
-          </div>
-          <div class="media-caption">
-            {% if event.media.exists %}
-            {{ event.media.first.caption|default:"Some special moments" }}
-            {% else %}
-            A moment inspired by nature
+      <div class="card-page" id="page-3" role="tabpanel" aria-labelledby="nav-3">
+        <div class="page-content">
+          <h2 class="page-title">
+            {% if event.event_type == 'birthday' %}Memory Snapshot
+            {% elif event.event_type == 'anniversary' %}Our Story
+            {% else %}Special Moments
             {% endif %}
+          </h2>
+          <div class="media-container">
+            <div class="media-display"
+                 data-media-urls="{% for media in event.media.all %}{% if media.media_type == 'image' %}{{ media.media_file|urlencode }}{% if not forloop.last %},{% endif %}{% endif %}{% endfor %}"
+                 data-fallback-url="{% static 'images/nature.jpg' %}"
+                 tabindex="0">
+            </div>
+            <div class="media-caption">
+              {% if event.media.exists %}
+              {{ event.media.first.caption|default:"Some special moments" }}
+              {% else %}
+              A moment inspired by nature
+              {% endif %}
+            </div>
+            <audio id="calming-sound" loop>
+              <source src="{% static 'audio/Whispering Wind.mp3' %}" type="audio/mpeg">
+              Your browser does not support the audio element.
+            </audio>
+            <button class="audio-control" aria-label="Toggle calming sound">
+              <i class="fas fa-pause"></i>
+              Pause Sound
+            </button>
           </div>
-          {% if event.media.all|length > 1 %}
-          {% endif %}
-          <audio id="calming-sound" loop>
-            <source src="{% static 'audio/Whispering Wind.mp3' %}" type="audio/mpeg">
-            Your browser does not support the audio element.
-          </audio>
-          <button class="audio-control" aria-label="Toggle calming sound">Pause Sound</button>
-        </div>
-        <div class="page-controls">
-          <button class="nav-button prev" aria-label="Go to previous page">← Back</button>
-          <button class="nav-button next" aria-label="Go to next page">Next →</button>
         </div>
       </div>
 
       <!-- Page 4: Interactive Element -->
-      <div class="card-page" id="page-4" role="tabpanel" aria-labelledby="tab-4" aria-hidden="true">
-        <div class="diya-container"></div>
-        <div class="tree-growth tree-mature"></div>
-        {% if event.event_type == 'birthday' %}
-        <h2 class="page-title">Make a Wish!</h2>
-        <div class="cake-container">
-          <div class="birthday-cake" tabindex="0" aria-label="Birthday cake with candles. Click to blow out candles."></div>
-          <div class="cake-instruction" aria-live="polite">Click to blow out the candles!</div>
-        </div>
-        <div class="audio-player-container" id="audio-player-birthday" {% if not audio_url %}style="display: none;"{% endif %}>
-          <audio id="user-audio-birthday" aria-label="User-uploaded audio message" controls>
-          {% if audio_url %}
-          <source src="{{ audio_url }}" type="audio/mpeg">
-          <source src="{{ audio_url }}" type="audio/flac">
-          <source src="{{ audio_url }}" type="audio/wav">
-          <source src="{{ audio_url }}" type="audio/ogg">
-          <source src="{{ audio_url }}" type="audio/aac">
+      <div class="card-page" id="page-4" role="tabpanel" aria-labelledby="nav-4">
+        <div class="page-content">
+          {% if event.event_type == 'birthday' %}
+          <h2 class="page-title">Make a Wish!</h2>
+          <div class="cake-container">
+            <div class="birthday-cake" tabindex="0" aria-label="Birthday cake with candles. Click to blow out candles.">
+              <div class="cake-base"></div>
+              <div class="cake-layers"></div>
+              <div class="candles-container"></div>
+            </div>
+            <div class="cake-instruction" aria-live="polite">Click to blow out the candles!</div>
+          </div>
+          {% elif event.event_type == 'anniversary' %}
+          <h2 class="page-title">One More Dance?</h2>
+          <div class="dance-container">
+            <button class="dance-button" aria-label="Start dance animation">
+              <i class="fas fa-music"></i>
+              Dance!
+            </button>
+            <div class="dance-animation" aria-live="polite"></div>
+          </div>
+          {% else %}
+          <h2 class="page-title">Tree of Memories</h2>
+          <div class="memory-tree-container">
+            <div class="memory-tree" tabindex="0" aria-label="Interactive memory tree. Click to add memories."></div>
+            <div class="tree-instruction" aria-live="polite">Click to plant a memory</div>
+            <div class="tree-message">
+              {{ event.message|default:"Each click represents a moment we've shared." }}
+            </div>
+          </div>
           {% endif %}
-          <div class="audio-fallback" role="alert">
-            Your browser does not support the audio element or the provided audio formats. Please use a modern browser like Chrome, Firefox, or Safari.
-          </div>
-          </audio>
-          <button class="audio-control" aria-label="Play audio message">Play Special Message</button>
-        </div>
-        <div class="quote-container" id="fallback-quote-birthday" {% if audio_url %}style="display: none;"{% endif %}>
-          <blockquote class="inspiration-quote" aria-live="polite"></blockquote>
-        </div>
-        {% elif event.event_type == 'anniversary' %}
-        <h2 class="page-title">One More Dance?</h2>
-        <div class="dance-container">
-          <button class="dance-button" aria-label="Start dance animation">Dance!</button>
-          <div class="dance-animation" aria-live="polite"></div>
-        </div>
-        <div class="audio-player-container" id="audio-player-anniversary" {% if not audio_url %}style="display: none;"{% endif %}>
-          <audio id="user-audio-anniversary" aria-label="User-uploaded audio message" controls>
+
+          <!-- Audio Player Container -->
+          <div class="audio-player-container" id="audio-player-container" {% if not audio_url %}style="display: none;"{% endif %}>
+            <audio id="user-audio" aria-label="User-uploaded audio message" controls>
             {% if audio_url %}
             <source src="{{ audio_url }}" type="audio/mpeg">
             <source src="{{ audio_url }}" type="audio/flac">
@@ -256,117 +297,114 @@
             <source src="{{ audio_url }}" type="audio/aac">
             {% endif %}
             <div class="audio-fallback" role="alert">
-              Your browser does not support the audio element or the provided audio formats. Please use a modern browser like Chrome, Firefox, or Safari.
+              Your browser does not support the audio element or the provided audio formats.
             </div>
-          </audio>
-          <button class="audio-control" aria-label="Hear Our Song">Hear Our Song</button>
-        </div>
-        <div class="quote-container" id="fallback-quote-anniversary" {% if audio_url %}style="display: none;"{% endif %}>
-          <blockquote class="inspiration-quote" aria-live="polite"></blockquote>
-        </div>
-        {% else %}
-        <h2 class="page-title">Tree of Memories</h2>
-        <div class="memory-tree-container">
-          <div class="memory-tree" tabindex="0" aria-label="Interactive memory tree. Click to add memories."></div>
-          <div class="tree-instruction" aria-live="polite">Click to plant a memory</div>
-          <div class="tree-message">
-            {{ event.message|default:"Each click represents a moment we've shared." }}
+            </audio>
+            <button class="audio-control-btn" aria-label="Play special message">
+              <i class="fas fa-play"></i>
+              Play Special Message
+            </button>
           </div>
-        </div>
-        <div class="audio-player-container" id="audio-player-{{ event.event_type }}" {% if not audio_url %}style="display: none;"{% endif %}>
-          <audio id="user-audio-{{ event.event_type }}" aria-label="User-uploaded audio message" controls>
-            {% if audio_url %}
-            <source src="{{ audio_url }}" type="audio/mpeg">
-            <source src="{{ audio_url }}" type="audio/flac">
-            <source src="{{ audio_url }}" type="audio/wav">
-            <source src="{{ audio_url }}" type="audio/ogg">
-            <source src="{{ audio_url }}" type="audio/aac">
-            {% endif %}
-            <div class="audio-fallback" role="alert">
-              Your browser does not support the audio element or the provided audio formats. Please use a modern browser like Chrome, Firefox, or Safari.
-            </div>
-          </audio>
-          <button class="audio-control" aria-label="Listen to Our Memory">Listen to Our Memory</button>
-        </div>
-        <div class="quote-container" id="fallback-quote-{{ event.event_type }}" {% if audio_url %}style="display: none;"{% endif %}>
-          <blockquote class="inspiration-quote" aria-live="polite"></blockquote>
-        </div>
-        {% endif %}
-        <div class="page-controls">
-          <button class="nav-button prev" aria-label="Go to previous page">← Back</button>
-          <button class="nav-button next" aria-label="Go to next page">Next →</button>
+
+          <!-- Fallback Quote -->
+          <div class="quote-container fallback-quote" {% if audio_url %}style="display: none;"{% endif %}>
+            <blockquote class="inspiration-quote" aria-live="polite"></blockquote>
+          </div>
         </div>
       </div>
 
       <!-- Page 5: Farewell -->
-      <div class="card-page" id="page-5" role="tabpanel" aria-labelledby="tab-5" aria-hidden="true">
-        <div class="diya-container"></div>
-        <div class="tree-growth tree-full"></div>
-        <h2 class="page-title">
-          {% if event.event_type == 'birthday' %}
-          Happy Birthday, <span class="recipient-name">{{ event.name }}</span>!
-          {% elif event.event_type == 'anniversary' %}
-          Here's to us, <span class="recipient-name">{{ event.name }}</span>. Forever yours.
-          {% else %}
-          <span class="recipient-name">{{ event.name }}</span>, you're unforgettable.
+      <div class="card-page" id="page-5" role="tabpanel" aria-labelledby="nav-5">
+        <div class="page-content">
+          <h2 class="page-title">
+            {% if event.event_type == 'birthday' %}
+            Happy Birthday, <span class="recipient-name">{{ event.name }}</span>!
+            {% elif event.event_type == 'anniversary' %}
+            Here's to us, <span class="recipient-name">{{ event.name }}</span>. Forever yours.
+            {% else %}
+            <span class="recipient-name">{{ event.name }}</span>, you're unforgettable.
+            {% endif %}
+          </h2>
+          <div class="farewell-message">
+            {% if event.message %}
+            {{ event.message|linebreaksbr }}
+            {% else %}
+            Wishing you joy and happiness today and always.
+            {% endif %}
+          </div>
+          {% if event.reflections.exists %}
+          <div class="voice-note">
+            <div class="voice-note-player">
+              <button class="play-voice-note" aria-label="Play reflection note">
+                <i class="fas fa-microphone"></i>
+                Play Reflection
+              </button>
+              <div class="voice-note-text hidden" aria-live="polite">{{ event.reflections.first.note }}</div>
+            </div>
+          </div>
           {% endif %}
-        </h2>
-        <div class="farewell-message">
-          {% if event.message %}
-          {{ event.message|linebreaksbr }}
-          {% else %}
-          Wishing you joy and happiness today and always.
-          {% endif %}
+          <div class="final-animation" aria-hidden="true"></div>
         </div>
-        {% if event.reflections.exists %}
-        <div class="voice-note">
-          <div class="voice-note-player">
-            <button class="play-voice-note" aria-label="Play reflection note">Play Reflection</button>
-            <div class="voice-note-text" aria-live="polite" hidden>{{ event.reflections.first.note }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Share Button and Modal -->
+  <div class="card-footer">
+    {% if is_owner %}
+    <button class="share-card" data-event-id="{{ event.id }}" aria-label="Share card">
+      <i class="fas fa-share-alt"></i>
+      Share
+    </button>
+    {% endif %}
+  </div>
+
+  <!-- Share Modal -->
+  <div class="share-modal" id="share-modal">
+    <div class="share-modal-content">
+      <h3>Share Your Card</h3>
+      <p class="warning-text">Warning: This link will expire in 3 days.</p>
+      <form id="share-form" onsubmit="return false;">
+        {% csrf_token %}
+        <div class="input-group">
+          <input type="password" id="share-password" name="share_password"
+                 placeholder="Set a share password (optional)..." aria-required="false">
+          <div class="button-group">
+            <button type="button" id="generate-share-link" aria-label="Generate share link">
+              <i class="fas fa-link"></i>
+              Generate Link
+            </button>
+            <button type="button" id="close-share-modal" aria-label="Close modal">
+              <i class="fas fa-times"></i>
+              Cancel
+            </button>
           </div>
         </div>
-        {% endif %}
-        <div class="final-animation" aria-hidden="true"></div>
+      </form>
+      <div class="share-url-container hidden" id="share-url-container">
+        <p id="share-url"></p>
+        <div class="social-links">
+          <a id="whatsapp-share" href="#" target="_blank" aria-label="Share on WhatsApp">
+            <i class="fab fa-whatsapp"></i>
+            WhatsApp
+          </a>
+          <a id="twitter-share" href="#" target="_blank" aria-label="Share on Twitter">
+            <i class="fab fa-twitter"></i>
+            Twitter
+          </a>
+          <a id="email-share" href="#" aria-label="Share via Email">
+            <i class="fas fa-envelope"></i>
+            Email
+          </a>
+        </div>
       </div>
     </div>
   </div>
 
-
-</div>
-<div class="card-footer">
-    {% if is_owner %}
-    <button class="share-card" data-event-id="{{ event.id }}" aria-label="Share card">🔗 Share</button>
-    {% endif %}
-</div>
-
-<!-- Share Modal -->
-<div class="share-modal" id="share-modal">
-  <div class="share-modal-content">
-    <h3>Share Your Card</h3>
-    <p class="warning-text">Warning: This link will expire in 3 days.</p>
-    <form id="share-form" onsubmit="return false;">
-      {% csrf_token %}
-      <input type="password" id="share-password" name="share_password" placeholder="Set a share password (optional)..." aria-required="false">
-      <div>
-        <button type="button" id="generate-share-link" aria-label="Generate share link">Generate Link</button>
-        <button type="button" id="close-share-modal" aria-label="Close modal">Cancel</button>
-      </div>
-    </form>
-    <div class="share-url-container" id="share-url-container">
-      <p id="share-url"></p>
-      <div class="social-links">
-        <a id="whatsapp-share" href="#" target="_blank" aria-label="Share on WhatsApp">WhatsApp</a>
-        <a id="twitter-share" href="#" target="_blank" aria-label="Share on Twitter">Twitter</a>
-        <a id="email-share" href="#" aria-label="Share via Email">Email</a>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-  document.cookie = "csrftoken={{ csrf_token }}; path=/";
-</script>
-<script src="{% static 'js/greeting_card.js' %}"></script>
+  <script>
+    document.cookie = "csrftoken={{ csrf_token }}; path=/";
+  </script>
+  <script src="{% static 'js/greeting_card.js' %}"></script>
 
 </body>
 </html>
