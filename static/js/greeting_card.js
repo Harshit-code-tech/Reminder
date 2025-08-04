@@ -97,7 +97,7 @@ class GreetingCardApp {
                 throw new Error('Card container not found');
             }
             this.eventType = this.cardContainer.dataset.theme || 'birthday';
-            document.cookie = `csrftoken=${this.cardContainer.dataset.csrfToken || ''}; path=/`;
+            // document.cookie = `csrftoken=${this.cardContainer.dataset.csrfToken || ''}; path=/`;
             if (this.eventType === 'raksha_bandhan') {
                 this.initializeRakhiLoadingScreen();
             }
