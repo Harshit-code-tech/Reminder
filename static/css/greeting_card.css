@@ -20,8 +20,249 @@
   --transition-medium: 0.3s ease;
   --transition-slow: 0.5s ease;
   --transition-theme: 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-}
 
+
+  /*Raksha Bandhan Specific Styles*/
+
+      --rakhi-primary: #DC2626;
+      --rakhi-gold: #F59E0B;
+      --rakhi-saffron: #FF6B35;
+      --rakhi-green: #10B981;
+      --rakhi-purple: #7C3AED;
+      --rakhi-silk: linear-gradient(45deg, #F59E0B, #DC2626);
+
+      /* Mobile optimizations */
+      --particle-count-mobile: 30;
+      --particle-count-desktop: 100;
+      --animation-duration-mobile: 2s;
+      --animation-duration-desktop: 3s;
+}
+    /* Raksha Bandhan Theme Styles */
+    [data-theme="raksha_bandhan"] {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fbbf24 100%);
+    }
+
+    /* Loading Screen for Rakhi */
+    .rakhi-loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fbbf24 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 1;
+      transition: opacity 1s ease-out;
+    }
+
+    .rakhi-loading.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .rangoli-pattern {
+      width: 120px;
+      height: 120px;
+      position: relative;
+      animation: rotate 4s linear infinite;
+    }
+
+    .rangoli-circle {
+      position: absolute;
+      border: 3px solid var(--rakhi-primary);
+      border-radius: 50%;
+      opacity: 0.8;
+    }
+
+    .rangoli-circle:nth-child(1) {
+      width: 120px;
+      height: 120px;
+      top: 0;
+      left: 0;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .rangoli-circle:nth-child(2) {
+      width: 80px;
+      height: 80px;
+      top: 20px;
+      left: 20px;
+      border-color: var(--rakhi-saffron);
+      animation: pulse 2s ease-in-out infinite 0.5s;
+    }
+
+    .rangoli-circle:nth-child(3) {
+      width: 40px;
+      height: 40px;
+      top: 40px;
+      left: 40px;
+      border-color: var(--rakhi-gold);
+      animation: pulse 2s ease-in-out infinite 1s;
+    }
+
+    .loading-text {
+      margin-top: 30px;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      font-size: 1.2rem;
+      color: var(--rakhi-primary);
+      text-align: center;
+      animation: fadeInOut 2s ease-in-out infinite;
+    }
+
+    .progress-garland {
+      width: 200px;
+      height: 8px;
+      background: rgba(220, 38, 38, 0.2);
+      border-radius: 4px;
+      margin-top: 20px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--rakhi-silk);
+      width: 0;
+      border-radius: 4px;
+      animation: fillProgress 3s ease-out forwards;
+    }
+
+    /* Diya Enhancements for Rakhi */
+    .rakhi-diya {
+      position: absolute;
+      width: 30px;
+      height: 25px;
+    }
+
+    .rakhi-diya-base {
+      width: 30px;
+      height: 15px;
+      background: var(--rakhi-gold);
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      position: relative;
+    }
+
+    .rakhi-diya-flame {
+      width: 8px;
+      height: 12px;
+      background: radial-gradient(circle, #ff6b35 0%, #dc2626 70%);
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      animation: flicker 1.5s ease-in-out infinite alternate;
+    }
+
+    .rakhi-diya-flame::after {
+      content: '';
+      width: 4px;
+      height: 6px;
+      background: #fbbf24;
+      border-radius: 50%;
+      position: absolute;
+      top: 2px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    /* Floating Petals */
+    .floating-petals {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .petal {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: var(--rakhi-saffron);
+      border-radius: 50% 0 50% 0;
+      animation: floatDown 4s linear infinite;
+      opacity: 0.8;
+    }
+
+    .petal.marigold {
+      background: var(--rakhi-gold);
+      transform: rotate(45deg);
+    }
+
+    .petal.rose {
+      background: var(--rakhi-primary);
+      border-radius: 50%;
+    }
+
+    /* Rakhi Thread Animation */
+    .rakhi-thread {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      margin: 0 auto;
+    }
+
+    .thread-path {
+      stroke: var(--rakhi-gold);
+      stroke-width: 3;
+      fill: none;
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      animation: drawThread 3s ease-out forwards;
+    }
+
+    .rakhi-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60px;
+      height: 60px;
+      background: var(--rakhi-silk);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px rgba(220, 38, 38, 0.5);
+      animation: rakhi-glow 2s ease-in-out infinite alternate;
+    }
+
+    .rakhi-center::before {
+      content: '🕉️';
+      font-size: 24px;
+      color: white;
+    }
+
+    /* Interactive tilak */
+    .tilak-ceremony {
+      position: relative;
+      width: 150px;
+      height: 100px;
+      margin: 20px auto;
+      cursor: pointer;
+    }
+
+    .tilak-spot {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 8px;
+      height: 20px;
+      background: var(--rakhi-primary);
+      border-radius: 4px;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .tilak-spot.applied {
+      opacity: 1;
+      animation: tilak-blessing 1s ease-out;
+    }
 /* Dark Theme Variables */
 [data-theme="dark"] {
   --bg-primary: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #581c87 100%);
@@ -1402,7 +1643,8 @@ body {
   left: 10%;
   right: 10%;
   height: 3px;
-  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  /*background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));*/
+  background: var(--rakhi-silk);
   border-radius: 2px;
   transform: translateY(-50%);
 }
@@ -1412,8 +1654,10 @@ body {
   top: 50%;
   width: 16px;
   height: 16px;
-  background: var(--accent-primary);
-  border: 3px solid white;
+  background: var(--rakhi-gold);
+  border: 3px solid var(--rakhi-primary);
+  /*background: var(--accent-primary);*/
+  /*border: 3px solid white;*/
   border-radius: 50%;
   cursor: pointer;
   transform: translate(-50%, -50%);
@@ -1432,7 +1676,8 @@ body {
   left: 50%;
   transform: translateX(-50%);
   background: var(--bg-secondary);
-  border: 2px solid var(--border-color);
+  border: 2px solid var(--rakhi-gold);
+  /*border: 2px solid var(--border-color);*/
   border-radius: 12px;
   padding: 16px;
   min-width: 200px;
@@ -1450,15 +1695,17 @@ body {
 }
 
 .popup-year {
-  color: var(--accent-primary);
+  /*color: var(--accent-primary);*/
   font-size: 0.9rem;
+  color: var(--rakhi-primary);
   font-weight: 600;
   margin-bottom: 4px;
 }
 
 .popup-title {
-  color: var(--text-primary);
+  /*color: var(--text-primary);*/
   font-size: 1.1rem;
+  color: var(--rakhi-gold);
   font-weight: 700;
   margin-bottom: 8px;
 }
@@ -1468,7 +1715,188 @@ body {
   font-size: 0.9rem;
   line-height: 1.4;
 }
+    /* Password puzzle for Rakhi */
+    .rakhi-puzzle {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 15px;
+      border: 2px solid var(--rakhi-gold);
+      margin: 20px 0;
+      text-align: center;
+    }
 
+    .rakhi-puzzle-text {
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      font-size: 1.1rem;
+      color: var(--rakhi-primary);
+      margin-bottom: 10px;
+    }
+
+    .rakhi-hint {
+      font-size: 0.9rem;
+      color: var(--rakhi-saffron);
+      font-style: italic;
+    }
+
+    /* Blessing Shower Animation */
+    .blessing-shower {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .blessing-particle {
+      position: absolute;
+      font-size: 20px;
+      animation: blessingFall 3s linear infinite;
+      opacity: 0.9;
+    }
+
+    /* Sacred Geometry Patterns */
+    .sacred-pattern {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      opacity: 0.1;
+      animation: rotate 20s linear infinite;
+    }
+
+    .sacred-pattern.top-left {
+      top: 10%;
+      left: 10%;
+    }
+
+    .sacred-pattern.top-right {
+      top: 10%;
+      right: 10%;
+      animation-direction: reverse;
+    }
+
+    .sacred-pattern.bottom-left {
+      bottom: 10%;
+      left: 10%;
+      animation-duration: 25s;
+    }
+
+    .sacred-pattern.bottom-right {
+      bottom: 10%;
+      right: 10%;
+      animation-direction: reverse;
+      animation-duration: 25s;
+    }
+
+    /* Animations */
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.1); opacity: 1; }
+    }
+
+    @keyframes fadeInOut {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
+    }
+
+    @keyframes fillProgress {
+      0% { width: 0%; }
+      100% { width: 100%; }
+    }
+
+    @keyframes flicker {
+      0%, 100% { transform: translateX(-50%) scale(1) rotate(-2deg); }
+      50% { transform: translateX(-50%) scale(1.1) rotate(2deg); }
+    }
+
+    @keyframes floatDown {
+      0% {
+        transform: translateY(-100px) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(calc(100vh + 100px)) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    @keyframes drawThread {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    @keyframes rakhi-glow {
+      0% { box-shadow: 0 0 20px rgba(220, 38, 38, 0.5); }
+      100% { box-shadow: 0 0 30px rgba(220, 38, 38, 0.8), 0 0 40px rgba(245, 158, 11, 0.4); }
+    }
+
+    @keyframes tilak-blessing {
+      0% { transform: translateX(-50%) scale(0); }
+      50% { transform: translateX(-50%) scale(1.2); }
+      100% { transform: translateX(-50%) scale(1); }
+    }
+
+    @keyframes blessingFall {
+      0% {
+        transform: translateY(-50px) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(calc(100vh + 50px)) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .rakhi-thread {
+        width: 150px;
+        height: 150px;
+      }
+
+      .rakhi-center {
+        width: 45px;
+        height: 45px;
+      }
+
+      .rakhi-center::before {
+        font-size: 18px;
+      }
+
+      .memory-popup {
+        min-width: 150px;
+        max-width: 200px;
+        padding: 12px;
+      }
+
+      .floating-petals .petal {
+        width: 8px;
+        height: 8px;
+      }
+
+      .blessing-particle {
+        font-size: 16px;
+      }
+    }
+
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce) {
+      .floating-petals .petal,
+      .blessing-particle,
+      .rakhi-diya-flame,
+      .thread-path {
+        animation: none;
+      }
+
+      .rakhi-center {
+        animation: none;
+      }
+    }
 /* ===== ERROR ALERT ===== */
 .error-alert {
   position: fixed;
@@ -1727,7 +2155,7 @@ body {
 }
 
 /* High contrast mode support */
-@media (prefers-contrast: high) {
+@media (prefers-contrast: more) {
   :root {
     --border-color: rgba(0, 0, 0, 0.5);
     --shadow-light: 0 4px 6px rgba(0, 0, 0, 0.3);

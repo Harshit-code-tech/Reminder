@@ -21,6 +21,55 @@ const CONFIG = {
         SMALL: 480
     }
 };
+class AudioManager {
+    constructor() {
+        this.tracks = {
+            background: null,
+            interactive: null,
+            userMessage: null
+        };
+        this.currentVolumes = {
+            background: 0.4,
+            interactive: 0.8,
+            userMessage: 0.8
+        };
+        this.isPlaying = false;
+    }
+
+    initBackgroundMusic() {
+        if (document.querySelector('[data-theme="raksha_bandhan"]')) {
+            this.playBackgroundMusic();
+        }
+    }
+
+    playBackgroundMusic() {
+        this.isPlaying = true;
+        // In real implementation, load and play actual audio files
+        console.log('Playing Raksha Bandhan background music');
+    }
+
+    fadeToUserMessage() {
+        if (this.tracks.background) {
+            this.fadeVolume('background', 0.2, 1000);
+        }
+        this.playTrack('userMessage');
+    }
+
+    fadeVolume(track, targetVolume, duration) {
+        // Simulated volume fade - add real audio fading logic here
+        if (this.tracks[track]) {
+            console.log(`Fading ${track} to volume ${targetVolume} over ${duration}ms`);
+        }
+    }
+
+    playTrack(trackName) {
+        if (this.tracks[trackName]) {
+            this.tracks[trackName].play();
+            console.log(`Playing track: ${trackName}`);
+        }
+    }
+}
+
 
 // ===== MAIN APPLICATION CLASS =====
 class GreetingCardApp {
@@ -35,6 +84,7 @@ class GreetingCardApp {
         this.elements = {};
         this.storageKey = '';
         this.savedData = {};
+        this.audioManager = new AudioManager();
 
         this.init();
     }
@@ -42,6 +92,15 @@ class GreetingCardApp {
     // ===== INITIALIZATION =====
     init() {
         try {
+            this.cardContainer = document.querySelector('.card-container');
+            if (!this.cardContainer) {
+                throw new Error('Card container not found');
+            }
+            this.eventType = this.cardContainer.dataset.theme || 'birthday';
+            document.cookie = `csrftoken=${this.cardContainer.dataset.csrfToken || ''}; path=/`;
+            if (this.eventType === 'raksha_bandhan') {
+                this.initializeRakhiLoadingScreen();
+            }
             this.cacheElements();
             this.setupEventListeners();
             this.initializeCard();
@@ -191,6 +250,21 @@ class GreetingCardApp {
                 ],
                 confettiColors: ['#fbcfe8', '#f472b6', '#db2777', '#be185d']
             },
+            raksha_bandhan: {
+                password: (input) => {
+                    const normalized = input.trim().toLowerCase();
+                    return ['rakhi', 'thread', 'bond', 'राखी', 'धागा'].includes(normalized);
+                },
+                quotes: [
+                    "भाई-बहन का प्यार, जीवन का सबसे प्यारा उपहार",
+                    "Siblings are the threads that weave the fabric of our hearts",
+                    "In you, I found a lifelong friend and protector",
+                    "The sacred thread binds us not just for today, but for all lifetimes",
+                    "Through all seasons of life, our bond remains unbreakable",
+                    "राखी का धागा, प्रेम का प्रसाद"
+                ],
+                confettiColors: ['#DC2626', '#F59E0B', '#FF6B35', '#10B981', '#7C3AED']
+            },
             other: {
                 password: (label) => label.trim().toLowerCase(),
                 quotes: [
@@ -260,11 +334,59 @@ class GreetingCardApp {
         }, CONFIG.TRANSITIONS.THEME);
     }
 
+
+    initializeRakhiLoadingScreen() {
+        const loadingScreen = document.getElementById('rakhi-loading');
+        if (!loadingScreen) {
+            console.error('Rakhi loading screen element not found');
+            return;
+        }
+        console.log('Rakhi loading screen found');
+
+        // Start petal animation
+        this.createFloatingPetals();
+
+        // Hide loading screen after 3 seconds
+        setTimeout(() => {
+            loadingScreen.classList.add('fade-out');
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 1000);
+        }, 3000);
+    }
+
+    createFloatingPetals() {
+        const petalsContainer = document.querySelector('.floating-petals');
+        if (!petalsContainer) return;
+
+        const petalTypes = ['petal', 'petal marigold', 'petal rose'];
+
+        setInterval(() => {
+            if (this.eventType !== 'raksha_bandhan') return;
+
+            const petal = document.createElement('div');
+            petal.className = petalTypes[Math.floor(Math.random() * petalTypes.length)];
+            petal.style.left = Math.random() * 100 + '%';
+            petal.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            petal.style.animationDelay = Math.random() * 2 + 's';
+
+            petalsContainer.appendChild(petal);
+
+            // Remove petal after animation
+            setTimeout(() => {
+                if (petal.parentNode) {
+                    petal.parentNode.removeChild(petal);
+                }
+            }, 6000);
+        }, 800);
+    }
+
     // ===== BACKGROUND EFFECTS =====
     initializeBackgroundEffects() {
         this.createStars();
         this.createClouds();
     }
+
 
     createStars() {
         const starsContainer = document.querySelector('.stars-container');
@@ -305,6 +427,7 @@ class GreetingCardApp {
     updateBackgroundEffects(theme) {
         const starsContainer = document.querySelector('.stars-container');
         const cloudsContainer = document.querySelector('.clouds-container');
+        const petalsContainer = document.querySelector('.floating-petals');
 
         if (starsContainer && cloudsContainer) {
             if (theme === 'dark') {
@@ -313,6 +436,12 @@ class GreetingCardApp {
             } else {
                 starsContainer.style.opacity = '0';
                 cloudsContainer.style.opacity = '1';
+            }
+        }
+        // Special handling for Raksha Bandhan theme
+        if (this.eventType === 'raksha_bandhan') {
+            if (petalsContainer) {
+                petalsContainer.style.opacity = theme === 'dark' ? '0.5' : '0.8';
             }
         }
     }
@@ -444,6 +573,138 @@ class GreetingCardApp {
         this.elements.revealPassword.textContent = this.elements.actualPassword.textContent;
         this.elements.revealPassword.classList.add('unblur');
         this.elements.revealPassword.style.pointerEvents = 'none';
+    }
+
+
+    // Rakhi Ceremony System
+    setupRakhiCeremony() {
+        const rakhiCenter = document.getElementById('rakhi-center');
+        const ceremonyInstructions = document.getElementById('ceremony-instructions');
+        const tilakSpot = document.getElementById('tilak-spot');
+
+        if (!rakhiCenter) return;
+
+
+        let ceremonyStep = 0;
+
+        const performCeremony = () => {
+            ceremonyStep++;
+
+            switch(ceremonyStep) {
+                case 1:
+                    // Step 1: Rakhi glow animation
+                    rakhiCenter.style.animation = 'rakhi-glow 1s ease-out';
+                    ceremonyInstructions.innerHTML = '✨ The rakhi glows with protective energy!';
+                    this.playBellSound();
+                    setTimeout(performCeremony, 2000);
+                    break;
+
+                case 2:
+                    // Step 2: Show tilak ceremony
+                    document.getElementById('tilak-ceremony').style.display = 'block';
+                    ceremonyInstructions.innerHTML = '🙏 Click to apply sacred tilak';
+                    this.setuptilakCeremony();
+                    break;
+            }
+        };
+
+        rakhiCenter.addEventListener('click', performCeremony);
+        rakhiCenter.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                performCeremony();
+            }
+        });
+    }
+
+    setuptilakCeremony() {
+        const tilakSpot = document.getElementById('tilak-spot');
+        const tilakCeremony = document.getElementById('tilak-ceremony');
+        const ceremonyInstructions = document.getElementById('ceremony-instructions');
+
+        if (!tilakSpot || !tilakCeremony) return;
+
+        const applytilak = () => {
+            tilakSpot.classList.add('applied');
+            this.playBellSound();
+            this.audioManager.fadeToUserMessage();
+
+            setTimeout(() => {
+                document.getElementById('ceremony-instructions').innerHTML = '🌟 Sacred ritual completed! Thread of memories will now appear.';
+
+                // Show thread of memories after ceremony
+                setTimeout(() => {
+                    const hasThreadOfMemories = this.cardContainer.dataset.threadOfMemories === 'true';
+                    if (hasThreadOfMemories) {
+                        this.showThreadOfMemories();
+                    }
+                }, 2000);
+            }, 1000);
+        };
+
+        tilakCeremony.addEventListener('click', applytilak);
+    }
+
+    initializeMemoryThread() {
+        const memoryPoints = document.querySelectorAll('.memory-point');
+        const memoryPopup = document.getElementById('memory-popup');
+
+        if (!memoryPopup) return;
+
+        memoryPoints.forEach(point => {
+            point.addEventListener('mouseenter', () => this.showMemoryPopup(point, memoryPopup));
+            point.addEventListener('mouseleave', () => this.hideMemoryPopup(memoryPopup));
+            point.addEventListener('click', () => this.showMemoryPopup(point, memoryPopup));
+            point.addEventListener('focus', () => this.showMemoryPopup(point, memoryPopup));
+            point.addEventListener('blur', () => this.hideMemoryPopup(memoryPopup));
+        });
+    }
+
+
+    showMemoryPopup(point, popup) {
+        const year = point.getAttribute('data-year');
+        const title = point.getAttribute('data-title');
+        const description = point.getAttribute('data-description');
+
+        popup.querySelector('.popup-year').textContent = year || 'Memory';
+        popup.querySelector('.popup-title').textContent = title || 'Special Moment';
+        popup.querySelector('.popup-description').textContent = description || 'A cherished memory';
+
+        popup.classList.remove('hidden');
+
+        const rect = point.getBoundingClientRect();
+        const containerRect = point.closest('.thread-of-memories-container').getBoundingClientRect();
+        popup.style.left = (rect.left - containerRect.left) + 'px';
+        popup.style.opacity = '1';
+
+        if (this.eventType === 'raksha_bandhan') {
+            this.playBellSound();
+        }
+    }
+
+    hideMemoryPopup(popup) {
+        if (popup) {
+            popup.style.opacity = '0';
+            setTimeout(() => popup.classList.add('hidden'), 300);
+        }
+    }
+    playBellSound() {
+        // Create audio context for bell sound
+        if (window.AudioContext || window.webkitAudioContext) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 1);
+        }
     }
 
     // ===== SLIDER UNLOCK SYSTEM =====
@@ -637,6 +898,9 @@ class GreetingCardApp {
             // Create popup
             const memoryPopup = document.createElement('div');
             memoryPopup.className = 'memory-popup hidden';
+            if (this.eventType === 'raksha_bandhan') {
+                memoryPopup.classList.add('rakhi-popup');
+            }
             memoryPopup.innerHTML = `
                 <h4 class="popup-year">${memory.year || 'Memory'}</h4>
                 <h3 class="popup-title">${memory.title || 'Special Moment'}</h3>
@@ -653,6 +917,10 @@ class GreetingCardApp {
                 });
                 memoryPopup.classList.remove('hidden');
                 memoryPopup.style.opacity = '1';
+                // Play bell sound for Rakhi
+                if (this.eventType === 'raksha_bandhan') {
+                    this.playBellSound();
+                }
             };
 
             const hidePopup = () => {
@@ -760,13 +1028,152 @@ class GreetingCardApp {
         document.addEventListener('keydown', escapeHandler);
     }
 
+    // Loading Screen Blessing
+
+    initializeBlessingRain() {
+        const blessingRainContainer = document.getElementById('blessing-rain');
+        if (!blessingRainContainer) return;
+
+        const blessings = ['🌸', '🌼', '🙏', '✨', '💝', '❤️'];
+        const createBlessing = () => {
+            const blessing = document.createElement('div');
+            blessing.className = 'blessing-particle';
+            blessing.textContent = blessings[Math.floor(Math.random() * blessings.length)];
+            blessing.style.left = `${Math.random() * 100}%`;
+            blessing.style.animationDuration = `${Math.random() * 2 + 2}s`;
+            blessing.style.animationDelay = `${Math.random() * 1}s`;
+            blessingRainContainer.appendChild(blessing);
+
+            setTimeout(() => {
+                if (blessing.parentNode) {
+                    blessing.parentNode.removeChild(blessing);
+                }
+            }, 4000);
+        };
+
+        // Create blessings at intervals
+        setInterval(createBlessing, 300);
+    }
     // ===== INTERACTIVE ELEMENTS =====
     setupInteractiveElements() {
+        console.log('Setting up Rakhi blessings');
         this.setupBirthdayCake();
         this.setupDanceButton();
         this.setupMemoryTree();
         this.setupMediaDisplays();
         this.setupAudioControls();
+
+        // Add Rakhi-specific interactions
+        if (this.eventType === 'raksha_bandhan') {
+            this.setupRakhiBlessings();
+        }
+    }
+    setupRakhiBlessings() {
+        this.initializeMemoryThread();
+        this.setupBlessingShower();
+        this.setupDiyaCeremony();
+        this.setupPromiseTree();
+        this.initializeBlessingRain();
+        this.audioManager.initBackgroundMusic();
+    }
+
+
+    setupPromiseTree() {
+        const promiseTree = document.getElementById('promise-tree');
+        if (!promiseTree) return;
+
+        const promises = [
+            "I promise to always support you",
+            "I promise to be there in tough times",
+            "I promise to celebrate your successes",
+            "I promise to protect your dreams",
+            "I promise to share your joys"
+        ];
+
+        let promiseIndex = 0;
+
+        promiseTree.addEventListener('click', () => {
+            if (promiseIndex < promises.length) {
+                const branch = document.createElement('div');
+                branch.className = 'promise-branch';
+                branch.textContent = promises[promiseIndex];
+                branch.style.cssText = `
+                    position: absolute;
+                    background: var(--rakhi-green);
+                    color: white;
+                    padding: 5px 10px;
+                    border-radius: 15px;
+                    font-size: 0.8rem;
+                    top: ${20 + promiseIndex * 15}%;
+                    left: ${30 + promiseIndex * 10}%;
+                    animation: fadeInUp 0.5s ease-out;
+                `;
+                promiseTree.appendChild(branch);
+                promiseIndex++;
+
+                if (promiseIndex >= promises.length) {
+                    this.revealAudioOrQuote();
+                }
+            }
+        });
+    }
+
+setupBlessingShower() {
+        const blessingBtn = document.getElementById('blessing-shower-btn');
+        const blessingShower = document.getElementById('blessing-shower');
+
+        if (blessingBtn && blessingShower) {
+            blessingBtn.addEventListener('click', () => {
+                this.createBlessingParticles(blessingShower);
+            });
+        }
+    }
+
+    createBlessingParticles(blessingShower) {
+        const blessings = ['🌸', '🌼', '💰', '🪙', '✨', '💝', '🙏', '❤️'];
+
+        for (let i = 0; i < 20; i++) {
+            setTimeout(() => {
+                const particle = document.createElement('div');
+                particle.className = 'blessing-particle';
+                particle.textContent = blessings[Math.floor(Math.random() * blessings.length)];
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = `${Math.random()}s`;
+                blessingShower.appendChild(particle);
+
+                setTimeout(() => {
+                    if (particle.parentNode) {
+                        particle.parentNode.removeChild(particle);
+                    }
+                }, 3500);
+            }, i * 100);
+        }
+    }
+
+    setupDiyaCeremony() {
+        const diyas = document.querySelectorAll('.ceremony-diya');
+        let litDiyas = 0;
+
+        diyas.forEach(diya => {
+            diya.addEventListener('click', () => {
+                if (diya.classList.contains('lit')) return;
+
+                diya.classList.add('lit');
+                const flame = diya.querySelector('.diya-flame-unlit');
+                if (flame) {
+                    flame.className = 'diya-flame-lit';
+                }
+
+                this.playBellSound();
+                litDiyas++;
+
+                if (litDiyas >= diyas.length) {
+                    setTimeout(() => {
+                        this.revealAudioOrQuote();
+                    }, 1000);
+                }
+            });
+        });
     }
 
     setupBirthdayCake() {
@@ -940,7 +1347,11 @@ class GreetingCardApp {
         const mediaUrls = display.dataset.mediaUrls
             ? display.dataset.mediaUrls.split(',').map(url => url.trim()).filter(url => url)
             : [];
-        const fallbackUrl = display.dataset.fallbackUrl || 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e';
+        let fallbackUrl = display.dataset.fallbackUrl || 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e';
+        // Rakhi-specific fallback
+        if (this.eventType === 'raksha_bandhan' && !mediaUrls.length) {
+            fallbackUrl = 'https://images.unsplash.com/photo-1597149493807-4b9f73995e45'; // Rakhi siblings image
+        }
 
         if (!mediaUrls.length) {
             mediaUrls.push(fallbackUrl);
@@ -954,10 +1365,20 @@ class GreetingCardApp {
             img.src = decodeURIComponent(url);
             img.alt = `Event media ${index + 1}`;
             img.className = 'media-image';
+            // Add Rakhi-specific styling
+            if (this.eventType === 'raksha_bandhan') {
+                img.className += ' rakhi-photo';
+            }
             img.loading = 'lazy';
             img.style.display = index === 0 ? 'block' : 'none';
 
-            img.onerror = () => console.error(`Failed to load image: ${url}`);
+            img.onerror = () => {
+                console.error(`Failed to load image: ${url}`);
+                // Fallback to default Rakhi image
+                if (this.eventType === 'raksha_bandhan') {
+                    img.src = fallbackUrl;
+                }
+            };
             fragment.appendChild(img);
         });
 
@@ -967,6 +1388,29 @@ class GreetingCardApp {
         if (mediaUrls.length > 1) {
             this.setupSlideshow(display);
         }
+        // Add traditional frame animation for Rakhi
+        if (this.eventType === 'raksha_bandhan') {
+            this.addTraditionalFrame(display);
+        }
+    }
+
+    addTraditionalFrame(display) {
+        const frame = document.createElement('div');
+        frame.className = 'traditional-frame';
+        frame.style.cssText = `
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border: 5px solid var(--rakhi-gold);
+            border-image: linear-gradient(45deg, var(--rakhi-gold), var(--rakshi-saffron)) 1;
+            pointer-events: none;
+            border-radius: 10px;
+        `;
+
+        display.style.position = 'relative';
+        display.appendChild(frame);
     }
 
     setupSlideshow(display) {
@@ -1226,7 +1670,9 @@ class GreetingCardApp {
                 this.initializeQuotes();
                 break;
             case 2:
-                if (this.eventType === 'birthday') {
+                if (this.eventType === 'raksha_bandhan') {
+                    this.setupRakhiCeremony();
+                } else if (this.eventType === 'birthday') {
                     this.setupSliderUnlock();
                 }
                 break;
@@ -1253,8 +1699,7 @@ class GreetingCardApp {
         const quotes = this.themes[this.eventType]?.quotes || this.themes.birthday.quotes;
 
         quoteElements.forEach(quoteEl => {
-            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-            quoteEl.textContent = randomQuote;
+            quoteEl.textContent = quotes[Math.floor(Math.random() * quotes.length)];
         });
     }
 
@@ -1302,7 +1747,9 @@ class GreetingCardApp {
 
         let animationElements = [];
 
-        if (this.eventType === 'birthday') {
+        if (this.eventType === 'raksha_bandhan') {
+            animationElements = this.createRakhiAnimation();
+        } else if (this.eventType === 'birthday') {
             animationElements = this.createBirthdayAnimation();
         } else if (this.eventType === 'anniversary') {
             animationElements = this.createAnniversaryAnimation();
@@ -1324,6 +1771,43 @@ class GreetingCardApp {
         }, 10000);
     }
 
+
+    createRakhiAnimation() {
+        const elements = [];
+
+        // Sacred symbols
+        const symbols = ['🕉️', '🪔', '🌸', '🌺', '💐', '✨'];
+        for (let i = 0; i < 12; i++) {
+            const symbol = document.createElement('div');
+            symbol.innerHTML = symbols[Math.floor(Math.random() * symbols.length)];
+            symbol.style.cssText = `
+                position: absolute;
+                left: ${Math.random() * 80 + 10}%;
+                font-size: ${Math.random() * 15 + 25}px;
+                animation: floatUp ${Math.random() * 3 + 3}s ease-out ${Math.random() * 2}s infinite;
+                pointer-events: none;
+                color: var(--rakhi-gold);
+            `;
+            elements.push(symbol);
+        }
+
+        // Golden thread spiral
+        const threadSpiral = document.createElement('div');
+        threadSpiral.innerHTML = '🧵';
+        threadSpiral.style.cssText = `
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            animation: rotate 4s linear infinite;
+            pointer-events: none;
+            color: var(--rakhi-gold);
+        `;
+        elements.push(threadSpiral);
+
+        return elements;
+    }
     createBirthdayAnimation() {
         const elements = [];
 

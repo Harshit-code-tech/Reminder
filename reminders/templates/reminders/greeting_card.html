@@ -16,10 +16,36 @@
 </head>
 
 <body class="min-h-screen flex items-center justify-center p-4 font-sans overflow-hidden">
+  <!-- Raksha Bandhan Loading Screen -->
+  {% if event.event_type == 'raksha_bandhan' %}
+  <div class="rakhi-loading" id="rakhi-loading">
+    <div class="rangoli-pattern">
+      <div class="rangoli-circle"></div>
+      <div class="rangoli-circle"></div>
+      <div class="rangoli-circle"></div>
+    </div>
+    <div class="loading-text">आपकी पवित्र यात्रा शुरू हो रही है...<br><small>Your sacred journey is beginning...</small></div>
+    <div class="progress-garland">
+      <div class="progress-fill"></div>
+    </div>
+  </div>
+  {% endif %}
   <!-- Background Elements -->
   <div class="background-effects">
     <div class="stars-container"></div>
     <div class="clouds-container"></div>
+
+    <!-- Raksha Bandhan Specific Background -->
+    {% if event.event_type == 'raksha_bandhan' %}
+    <div class="floating-petals">
+      <!-- Petals will be dynamically generated -->
+    </div>
+
+    <div class="sacred-pattern top-left">🕉️</div>
+    <div class="sacred-pattern top-right">🪔</div>
+    <div class="sacred-pattern bottom-left">🌸</div>
+    <div class="sacred-pattern bottom-right">🕉️</div>
+    {% endif %}
   </div>
 
   <!-- Theme Toggle Button -->
@@ -46,23 +72,33 @@
   <nav class="page-navigator" role="navigation" aria-label="Card Pages Navigation">
     <div class="nav-item active" data-page="1" tabindex="0" role="button" aria-label="Welcome Page">
       <i class="fas fa-home"></i>
-      <span class="nav-tooltip">Welcome</span>
+      <span class="nav-tooltip">
+        {% if event.event_type == 'raksha_bandhan' %}Sacred Bond{% else %}Welcome{% endif %}
+      </span>
     </div>
-    <div class="nav-item" data-page="2" tabindex="0" role="button" aria-label="Animation Page">
-      <i class="fas fa-play-circle"></i>
-      <span class="nav-tooltip">Animation</span>
+    <div class="nav-item" data-page="2" tabindex="0" role="button" aria-label="Ritual Page">
+      <i class="{% if event.event_type == 'raksha_bandhan' %}fas fa-hand-holding-heart{% else %}fas fa-play-circle{% endif %}"></i>
+      <span class="nav-tooltip">
+        {% if event.event_type == 'raksha_bandhan' %}Sacred Ritual{% else %}Animation{% endif %}
+      </span>
     </div>
     <div class="nav-item" data-page="3" tabindex="0" role="button" aria-label="Memories Page">
       <i class="fas fa-camera"></i>
-      <span class="nav-tooltip">Memories</span>
+      <span class="nav-tooltip">
+        {% if event.event_type == 'raksha_bandhan' %}Bachpan Ki Yaadein{% else %}Memories{% endif %}
+      </span>
     </div>
-    <div class="nav-item" data-page="4" tabindex="0" role="button" aria-label="Interactive Page">
-      <i class="fas fa-magic"></i>
-      <span class="nav-tooltip">Interactive</span>
+    <div class="nav-item" data-page="4" tabindex="0" role="button" aria-label="Blessings Page">
+      <i class="{% if event.event_type == 'raksha_bandhan' %}fas fa-praying-hands{% else %}fas fa-magic{% endif %}"></i>
+      <span class="nav-tooltip">
+        {% if event.event_type == 'raksha_bandhan' %}Blessings{% else %}Interactive{% endif %}
+      </span>
     </div>
-    <div class="nav-item" data-page="5" tabindex="0" role="button" aria-label="Farewell Page">
+    <div class="nav-item" data-page="5" tabindex="0" role="button" aria-label="Eternal Bond Page">
       <i class="fas fa-heart"></i>
-      <span class="nav-tooltip">Farewell</span>
+      <span class="nav-tooltip">
+        {% if event.event_type == 'raksha_bandhan' %}Eternal Bond{% else %}Farewell{% endif %}
+      </span>
     </div>
   </nav>
 
@@ -83,6 +119,37 @@
        data-memories="{{ thread_of_memories_data }}"
        data-audio-url="{% for media in event.media.all %}{% if media.media_type == 'audio' %}{{ media.media_file|urlencode }}{% endif %}{% endfor %}">
 
+
+
+    <!-- Enhanced Diya Decorations for Rakhi -->
+    {% if event.event_type == 'raksha_bandhan' %}
+    <div class="rakhi-diya-decorations">
+      <div class="rakhi-diya top-left">
+        <div class="rakhi-diya-base"></div>
+        <div class="rakhi-diya-flame"></div>
+      </div>
+      <div class="rakhi-diya top-right">
+        <div class="rakhi-diya-base"></div>
+        <div class="rakhi-diya-flame"></div>
+      </div>
+      <div class="rakhi-diya bottom-left">
+        <div class="rakhi-diya-base"></div>
+        <div class="rakhi-diya-flame"></div>
+      </div>
+      <div class="rakhi-diya bottom-right">
+        <div class="rakhi-diya-base"></div>
+        <div class="rakhi-diya-flame"></div>
+      </div>
+    </div>
+    {% else %}
+
+    <!-- Original CSS Tree Growth Animation for other themes -->
+    <div class="tree-animation">
+      <div class="tree-trunk"></div>
+      <div class="tree-leaves"></div>
+      <div class="tree-flowers"></div>
+    </div>
+
     <!-- CSS Diya Decorations -->
     <div class="diya-decorations">
       <div class="diya top-left">
@@ -102,13 +169,7 @@
         <div class="diya-flame"></div>
       </div>
     </div>
-
-    <!-- CSS Tree Growth Animation -->
-    <div class="tree-animation">
-      <div class="tree-trunk"></div>
-      <div class="tree-leaves"></div>
-      <div class="tree-flowers"></div>
-    </div>
+    {% endif %}
 
     <!-- Card Pages -->
     <div class="card-pages">
@@ -116,8 +177,12 @@
       <div class="card-page {% if not requires_card_password %}active{% endif %}" id="page-1" role="tabpanel" aria-labelledby="nav-1">
         <div class="page-content">
           <h2 class="welcome-title" data-event-type="{{ event.event_type }}">
+            {% if event.event_type == 'raksha_bandhan' %}
+            🌸 A Sacred Bond Awaits 🌸<br>
+            💝 Surprise for <span class="recipient-name">{{ event.name }}</span>!<br>
+            ✨ Raksha Bandhan Ki Shubhkamnayein ✨
+            {% elif event.event_type == 'birthday' %}
             ✨ A Special Surprise Awaits ✨<br>
-            {% if event.event_type == 'birthday' %}
             🎉 Surprise for <span class="recipient-name">{{ event.name }}</span>!
             {% elif event.event_type == 'anniversary' %}
             💞 A Love Note for <span class="recipient-name">{{ event.name }}</span>
@@ -127,7 +192,12 @@
           </h2>
 
           <div class="puzzle-container">
-            {% if event.event_type == 'birthday' %}
+            {% if event.event_type == 'raksha_bandhan' %}
+            <div class="rakhi-puzzle">
+              <div class="rakhi-puzzle-text">What sacred thread binds siblings forever?</div>
+              <div class="rakhi-hint">💝 The thread that weaves hearts together with love and protection</div>
+            </div>
+            {% elif event.event_type == 'birthday' %}
             <div class="emoji-puzzle">🎉 + 💝 = Pure Joy!</div>
             {% elif event.event_type == 'anniversary' %}
             <div class="date-puzzle">What is the date that marks another year of our journey together?</div>
@@ -146,7 +216,7 @@
                     id="card-password-input"
                     name="card_password"
                     class="password-input"
-                    placeholder="Enter the card password..."
+                    placeholder="{% if event.event_type == 'raksha_bandhan' %}Enter the sacred thread name...{% else %}Enter the card password...{% endif %}"
                     aria-required="true">
                 <button type="submit" class="unlock-button" aria-label="Unlock card content">
                   <i class="fas fa-unlock"></i>
@@ -158,12 +228,12 @@
             <div class="password-hint" aria-live="polite">
               <span class="hint-icon">💡</span>
               Hint:
-              {% if event.event_type == 'birthday' %}
+              {% if event.event_type == 'raksha_bandhan' %}
+              The <strong>symbol</strong> of our bond (e.g., rakhi, thread, or bond).
+              {% elif event.event_type == 'birthday' %}
               <strong>The name</strong> that brings smiles every year.
               {% elif event.event_type == 'anniversary' %}
               When did <strong>we</strong> begin this journey?
-              {% elif event.event_type == 'raksha_bandhan' %}
-              The <strong>symbol</strong> of our bond (e.g., rakhi, thread, or bond).
               {% else %}
               The one <strong>word</strong> that defines this memory
               {% endif %}
@@ -182,7 +252,29 @@
       <!-- Page 2: Animation/Countdown -->
       <div class="card-page" id="page-2" role="tabpanel" aria-labelledby="nav-2">
         <div class="page-content">
-          {% if event.event_type == 'birthday' %}
+          {% if event.event_type == 'raksha_bandhan' %}
+          <h2 class="page-title">Ready for the sacred ritual, <span class="recipient-name">{{ event.name }}</span>?</h2>
+          <p class="ritual-subtitle">Let's celebrate our eternal bond!</p>
+
+          <div class="rakhi-ceremony-container">
+            <div class="rakhi-thread" id="rakhi-thread">
+              <svg width="200" height="200" viewBox="0 0 200 200">
+                <path class="thread-path" d="M 100 20 Q 180 100 100 180 Q 20 100 100 20" stroke="#F59E0B" stroke-width="3" fill="none"/>
+              </svg>
+              <div class="rakhi-center" id="rakhi-center" tabindex="0" role="button" aria-label="Click to perform rakhi ceremony">
+              </div>
+            </div>
+
+            <div class="ceremony-instructions" id="ceremony-instructions">
+              <p>🎋 Click the sacred rakhi to begin the ritual</p>
+            </div>
+
+            <div class="tilak-ceremony" id="tilak-ceremony" style="display: none;">
+              <p>Apply tilak for blessings</p>
+              <div class="tilak-spot" id="tilak-spot"></div>
+            </div>
+          </div>
+          {% elif event.event_type == 'birthday' %}
           <h2 class="page-title">Want a gift, <span class="recipient-name">{{ event.name }}</span>?</h2>
           <div class="countdown-container">
             <div class="countdown" aria-live="assertive">5</div>
@@ -223,12 +315,35 @@
       <div class="card-page" id="page-3" role="tabpanel" aria-labelledby="nav-3">
         <div class="page-content">
           <h2 class="page-title">
-            {% if event.event_type == 'birthday' %}Memory Snapshot
+            {% if event.event_type == 'raksha_bandhan' %}
+            Our Beautiful Journey Together<br>
+            <span style="font-size: 1.2rem; color: var(--rakhi-saffron);">Sibling Memories Through the Years</span>
+            {% elif event.event_type == 'birthday' %}Memory Snapshot
             {% elif event.event_type == 'anniversary' %}Our Story
             {% else %}Special Moments
             {% endif %}
           </h2>
+
           <div class="media-container">
+            {% if event.event_type == 'raksha_bandhan' %}
+            <div class="photo-gallery">
+              <div class="photo-frame">
+                <img src="{% if event.media.exists %}{{ event.media.first.media_file.url }}{% else %}{% static 'images/nature.jpg' %}{% endif %}"
+                     alt="Special memory"
+                     class="media-image rakhi-photo"
+                     data-fallback-url="{% static 'images/nature.jpg' %}">
+
+                <div class="marigold-decoration">🌼</div>
+                <div class="photo-caption">
+                  {% if event.media.exists %}
+                  {{ event.media.first.caption|default:"Some special moments" }}
+                  {% else %}
+                  A moment inspired by nature
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% else %}
             <div class="media-display"
                  data-media-urls="{% for media in event.media.all %}{% if media.media_type == 'image' %}{{ media.media_file|urlencode }}{% if not forloop.last %},{% endif %}{% endif %}{% endfor %}"
                  data-fallback-url="{% static 'images/nature.jpg' %}"
@@ -241,6 +356,9 @@
               A moment inspired by nature
               {% endif %}
             </div>
+            {% endif %}
+
+
             <audio id="calming-sound" loop>
               <source src="{% static 'audio/Whispering Wind.mp3' %}" type="audio/mpeg">
               Your browser does not support the audio element.
@@ -256,8 +374,63 @@
       <!-- Page 4: Interactive Element -->
       <div class="card-page" id="page-4" role="tabpanel" aria-labelledby="nav-4">
         <div class="page-content">
-          {% if event.event_type == 'birthday' %}
-          <h2 class="page-title">Make a Wish!</h2>
+          <h2 class="page-title">
+            {% if event.event_type == 'raksha_bandhan' %}
+            Blessings & Promises 🙏
+            {% elif event.event_type == 'birthday' %}Make a Wish!
+            {% elif event.event_type == 'anniversary' %}One More Dance?
+            {% else %}Tree of Memories
+            {% endif %}
+          </h2>
+
+          {% if event.event_type == 'raksha_bandhan' %}
+          <!-- Sacred Promise Tree -->
+          <div class="promise-tree-container">
+            <div class="promise-tree" id="promise-tree" tabindex="0" aria-label="Sacred promise tree. Click to add promises.">
+              <div class="tree-trunk"></div>
+            </div>
+            <div class="tree-instruction" aria-live="polite">Click to plant a promise of support</div>
+          </div>
+
+          <!-- Blessing Shower -->
+          <div style="text-align: center; margin: 30px 0;">
+            <p style="color: var(--rakhi-primary); margin-bottom: 15px;">Shower blessings for prosperity</p>
+            <button id="blessing-shower-btn" class="action-button" style="background: var(--rakhi-silk); color: white; border: none; padding: 15px 30px; border-radius: 25px; font-size: 1.1rem; cursor: pointer;">
+              <i class="fas fa-hands"></i>
+              Send Blessings
+            </button>
+          </div>
+
+          <!-- Diya Lighting Ceremony -->
+          <div class="diya-ceremony-container" id="diya-ceremony">
+            <div class="ceremony-diya" data-wish="prosperity">
+              <div class="ceremony-diya-base"></div>
+              <div class="ceremony-diya-flame"></div>
+            </div>
+            <div class="ceremony-diya" data-wish="happiness">
+              <div class="ceremony-diya-base"></div>
+              <div class="ceremony-diya-flame"></div>
+            </div>
+            <div class="ceremony-diya" data-wish="health">
+              <div class="ceremony-diya-base"></div>
+              <div class="ceremony-diya-flame"></div>
+            </div>
+            <div class="ceremony-diya" data-wish="success">
+              <div class="ceremony-diya-base"></div>
+              <div class="ceremony-diya-flame"></div>
+            </div>
+            <div class="ceremony-diya" data-wish="peace">
+              <div class="ceremony-diya-base"></div>
+              <div class="ceremony-diya-flame"></div>
+            </div>
+            <div class="ceremony-diya" data-wish="love">
+              <div class="ceremony-diya-base"></div>
+              <div class="ceremony-diya-flame"></div>
+            </div>
+          </div>
+          <p style="text-align: center; color: var(--rakhi-saffron); margin-top: 15px;">Click each diya to light it with a blessing</p>
+
+          {% elif event.event_type == 'birthday' %}
           <div class="cake-container">
             <div class="birthday-cake" tabindex="0" aria-label="Birthday cake with candles. Click to blow out candles.">
               <div class="cake-base"></div>
@@ -267,7 +440,6 @@
             <div class="cake-instruction" aria-live="polite">Click to blow out the candles!</div>
           </div>
           {% elif event.event_type == 'anniversary' %}
-          <h2 class="page-title">One More Dance?</h2>
           <div class="dance-container">
             <button class="dance-button" aria-label="Start dance animation">
               <i class="fas fa-music"></i>
@@ -276,7 +448,6 @@
             <div class="dance-animation" aria-live="polite"></div>
           </div>
           {% else %}
-          <h2 class="page-title">Tree of Memories</h2>
           <div class="memory-tree-container">
             <div class="memory-tree" tabindex="0" aria-label="Interactive memory tree. Click to add memories."></div>
             <div class="tree-instruction" aria-live="polite">Click to plant a memory</div>
@@ -316,14 +487,45 @@
       <!-- Page 5: Farewell -->
       <div class="card-page" id="page-5" role="tabpanel" aria-labelledby="nav-5">
         <div class="page-content">
+          {% if event.event_type == 'raksha_bandhan' %}
+          <div class="eternal-bond-container">
+            <div class="sanskrit-verse">
+              राखी का यह पावन धागा,<br>
+              बांधे प्रेम और विश्वास का नाता
+            </div>
+            <div class="verse-translation">
+              This sacred thread of Rakhi,<br>
+              Binds the bond of love and trust
+            </div>
+
+            <h2 class="page-title" style="margin: 30px 0;">
+              <span class="recipient-name">{{ event.name }}</span>, you are my strength and joy!
+            </h2>
+
+            <div class="farewell-message" style="font-size: 1.1rem; line-height: 1.6; color: var(--rakhi-primary); text-align: center; margin: 30px 0;">
+              {% if event.message %}
+              {{ event.message|linebreaksbr }}
+              {% else %}
+              May our bond grow stronger with each passing year. You are not just my sibling, but my lifelong friend, protector, and companion. This sacred thread represents our unbreakable connection that transcends time and distance.
+              {% endif %}
+            </div>
+
+            <!-- Sacred Thread Visualization -->
+            <div class="infinity-thread">
+              <svg width="200" height="100" viewBox="0 0 200 100">
+                <path class="infinity-path" d="M 20 50 Q 50 20, 100 50 Q 150 80, 180 50 Q 150 20, 100 50 Q 50 80, 20 50" stroke="#F59E0B" stroke-width="4" fill="none"/>
+              </svg>
+            </div>
+
+            <!-- Blessing Rain -->
+            <div class="blessing-rain-container" id="blessing-rain">
+              <!-- Animated blessings will be added here -->
+            </div>
+          </div>
+
+          {% elif event.event_type == 'birthday' %}
           <h2 class="page-title">
-            {% if event.event_type == 'birthday' %}
             Happy Birthday, <span class="recipient-name">{{ event.name }}</span>!
-            {% elif event.event_type == 'anniversary' %}
-            Here's to us, <span class="recipient-name">{{ event.name }}</span>. Forever yours.
-            {% else %}
-            <span class="recipient-name">{{ event.name }}</span>, you're unforgettable.
-            {% endif %}
           </h2>
           <div class="farewell-message">
             {% if event.message %}
@@ -332,6 +534,30 @@
             Wishing you joy and happiness today and always.
             {% endif %}
           </div>
+          {% elif event.event_type == 'anniversary' %}
+          <h2 class="page-title">
+            Here's to us, <span class="recipient-name">{{ event.name }}</span>. Forever yours.
+          </h2>
+          <div class="farewell-message">
+            {% if event.message %}
+            {{ event.message|linebreaksbr }}
+            {% else %}
+            Wishing you joy and happiness today and always.
+            {% endif %}
+          </div>
+          {% else %}
+          <h2 class="page-title">
+            <span class="recipient-name">{{ event.name }}</span>, you're unforgettable.
+          </h2>
+          <div class="farewell-message">
+            {% if event.message %}
+            {{ event.message|linebreaksbr }}
+            {% else %}
+            Wishing you joy and happiness today and always.
+            {% endif %}
+          </div>
+          {% endif %}
+
           {% if event.reflections.exists %}
           <div class="voice-note">
             <div class="voice-note-player">
