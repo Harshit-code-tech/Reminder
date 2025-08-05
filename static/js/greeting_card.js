@@ -1091,6 +1091,7 @@ class GreetingCardApp {
 
     setupPromiseTree() {
         const promiseTree = document.getElementById('promise-tree');
+        const treeBranches = document.querySelector('.tree-branches');
         if (!promiseTree) return;
 
         const promises = [
@@ -1102,33 +1103,96 @@ class GreetingCardApp {
         ];
 
         let promiseIndex = 0;
+        const branchPositions = [
+            { top: '10%', left: '15%', rotate: '-15deg' },
+            { top: '25%', left: '75%', rotate: '10deg' },
+            { top: '45%', left: '30%', rotate: '-5deg' },
+            { top: '60%', left: '65%', rotate: '8deg' },
+            { top: '75%', left: '40%', rotate: '-12deg' }
+        ];
+
+        // Add small decorative leaves to the tree
+        this.addDecorativeLeaves(treeBranches);
 
         promiseTree.addEventListener('click', () => {
             if (promiseIndex < promises.length) {
                 const branch = document.createElement('div');
                 branch.className = 'promise-branch';
                 branch.textContent = promises[promiseIndex];
-                branch.style.cssText = `
-                    position: absolute;
-                    background: var(--rakhi-green);
-                    color: white;
-                    padding: 5px 10px;
-                    border-radius: 15px;
-                    font-size: 0.8rem;
-                    top: ${20 + promiseIndex * 15}%;
-                    left: ${10 + promiseIndex * 10}%;
-                    animation: fadeInUp 0.5s ease-out;
-                `;
-                promiseTree.appendChild(branch);
+                // branch.style.cssText = `
+                //     position: absolute;
+                //     background: var(--rakhi-green);
+                //     color: white;
+                //     padding: 5px 10px;
+                //     border-radius: 15px;
+                //     font-size: 0.8rem;
+                //     top: ${20 + promiseIndex * 15}%;
+                //     left: ${10 + promiseIndex * 10}%;
+                //     animation: fadeInUp 0.5s ease-out;
+                // `;
+                // promiseTree.appendChild(branch);
+                // promiseIndex++;
+                //
+                // if (promiseIndex >= promises.length) {
+                //     this.revealAudioOrQuote();
+                // }
+                            // Position based on predefined spots
+                const position = branchPositions[promiseIndex];
+                branch.style.top = position.top;
+                branch.style.left = position.left;
+                branch.style.transform = `rotate(${position.rotate}) scale(0)`;
+
+                // Add to tree
+                treeBranches.appendChild(branch);
+
+                // Add growing animation
+                setTimeout(() => {
+                    branch.style.animation = 'branchGrow 0.5s forwards';
+                }, 50);
+
+                // Play bell sound for immersion
+                this.playBellSound();
+
                 promiseIndex++;
 
+                // Update instruction text
+                const instruction = document.querySelector('.tree-instruction');
+                if (instruction) {
+                    instruction.textContent = promiseIndex >= promises.length ?
+                        "Your tree of promises is complete! ✨" :
+                        `Click to add ${5 - promiseIndex} more ${promiseIndex === 4 ? 'promise' : 'promises'}`;
+                }
+
                 if (promiseIndex >= promises.length) {
-                    this.revealAudioOrQuote();
+                    // Tree completion effect
+                    setTimeout(() => {
+                        const foliage = promiseTree.querySelector('.tree-foliage');
+                        if (foliage) {
+                            foliage.style.animation = 'pulse 2s infinite';
+                        }
+                        this.showConfetti();
+                        this.revealAudioOrQuote();
+                    }, 1000);
                 }
             }
         });
     }
 
+    addDecorativeLeaves(container) {
+        const leafEmojis = ['🍃', '🌿', '☘️'];
+        for (let i = 0; i < 8; i++) {
+            const leaf = document.createElement('div');
+            leaf.textContent = leafEmojis[Math.floor(Math.random() * leafEmojis.length)];
+            leaf.style.position = 'absolute';
+            leaf.style.fontSize = `${Math.random() * 8 + 12}px`;
+            leaf.style.top = `${Math.random() * 80 + 10}%`;
+            leaf.style.left = `${Math.random() * 80 + 10}%`;
+            leaf.style.opacity = '0.7';
+            leaf.style.transform = `rotate(${Math.random() * 360}deg)`;
+            leaf.style.pointerEvents = 'none';
+            container.appendChild(leaf);
+        }
+    }
     setupBlessingShower() {
         const blessingBtn = document.getElementById('blessing-shower-btn');
         const blessingShower = document.getElementById('blessing-shower');

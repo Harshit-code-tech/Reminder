@@ -808,18 +808,103 @@ body {
   pointer-events: none;
   z-index: 1;
 }
+.promise-tree-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.promise-tree {
+  position: relative;
+  width: 240px;
+  height: 260px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.promise-tree:hover {
+  transform: scale(1.03);
+}
 
 .tree-trunk {
-  position: relative;
+  position: absolute;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 8px;
-  height: 30px;
-  background: linear-gradient(180deg, #92400e, #78350f);
-  border-radius: 4px 4px 0 0;
-  animation: growTrunk 3s ease-out;
+  width: 30px;
+  height: 80px;
+  background: linear-gradient(to right, #8B4513, #A0522D, #8B4513);
+  border-radius: 5px;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
 }
+
+.tree-foliage {
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 160px;
+  height: 160px;
+  background: radial-gradient(circle at center, var(--rakhi-green) 60%, transparent 100%);
+  border-radius: 50%;
+  opacity: 0.8;
+}
+
+.tree-branches {
+  position: absolute;
+  bottom: 60px;
+  left: 0;
+  width: 100%;
+  height: 160px;
+}
+
+.promise-branch {
+  position: absolute;
+  padding: 8px 12px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, var(--rakhi-gold), var(--rakhi-saffron));
+  color: #000080;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transform-origin: bottom center;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  max-width: 150px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 2;
+  /*background-color: rgba(139, 69, 19, 0.7);*/
+}
+
+.tree-instruction {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-align: center;
+  font-style: italic;
+}
+
+@keyframes branchGrow {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+/*.tree-trunk {*/
+/*  position: relative;*/
+/*  bottom: 0;*/
+/*  left: 50%;*/
+/*  transform: translateX(-50%);*/
+/*  width: 8px;*/
+/*  height: 30px;*/
+/*  background: linear-gradient(180deg, #92400e, #78350f);*/
+/*  border-radius: 4px 4px 0 0;*/
+/*  animation: growTrunk 3s ease-out;*/
+/*}*/
 
 .tree-leaves {
   position: absolute;
@@ -1675,8 +1760,9 @@ body {
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.05); opacity: 0.8; }
+  0% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.05); }
+  100% { transform: translateX(-50%) scale(1); }
 }
 
 @keyframes success-glow {
