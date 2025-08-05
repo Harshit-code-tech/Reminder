@@ -97,7 +97,7 @@ class GreetingCardApp {
                 throw new Error('Card container not found');
             }
             this.eventType = this.cardContainer.dataset.theme || 'birthday';
-            // document.cookie = `csrftoken=${this.cardContainer.dataset.csrfToken || ''}; path=/`;
+
             if (this.eventType === 'raksha_bandhan') {
                 this.initializeRakhiLoadingScreen();
             }
@@ -2043,6 +2043,55 @@ setupBlessingShower() {
     }
 }
 
+function positionCornerDiyas() {
+    const diyaPositions = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+    diyaPositions.forEach(position => {
+        const diya = document.querySelector(`.rakhi-diya.${position}`);
+        if (diya) {
+            diya.style.position = 'absolute';
+            if (position.includes('top')) diya.style.top = '10px';
+            if (position.includes('bottom')) diya.style.bottom = '10px';
+            if (position.includes('left')) diya.style.left = '10px';
+            if (position.includes('right')) diya.style.right = '10px';
+        }
+    });
+}
+
+function initPage1Decor() {
+    const page1 = document.querySelector('#page-1 .page-content');
+    if (!page1) return;
+
+    // Rangoli Corners
+    const rangoliContainer = document.createElement('div');
+    rangoliContainer.className = 'rakhi-rangoli-container';
+    rangoliContainer.innerHTML = `
+        <div class="rakhi-rangoli top-left-rangoli"></div>
+        <div class="rakhi-rangoli top-right-rangoli"></div>
+        <div class="rakhi-rangoli bottom-left-rangoli"></div>
+        <div class="rakhi-rangoli bottom-right-rangoli"></div>
+    `;
+
+    // Marigold Garland
+    const garland = document.createElement('div');
+    garland.className = 'marigold-garland';
+    garland.innerHTML = '🌼🌼🌼🌼🌼🌼🌼🌼🌼🌼🌼';
+
+    // Append to page
+    page1.appendChild(rangoliContainer);
+    page1.insertBefore(garland, page1.firstChild);
+
+    // Fabric background on body
+    document.body.classList.add('fabric-bg');
+
+    // Bonus: Slight random rotation for each rangoli
+    const rangolis = rangoliContainer.querySelectorAll('.rakhi-rangoli');
+    rangolis.forEach(el => {
+      const angle = Math.floor(Math.random() * 360); // 0 to 359 degrees
+      el.style.transform = `rotate(${angle}deg)`;
+    });
+}
+
+
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', () => {
     try {
@@ -2090,6 +2139,9 @@ document.addEventListener('DOMContentLoaded', () => {
         errorDiv.textContent = 'Failed to load the greeting card. Please refresh the page.';
         document.body.appendChild(errorDiv);
     }
+    positionCornerDiyas();
+    initPage1Decor();
+
 });
 
 // ===== PERFORMANCE MONITORING =====
