@@ -328,12 +328,13 @@
             {% if event.event_type == 'raksha_bandhan' %}
             <div class="photo-gallery">
               <div class="photo-frame">
-                <img src="{% if event.media.exists %}{{ event.media.first.media_file.url }}{% else %}{% static 'images/nature.jpg' %}{% endif %}"
-                     alt="Raksha Bandhan celebration"
-                     class="media-image rakhi-photo"
-                     style="width: 300px; height: 200px; object-fit: cover; border-radius: 15px; border: 3px solid var(--rakhi-gold);"
-                     data-fallback-url="{% static 'images/nature.jpg' %}">
-
+                <div class="media-display"
+                     style="width: 300px; height: 200px; background-size: cover; background-position: center; border-radius: 15px; border: 3px solid var(--rakhi-gold);"
+                     data-media-urls="{% for media in event.media.all %}{% if media.media_type == 'image' %}{{ media.media_file|urlencode }}{% if not forloop.last %},{% endif %}{% endif %}{% endfor %}"
+                     data-fallback-url="{% static 'images/nature.jpg' %}"
+                     role="img"
+                     aria-label="Raksha Bandhan celebration">
+                </div>
                 <div class="marigold-decoration" style="position: relative; top: -10px; right: -10px; font-size: 2rem;">🌼</div>
                 <div class="photo-caption" style="text-align: center; margin-top: 15px; color: var(--rakhi-gold);">
                   {% if event.media.exists %}

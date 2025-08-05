@@ -1297,6 +1297,8 @@ body {
   width: 100%;
   max-width: 500px;
   margin: 0 auto;
+  left: 50%;
+
 }
 
 .media-display {
@@ -1308,6 +1310,9 @@ body {
   box-shadow: var(--shadow-heavy);
   cursor: pointer;
   margin-bottom: 16px;
+  align-items: center;
+  left : 20%;
+
 }
 
 .media-image {
@@ -1594,6 +1599,9 @@ body {
   gap: 8px;
   box-shadow: var(--shadow-medium);
   margin-top: 16px;
+  position: relative;
+    left: 33%;
+    top: 10%;
 }
 
 .audio-control:hover,

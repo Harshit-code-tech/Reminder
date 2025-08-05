@@ -1468,10 +1468,7 @@ class GreetingCardApp {
             img.src = decodeURIComponent(url);
             img.alt = `Event media ${index + 1}`;
             img.className = 'media-image';
-            // Add Rakhi-specific styling
-            if (this.eventType === 'raksha_bandhan') {
-                img.className += ' rakhi-photo';
-            }
+
             img.loading = 'lazy';
             img.style.display = index === 0 ? 'block' : 'none';
 
@@ -1517,6 +1514,10 @@ class GreetingCardApp {
     }
 
     setupSlideshow(display) {
+        const existingControls = display.parentElement.querySelector('.slideshow-controls');
+        if (existingControls) {
+            existingControls.remove();
+        }
         const images = display.querySelectorAll('.media-image');
         const container = display.parentElement;
 
