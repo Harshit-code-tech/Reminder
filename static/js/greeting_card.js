@@ -100,6 +100,8 @@ class GreetingCardApp {
 
             if (this.eventType === 'raksha_bandhan') {
                 this.initializeRakhiLoadingScreen();
+                 glowrangoli();
+
             }
             this.cacheElements();
             this.setupEventListeners();
@@ -955,6 +957,7 @@ class GreetingCardApp {
             }
         });
     }
+
 
     showMilestonePopup() {
         if (document.querySelector('.milestone-popup')) return;
@@ -2057,19 +2060,45 @@ function positionCornerDiyas() {
     });
 }
 
+function glowrangoli(){
+
+    // Target all page content divs
+      const allPages = document.querySelectorAll('.card-page .page-content');
+
+      allPages.forEach(page => {
+        // Check if this page already has rangoli
+        if (!page.querySelector('.rakhi-rangoli-container')) {
+          // Create rangoli container
+          const rangoliContainer = document.createElement('div');
+          rangoliContainer.className = 'rakhi-rangoli-container';
+          rangoliContainer.innerHTML = `
+            <div class="rakhi-rangoli top-left-rangoli"></div>
+            <div class="rakhi-rangoli top-right-rangoli"></div>
+            <div class="rakhi-rangoli bottom-left-rangoli"></div>
+            <div class="rakhi-rangoli bottom-right-rangoli"></div>
+          `;
+
+          // Add to page
+          page.appendChild(rangoliContainer);
+
+          // Apply random rotation to each rangoli
+          const rangolis = rangoliContainer.querySelectorAll('.rakhi-rangoli');
+          rangolis.forEach(el => {
+            const angle = Math.floor(Math.random() * 360);
+            el.style.transform = `rotate(${angle}deg)`;
+          });
+        }
+      });
+
+      // Apply fabric background to body if not already applied
+      document.body.classList.add('fabric-bg');
+}
+
 function initPage1Decor() {
     const page1 = document.querySelector('#page-1 .page-content');
     if (!page1) return;
 
-    // Rangoli Corners
-    const rangoliContainer = document.createElement('div');
-    rangoliContainer.className = 'rakhi-rangoli-container';
-    rangoliContainer.innerHTML = `
-        <div class="rakhi-rangoli top-left-rangoli"></div>
-        <div class="rakhi-rangoli top-right-rangoli"></div>
-        <div class="rakhi-rangoli bottom-left-rangoli"></div>
-        <div class="rakhi-rangoli bottom-right-rangoli"></div>
-    `;
+
 
     // Marigold Garland
     const garland = document.createElement('div');
@@ -2077,18 +2106,8 @@ function initPage1Decor() {
     garland.innerHTML = '🌼🌼🌼🌼🌼🌼🌼🌼🌼🌼🌼';
 
     // Append to page
-    page1.appendChild(rangoliContainer);
     page1.insertBefore(garland, page1.firstChild);
 
-    // Fabric background on body
-    document.body.classList.add('fabric-bg');
-
-    // Bonus: Slight random rotation for each rangoli
-    const rangolis = rangoliContainer.querySelectorAll('.rakhi-rangoli');
-    rangolis.forEach(el => {
-      const angle = Math.floor(Math.random() * 360); // 0 to 359 degrees
-      el.style.transform = `rotate(${angle}deg)`;
-    });
 }
 
 
