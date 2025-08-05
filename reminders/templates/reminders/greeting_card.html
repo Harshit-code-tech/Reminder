@@ -329,12 +329,13 @@
             <div class="photo-gallery">
               <div class="photo-frame">
                 <img src="{% if event.media.exists %}{{ event.media.first.media_file.url }}{% else %}{% static 'images/nature.jpg' %}{% endif %}"
-                     alt="Special memory"
+                     alt="Raksha Bandhan celebration"
                      class="media-image rakhi-photo"
+                     style="width: 300px; height: 200px; object-fit: cover; border-radius: 15px; border: 3px solid var(--rakhi-gold);"
                      data-fallback-url="{% static 'images/nature.jpg' %}">
 
-                <div class="marigold-decoration">🌼</div>
-                <div class="photo-caption">
+                <div class="marigold-decoration" style="position: relative; top: -10px; right: -10px; font-size: 2rem;">🌼</div>
+                <div class="photo-caption" style="text-align: center; margin-top: 15px; color: var(--rakhi-gold);">
                   {% if event.media.exists %}
                   {{ event.media.first.caption|default:"Some special moments" }}
                   {% else %}
@@ -399,31 +400,32 @@
               <i class="fas fa-hands"></i>
               Send Blessings
             </button>
+            <div id="blessing-shower" class="blessing-shower"></div>
           </div>
 
           <!-- Diya Lighting Ceremony -->
           <div class="diya-ceremony-container" id="diya-ceremony">
-            <div class="ceremony-diya" data-wish="prosperity">
+            <div class="ceremony-diya" data-wish="prosperity, समृद्धि">
               <div class="ceremony-diya-base"></div>
               <div class="ceremony-diya-flame"></div>
             </div>
-            <div class="ceremony-diya" data-wish="happiness">
+            <div class="ceremony-diya" data-wish="happiness, खुशी">
               <div class="ceremony-diya-base"></div>
               <div class="ceremony-diya-flame"></div>
             </div>
-            <div class="ceremony-diya" data-wish="health">
+            <div class="ceremony-diya" data-wish="health, स्वास्थ्य">
               <div class="ceremony-diya-base"></div>
               <div class="ceremony-diya-flame"></div>
             </div>
-            <div class="ceremony-diya" data-wish="success">
+            <div class="ceremony-diya" data-wish="success, सफलता">
               <div class="ceremony-diya-base"></div>
               <div class="ceremony-diya-flame"></div>
             </div>
-            <div class="ceremony-diya" data-wish="peace">
+            <div class="ceremony-diya" data-wish="peace, शांति">
               <div class="ceremony-diya-base"></div>
               <div class="ceremony-diya-flame"></div>
             </div>
-            <div class="ceremony-diya" data-wish="love">
+            <div class="ceremony-diya" data-wish="love, प्यार">
               <div class="ceremony-diya-base"></div>
               <div class="ceremony-diya-flame"></div>
             </div>

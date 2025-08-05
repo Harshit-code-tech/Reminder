@@ -632,14 +632,22 @@ class GreetingCardApp {
             this.audioManager.fadeToUserMessage();
 
             setTimeout(() => {
-                document.getElementById('ceremony-instructions').innerHTML = '🌟 Sacred ritual completed! Thread of memories will now appear.';
+                const hasThreadOfMemories = this.cardContainer.dataset.threadOfMemories === 'true';
+                let message = '🌟 Sacred ritual completed! ';
+                if (hasThreadOfMemories) {
+                    message += 'Thread of memories will now appear.';
+                } else {
+                    message += 'Milestones will now appear.';
+                }
 
+                document.getElementById('ceremony-instructions').innerHTML = message;
                 // Show thread of memories after ceremony
                 setTimeout(() => {
-                    const hasThreadOfMemories = this.cardContainer.dataset.threadOfMemories === 'true';
+                    // const hasThreadOfMemories = this.cardContainer.dataset.threadOfMemories === 'true';
                     if (hasThreadOfMemories) {
                         this.showThreadOfMemories();
                     }
+                    this.showMilestonePopup();
                 }, 2000);
             }, 1000);
         };
@@ -1108,7 +1116,7 @@ class GreetingCardApp {
                     border-radius: 15px;
                     font-size: 0.8rem;
                     top: ${20 + promiseIndex * 15}%;
-                    left: ${30 + promiseIndex * 10}%;
+                    left: ${10 + promiseIndex * 10}%;
                     animation: fadeInUp 0.5s ease-out;
                 `;
                 promiseTree.appendChild(branch);
@@ -1121,7 +1129,7 @@ class GreetingCardApp {
         });
     }
 
-setupBlessingShower() {
+    setupBlessingShower() {
         const blessingBtn = document.getElementById('blessing-shower-btn');
         const blessingShower = document.getElementById('blessing-shower');
 
@@ -1135,12 +1143,16 @@ setupBlessingShower() {
     createBlessingParticles(blessingShower) {
         const blessings = ['🌸', '🌼', '💰', '🪙', '✨', '💝', '🙏', '❤️'];
 
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
         for (let i = 0; i < 20; i++) {
             setTimeout(() => {
                 const particle = document.createElement('div');
                 particle.className = 'blessing-particle';
                 particle.textContent = blessings[Math.floor(Math.random() * blessings.length)];
+                particle.style.position = 'fixed';
                 particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = -30 + 'px';
                 particle.style.animationDelay = `${Math.random()}s`;
                 blessingShower.appendChild(particle);
 
@@ -1158,6 +1170,29 @@ setupBlessingShower() {
         let litDiyas = 0;
 
         diyas.forEach(diya => {
+            // Add hover tooltip functionality
+            const wish = diya.getAttribute('data-wish');
+            if (wish) {
+                // Create tooltip element
+                const tooltip = document.createElement('div');
+                tooltip.className = 'diya-tooltip';
+                tooltip.textContent = wish.charAt(0).toUpperCase() + wish.slice(1);
+                diya.appendChild(tooltip);
+
+                // Show tooltip on hover
+                diya.addEventListener('mouseenter', () => {
+                    tooltip.style.opacity = '1';
+                    tooltip.style.transform = 'translateY(-5px)';
+                });
+
+                // Hide tooltip when mouse leaves
+                diya.addEventListener('mouseleave', () => {
+                    tooltip.style.opacity = '0';
+                    tooltip.style.transform = 'translateY(0)';
+                });
+            }
+
+            // Original click behavior
             diya.addEventListener('click', () => {
                 if (diya.classList.contains('lit')) return;
 
@@ -1172,6 +1207,7 @@ setupBlessingShower() {
 
                 if (litDiyas >= diyas.length) {
                     setTimeout(() => {
+                        alert('🎉 All diyas lit! Your blessings are complete. The divine light shines upon you!');
                         this.revealAudioOrQuote();
                     }, 1000);
                 }
