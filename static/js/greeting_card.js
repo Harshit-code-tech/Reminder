@@ -1880,37 +1880,28 @@ class GreetingCardApp {
 
         // Sacred symbols
         const symbols = ['🕉️', '🪔', '🌸', '🌺', '💐', '✨'];
-        for (let i = 0; i < 12; i++) {
+        for (let i = 0; i < 20; i++) { // Increased count for better coverage
             const symbol = document.createElement('div');
             symbol.innerHTML = symbols[Math.floor(Math.random() * symbols.length)];
             symbol.style.cssText = `
-                position: absolute;
-                left: ${Math.random() * 80 + 10}%;
+                position: fixed;
+                left: ${Math.random() * 95}vw;
+                top: ${Math.random() * 95}vh;
                 font-size: ${Math.random() * 15 + 25}px;
                 animation: floatUp ${Math.random() * 3 + 3}s ease-out ${Math.random() * 2}s infinite;
                 pointer-events: none;
                 color: var(--rakhi-gold);
+                z-index: 9999;
+                text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
             `;
+            document.body.appendChild(symbol);
             elements.push(symbol);
         }
 
-        // Golden thread spiral
-        const threadSpiral = document.createElement('div');
-        threadSpiral.innerHTML = '🧵';
-        threadSpiral.style.cssText = `
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 4rem;
-            animation: rotate 4s linear infinite;
-            pointer-events: none;
-            color: var(--rakhi-gold);
-        `;
-        elements.push(threadSpiral);
 
         return elements;
     }
+
     createBirthdayAnimation() {
         const elements = [];
 
