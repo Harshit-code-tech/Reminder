@@ -12,7 +12,7 @@ Welcome! This is a modern Django web app to help you remember and celebrate birt
 
 ## ✨ Features
 
-- **Event Tracking:** Add, edit, and manage birthdays, anniversaries, and custom events.
+- **Event Tracking:** Add, edit, and manage birthdays, anniversaries, raksha bandhan and custom events.
 - **Automated Reminders:** Email reminders sent before each event.
 - **Greeting Cards:** Shareable, animated cards with images and audio support.
 - **Media Attachments:** Upload personal photos and voice messages.
@@ -55,7 +55,7 @@ Welcome! This is a modern Django web app to help you remember and celebrate birt
 1. **Clone the repo:**
     ```sh
     git clone git clone https://github.com/Harshit-code-tech/Reminder.git
-    cd birthday-reminder
+    cd Reminder
     ```
 
 2. **Install dependencies:**
@@ -87,7 +87,7 @@ Welcome! This is a modern Django web app to help you remember and celebrate birt
 
 - 🧾 Token-based sharing with expiry + renewal logic  
 - 📩 MailerSend integration with retry logic  
-- 🧠 Event-type based themes (Birthday, Anniversary, Custom)  
+- 🧠 Event-type based themes (Birthday, Anniversary,Raksha Bandhan, Custom)  
 - 🕒 Timezone-aware cron scheduling (IST / UTC+5:30)  
 - 📊 Analytics dashboard with reminder + user metrics  
 - 🔐 Rate-limited views and email gating  
@@ -102,6 +102,6 @@ Welcome! This is a modern Django web app to help you remember and celebrate birt
 
 Feedback is welcome!  
 - 📧 **Email:** [harshitghosh7@gmail.com](mailto:harshitghosh7@gmail.com)  
-- 🐛 **GitHub Issues:** [Open an issue](https://github.com/Harshit-code-tech/birthday-reminder/issues)
+- 🐛 **GitHub Issues:** [Open an issue](https://github.com/Harshit-code-tech/Reminder/issues)
 
 ---
