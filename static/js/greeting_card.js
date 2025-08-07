@@ -21,52 +21,173 @@ const CONFIG = {
         SMALL: 480
     }
 };
+
+
 class AudioManager {
     constructor() {
         this.tracks = {
             background: null,
-            interactive: null,
-            userMessage: null
+            bell: null,
+            success: null,
+            pageturn: null,
+            blessing: null,
+            celebration: null
         };
-        this.currentVolumes = {
-            background: 0.4,
-            interactive: 0.8,
-            userMessage: 0.8
-        };
-        this.isPlaying = false;
+        this.isEnabled = true;
+        this.loadAudioTracks();
+    }
+
+    loadAudioTracks() {
+        try {
+            // Load actual audio files with error handling
+            const audioFiles = {
+                background: '/static/audio/background-rakhi.mp3',
+                bell: '/static/audio/bell-sacred.mp3',
+                success: '/static/audio/success-chime.mp3',
+                pageTransition: '/static/audio/page-turn.mp3',
+                blessing: '/static/audio/blessing-sound.mp3',
+                celebration: '/static/audio/celebration.mp3'
+            };
+
+            Object.keys(audioFiles).forEach(key => {
+                try {
+                    const audio = new Audio(audioFiles[key]);
+
+                    // Set up error handling
+                    audio.addEventListener('error', (e) => {
+                        console.warn(`Failed to load audio: ${audioFiles[key]}`, e);
+                        this.tracks[key] = null;
+                    });
+
+                    // Set up success handler
+                    audio.addEventListener('canplaythrough', () => {
+                        // Set volumes only after audio is loaded
+                        if (key === 'background') {
+                            audio.volume = 0.3;
+                            audio.loop = true;
+                        } else {
+                            audio.volume = 0.6;
+                        }
+                    });
+
+                    this.tracks[key] = audio;
+                } catch (error) {
+                    console.warn(`Error creating audio for ${key}:`, error);
+                    this.tracks[key] = null;
+                }
+            });
+
+        } catch (error) {
+            console.warn('AudioManager initialization failed:', error);
+            this.isEnabled = false;
+        }
+    }
+
+
+    // Fallback audio generation for missing files
+    generateTone(frequency, duration, type = 'sine') {
+        if (!this.isEnabled || !(window.AudioContext || window.webkitAudioContext)) {
+            return;
+        }
+
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+            oscillator.type = type;
+
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        } catch (error) {
+            console.warn('Tone generation failed:', error);
+        }
+    }
+
+    // Specific audio methods
+    // Specific audio methods with fallbacks
+    playBellSound() {
+        // Only for: Rakhi ceremony, Diya lighting, Sacred moments
+        if (this.tracks.bell && this.tracks.bell.readyState >= 2) {
+            this.tracks.bell.currentTime = 0;
+            this.tracks.bell.play().catch(e => console.log('Audio blocked:', e));
+        } else {
+            // Fallback: Generate bell-like tone
+            this.generateTone(800, 1.0, 'triangle');
+        }
+    }
+
+    playSuccessSound() {
+        // For: Password unlock, Tree completion, All diyas lit
+        if (this.tracks.success && this.tracks.success.readyState >= 2) {
+            this.tracks.success.currentTime = 0;
+            this.tracks.success.play().catch(e => console.log('Audio blocked:', e));
+        } else {
+            // Fallback: Generate success chord
+            [523.25, 659.25, 783.99].forEach((freq, index) => {
+                setTimeout(() => this.generateTone(freq, 0.5, 'triangle'), index * 100);
+            });
+        }
+    }
+
+    playPageTransition() {
+        // For: Page navigation - keep minimal
+        if (this.tracks.pageTransition && this.tracks.pageTransition.readyState >= 2) {
+            this.tracks.pageTransition.currentTime = 0;
+            this.tracks.pageTransition.play().catch(e => console.log('Audio blocked:', e));
+        }
+        // No fallback - page transitions should be quiet
+    }
+
+    playBlessingSound() {
+        // For: Blessing shower only
+        if (this.tracks.blessing && this.tracks.blessing.readyState >= 2) {
+            this.tracks.blessing.currentTime = 0;
+            this.tracks.blessing.play().catch(e => console.log('Audio blocked:', e));
+        } else {
+            // Fallback: Gentle chime
+            this.generateTone(659.25, 0.8, 'sine');
+        }
+    }
+
+    playCelebrationSound() {
+        // For: Final page, ceremony completion
+        if (this.tracks.celebration && this.tracks.celebration.readyState >= 2) {
+            this.tracks.celebration.currentTime = 0;
+            this.tracks.celebration.play().catch(e => console.log('Audio blocked:', e));
+        } else {
+            // Fallback: Celebration chord progression
+            const frequencies = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+            frequencies.forEach((freq, index) => {
+                setTimeout(() => this.generateTone(freq, 0.8, 'triangle'), index * 200);
+            });
+        }
+    }
+
+    startBackgroundMusic() {
+        // Only start if explicitly called and available
+        if (this.tracks.background && this.tracks.background.readyState >= 2) {
+            this.tracks.background.play().catch(e => console.log('Background music blocked:', e));
+        }
+    }
+
+    stopBackgroundMusic() {
+        if (this.tracks.background) {
+            this.tracks.background.pause();
+            this.tracks.background.currentTime = 0;
+        }
     }
 
     initBackgroundMusic() {
-        if (document.querySelector('[data-theme="raksha_bandhan"]')) {
-            this.playBackgroundMusic();
-        }
-    }
 
-    playBackgroundMusic() {
-        this.isPlaying = true;
-        // In real implementation, load and play actual audio files
-        console.log('Playing Raksha Bandhan background music');
-    }
-
-    fadeToUserMessage() {
-        if (this.tracks.background) {
-            this.fadeVolume('background', 0.2, 1000);
-        }
-        this.playTrack('userMessage');
-    }
-
-    fadeVolume(track, targetVolume, duration) {
-        // Simulated volume fade - add real audio fading logic here
-        if (this.tracks[track]) {
-            console.log(`Fading ${track} to volume ${targetVolume} over ${duration}ms`);
-        }
-    }
-
-    playTrack(trackName) {
-        if (this.tracks[trackName]) {
-            this.tracks[trackName].play();
-            console.log(`Playing track: ${trackName}`);
-        }
+        console.log('Background music system initialized (files not found, using fallbacks)');
     }
 }
 
@@ -480,6 +601,11 @@ class GreetingCardApp {
         // Initialize page-specific features
         this.initializePage(pageNum);
 
+        // Only play transition sound for significant page changes
+        if (Math.abs(pageNum - (this.savedData.lastPage || 1)) > 1) {
+            this.audioManager.playPageTransition();
+        }
+
         // Smooth scroll to top
         this.cardContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
@@ -528,6 +654,7 @@ class GreetingCardApp {
                 localStorage.removeItem('incorrectAttempts');
 
                 this.elements.passwordInput.classList.add('success');
+                this.audioManager.playSuccessSound();
                 this.showConfetti();
                 this.showFeedback('Card unlocked successfully! 🎉', 'success');
 
@@ -606,7 +733,7 @@ class GreetingCardApp {
         startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sacred Ritual in Progress...';
 
         // Play sound
-        this.playBellSound();
+        this.audioManager.playBellSound();
 
         // Start animation sequence
         this.runRakhiAnimationSequence(instruction);
@@ -628,7 +755,7 @@ class GreetingCardApp {
             if (brotherLeftHand) {
                 brotherLeftHand.classList.add('brother-extending-hand');
             }
-            this.playBellSound();
+            this.audioManager.playBellSound();
 
             setTimeout(() => {
                 // Step 3: Sister ties rakhi to brother's wrist
@@ -636,7 +763,7 @@ class GreetingCardApp {
                 if (wristRakhi) {
                     wristRakhi.classList.add('wrist-rakhi-appearing');
                 }
-                this.playBellSound();
+                this.audioManager.playBellSound();
 
                 setTimeout(() => {
                     // Step 4: Sister applies tilak on brother's forehead
@@ -644,13 +771,13 @@ class GreetingCardApp {
                     if (foreheadTilak) {
                         foreheadTilak.classList.add('forehead-tilak-appearing');
                     }
-                    this.playBellSound();
+                    this.audioManager.playBellSound();
 
                     setTimeout(() => {
                         // Step 5: Ceremony complete, show beautiful rakhi display
                         instruction.textContent = '✨ The sacred bond is blessed with divine grace... | यह पवित्र बंधन अब ईश्वर की कृपा से संजोया गया है...';
                         this.showBeautifulRakhiDisplay();
-                        this.playCelebrationSound();
+                        this.audioManager.playCelebrationSound();
 
                         // Update instruction after rakhi appears
                         setTimeout(() => {
@@ -669,7 +796,7 @@ class GreetingCardApp {
         if (rakhiContainer) {
             rakhiContainer.classList.add('show');
             // Play celebration sound
-            setTimeout(() => this.playCelebrationSound(), 500);
+            setTimeout(() => this.audioManager.playCelebrationSound(), 500);
         }
     }
 
@@ -678,6 +805,7 @@ class GreetingCardApp {
         const giftIcon = document.getElementById('gift-icon');
         if (giftIcon) {
             giftIcon.addEventListener('click', () => this.showRakhiGiftPopup());
+
         }
 
         // Close buttons
@@ -696,7 +824,7 @@ class GreetingCardApp {
         const giftPopup = document.getElementById('gift-popup');
         if (giftPopup) {
             giftPopup.classList.add('show');
-            this.playCelebrationSound();
+            this.audioManager.playCelebrationSound();
             this.showConfetti();
         }
     }
@@ -751,65 +879,6 @@ class GreetingCardApp {
     }
 
 
-    // Enhanced bell sound for more authentic feel
-
-    playBellSound() {
-        if (window.AudioContext || window.webkitAudioContext) {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator1 = audioContext.createOscillator();
-            const oscillator2 = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            const filterNode = audioContext.createBiquadFilter();
-
-            oscillator1.connect(filterNode);
-            oscillator2.connect(filterNode);
-            filterNode.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-
-            // Primary frequency (fundamental)
-            oscillator1.frequency.setValueAtTime(800, audioContext.currentTime);
-            // Harmonic frequency for richness
-            oscillator2.frequency.setValueAtTime(1200, audioContext.currentTime);
-
-            filterNode.type = 'lowpass';
-            filterNode.frequency.setValueAtTime(2000, audioContext.currentTime);
-
-            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.0);
-
-            oscillator1.start(audioContext.currentTime);
-            oscillator1.stop(audioContext.currentTime + 1.0);
-            oscillator2.start(audioContext.currentTime);
-            oscillator2.stop(audioContext.currentTime + 1.0);
-        }
-    }
-
-    playCelebrationSound() {
-        if (window.AudioContext || window.webkitAudioContext) {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-            // Create a more celebratory sound with multiple tones
-            const frequencies = [523.25, 659.25, 783.99]; // C5, E5, G5 (major chord)
-
-            frequencies.forEach((freq, index) => {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-
-                oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
-                oscillator.type = 'triangle';
-
-                const startTime = audioContext.currentTime + (index * 0.1);
-                gainNode.gain.setValueAtTime(0.1, startTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.8);
-
-                oscillator.start(startTime);
-                oscillator.stop(startTime + 0.8);
-            });
-        }
-    }
 
     initializeMemoryThread() {
         const memoryPoints = document.querySelectorAll('.memory-point');
@@ -844,7 +913,7 @@ class GreetingCardApp {
         popup.style.opacity = '1';
 
         if (this.eventType === 'raksha_bandhan') {
-            this.playBellSound();
+            this.audioManager.playBellSound();
         }
     }
 
@@ -1067,7 +1136,7 @@ class GreetingCardApp {
                 memoryPopup.style.opacity = '1';
                 // Play bell sound for Rakhi
                 if (this.eventType === 'raksha_bandhan') {
-                    this.playBellSound();
+                    this.audioManager.playBellSound();
                 }
             };
 
@@ -1223,7 +1292,7 @@ class GreetingCardApp {
         this.setupDiyaCeremony();
         this.setupPromiseTree();
         this.initializeBlessingRain();
-        this.audioManager.initBackgroundMusic();
+        console.log('Rakhi blessings setup completed');
     }
 
 
@@ -1273,7 +1342,7 @@ class GreetingCardApp {
                 }, 50);
 
                 // Play bell sound for immersion
-                this.playBellSound();
+                this.audioManager.playBellSound();
 
                 promiseIndex++;
 
@@ -1388,11 +1457,12 @@ class GreetingCardApp {
                     flame.className = 'diya-flame-lit';
                 }
 
-                this.playBellSound();
+                this.audioManager.playBellSound();
                 litDiyas++;
 
                 if (litDiyas >= diyas.length) {
                     setTimeout(() => {
+                        this.audioManager.playSuccessSound();
                         alert('🎉 All diyas lit! Your blessings are complete. The divine light shines upon you!');
                         this.revealAudioOrQuote();
                     }, 1000);
