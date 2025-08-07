@@ -25,11 +25,15 @@ const CONFIG = {
 
 class AudioManager {
     constructor() {
+        this.backgroundVolume = 0.3;
+        this.effectVolume = 0.6;
+        this.isBackgroundPlaying = false;
+
         this.tracks = {
             background: null,
             bell: null,
             success: null,
-            pageturn: null,
+            pageTransition: null,
             blessing: null,
             celebration: null
         };
@@ -61,12 +65,20 @@ class AudioManager {
 
                     // Set up success handler
                     audio.addEventListener('canplaythrough', () => {
-                        // Set volumes only after audio is loaded
+                        // Set volumes only after audio is loaded and validate they're finite numbers
                         if (key === 'background') {
-                            audio.volume = 0.3;
+                            if (typeof this.backgroundVolume === 'number' && isFinite(this.backgroundVolume)) {
+                                audio.volume = Math.max(0, Math.min(1, this.backgroundVolume));
+                            } else {
+                                audio.volume = 0.3; // Safe fallback
+                            }
                             audio.loop = true;
                         } else {
-                            audio.volume = 0.6;
+                            if (typeof this.effectVolume === 'number' && isFinite(this.effectVolume)) {
+                                audio.volume = Math.max(0, Math.min(1, this.effectVolume));
+                            } else {
+                                audio.volume = 0.6; // Safe fallback
+                            }
                         }
                     });
 
@@ -111,57 +123,113 @@ class AudioManager {
         }
     }
 
-    // Specific audio methods
+    // Duck background music when other sounds play
+    duckBackgroundAudio(shouldDuck = true) {
+        if (this.tracks.background && this.isBackgroundPlaying) {
+            // FIXED: Validate volumes are finite numbers
+            const baseVolume = (typeof this.backgroundVolume === 'number' && isFinite(this.backgroundVolume))
+                ? this.backgroundVolume : 0.3;
+            const targetVolume = shouldDuck ? baseVolume * 0.2 : baseVolume;
+
+            // Validate current volume
+            const currentVolume = (typeof this.tracks.background.volume === 'number' && isFinite(this.tracks.background.volume))
+                ? this.tracks.background.volume : 0.3;
+
+            const step = (targetVolume - currentVolume) / 10;
+
+            let steps = 0;
+            const fadeInterval = setInterval(() => {
+                if (steps >= 10 || !this.tracks.background) {
+                    if (this.tracks.background && isFinite(targetVolume)) {
+                        this.tracks.background.volume = Math.max(0, Math.min(1, targetVolume));
+                    }
+                    clearInterval(fadeInterval);
+                    return;
+                }
+
+                const newVolume = currentVolume + (step * steps);
+                if (this.tracks.background && isFinite(newVolume)) {
+                    this.tracks.background.volume = Math.max(0, Math.min(1, newVolume));
+                }
+                steps++;
+            }, 50);
+        }
+    }
+
     // Specific audio methods with fallbacks
     playBellSound() {
-        // Only for: Rakhi ceremony, Diya lighting, Sacred moments
         if (this.tracks.bell && this.tracks.bell.readyState >= 2) {
+            this.duckBackgroundAudio(true);
             this.tracks.bell.currentTime = 0;
             this.tracks.bell.play().catch(e => console.log('Audio blocked:', e));
+
+            // Restore background volume after bell finishes
+            setTimeout(() => {
+                this.duckBackgroundAudio(false);
+            }, 2000);
         } else {
-            // Fallback: Generate bell-like tone
             this.generateTone(800, 1.0, 'triangle');
         }
     }
 
     playSuccessSound() {
-        // For: Password unlock, Tree completion, All diyas lit
         if (this.tracks.success && this.tracks.success.readyState >= 2) {
+            this.duckBackgroundAudio(true);
             this.tracks.success.currentTime = 0;
             this.tracks.success.play().catch(e => console.log('Audio blocked:', e));
+
+            // Restore background volume after success sound
+            setTimeout(() => {
+                this.duckBackgroundAudio(false);
+            }, 2000);
         } else {
-            // Fallback: Generate success chord
             [523.25, 659.25, 783.99].forEach((freq, index) => {
                 setTimeout(() => this.generateTone(freq, 0.5, 'triangle'), index * 100);
             });
         }
     }
 
+
     playPageTransition() {
         // For: Page navigation - keep minimal
         if (this.tracks.pageTransition && this.tracks.pageTransition.readyState >= 2) {
             this.tracks.pageTransition.currentTime = 0;
-            this.tracks.pageTransition.play().catch(e => console.log('Audio blocked:', e));
+            this.tracks.pageTransition.play().catch(e => console.log('Page Turn Audio blocked:', e));
         }
-        // No fallback - page transitions should be quiet
+        else{
+            this.generateTone(220, 0.3, 'sine');
+        }
     }
 
     playBlessingSound() {
-        // For: Blessing shower only
+        console.log('Playing blessing sound');
         if (this.tracks.blessing && this.tracks.blessing.readyState >= 2) {
+            this.duckBackgroundAudio(true);
             this.tracks.blessing.currentTime = 0;
-            this.tracks.blessing.play().catch(e => console.log('Audio blocked:', e));
+            this.tracks.blessing.play().catch(e => console.log('Blessing audio blocked:', e));
+
+            // Restore background volume after blessing
+            setTimeout(() => {
+                this.duckBackgroundAudio(false);
+            }, 3000);
         } else {
-            // Fallback: Gentle chime
+            // Fallback: Gentle blessing chime
             this.generateTone(659.25, 0.8, 'sine');
         }
     }
 
+    // FIXED: Celebration sound should only play on page 5 or ceremony completion
     playCelebrationSound() {
-        // For: Final page, ceremony completion
+        console.log('Playing celebration sound');
         if (this.tracks.celebration && this.tracks.celebration.readyState >= 2) {
+            this.duckBackgroundAudio(true);
             this.tracks.celebration.currentTime = 0;
-            this.tracks.celebration.play().catch(e => console.log('Audio blocked:', e));
+            this.tracks.celebration.play().catch(e => console.log('Celebration audio blocked:', e));
+
+            // Restore background volume after celebration
+            setTimeout(() => {
+                this.duckBackgroundAudio(false);
+            }, 4000);
         } else {
             // Fallback: Celebration chord progression
             const frequencies = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
@@ -170,21 +238,48 @@ class AudioManager {
             });
         }
     }
-
     startBackgroundMusic() {
-        // Only start if explicitly called and available
         if (this.tracks.background && this.tracks.background.readyState >= 2) {
-            this.tracks.background.play().catch(e => console.log('Background music blocked:', e));
+            // FIXED: Validate volume before setting
+            const volume = (typeof this.backgroundVolume === 'number' && isFinite(this.backgroundVolume))
+                ? Math.max(0, Math.min(1, this.backgroundVolume)) : 0.3;
+
+            this.tracks.background.volume = volume;
+            this.tracks.background.play()
+                .then(() => {
+                    this.isBackgroundPlaying = true;
+                    console.log('Background music started');
+                })
+                .catch(e => {
+                    console.log('Background music blocked:', e);
+                    // Try to start on first user interaction
+                    this.setupUserInteractionAudio();
+                });
         }
     }
+
 
     stopBackgroundMusic() {
         if (this.tracks.background) {
             this.tracks.background.pause();
             this.tracks.background.currentTime = 0;
+            this.isBackgroundPlaying = false;
         }
     }
 
+    // Setup background music to start on user interaction
+    setupUserInteractionAudio() {
+        const startAudioOnInteraction = () => {
+            if (!this.isBackgroundPlaying) {
+                this.startBackgroundMusic();
+            }
+            document.removeEventListener('click', startAudioOnInteraction);
+            document.removeEventListener('keydown', startAudioOnInteraction);
+        };
+
+        document.addEventListener('click', startAudioOnInteraction, { once: true });
+        document.addEventListener('keydown', startAudioOnInteraction, { once: true });
+    }
     initBackgroundMusic() {
 
         console.log('Background music system initialized (files not found, using fallbacks)');
@@ -207,7 +302,7 @@ class GreetingCardApp {
         this.storageKey = '';
         this.savedData = {};
         this.audioManager = new AudioManager();
-
+        this.lastPage = 1;
         this.init();
     }
 
@@ -231,6 +326,10 @@ class GreetingCardApp {
             this.setupThemeSystem();
             this.setupNavigation();
             this.initializeBackgroundEffects();
+
+            setTimeout(() => {
+                this.audioManager.setupUserInteractionAudio();
+            }, 1000);
             console.log('Greeting card initialized successfully');
         } catch (error) {
             console.error('Error initializing greeting card:', error);
@@ -584,6 +683,10 @@ class GreetingCardApp {
             return;
         }
 
+        if (Math.abs(pageNum - this.currentPage) >= 1 && this.currentPage !== 0) {
+            this.audioManager.playPageTransition();
+        }
+
         this.currentPage = pageNum;
         this.saveData({ lastPage: this.currentPage });
 
@@ -601,10 +704,6 @@ class GreetingCardApp {
         // Initialize page-specific features
         this.initializePage(pageNum);
 
-        // Only play transition sound for significant page changes
-        if (Math.abs(pageNum - (this.savedData.lastPage || 1)) > 1) {
-            this.audioManager.playPageTransition();
-        }
 
         // Smooth scroll to top
         this.cardContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -777,7 +876,7 @@ class GreetingCardApp {
                         // Step 5: Ceremony complete, show beautiful rakhi display
                         instruction.textContent = '✨ The sacred bond is blessed with divine grace... | यह पवित्र बंधन अब ईश्वर की कृपा से संजोया गया है...';
                         this.showBeautifulRakhiDisplay();
-                        this.audioManager.playCelebrationSound();
+                        this.audioManager.playSuccessSound();
 
                         // Update instruction after rakhi appears
                         setTimeout(() => {
@@ -795,8 +894,8 @@ class GreetingCardApp {
         const rakhiContainer = document.getElementById('beautiful-rakhi');
         if (rakhiContainer) {
             rakhiContainer.classList.add('show');
-            // Play celebration sound
-            setTimeout(() => this.audioManager.playCelebrationSound(), 500);
+            // Play blessing sound
+            setTimeout(() => this.audioManager.playBlessingSound(), 500);
         }
     }
 
@@ -824,7 +923,7 @@ class GreetingCardApp {
         const giftPopup = document.getElementById('gift-popup');
         if (giftPopup) {
             giftPopup.classList.add('show');
-            this.audioManager.playCelebrationSound();
+            this.audioManager.playSuccessSound();
             this.showConfetti();
         }
     }
@@ -1390,8 +1489,12 @@ class GreetingCardApp {
 
         if (blessingBtn && blessingShower) {
             blessingBtn.addEventListener('click', () => {
+                console.log('Blessing button clicked');
+                this.audioManager.playBlessingSound();
                 this.createBlessingParticles(blessingShower);
             });
+        }else {
+            console.error('Blessing button or shower container not found');
         }
     }
 
@@ -1664,6 +1767,29 @@ class GreetingCardApp {
             img.loading = 'lazy';
             img.style.display = index === 0 ? 'block' : 'none';
 
+            // Calculate and maintain aspect ratio
+            img.onload = () => {
+                const aspectRatio = img.naturalWidth / img.naturalHeight;
+                const containerWidth = display.clientWidth;
+                const maxHeight = window.innerWidth <= 768 ? 300 : 500;
+                
+                if (aspectRatio > 1.5) {
+                    // Wide images
+                    img.style.width = '100%';
+                    img.style.height = 'auto';
+                    img.style.maxHeight = maxHeight + 'px';
+                } else {
+                    // Portrait or square images
+                    img.style.height = 'auto';
+                    img.style.width = '100%';
+                    img.style.maxHeight = maxHeight + 'px';
+                }
+                
+                // Center the image in container
+                display.style.alignItems = 'center';
+                display.style.justifyContent = 'center';
+            };
+
             img.onerror = () => {
                 console.error(`Failed to load image: ${url}`);
                 // Fallback to default Rakhi image
@@ -1675,6 +1801,37 @@ class GreetingCardApp {
         });
 
         display.appendChild(fragment);
+
+        // Add click handler for full-size view
+        display.addEventListener('click', (e) => {
+            if (e.target.classList.contains('media-image')) {
+                this.showImageModal(e.target.src, e.target.alt);
+            }
+        });
+
+        // Add zoom hint
+        const zoomHint = document.createElement('div');
+        zoomHint.className = 'zoom-hint';
+        zoomHint.innerHTML = '🔍 Click to zoom';
+        display.appendChild(zoomHint);
+
+        // Add fit toggle button
+        const fitToggle = document.createElement('button');
+        fitToggle.className = 'image-fit-toggle';
+        fitToggle.innerHTML = '📐 Fit: Contain';
+        fitToggle.title = 'Toggle image fit mode';
+        
+        let fitMode = 'contain';
+        fitToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fitMode = fitMode === 'contain' ? 'cover' : fitMode === 'cover' ? 'fill' : 'contain';
+            
+            display.className = display.className.replace(/fit-(contain|cover|fill)/, '') + ` fit-${fitMode}`;
+            fitToggle.innerHTML = `📐 Fit: ${fitMode.charAt(0).toUpperCase() + fitMode.slice(1)}`;
+        });
+        
+        display.appendChild(fitToggle);
+        display.classList.add('fit-contain'); // Default fit mode
 
         // Setup slideshow if multiple images
         if (mediaUrls.length > 1) {
@@ -1703,6 +1860,56 @@ class GreetingCardApp {
 
         display.style.position = 'relative';
         display.appendChild(frame);
+    }
+
+    // ===== IMAGE MODAL FUNCTIONALITY =====
+    showImageModal(imageSrc, imageAlt) {
+        // Create modal if it doesn't exist
+        let modal = document.getElementById('imageModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'imageModal';
+            modal.className = 'image-modal';
+            modal.innerHTML = `
+                <div class="image-modal-content">
+                    <span class="image-modal-close">&times;</span>
+                    <img src="" alt="" />
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            // Close modal handlers
+            const closeBtn = modal.querySelector('.image-modal-close');
+            closeBtn.addEventListener('click', () => this.hideImageModal());
+            
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    this.hideImageModal();
+                }
+            });
+
+            // ESC key handler
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modal.classList.contains('show')) {
+                    this.hideImageModal();
+                }
+            });
+        }
+
+        // Set image and show modal
+        const modalImg = modal.querySelector('img');
+        modalImg.src = imageSrc;
+        modalImg.alt = imageAlt;
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    hideImageModal() {
+        const modal = document.getElementById('imageModal');
+        if (modal) {
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
     }
 
     setupSlideshow(display) {
@@ -2039,13 +2246,14 @@ class GreetingCardApp {
     playFinalAnimation() {
         const finalAnimation = document.querySelector('.final-animation');
         if (!finalAnimation) return;
-
+        this.audioManager.playCelebrationSound();
         finalAnimation.innerHTML = '';
 
         let animationElements = [];
 
         if (this.eventType === 'raksha_bandhan') {
             animationElements = this.createRakhiAnimation();
+
         } else if (this.eventType === 'birthday') {
             animationElements = this.createBirthdayAnimation();
         } else if (this.eventType === 'anniversary') {

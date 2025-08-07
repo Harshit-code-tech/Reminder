@@ -1336,35 +1336,203 @@ body {
 /* ===== MEDIA DISPLAY ===== */
 .media-container {
   width: 100%;
-  max-width: 500px;
+  max-width: 600px;
   margin: 0 auto;
-  left: 50%;
-
+  padding: 0 20px;
 }
 
 .media-display {
   position: relative;
   width: 100%;
-  height: 300px;
+  min-height: 300px;
+  max-height: 500px;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: var(--shadow-heavy);
   cursor: pointer;
-  margin-bottom: 16px;
+  margin: 0 auto 16px auto;
+  display: flex;
   align-items: center;
-  left : 20%;
-
+  justify-content: center;
+  background: var(--bg-secondary);
 }
 
 .media-image {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  max-height: 500px;
+  object-fit: contain;
   transition: all var(--transition-medium);
+  border-radius: 12px;
 }
 
 .media-image:hover {
+  transform: scale(1.02);
+}
+
+/* ===== RESPONSIVE IMAGE CONTAINER ===== */
+.responsive-image-container {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  background: var(--bg-secondary);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--shadow-heavy);
+  position: relative;
+}
+
+.responsive-image-container img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  max-height: 70vh;
+  border-radius: 12px;
+}
+
+.image-full-view {
+  object-fit: contain !important;
+  max-height: none !important;
+  height: auto !important;
+}
+
+/* Photo gallery improvements for Raksha Bandhan */
+.photo-gallery {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.photo-frame {
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+  background: var(--bg-secondary);
+  border-radius: 20px;
+  padding: 15px;
+  box-shadow: var(--shadow-heavy);
+}
+
+/* ===== IMAGE MODAL FOR FULL VIEW ===== */
+.image-modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(5px);
+}
+
+.image-modal.show {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.image-modal-content {
+  position: relative;
+  max-width: 95vw;
+  max-height: 95vh;
+  margin: auto;
+  display: block;
+  border-radius: 12px;
+  box-shadow: var(--shadow-heavy);
+}
+
+.image-modal img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 95vh;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+.image-modal-close {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  color: white;
+  font-size: 40px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.image-modal-close:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: scale(1.1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Image zoom hint */
+.zoom-hint {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.media-display:hover .zoom-hint {
+  opacity: 1;
+}
+
+/* Image fit toggle button */
+.image-fit-toggle {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  z-index: 10;
+  transition: all var(--transition-fast);
+}
+
+.image-fit-toggle:hover {
+  background: rgba(0, 0, 0, 0.9);
   transform: scale(1.05);
+}
+
+/* Fit modes */
+.fit-contain .media-image {
+  object-fit: contain !important;
+}
+
+.fit-cover .media-image {
+  object-fit: cover !important;
+}
+
+.fit-fill .media-image {
+  object-fit: fill !important;
 }
 
 .media-caption {
@@ -2184,8 +2352,33 @@ body {
       }
     }
 
+/* Container queries support (for modern browsers) */
+@supports (container-type: inline-size) {
+  .card-container {
+    container-type: inline-size;
+  }
+
+  @container (max-width: 500px) {
+    .page-content {
+      padding: 15px 10px;
+    }
+
+    .ritual-btn {
+      width: 100%;
+    }
+  }
+}
     /* Reduced motion support */
     @media (prefers-reduced-motion: reduce) {
+        .card-container {
+          transition: none;
+        }
+
+        .nav-item:hover,
+        .theme-toggle:hover,
+        .ritual-btn:hover {
+          transform: none;
+        }
       .floating-petals .petal,
       .blessing-particle,
       .rakhi-diya-flame,
@@ -2266,118 +2459,223 @@ body {
 }
 
 /* ===== RESPONSIVE DESIGN ===== */
+/* Enhanced Mobile Styles */
 @media (max-width: 768px) {
   .card-container {
     max-width: 100%;
-    height: 500px;
-    margin: 10px;
+    min-height: 75vh;
+    height: auto;
+    margin: 5px;
     border-radius: 16px;
-    max-height: 95vh;
-    overflow-x: hidden; /* Prevent horizontal scroll */
+    box-shadow: var(--shadow-medium);
   }
 
   .page-content {
-    padding: 20px;
-    gap: 16px;
-    padding-bottom: 60px;
+    padding: 20px 15px;
+    gap: 15px;
+    min-height: auto;
   }
 
   .welcome-title, .page-title {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
+    line-height: 1.3;
+    margin-bottom: 12px;
   }
 
+  /* Navigation improvements */
   .page-navigator {
-    right: 10px;
-    padding: 12px 6px;
+    right: 8px;
+    padding: 10px 6px;
+    border-radius: 16px;
   }
 
   .nav-item {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
   }
 
   .nav-item i {
-    font-size: 16px;
+    font-size: 14px;
   }
 
   .nav-tooltip {
     display: none;
   }
 
+  /* Theme toggle improvements */
   .theme-toggle-container {
-    top: 10px;
-    right: 10px;
+    top: 8px;
+    right: 8px;
   }
 
   .toggle-track {
-    width: 50px;
-    height: 25px;
+    width: 45px;
+    height: 22px;
   }
 
   .toggle-thumb {
-    width: 21px;
-    height: 21px;
+    width: 18px;
+    height: 18px;
+    top: 2px;
+    left: 2px;
   }
 
   [data-theme="dark"] .toggle-thumb {
-    transform: translateX(25px);
+    transform: translateX(23px);
+  }
+
+  /* Password section improvements */
+  .password-container {
+    max-width: 100%;
+    padding: 0 10px;
   }
 
   .input-group {
     flex-direction: column;
+    gap: 10px;
   }
 
+  .password-input {
+    padding: 12px 16px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  .unlock-button {
+    padding: 12px 20px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Slider improvements */
   .slider-unlock-container {
-    width: 250px;
+    width: 100%;
+    max-width: 280px;
+  }
+
+  .slider-track {
+    height: 50px;
+  }
+
+  .slider-thumb {
+    width: 42px;
+    height: 42px;
+  }
+
+  /* Media display improvements */
+  .media-container {
+    max-width: 100%;
+    padding: 0 10px;
   }
 
   .media-display {
-    height: 200px;
+    min-height: 250px;
+    max-height: 400px;
+    margin: 0 auto 16px auto;
   }
 
+  .photo-gallery {
+    max-width: 100%;
+  }
+
+  .photo-frame {
+    padding: 10px;
+  }
+
+  .responsive-image-container {
+    max-width: 100%;
+  }
+
+  .responsive-image-container img {
+    max-height: 50vh;
+  }
+
+  /* Interactive elements improvements */
   .birthday-cake {
-    width: 150px;
-    height: 120px;
+    width: 140px;
+    height: 110px;
   }
 
   .memory-tree {
-    width: 250px;
-    height: 150px;
+    width: 220px;
+    height: 140px;
   }
 
+  .promise-tree {
+    width: 180px;
+    height: 200px;
+  }
+
+  /* Audio controls improvements */
+  .audio-control, .audio-control-btn {
+    position: static;
+    left: auto;
+    top: auto;
+    margin: 10px auto;
+  }
+
+  /* Rakhi specific improvements */
+  .rakhi-ceremony-svg-container {
+    padding: 15px 10px;
+    min-height: 400px;
+  }
+
+  .ritual-btn {
+    padding: 12px 24px;
+    font-size: 1rem;
+    width: 100%;
+    max-width: 280px;
+  }
+
+  /* Diya ceremony improvements */
+  .diya-ceremony-container {
+    max-width: 100%;
+    gap: 15px;
+  }
+
+  .ceremony-diya {
+    transform: scale(0.9);
+  }
+
+  /* Thread of memories improvements */
+  .thread-of-memories-container {
+    height: 100px;
+    padding: 15px 10px;
+  }
+
+  .memory-popup {
+    min-width: 160px;
+    max-width: 220px;
+    padding: 12px;
+    font-size: 0.85rem;
+  }
+
+  /* Share modal improvements */
   .share-modal-content {
-    padding: 20px;
-    margin: 20px;
+    padding: 20px 15px;
+    margin: 15px;
+    border-radius: 16px;
   }
 
   .button-group {
     flex-direction: column;
+    gap: 10px;
   }
 
   .social-links {
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
   }
 
-  .diya {
-    width: 30px;
-    height: 30px;
-  }
-
-  .diya-base {
-    width: 18px;
-    height: 9px;
-  }
-
-  .diya-flame {
-    width: 6px;
-    height: 9px;
-  }
-
-  .tree-animation {
-    width: 40px;
-    height: 60px;
+  .social-links a {
+    flex: 1;
+    min-width: 100px;
+    font-size: 0.9rem;
+    padding: 10px 12px;
   }
 }
+
        /* Diya Ceremony */
         .diya-ceremony-container {
             display: flex;
@@ -2422,56 +2720,84 @@ body {
             animation: flicker 1.5s ease-in-out infinite alternate;
             box-shadow: 0 0 10px rgba(255, 69, 0, 0.8);
         }
-@media (max-width: 480px) {
+
+
+/* Landscape orientation adjustments */
+@media (max-width: 768px) and (orientation: landscape) {
   .card-container {
-    height: 450px;
+    max-height: 90vh;
+    overflow-y: auto;
   }
 
   .page-content {
-    padding: 16px;
-    gap: 12px;
-  }
-
-  .welcome-title, .page-title {
-    font-size: 1.2rem;
-  }
-
-  .countdown {
-    font-size: 3rem;
-  }
-
-  .slider-unlock-container {
-    width: 200px;
-  }
-
-  .slider-track {
-    height: 50px;
-  }
-
-  .slider-thumb {
-    width: 42px;
-    height: 42px;
-  }
-
-  .birthday-cake {
-    width: 120px;
-    height: 100px;
-  }
-
-  .memory-tree {
-    width: 200px;
-    height: 120px;
-  }
-
-  .thread-of-memories-container {
-    height: 100px;
     padding: 15px;
   }
 
-  .memory-popup {
-    min-width: 150px;
-    max-width: 200px;
-    padding: 12px;
+  .welcome-title, .page-title {
+    font-size: 1.3rem;
+  }
+
+  .rakhi-ceremony-svg-container {
+    min-height: 300px;
+  }
+}
+
+
+/* Extra small devices */
+@media (max-width: 360px) {
+  .page-content {
+    padding: 12px 8px;
+  }
+
+  .welcome-title, .page-title {
+    font-size: 1.1rem;
+  }
+
+  .password-input {
+    padding: 10px 14px;
+  }
+
+  .ritual-btn {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+  }
+
+  .gift-popup-content {
+    padding: 15px 10px;
+  }
+}
+
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .diya-flame, .rakhi-diya-flame {
+    filter: blur(0.25px);
+  }
+}
+
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+  .nav-item,
+  .theme-toggle,
+  .slider-thumb,
+  .ritual-btn,
+  .action-button,
+  .ceremony-diya {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .nav-item:hover,
+  .theme-toggle:hover,
+  .ritual-btn:hover {
+    transform: none;
+  }
+
+  .nav-item:active,
+  .theme-toggle:active,
+  .ritual-btn:active {
+    transform: scale(0.95);
   }
 }
 
@@ -2956,26 +3282,127 @@ body {
 }
 
 /* Responsive adjustments for the SVG */
+/* Small Mobile Styles */
 @media (max-width: 480px) {
-    .rakhi-ceremony-svg {
-        height: 250px;
-    }
+  .card-container {
+    margin: 2px;
+    border-radius: 12px;
+    min-height: 70vh;
+  }
 
-    .ritual-btn {
-        padding: 10px 20px;
-        font-size: 0.9rem;
-    }
+  .page-content {
+    padding: 15px 10px;
+    gap: 12px;
+  }
 
-    .gift-popup-content {
-        padding: 15px;
-        max-width: 90vw;
-    }
+  .welcome-title, .page-title {
+    font-size: 1.2rem;
+    line-height: 1.25;
+  }
 
-    .hindi-message {
-        font-size: 1rem;
-    }
+  .countdown {
+    font-size: 2.5rem;
+  }
+
+  .slider-unlock-container {
+    width: 100%;
+    max-width: 250px;
+  }
+
+  .slider-track {
+    height: 45px;
+  }
+
+  .slider-thumb {
+    width: 37px;
+    height: 37px;
+  }
+
+  .birthday-cake {
+    width: 120px;
+    height: 90px;
+  }
+
+  .memory-tree {
+    width: 180px;
+    height: 120px;
+  }
+
+  .promise-tree {
+    width: 160px;
+    height: 180px;
+  }
+
+  .media-display {
+    min-height: 200px;
+    max-height: 300px;
+  }
+
+  .responsive-image-container img {
+    max-height: 40vh;
+  }
+
+  .rakhi-ceremony-svg-container {
+    padding: 10px 5px;
+    min-height: 350px;
+  }
+
+  .ritual-btn {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+
+  .gift-popup-content {
+    padding: 20px 15px;
+    margin: 10px;
+    max-width: 90vw;
+  }
+
+  .hindi-message {
+    font-size: 1.1rem;
+  }
+
+  .english-message {
+    font-size: 1rem;
+  }
+
+  /* Navigation adjustments */
+  .nav-item {
+    width: 32px;
+    height: 32px;
+  }
+
+  .nav-item i {
+    font-size: 12px;
+  }
+
+  /* Rangoli and decorative elements */
+  .rakhi-rangoli {
+    width: 40px;
+    height: 40px;
+  }
+
+  .marigold-garland {
+    font-size: 1.2rem;
+    padding: 5px 0;
+  }
+
+  /* Diya adjustments */
+  .diya, .rakhi-diya {
+    width: 24px;
+    height: 20px;
+  }
+
+  .diya-base, .rakhi-diya-base {
+    width: 18px;
+    height: 10px;
+  }
+
+  .diya-flame, .rakhi-diya-flame {
+    width: 6px;
+    height: 8px;
+  }
 }
-
         .beautiful-rakhi-container {
             position: fixed;
             top: 0;
@@ -3402,4 +3829,24 @@ body {
         opacity: 1;
         transform: scaleY(1) translateY(0);
     }
+}
+
+html {
+  font-size: 16px;
+}
+
+@media (max-width: 1200px) {
+  html { font-size: 15px; }
+}
+
+@media (max-width: 992px) {
+  html { font-size: 14px; }
+}
+
+@media (max-width: 768px) {
+  html { font-size: 13px; }
+}
+
+@media (max-width: 480px) {
+  html { font-size: 12px; }
 }
