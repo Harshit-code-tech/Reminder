@@ -80,6 +80,7 @@ class GreetingCardApp {
         this.incorrectAttempts = 0;
         this.cardContainer = null;
         this.eventType = 'birthday';
+        this.animationInProgress = false;
         this.themes = this.initializeThemes();
         this.elements = {};
         this.storageKey = '';
@@ -578,81 +579,236 @@ class GreetingCardApp {
     }
 
 
-    // Rakhi Ceremony System
-    setupRakhiCeremony() {
-        const rakhiCenter = document.getElementById('rakhi-center');
-        const ceremonyInstructions = document.getElementById('ceremony-instructions');
-        const tilakSpot = document.getElementById('tilak-spot');
 
-        if (!rakhiCenter) return;
+    setupRakhiSVGCeremony() {
+        const startRitualBtn = document.getElementById('start-ritual-btn');
+        if (!startRitualBtn) return;
 
+        if (this.animationInProgress) return;
 
-        let ceremonyStep = 0;
-
-        const performCeremony = () => {
-            ceremonyStep++;
-
-            switch(ceremonyStep) {
-                case 1:
-                    // Step 1: Rakhi glow animation
-                    rakhiCenter.style.animation = 'rakhi-glow 1s ease-out';
-                    ceremonyInstructions.innerHTML = '✨ The rakhi glows with protective energy!';
-                    this.playBellSound();
-                    setTimeout(performCeremony, 2000);
-                    break;
-
-                case 2:
-                    // Step 2: Show tilak ceremony
-                    document.getElementById('tilak-ceremony').style.display = 'block';
-                    ceremonyInstructions.innerHTML = '🙏 Click to apply sacred tilak';
-                    this.setuptilakCeremony();
-                    break;
-            }
-        };
-
-        rakhiCenter.addEventListener('click', performCeremony);
-        rakhiCenter.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                performCeremony();
-            }
+        startRitualBtn.addEventListener('click', () => {
+            this.startRakhiRitual();
         });
+
+        // Setup gift and popup handlers
+        this.setupRakhiGiftHandlers();
     }
 
-    setuptilakCeremony() {
-        const tilakSpot = document.getElementById('tilak-spot');
-        const tilakCeremony = document.getElementById('tilak-ceremony');
-        const ceremonyInstructions = document.getElementById('ceremony-instructions');
+    startRakhiRitual() {
+        if (this.animationInProgress) return;
 
-        if (!tilakSpot || !tilakCeremony) return;
+        this.animationInProgress = true;
+        const startBtn = document.getElementById('start-ritual-btn');
+        const instruction = document.querySelector('.ritual-instruction');
 
-        const applytilak = () => {
-            tilakSpot.classList.add('applied');
+        // Update button
+        startBtn.disabled = true;
+        startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sacred Ritual in Progress...';
+
+        // Play sound
+        this.playBellSound();
+
+        // Start animation sequence
+        this.runRakhiAnimationSequence(instruction);
+    }
+
+     runRakhiAnimationSequence(instruction) {
+        const sister = document.getElementById('sister');
+        const brotherLeftHand = document.querySelector('.brother-left-hand');
+        const wristRakhi = document.getElementById('wrist-rakhi');
+        const foreheadTilak = document.getElementById('forehead-tilak');
+
+        // Step 1: Sister walks toward brother
+        instruction.textContent = '👣 Sister approaches with love and ready to annoy his brother... | बहन प्यार से पास आ रही है, शरारत का पूरा मूड है...';
+        sister.classList.add('sister-walking');
+
+        setTimeout(() => {
+            // Step 2: Brother extends hand
+            instruction.textContent = '🤝 Brother extends his hand for the sacred thread... | भाई ने रक्षासूत्र के लिए हाथ बढ़ाया...';
+            if (brotherLeftHand) {
+                brotherLeftHand.classList.add('brother-extending-hand');
+            }
             this.playBellSound();
-            this.audioManager.fadeToUserMessage();
 
             setTimeout(() => {
-                const hasThreadOfMemories = this.cardContainer.dataset.threadOfMemories === 'true';
-                let message = '🌟 Sacred ritual completed! ';
-                if (hasThreadOfMemories) {
-                    message += 'Thread of memories will now appear.';
-                } else {
-                    message += 'Milestones will now appear.';
+                // Step 3: Sister ties rakhi to brother's wrist
+                instruction.textContent = '🔗 Sister ties the sacred rakhi with prayers... | बहन ने प्रेम और प्रार्थनाओं के साथ राखी बाँधी...';
+                if (wristRakhi) {
+                    wristRakhi.classList.add('wrist-rakhi-appearing');
                 }
+                this.playBellSound();
 
-                document.getElementById('ceremony-instructions').innerHTML = message;
-                // Show thread of memories after ceremony
                 setTimeout(() => {
-                    // const hasThreadOfMemories = this.cardContainer.dataset.threadOfMemories === 'true';
-                    if (hasThreadOfMemories) {
-                        this.showThreadOfMemories();
+                    // Step 4: Sister applies tilak on brother's forehead
+                    instruction.textContent = '🌺 Applying tilak for divine blessings... | ईश्वर की कृपा के लिए बहन तिलक लगा रही है...';
+                    if (foreheadTilak) {
+                        foreheadTilak.classList.add('forehead-tilak-appearing');
                     }
-                    this.showMilestonePopup();
-                }, 2000);
-            }, 1000);
-        };
+                    this.playBellSound();
 
-        tilakCeremony.addEventListener('click', applytilak);
+                    setTimeout(() => {
+                        // Step 5: Ceremony complete, show beautiful rakhi display
+                        instruction.textContent = '✨ The sacred bond is blessed with divine grace... | यह पवित्र बंधन अब ईश्वर की कृपा से संजोया गया है...';
+                        this.showBeautifulRakhiDisplay();
+                        this.playCelebrationSound();
+
+                        // Update instruction after rakhi appears
+                        setTimeout(() => {
+                            instruction.innerHTML = '🎁 <strong>Click the gift</strong> to receive your blessing!<br>🎁 <strong>तोहफ़ा खोलो</strong> और आशीर्वाद पाओ!';
+                        }, 2000);
+
+                    }, 2000); // Wait for tilak animation
+                }, 2500); // Wait for rakhi tying animation
+            }, 2000); // Wait for brother extending hand
+        }, 3000); // Wait for sister walking animation
+    }
+
+
+    showBeautifulRakhiDisplay() {
+        const rakhiContainer = document.getElementById('beautiful-rakhi');
+        if (rakhiContainer) {
+            rakhiContainer.classList.add('show');
+            // Play celebration sound
+            setTimeout(() => this.playCelebrationSound(), 500);
+        }
+    }
+
+    setupRakhiGiftHandlers() {
+        // Gift icon click
+        const giftIcon = document.getElementById('gift-icon');
+        if (giftIcon) {
+            giftIcon.addEventListener('click', () => this.showRakhiGiftPopup());
+        }
+
+        // Close buttons
+        const closeRakhi = document.getElementById('close-rakhi');
+        if (closeRakhi) {
+            closeRakhi.addEventListener('click', () => this.closeRakhiDisplay());
+        }
+
+        const closeGift = document.getElementById('close-gift-popup');
+        if (closeGift) {
+            closeGift.addEventListener('click', () => this.closeRakhiGiftPopup());
+        }
+    }
+
+    showRakhiGiftPopup() {
+        const giftPopup = document.getElementById('gift-popup');
+        if (giftPopup) {
+            giftPopup.classList.add('show');
+            this.playCelebrationSound();
+            this.showConfetti();
+        }
+    }
+
+    closeRakhiDisplay() {
+        const rakhiContainer = document.getElementById('beautiful-rakhi');
+        if (rakhiContainer) {
+            rakhiContainer.classList.remove('show');
+        }
+        // Continue to next section
+        setTimeout(() => this.triggerRakhiNextSection(), 500);
+    }
+
+    closeRakhiGiftPopup() {
+        const giftPopup = document.getElementById('gift-popup');
+        if (giftPopup) {
+            giftPopup.classList.remove('show');
+        }
+        // Also close the rakhi display
+        setTimeout(() => {
+            this.closeRakhiDisplay();
+        }, 300);
+    }
+
+    triggerRakhiNextSection() {
+        // Update ritual instruction
+        const instruction = document.querySelector('.ritual-instruction');
+        if (instruction) {
+            instruction.innerHTML = '✨ <strong>पवित्र रस्म पूरी हुई!</strong> Sacred ceremony completed! <br>आपका बंधन ईश्वर के प्रेम से पवित्र हुआ है। Your bond is blessed with divine love.';
+
+        }
+
+        // Show success feedback
+        this.showFeedback('🎉 Sacred Raksha Bandhan ceremony completed! May your bond grow stronger.', 'success');
+
+        // Reset animation state
+        this.animationInProgress = false;
+
+        // Hide the start button since ceremony is complete
+        const startBtn = document.getElementById('start-ritual-btn');
+        if (startBtn) {
+            startBtn.style.display = 'none';
+        }
+
+        // Check for thread of memories or show milestone popup
+        const hasThreadOfMemories = this.cardContainer.dataset.threadOfMemories === 'true';
+        if (hasThreadOfMemories) {
+            setTimeout(() => this.showThreadOfMemories(), 2000);
+        } else {
+            setTimeout(() => this.showMilestonePopup(), 2000);
+        }
+    }
+
+
+    // Enhanced bell sound for more authentic feel
+
+    playBellSound() {
+        if (window.AudioContext || window.webkitAudioContext) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator1 = audioContext.createOscillator();
+            const oscillator2 = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            const filterNode = audioContext.createBiquadFilter();
+
+            oscillator1.connect(filterNode);
+            oscillator2.connect(filterNode);
+            filterNode.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            // Primary frequency (fundamental)
+            oscillator1.frequency.setValueAtTime(800, audioContext.currentTime);
+            // Harmonic frequency for richness
+            oscillator2.frequency.setValueAtTime(1200, audioContext.currentTime);
+
+            filterNode.type = 'lowpass';
+            filterNode.frequency.setValueAtTime(2000, audioContext.currentTime);
+
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.0);
+
+            oscillator1.start(audioContext.currentTime);
+            oscillator1.stop(audioContext.currentTime + 1.0);
+            oscillator2.start(audioContext.currentTime);
+            oscillator2.stop(audioContext.currentTime + 1.0);
+        }
+    }
+
+    playCelebrationSound() {
+        if (window.AudioContext || window.webkitAudioContext) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+            // Create a more celebratory sound with multiple tones
+            const frequencies = [523.25, 659.25, 783.99]; // C5, E5, G5 (major chord)
+
+            frequencies.forEach((freq, index) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
+                oscillator.type = 'triangle';
+
+                const startTime = audioContext.currentTime + (index * 0.1);
+                gainNode.gain.setValueAtTime(0.1, startTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.8);
+
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 0.8);
+            });
+        }
     }
 
     initializeMemoryThread() {
@@ -696,24 +852,6 @@ class GreetingCardApp {
         if (popup) {
             popup.style.opacity = '0';
             setTimeout(() => popup.classList.add('hidden'), 300);
-        }
-    }
-    playBellSound() {
-        // Create audio context for bell sound
-        if (window.AudioContext || window.webkitAudioContext) {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-
-            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
-
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 1);
         }
     }
 
@@ -1119,24 +1257,8 @@ class GreetingCardApp {
                 const branch = document.createElement('div');
                 branch.className = 'promise-branch';
                 branch.textContent = promises[promiseIndex];
-                // branch.style.cssText = `
-                //     position: absolute;
-                //     background: var(--rakhi-green);
-                //     color: white;
-                //     padding: 5px 10px;
-                //     border-radius: 15px;
-                //     font-size: 0.8rem;
-                //     top: ${20 + promiseIndex * 15}%;
-                //     left: ${10 + promiseIndex * 10}%;
-                //     animation: fadeInUp 0.5s ease-out;
-                // `;
-                // promiseTree.appendChild(branch);
-                // promiseIndex++;
-                //
-                // if (promiseIndex >= promises.length) {
-                //     this.revealAudioOrQuote();
-                // }
-                            // Position based on predefined spots
+
+                // Position based on predefined spots
                 const position = branchPositions[promiseIndex];
                 branch.style.top = position.top;
                 branch.style.left = position.left;
@@ -1775,7 +1897,8 @@ class GreetingCardApp {
                 break;
             case 2:
                 if (this.eventType === 'raksha_bandhan') {
-                    this.setupRakhiCeremony();
+                    this.setupRakhiSVGCeremony();
+
                 } else if (this.eventType === 'birthday') {
                     this.setupSliderUnlock();
                 }
@@ -2012,7 +2135,24 @@ class GreetingCardApp {
         this.initializeQuotes();
     }
 
+    closeAllRakhiPopups() {
+        const giftPopup = document.getElementById('gift-popup');
+        const rakhiContainer = document.getElementById('beautiful-rakhi');
+
+        if (giftPopup && giftPopup.classList.contains('show')) {
+            this.closeRakhiGiftPopup();
+        } else if (rakhiContainer && rakhiContainer.classList.contains('show')) {
+            this.closeRakhiDisplay();
+        }
+    }
     handleKeyboardNavigation(e) {
+
+        // Handle escape key for popups
+        if (e.key === 'Escape' && this.eventType === 'raksha_bandhan') {
+            this.closeAllRakhiPopups();
+            return;
+        }
+
         // Arrow key navigation
         if (e.key === 'ArrowLeft' && this.currentPage > 1) {
             this.goToPage(this.currentPage - 1);

@@ -2,7 +2,7 @@
 :root {
   /* Light Theme Colors */
   --bg-primary: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 50%, #fdf2f8 100%);
-  --bg-secondary: rgba(255, 255, 255, 0.9);
+  --bg-secondary: rgba(255, 248, 220, 0.9);
   --text-primary: #1f2937;
   --text-secondary: #6b7280;
   --accent-primary: #3b82f6;
@@ -220,6 +220,7 @@
   height: 100%;
   pointer-events: none;
   z-index: 1;
+  background-blend-mode: overlay;
 }
 
 .rakhi-rangoli {
@@ -233,6 +234,9 @@
   position: absolute;
   z-index: 10;
   pointer-events: none;
+}
+[data-theme="light"] .rakhi-rangoli {
+  background: radial-gradient(circle, #e57607 30%, transparent 70%);
 }
 
 @keyframes rangoliPulse {
@@ -268,12 +272,15 @@
 }
 
     /* Rakhi Thread Animation */
-    .rakhi-thread {
-      position: relative;
-      width: 200px;
-      height: 200px;
-      margin: 0 auto;
-    }
+.rakhi-thread {
+            position: absolute;
+            width: 280px;
+            height: 280px;
+            border: 4px solid var(--rakhi-saffron);
+            border-radius: 50%;
+            background: none;
+            animation: threadShimmer 3s ease-in-out infinite;
+}
 
     .thread-path {
       stroke: var(--rakhi-gold);
@@ -284,21 +291,20 @@
       animation: drawThread 3s ease-out forwards;
     }
 
-    .rakhi-center {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 60px;
-      height: 60px;
-      background: var(--rakhi-silk);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 0 20px rgba(220, 38, 38, 0.5);
-      animation: rakhi-glow 2s ease-in-out infinite alternate;
-    }
+        .rakhi-center {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            position: absolute;
+            background: radial-gradient(circle, #DC143C 0%, #B71C1C 70%, #8E24AA 100%);
+            box-shadow:
+                0 0 30px rgba(220, 20, 60, 0.8),
+                inset 0 0 15px rgba(139, 69, 19, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: centerPulse 2s ease-in-out infinite;
+        }
 
     .rakhi-center::before {
       content: '🕉️';
@@ -847,8 +853,8 @@ body {
 .tree-foliage {
   position: absolute;
   bottom: 60px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 17%;
+
   width: 160px;
   height: 160px;
   background: radial-gradient(circle at center, var(--rakhi-green) 60%, transparent 100%);
@@ -2525,4 +2531,845 @@ body {
             color: var(--text-primary);
             margin-bottom: 30px;
             font-style: italic;
+}
+
+
+.rakhi-ceremony-svg-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  min-height: 500px;
+}
+
+.rakhi-ceremony-svg {
+  border-radius: 15px;
+  background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 50%, #FFE0B2 100%);
+  box-shadow: 0 8px 25px rgba(255, 193, 7, 0.2);
+  border: 2px solid var(--rakhi-gold, #FFD700);
+}
+
+/* Ritual Controls */
+.ritual-controls {
+  text-align: center;
+}
+
+.ritual-btn {
+  background: linear-gradient(45deg, var(--rakhi-silk, #E91E63), var(--rakhi-saffron, #FF6B35));
+  color: #bb8512;
+  padding: 15px 30px;
+  font-size: 1.2rem;
+  border-radius: 25px;
+  border: purple;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(233, 30, 99, 0.3);
+  transition: all 0.3s ease;
+}
+
+.ritual-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4);
+}
+
+.ritual-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.ritual-instruction {
+  margin-top: 10px;
+  color: var(--rakhi-primary, #8E24AA);
+  font-style: italic;
+}
+
+/* Gift Popup */
+.gift-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1100;
+  backdrop-filter: blur(5px);
+}
+
+.gift-popup.show {
+            display: flex;
+            animation: fadeIn 0.5s ease-out;
+
+}
+.gift-popup-content {
+  background: linear-gradient(135deg, #FFF8E1, #FFECB3);
+  padding: 30px;
+  border-radius: 20px;
+  text-align: center;
+  max-width: 400px;
+  margin: 20px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+  border: 3px solid var(--rakhi-gold, #FFD700);
+  animation: popupAppear 0.5s ease-out;
+  position: relative;
+}
+
+@keyframes popupAppear {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.gift-popup h3 {
+  color: var(--rakhi-silk, #E91E63);
+  margin-bottom: 20px;
+  font-size: 2rem;
+}
+
+.hindi-message {
+  color: var(--rakhi-saffron, #FF6B35);
+  font-size: 1.4rem;
+  font-weight: bold;
+  margin: 15px 0;
+}
+
+.english-message {
+  color: var(--rakhi-primary, #8E24AA);
+  margin: 10px 0;
+  font-size: 1.1rem;
+}
+
+.playful-message {
+  color: var(--rakhi-green, #4CAF50);
+  font-style: italic;
+  font-size: 0.9rem;
+  margin: 15px 0;
+}
+
+.close-gift-popup {
+  background: var(--rakhi-silk, #E91E63);
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.close-gift-popup:hover {
+  background: var(--rakhi-saffron, #FF6B35);
+  transform: translateY(-2px);
+}
+
+/* Animation Classes */
+.sister-walking {
+  animation: walkToCenter 3s ease-in-out forwards;
+}
+
+
+.brother-extending-hand {
+  animation: extendHand 1s ease-out forwards;
+}
+
+        .wrist-rakhi-appearing {
+            animation: rakhiWristAppear 2s ease-out forwards;
+        }
+
+        .forehead-tilak-appearing {
+            animation: tilakForheadAppear 1.5s ease-out 0.5s forwards;
+        }
+
+.gift-revealing {
+  animation: giftReveal 1.2s ease-out 1s forwards;
+}
+.gift-interactive {
+            cursor: pointer !important;
+            animation: giftPulse 2s infinite;
+}
+/* Keyframe Animations */
+@keyframes walkToCenter {
+  0% { transform: translate(50px, 180px); }
+  50% { transform: translate(200px, 175px); }
+  100% { transform: translate(320px, 180px); }
+}
+@keyframes extendHand {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-20deg) translateX(10px); }
+}
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes rakhiGlow {
+            0% { box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 rgba(255, 215, 0, 0.4); }
+            100% { box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4), 0 0 40px rgba(255, 215, 0, 0.6); }
+        }
+
+        @keyframes rotateRing {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes petalPulse {
+            0%, 100% { transform: rotate(var(--rotation)) translateY(-90px) scale(1); opacity: 0.8; }
+            50% { transform: rotate(var(--rotation)) translateY(-90px) scale(1.2); opacity: 1; }
+        }
+
+        @keyframes giftBounce {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes popupScale {
+            0% { opacity: 0; transform: scale(0.8) translateY(30px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+@keyframes rakhiAppear {
+  0% {
+    opacity: 0;
+    transform: translate(535px, 110px) scale(0);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translate(535px, 110px) scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(535px, 110px) scale(1);
+  }
+}
+
+@keyframes tilakAppear {
+  0% {
+    opacity: 0;
+    transform: translate(500px, 45px) scaleY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(500px, 45px) scaleY(1);
+  }
+}
+
+@keyframes giftReveal {
+  0% {
+    opacity: 0;
+    transform: translate(450px, 110px) rotateY(-90deg);
+  }
+  70% {
+    opacity: 1;
+    transform: translate(450px, 110px) rotateY(10deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(450px, 110px) rotateY(0deg);
+  }
+}
+
+        /* New Keyframes for improved animations */
+        @keyframes threadShimmer {
+            0%, 100% { box-shadow: 0 0 10px rgba(255, 111, 53, 0.6); }
+            50% { box-shadow: 0 0 25px rgba(255, 111, 53, 1), inset 0 0 15px rgba(255, 215, 0, 0.8); }
+        }
+
+        @keyframes centerPulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 30px rgba(220, 20, 60, 0.8), inset 0 0 15px rgba(139, 69, 19, 0.6);
+            }
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 0 50px rgba(220, 20, 60, 1), inset 0 0 25px rgba(139, 69, 19, 0.8);
+            }
+        }
+
+        @keyframes gemTwinkle {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 5px currentColor;
+            }
+            50% {
+                transform: scale(1.5);
+                box-shadow: 0 0 15px currentColor, 0 0 25px currentColor;
+            }
+        }
+
+        @keyframes omGlow {
+            0%, 100% {
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(255, 255, 255, 0.5);
+            }
+            50% {
+                text-shadow: 2px 2px 8px rgba(0, 0, 0, 1), 0 0 20px rgba(255, 255, 255, 0.8), 0 0 30px rgba(255, 215, 0, 0.6);
+            }
+        }
+
+        @keyframes rakhiWristAppear {
+            0% {
+                opacity: 0;
+                transform: translate(35px, 110px) scale(0) rotate(-180deg);
+            }
+            50% {
+                opacity: 0.8;
+                transform: translate(35px, 110px) scale(1.3) rotate(-90deg);
+            }
+            100% {
+                opacity: 1;
+                transform: translate(35px, 110px) scale(1) rotate(0deg);
+            }
+        }
+
+        @keyframes tilakForheadAppear {
+            0% {
+                opacity: 0;
+                transform: translate(0, 45px) scaleY(0) translateY(-10px);
+            }
+            60% {
+                opacity: 0.9;
+                transform: translate(0, 45px) scaleY(1.2) translateY(-2px);
+            }
+            100% {
+                opacity: 1;
+                transform: translate(0, 45px) scaleY(1) translateY(0px);
+            }
+        }
+
+
+
+
+@keyframes giftPulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+}
+        .rakhi-petals {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+        }
+
+        .petal {
+            position: absolute;
+            width: 24px;
+            height: 48px;
+            left:140px;
+            top:100px;
+            background: linear-gradient(45deg, var(--rakhi-gold), var(--rakhi-saffron));
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            transform-origin: bottom center;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+
+
+        .petal:nth-child(1) { transform: rotate(0deg) translateY(-110px); animation: petalPulse 4s ease-in-out infinite; }
+        .petal:nth-child(2) { transform: rotate(45deg) translateY(-110px); animation: petalPulse 4s ease-in-out infinite 0.5s; }
+        .petal:nth-child(3) { transform: rotate(90deg) translateY(-110px); animation: petalPulse 4s ease-in-out infinite 1s; }
+        .petal:nth-child(4) { transform: rotate(135deg) translateY(-110px); animation: petalPulse 4s ease-in-out infinite 1.5s; }
+        .petal:nth-child(5) { transform: rotate(180deg) translateY(-110px); animation: petalPulse 4s ease-in-out infinite 2s; }
+        .petal:nth-child(6) { transform: rotate(225deg) translateY(-110px); animation: petalPulse 4s ease-in-out infinite 2.5s; }
+        .petal:nth-child(7) { transform: rotate(270deg) translateY(-110px); animation: petalPulse 4s ease-in-out infinite 3s; }
+        .petal:nth-child(8) { transform: rotate(315deg) translateY(-110px); animation: petalPulse 4s ease-in-out infinite 3.5s; }
+
+
+
+        /* Floating petals animation */
+.floating-petal {
+            animation: floatPetal 4s ease-in-out infinite;
+}
+
+@keyframes floatPetal {
+            0%, 100% {
+                opacity: 0.6;
+                transform: translateY(0px) translateX(0px);
+            }
+            50% {
+                opacity: 1;
+                transform: translateY(-10px) translateX(5px);
+            }
+}
+/* Responsive Design */
+        @media (max-width: 768px) {
+            .page-title { font-size: 2rem; }
+            .css-rakhi { width: 150px; height: 150px; }
+            .rakhi-outer-ring { width: 130px; height: 130px; }
+            .rakhi-middle-ring { width: 100px; height: 100px; }
+            .rakhi-center { width: 60px; height: 60px; }
+            .gift-popup-content { padding: 25px; margin: 10px; }
+            .ritual-btn { padding: 12px 24px; font-size: 1rem; }
+        }
+
+@keyframes page2pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(233, 30, 99, 0.6); }
+    100% { transform: scale(1); }
+}
+
+.gift-interactive:hover {
+    filter: brightness(1.1);
+    transform: scale(1.05);
+    transition: all 0.3s ease;
+}
+
+/* Responsive adjustments for the SVG */
+@media (max-width: 480px) {
+    .rakhi-ceremony-svg {
+        height: 250px;
+    }
+
+    .ritual-btn {
+        padding: 10px 20px;
+        font-size: 0.9rem;
+    }
+
+    .gift-popup-content {
+        padding: 15px;
+        max-width: 90vw;
+    }
+
+    .hindi-message {
+        font-size: 1rem;
+    }
+}
+
+        .beautiful-rakhi-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+        .beautiful-rakhi-container.show {
+            display: flex;
+            animation: fadeIn 1s ease-out;
+        }
+.rakhi-main-design {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin-bottom: 40px;
+}
+
+        .rakhi-display {
+            background: radial-gradient(circle, #FFF8E1 0%, #FFECB3 70%, #FFE0B2 100%);
+            padding: 80px;
+            border-radius: 50%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border: 8px solid var(--rakhi-gold);
+            position: relative;
+            animation: rakhiGlow 2s ease-in-out infinite alternate;
+        }
+
+        .css-rakhi {
+            width: 300px;
+            height: 300px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+/* Central Rakhi Design */
+.rakhi-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120px;
+    height: 120px;
+    animation: rakhi-rotate 20s linear infinite;
+}
+
+        .rakhi-outer-ring {
+            width: 220px;
+            height: 220px;
+            border: 8px solid var(--rakhi-gold);
+            border-radius: 50%;
+            position: absolute;
+            background: conic-gradient(from 0deg, var(--rakhi-silk), var(--rakhi-saffron), var(--rakhi-gold), var(--rakhi-silk));
+            box-shadow:
+                inset 0 0 30px rgba(255, 215, 0, 0.6),
+                0 0 40px rgba(233, 30, 99, 0.4);
+            animation: rotateRing 12s linear infinite;
+        }
+
+.rakhi-decorative-dots {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 20% 20%, #DC143C 8px, transparent 8px),
+        radial-gradient(circle at 80% 20%, #4CAF50 6px, transparent 6px),
+        radial-gradient(circle at 20% 80%, #2196F3 7px, transparent 7px),
+        radial-gradient(circle at 80% 80%, #FF9800 6px, transparent 6px);
+}
+
+        .rakhi-middle-ring {
+            width: 160px;
+            height: 160px;
+            border: 6px solid var(--rakhi-saffron);
+            border-radius: 50%;
+            position: absolute;
+            background: radial-gradient(circle, #FFD700 0%, #FF8F00 50%, #FF6B35 100%);
+            box-shadow:
+                inset 0 0 20px rgba(255, 111, 53, 0.8),
+                0 0 25px rgba(255, 111, 53, 0.5);
+            animation: rotateRing 8s linear infinite reverse;
+        }
+        /* Inner Ring */
+        .rakhi-inner-ring {
+            width: 100px;
+            height: 100px;
+            border: 4px solid var(--rakhi-primary);
+            border-radius: 50%;
+            position: absolute;
+            background: linear-gradient(45deg, #8E24AA, #AB47BC);
+            box-shadow: inset 0 0 15px rgba(142, 36, 170, 0.8);
+            animation: rotateRing 6s linear infinite;
+        }
+
+.rakhi-gems {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.gem {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: gem-twinkle 2s infinite;
+}
+
+
+        .gem {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: gemTwinkle 2s ease-in-out infinite;
+        }
+
+        .gem:nth-child(1) {
+            background: #4CAF50;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation-delay: 0s;
+        }
+        .gem:nth-child(2) {
+            background: #2196F3;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            animation-delay: 0.7s;
+        }
+        .gem:nth-child(3) {
+            background: #FF9800;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation-delay: 1.4s;
+        }
+        .gem:nth-child(4) {
+            background: #9C27B0;
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+            animation-delay: 2.1s;
+        }
+
+
+.om-symbol {
+            font-size: 28px;
+            color: white;
+            font-weight: bold;
+            text-shadow:
+                2px 2px 4px rgba(0, 0, 0, 0.8),
+                0 0 10px rgba(255, 255, 255, 0.5);
+            animation: omGlow 3s ease-in-out infinite;
+}
+.rakhi-inner-circle {
+    position: absolute;
+    top: 25px;
+    left: 25px;
+    right: 25px;
+    bottom: 25px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FFFFFF, #FFD700);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.rakhi-center-symbol {
+    font-size: 24px;
+    animation: symbol-glow 4s ease-in-out infinite;
+}
+
+/* Rakhi Threads */
+.rakhi-thread-left,
+.rakhi-thread-right {
+    position: absolute;
+    top: 50%;
+    width: 100px;
+    height: 8px;
+    background: linear-gradient(90deg, #D4AF37, #FFD700, #D4AF37);
+    border-radius: 4px;
+    transform: translateY(-50%);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.rakhi-thread-left {
+    right: 100%;
+    animation: thread-wave-left 3s ease-in-out infinite;
+}
+
+.rakhi-thread-right {
+    left: 100%;
+    animation: thread-wave-right 3s ease-in-out infinite;
+}
+
+/* Floating Sparkles */
+.sparkle {
+    position: absolute;
+    font-size: 20px;
+    animation: sparkle-float 4s ease-in-out infinite;
+}
+
+.sparkle-1 { top: 20%; left: 20%; animation-delay: 0s; }
+.sparkle-2 { top: 30%; right: 15%; animation-delay: 1s; }
+.sparkle-3 { bottom: 25%; left: 25%; animation-delay: 2s; }
+.sparkle-4 { bottom: 20%; right: 20%; animation-delay: 3s; }
+
+/* Gift Icon */
+
+
+        .gift-icon {
+            position: absolute;
+            bottom: -50px;
+            right: -50px;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, var(--rakhi-silk), var(--rakhi-saffron));
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(233, 30, 99, 0.4);
+            animation: giftBounce 2s ease-in-out infinite;
+            border: 3px solid var(--rakhi-gold);
+        }
+
+        .gift-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 30px rgba(233, 30, 99, 0.6);
+        }
+
+        .gift-icon i {
+            font-size: 2rem;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        /* Close Button */
+        .close-rakhi {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .close-rakhi:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+.gift-box {
+    position: relative;
+    width: 80px;
+    height: 60px;
+    margin: 0 auto 10px;
+}
+
+.gift-base {
+    width: 100%;
+    height: 70%;
+    background: linear-gradient(135deg, #E91E63, #C2185B);
+    border-radius: 8px;
+    position: absolute;
+    bottom: 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.gift-lid {
+    width: 100%;
+    height: 30%;
+    background: linear-gradient(135deg, #F48FB1, #E91E63);
+    border-radius: 8px 8px 4px 4px;
+    position: absolute;
+    top: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.gift-ribbon-h {
+    position: absolute;
+    top: 25%;
+    left: 0;
+    right: 0;
+    height: 12px;
+    background: linear-gradient(135deg, #FFD700, #FFA000);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.gift-ribbon-v {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 12px;
+    height: 100%;
+    background: linear-gradient(45deg, #FFD700, #FFA000);
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+}
+
+.gift-bow {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 16px;
+}
+
+.bow-left,
+.bow-right {
+    position: absolute;
+    width: 12px;
+    height: 16px;
+    background: linear-gradient(135deg, #FF4081, #E91E63);
+    border-radius: 8px 0 8px 8px;
+}
+
+.bow-left { left: 0; }
+.bow-right { right: 0; transform: scaleX(-1); }
+
+.bow-center {
+    position: absolute;
+    top: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 12px;
+    background: linear-gradient(135deg, #AD1457, #880E4F);
+    border-radius: 3px;
+}
+
+/* Animations */
+@keyframes rakhi-rotate {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes ring-pulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.6); }
+    50% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.9), 0 0 40px rgba(255, 107, 53, 0.5); }
+}
+
+@keyframes gem-twinkle {
+    0%, 100% { opacity: 0.7; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes symbol-glow {
+    0%, 100% { text-shadow: 0 0 10px rgba(255, 215, 0, 0.8); }
+    50% { text-shadow: 0 0 20px rgba(255, 215, 0, 1), 0 0 30px rgba(255, 107, 53, 0.8); }
+}
+
+@keyframes thread-wave-left {
+    0%, 100% { transform: translateY(-50%) rotate(-2deg); }
+    50% { transform: translateY(-50%) rotate(2deg); }
+}
+
+@keyframes thread-wave-right {
+    0%, 100% { transform: translateY(-50%) rotate(2deg); }
+    50% { transform: translateY(-50%) rotate(-2deg); }
+}
+
+@keyframes sparkle-float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.7; }
+    50% { transform: translateY(-10px) rotate(180deg); opacity: 1; }
+}
+
+@keyframes gift-bounce {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-5px); }
+}
+.sister-extending-arm {
+    animation: sisterExtendArm 1s ease-out forwards;
+}
+
+@keyframes sisterExtendArm {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(-30deg) translateY(-10px); }
+}
+
+/* Improved rakhi and tilak animations */
+@keyframes rakhiAppear {
+    0% {
+        opacity: 0;
+        transform: scale(0) rotate(-180deg);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.2) rotate(-90deg);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+@keyframes tilakAppear {
+    0% {
+        opacity: 0;
+        transform: scaleY(0) translateY(10px);
+    }
+    100% {
+        opacity: 1;
+        transform: scaleY(1) translateY(0);
+    }
 }
