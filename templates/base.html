@@ -217,26 +217,37 @@
             background: var(--header-gradient-dark);
         }
 
-        /* Improved responsive lamp positioning */
+        /* Enhanced lamp positioning and animations */
         .lamp-container {
             position: fixed;
             z-index: 100;
             display: flex;
             flex-direction: column;
             align-items: center;
-            transition: transform 0.3s ease, filter 0.3s ease;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), filter 0.4s ease;
             transform-origin: top center;
+            cursor: pointer;
         }
         .lamp-container:hover {
-            transform: scale(0.9);
-            filter: brightness(1.1) drop-shadow(0 0 10px rgba(245, 158, 11, 0.5));
+            transform: scale(0.95);
+            filter: brightness(1.2) drop-shadow(0 0 15px rgba(245, 158, 11, 0.7));
+        }
+        .lamp-container.mode-switching {
+            animation: lampSwitch 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes lampSwitch {
+            0% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(0.9) rotate(-2deg); }
+            50% { transform: scale(0.8) rotate(2deg); }
+            75% { transform: scale(0.95) rotate(-1deg); }
+            100% { transform: scale(1) rotate(0deg); }
         }
         .lamp-wrapper {
             display: flex;
             flex-direction: column;
             align-items: center;
             transform-origin: top center;
-            transition: transform 0.4s ease;
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
         .lamp {
             width: 40px;
@@ -244,8 +255,9 @@
             background: linear-gradient(to bottom, #f59e0b, #d97706);
             border-radius: 10px 10px 20px 20px;
             position: relative;
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
-            transition: all 0.5s ease;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
         }
         .lamp::before {
             content: '';
@@ -257,7 +269,8 @@
             top: -8px;
             left: 50%;
             transform: translateX(-50%);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s ease;
         }
         .lamp::after {
             content: '';
@@ -269,6 +282,7 @@
             top: -24px;
             left: 50%;
             transform: translateX(-50%);
+            transition: all 0.4s ease;
         }
         .lamp-light {
             position: absolute;
@@ -279,8 +293,8 @@
             top: 24px;
             left: 50%;
             transform: translateX(-50%);
-            box-shadow: 0 0 24px #fcd34d;
-            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 30px #fcd34d, 0 0 60px rgba(252, 211, 77, 0.5);
+            transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
             overflow: hidden;
         }
         .lamp-light::before {
@@ -291,17 +305,30 @@
             width: 32px;
             height: 32px;
             border-radius: 50%;
-            background: #0f172a;
-            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            background: radial-gradient(circle, #0f172a, #1e293b);
+            transition: transform 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             transform: scale(0);
+            box-shadow: 0 0 20px rgba(15, 23, 42, 0.8);
+        }
+        .lamp-light::after {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), transparent 60%);
+            opacity: 0.7;
+            transition: opacity 0.6s ease;
         }
         body.dark-mode .lamp-light {
             background: var(--lamp-gradient-dark);
-            box-shadow: 0 0 40px #f59e0b;
+            box-shadow: 0 0 50px #f59e0b, 0 0 100px rgba(245, 158, 11, 0.4);
         }
         body.dark-mode .lamp-light::before {
-            background: #fbbf24;
-            transform: scale(1) translate(-24px, 24px);
+            background: radial-gradient(circle, #fbbf24, #f59e0b);
+            transform: scale(1.2) translate(-20px, 20px);
+        }
+        body.dark-mode .lamp-light::after {
+            opacity: 0.9;
         }
         .lamp-string {
             width: 2px;
@@ -311,43 +338,60 @@
             position: relative;
             cursor: pointer;
             border-radius: 1px;
-            transition: all 0.3s ease;
-            title: "Click to toggle light/dark mode";
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .lamp-string:hover {
-            filter: brightness(1.2);
+            filter: brightness(1.3);
+            transform: scaleX(1.5);
         }
         .lamp-string.pulling {
-            animation: none;
-            transform: scaleY(0.8);
+            animation: pullString 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            transform: scaleY(0.7);
         }
         .lamp-wrapper.pulling {
-            transform: translateY(8px);
+            transform: translateY(12px) scale(0.95);
         }
-        @keyframes pull {
-            0% { transform: translateY(0); }
-            50% { transform: translateY(12px); }
-            100% { transform: translateY(0); }
+        @keyframes pullString {
+            0% { transform: scaleY(1) scaleX(1); }
+            30% { transform: scaleY(0.6) scaleX(2); }
+            70% { transform: scaleY(0.8) scaleX(1.5); }
+            100% { transform: scaleY(0.7) scaleX(1); }
         }
         .lamp-string::after {
             content: '';
             position: absolute;
             width: 8px;
             height: 8px;
-            background: linear-gradient(to bottom, #b45309, #92400e);
+            background: radial-gradient(circle, #b45309, #92400e);
             border-radius: 50%;
             bottom: -4px;
             left: 50%;
             transform: translateX(-50%);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+        .lamp-string:hover::after {
+            transform: translateX(-50%) scale(1.2);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
         }
         .mode-label {
             color: #92400e;
             font-size: 10px;
             margin-top: 8px;
             font-weight: bold;
-            transition: all 0.5s ease;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            opacity: 0.8;
+        }
+        .mode-label.changing {
+            animation: labelFlicker 0.8s ease-in-out;
+        }
+        @keyframes labelFlicker {
+            0%, 100% { opacity: 0.8; }
+            20%, 60% { opacity: 0.3; }
+            40%, 80% { opacity: 1; }
+        }
+        .mode-label {
             background: rgba(255, 255, 255, 0.7);
             padding: 2px 6px;
             border-radius: 8px;
@@ -727,19 +771,27 @@
             // Position lamp based on header height initially
             positionLampBasedOnHeader();
 
-            // Implement the improved theme toggle with lamp pull animation
+            // Implement the enhanced theme toggle with improved lamp pull animation
             const lampString = document.querySelector('.lamp-string');
             const lampWrapper = document.querySelector('.lamp-wrapper');
+            const lampContainer = document.querySelector('.lamp-container');
 
-            if (lampString && lampWrapper) {
+            if (lampString && lampWrapper && lampContainer) {
+                // Enhanced pull animation on mousedown
                 lampString.addEventListener('mousedown', (e) => {
-                    // Add pulling class to animate the lamp and string
                     lampString.classList.add('pulling');
                     lampWrapper.classList.add('pulling');
+                    lampContainer.classList.add('mode-switching');
+                    
+                    // Add haptic feedback (if supported)
+                    if (navigator.vibrate) {
+                        navigator.vibrate(50);
+                    }
                 });
 
                 lampString.addEventListener('click', (e) => {
                     const transition = document.querySelector('.mode-transition');
+                    const modeLabel = document.querySelector('.mode-label');
 
                     const rect = lampString.getBoundingClientRect();
                     const x = rect.left + rect.width / 2;
@@ -749,13 +801,15 @@
                     transition.style.setProperty('--x', `${x}px`);
                     transition.style.setProperty('--y', `${y}px`);
 
-
+                    // Add mode label animation
+                    if (modeLabel) {
+                        modeLabel.classList.add('changing');
+                    }
 
                     // Add appropriate transition class
                     const isDarkMode = document.body.classList.contains('dark-mode');
                     transition.classList.add('active', isDarkMode ? 'to-light' : 'to-dark');
                     document.body.classList.add('animating');
-
 
                     // Slight delay to ensure the transition starts before class changes
                     setTimeout(() => {
@@ -763,27 +817,32 @@
                         const newDarkMode = document.body.classList.contains('dark-mode');
                         localStorage.setItem('theme', newDarkMode ? 'dark' : 'light');
 
-                        const modeLabel = document.querySelector('.mode-label');
                         if (modeLabel) {
                             modeLabel.textContent = newDarkMode ? 'Night Mode' : 'Day Mode';
                         }
-                    }, 100);
+                    }, 150);
 
                     // Remove transition class after animation completes
                     setTimeout(() => {
                         transition.classList.remove('active', 'to-dark', 'to-light');
-
-
-                        // Remove pulling classes
                         lampString.classList.remove('pulling');
                         lampWrapper.classList.remove('pulling');
-                    }, 800);
+                        lampContainer.classList.remove('mode-switching');
+                        
+                        if (modeLabel) {
+                            modeLabel.classList.remove('changing');
+                        }
+                        
+                        document.body.classList.remove('animating');
+                    }, 1000);
                 });
 
                 // Handle case when mouse leaves during pull
                 document.addEventListener('mouseup', () => {
-                    lampString.classList.remove('pulling');
-                    lampWrapper.classList.remove('pulling');
+                    if (!lampContainer.classList.contains('mode-switching')) {
+                        lampString.classList.remove('pulling');
+                        lampWrapper.classList.remove('pulling');
+                    }
                 });
 
                 // Handle touch devices
