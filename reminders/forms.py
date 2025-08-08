@@ -274,10 +274,11 @@ class EventForm(forms.ModelForm):
                 if len(memories) < 2:
                     self.add_error('thread_of_memories', 'Thread of Memories requires at least 2 memories.')
 
+                # Remove strict pairs validation - users should be flexible in adding memories
                 # For Raksha Bandhan, validate the format (pairs)
-                if event_type == 'raksha_bandhan' and len(memories) % 2 != 0:
-                    self.add_error('thread_of_memories',
-                                   'Thread of Memories should have pairs of headers and descriptions.')
+                # if event_type == 'raksha_bandhan' and len(memories) % 2 != 0:
+                #     self.add_error('thread_of_memories',
+                #                    'Thread of Memories should have pairs of headers and descriptions.')
             else:
                 # Empty thread_of_memories when that option is selected
                 self.add_error('thread_of_memories', 'Please add at least 2 memories for Thread of Memories.')

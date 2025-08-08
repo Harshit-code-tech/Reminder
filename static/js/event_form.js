@@ -289,16 +289,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="grid grid-cols-2 gap-3 mb-2">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Year</label>
-                            <input type="text" class="memory-year w-full rounded-md border-gray-300 dark:border-slate-600 dark:bg-slate-800 shadow-sm" placeholder="e.g., 2023">
+                            <input type="text" class="memory-year w-full rounded-md border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-200 text-gray-800 shadow-sm" placeholder="e.g., 2023">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
-                            <input type="text" class="memory-title w-full rounded-md border-gray-300 dark:border-slate-600 dark:bg-slate-800 shadow-sm" placeholder="e.g., Event Title">
+                            <input type="text" class="memory-title w-full rounded-md border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-200 text-gray-800 shadow-sm" placeholder="e.g., Event Title">
                         </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-                        <textarea class="memory-description w-full rounded-md border-gray-300 dark:border-slate-600 dark:bg-slate-800 shadow-sm" rows="2" placeholder="Write a brief description of this memory..."></textarea>
+                        <textarea class="memory-description w-full rounded-md border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-200 text-gray-800 shadow-sm" rows="2" placeholder="Write a brief description of this memory..."></textarea>
                     </div>
                 `;
 
@@ -361,21 +361,138 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Initial update of thread of memories data
         updateThreadOfMemoriesData();
+        
+        // Initialize existing thread of memories data when editing
+        initializeExistingMemories();
+    }
+    
+    // Function to initialize existing thread of memories data when editing
+    function initializeExistingMemories() {
+        const threadOfMemoriesInput = document.getElementById('id_thread_of_memories');
+        const memoriesContainer = document.getElementById('memories-container');
+        
+        if (!threadOfMemoriesInput || !memoriesContainer) return;
+        
+        const existingData = threadOfMemoriesInput.value;
+        if (!existingData || !existingData.trim()) return;
+        
+        // Parse existing thread of memories data
+        const lines = existingData.split('\n').filter(line => line.trim());
+        if (lines.length < 2) return;
+        
+        // Clear default memory entries
+        memoriesContainer.innerHTML = '';
+        
+        // Parse and populate memory entries
+        for (let i = 0; i < lines.length; i += 2) {
+            if (i + 1 < lines.length) {
+                const headerLine = lines[i];
+                const description = lines[i + 1];
+                
+                // Extract year and title from header line
+                let year = '';
+                let title = headerLine;
+                
+                if (headerLine.includes(':')) {
+                    const parts = headerLine.split(':', 2);
+                    const firstPart = parts[0].trim();
+                    if (firstPart.match(/^\d{4}$/)) { // If first part is a 4-digit year
+                        year = firstPart;
+                        title = parts[1].trim();
+                    }
+                }
+                
+                // Create new memory entry
+                const newMemoryEntry = document.createElement('div');
+                newMemoryEntry.className = 'memory-entry bg-white dark:bg-slate-700 p-3 rounded-lg mb-4 shadow-sm';
+                newMemoryEntry.innerHTML = `
+                    <div class="grid grid-cols-2 gap-3 mb-2">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Year</label>
+                            <input type="text" class="memory-year w-full rounded-md border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-200 text-gray-800 shadow-sm" placeholder="e.g., 2020" value="${year}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                            <input type="text" class="memory-title w-full rounded-md border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-200 text-gray-800 shadow-sm" placeholder="e.g., Event Title" value="${title}">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                        <textarea class="memory-description w-full rounded-md border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-200 text-gray-800 shadow-sm" rows="2" placeholder="Write a brief description of this memory...">${description}</textarea>
+                    </div>
+                    <button type="button" class="remove-memory-btn mt-2 text-red-600 hover:text-red-800 text-sm">Remove</button>
+                `;
+                
+                memoriesContainer.appendChild(newMemoryEntry);
+                
+                // Add event listeners
+                const removeBtn = newMemoryEntry.querySelector('.remove-memory-btn');
+                if (removeBtn) {
+                    removeBtn.addEventListener('click', () => {
+                        newMemoryEntry.remove();
+                        updateThreadOfMemoriesData();
+                    });
+                }
+                
+                const inputs = newMemoryEntry.querySelectorAll('input, textarea');
+                inputs.forEach(input => {
+                    input.addEventListener('input', updateThreadOfMemoriesData);
+                });
+            }
+        }
+        
+        // If no entries were created, add default ones
+        if (memoriesContainer.children.length === 0) {
+            // Add default memory entries (same as in template)
+            for (let i = 0; i < 2; i++) {
+                const placeholders = [
+                    { year: '2020', title: 'Our First Date', description: 'Write a brief description of this memory...' },
+                    { year: '2022', title: 'Our Wedding', description: 'Write a brief description of this memory...' }
+                ];
+                const placeholder = placeholders[i];
+                
+                const newMemoryEntry = document.createElement('div');
+                newMemoryEntry.className = 'memory-entry bg-white dark:bg-slate-700 p-3 rounded-lg mb-4 shadow-sm';
+                newMemoryEntry.innerHTML = `
+                    <div class="grid grid-cols-2 gap-3 mb-2">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Year</label>
+                            <input type="text" class="memory-year w-full rounded-md border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-200 text-gray-800 shadow-sm" placeholder="e.g., ${placeholder.year}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                            <input type="text" class="memory-title w-full rounded-md border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-200 text-gray-800 shadow-sm" placeholder="e.g., ${placeholder.title}">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                        <textarea class="memory-description w-full rounded-md border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-200 text-gray-800 shadow-sm" rows="2" placeholder="${placeholder.description}"></textarea>
+                    </div>
+                `;
+                
+                memoriesContainer.appendChild(newMemoryEntry);
+                
+                const inputs = newMemoryEntry.querySelectorAll('input, textarea');
+                inputs.forEach(input => {
+                    input.addEventListener('input', updateThreadOfMemoriesData);
+                });
+            }
+        }
     }
     // Handle form submission
 
     if (form) {
         form.addEventListener('submit', event => {
-            // Check if thread of memories is selected but has less than 2 valid memories
+            // Check if thread of memories is selected but has insufficient content
             const threadRadio = document.getElementById('id_memory_display_type_thread');
             if (threadRadio && threadRadio.checked) {
                 const threadOfMemoriesInput = document.getElementById('id_thread_of_memories');
                 if (threadOfMemoriesInput) {
                     const lines = threadOfMemoriesInput.value.split('\n').filter(line => line.trim());
-                    // Check if we have at least 2 memory entries (each with 2 lines)
-                    if (lines.length < 4) {
+                    // Check if we have at least 2 memory items (more flexible validation)
+                    if (lines.length < 2) {
                         event.preventDefault();
-                        alert('Thread of Memories requires at least 2 complete memory entries (with year/title and description).');
+                        alert('Thread of Memories requires at least 2 memory items. Please add some memories with descriptions.');
                     }
                 }
             }

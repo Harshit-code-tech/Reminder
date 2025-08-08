@@ -156,10 +156,11 @@ class Event(models.Model):
             if len(memories) < 2:
                 raise ValidationError({'thread_of_memories': "Thread of Memories requires at least 2 memories."})
 
-            # For structured memories, ensure even number (pairs)
-            if self.event_type == 'raksha_bandhan' and len(memories) % 2 != 0:
-                raise ValidationError(
-                    {'thread_of_memories': "Thread of Memories should have pairs of headers and descriptions."})
+            # For structured memories, ensure even number (pairs) - only for specific event types if needed
+            # Note: Removing strict pairs requirement as users should be able to add any number of memories
+            # if self.event_type == 'raksha_bandhan' and len(memories) % 2 != 0:
+            #     raise ValidationError(
+            #         {'thread_of_memories': "Thread of Memories should have pairs of headers and descriptions."})
 
     def get_memory_data(self):
         """Parse thread_of_memories into structured data."""
