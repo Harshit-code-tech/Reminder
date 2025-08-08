@@ -211,11 +211,11 @@
 
                     <div class="flex gap-4 mb-4">
                         <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="memory_display_type" value="highlights" id="id_memory_display_type_highlights" class="w-4 h-4 text-purple-600" {% if form.memory_display_type.value != 'thread_of_memories' %}checked{% endif %}>
+                            <input type="radio" name="memory_display_type" value="highlights" id="id_memory_display_type_highlights" class="w-4 h-4 text-purple-600"{% if form.memory_display_type.value != 'thread_of_memories' %} checked{% endif %}>
                             <span class="text-gray-700 dark:text-gray-200">Highlights/Milestones</span>
                         </label>
                         <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="memory_display_type" value="thread_of_memories" id="id_memory_display_type_thread" class="w-4 h-4 text-purple-600" {% if form.memory_display_type.value == 'thread_of_memories' %}checked{% endif %}>
+                            <input type="radio" name="memory_display_type" value="thread_of_memories" id="id_memory_display_type_thread" class="w-4 h-4 text-purple-600"{% if form.memory_display_type.value == 'thread_of_memories' %} checked{% endif %}>
                             <span class="text-gray-700 dark:text-gray-200">Thread of Memories</span>
                         </label>
                     </div>
@@ -250,6 +250,20 @@
 
                         <div class="text-sm text-gray-600 dark:text-gray-300 mb-3">
                             Add at least 2 memories to create a thread. Each memory requires a year, title, and description.
+                        </div>
+
+                        <!-- Quick Text Input Option -->
+                        <div class="mb-4 p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Quick Text Format (Optional)
+                            </label>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                Paste text in format: "2022 Title Here Description here... 2023 Another Title Another description..."
+                            </div>
+                            <textarea id="quick-text-input" class="w-full rounded-md border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-200 text-gray-800 shadow-sm" rows="3" placeholder="2022 Title, description.. 2023 checking, working..."></textarea>
+                            <button type="button" id="parse-quick-text" class="mt-2 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 font-medium py-1 px-2 rounded">
+                                Parse Text Into Memory Fields
+                            </button>
                         </div>
 
                         <div id="memories-container">
@@ -305,7 +319,8 @@
                     </div>
                 </div>
 
-
+                <!-- Additional Fields Container -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                     <!-- Remind Days Before Field -->
                     <div class="form-group transition-colors duration-300 hover:shadow-md rounded-lg p-4 bg-gray-50/80 dark:bg-slate-700/90 border border-gray-200 dark:border-slate-600 backdrop-blur-sm">
                         <label for="id_remind_days_before" class="block font-semibold mb-2 text-gray-700 dark:text-gray-200">

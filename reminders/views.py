@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import logging
+import json
 from django.db.models import Prefetch
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_protect
@@ -12,7 +13,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.contrib import messages
 from django_ratelimit.decorators import ratelimit
-import json
 from .models import Event, CelebrationCardPage, EventMedia, Reflection, CardShare
 from .forms import EventForm
 from .utils import send_upcoming_reminders, process_bulk_import, get_csv_template, get_analytics_data,get_admin_dashboard_stats
@@ -137,6 +137,10 @@ def add_event(request):
 def edit_event(request, event_id):
     event = get_object_or_404(Event, id=event_id, user=request.user)
     if request.method == 'POST':
+        print(f"DEBUG VIEW: Received POST data: {dict(request.POST)}")
+        print(f"DEBUG VIEW: thread_of_memories value: '{request.POST.get('thread_of_memories', 'NOT_FOUND')}'")
+        print(f"DEBUG VIEW: memory_display_type value: '{request.POST.get('memory_display_type', 'NOT_FOUND')}'")
+        
         form = EventForm(request.POST, request.FILES, instance=event)
         if form.is_valid():
             try:
@@ -682,33 +686,37 @@ def greeting_card_view(request, event_id):
     thread_of_memories_data = []
     if event.thread_of_memories:
         try:
-            # Parse thread of memories from text field
-            memories = [m.strip() for m in event.thread_of_memories.split('\n') if m.strip()]
+            thread_of_memories_data = json.loads(event.thread_of_memories)
+        except (json.JSONDecodeError, TypeError):
+            # Fallback to old text parsing for backward compatibility
+            try:
+                # Parse thread of memories from text field (legacy format)
+                memories = [m.strip() for m in event.thread_of_memories.split('\n') if m.strip()]
 
-            for i in range(0, len(memories), 2):
-                if i + 1 < len(memories):
-                    # Extract year and title from first line
-                    header = memories[i]
-                    description = memories[i + 1]
+                for i in range(0, len(memories), 2):
+                    if i + 1 < len(memories):
+                        # Extract year and title from first line
+                        header = memories[i]
+                        description = memories[i + 1]
 
-                    year = ""
-                    title = header
+                        year = ""
+                        title = header
 
-                    # Try to extract year if it's in the format "YEAR: Title"
-                    if ":" in header:
-                        year_part, title_part = header.split(":", 1)
-                        if year_part.strip().isdigit():
-                            year = year_part.strip()
-                            title = title_part.strip()
+                        # Try to extract year if it's in the format "YEAR: Title"
+                        if ":" in header:
+                            year_part, title_part = header.split(":", 1)
+                            if year_part.strip().isdigit():
+                                year = year_part.strip()
+                                title = title_part.strip()
 
-                    thread_of_memories_data.append({
-                        "year": year,
-                        "title": title,
-                        "description": description
-                    })
-        except Exception as e:
-            logger.error(f"Error parsing thread of memories: {e}")
-            thread_of_memories_data = []
+                        thread_of_memories_data.append({
+                            "year": year,
+                            "title": title,
+                            "description": description
+                        })
+            except Exception as e:
+                logger.error(f"Error parsing thread of memories: {e}")
+                thread_of_memories_data = []
 
     context = {
         'event': event,
@@ -1013,32 +1021,36 @@ def public_card_view(request, token):
     thread_of_memories_data = []
     if event.thread_of_memories:
         try:
-            # Parse thread of memories from text field
-            memories = [m.strip() for m in event.thread_of_memories.split('\n') if m.strip()]
-            for i in range(0, len(memories), 2):
-                if i + 1 < len(memories):
-                    # Extract year and title from first line
-                    header = memories[i]
-                    description = memories[i + 1]
+            thread_of_memories_data = json.loads(event.thread_of_memories)
+        except (json.JSONDecodeError, TypeError):
+            # Fallback to old text parsing for backward compatibility
+            try:
+                # Parse thread of memories from text field (legacy format)
+                memories = [m.strip() for m in event.thread_of_memories.split('\n') if m.strip()]
+                for i in range(0, len(memories), 2):
+                    if i + 1 < len(memories):
+                        # Extract year and title from first line
+                        header = memories[i]
+                        description = memories[i + 1]
 
-                    year = ""
-                    title = header
+                        year = ""
+                        title = header
 
-                    # Try to extract year if it's in the format "YEAR: Title"
-                    if ":" in header:
-                        year_part, title_part = header.split(":", 1)
-                        if year_part.strip().isdigit():
-                            year = year_part.strip()
-                            title = title_part.strip()
+                        # Try to extract year if it's in the format "YEAR: Title"
+                        if ":" in header:
+                            year_part, title_part = header.split(":", 1)
+                            if year_part.strip().isdigit():
+                                year = year_part.strip()
+                                title = title_part.strip()
 
-                    thread_of_memories_data.append({
-                        "year": year,
-                        "title": title,
-                        "description": description
-                    })
-        except Exception as e:
-            logger.error(f"Error parsing thread of memories for event {event.id}: {str(e)}")
-            thread_of_memories_data = []
+                        thread_of_memories_data.append({
+                            "year": year,
+                            "title": title,
+                            "description": description
+                        })
+            except Exception as e:
+                logger.error(f"Error parsing thread of memories for event {event.id}: {str(e)}")
+                thread_of_memories_data = []
 
     context = {
         'event': event,

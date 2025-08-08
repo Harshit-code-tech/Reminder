@@ -225,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const y = e.clientY / window.innerHeight;
 
             bg.style.background = `linear-gradient(135deg,
-                rgba(167, 139, 250, ${0.05 + x * 0.1}) ${0 + y * 10}%,
+                rgba(167, 139, 250, ${0.05 + x * 0.1}) ${(y * 10)}%,
                 rgba(139, 92, 246, ${0.05 + y * 0.1}) ${90 + x * 10}%)`;
         });
     }
@@ -321,6 +321,117 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // Quick text parser functionality
+        const quickTextInput = document.getElementById('quick-text-input');
+        const parseQuickTextBtn = document.getElementById('parse-quick-text');
+        
+        if (quickTextInput && parseQuickTextBtn && memoriesContainer) {
+            parseQuickTextBtn.addEventListener('click', () => {
+                const quickText = quickTextInput.value.trim();
+                if (!quickText) {
+                    alert('Please enter some text to parse.');
+                    return;
+                }
+                
+                // Parse the text using regex to find year + content patterns
+                const pattern = /(\d{4})\s+([^0-9]*?)(?=\d{4}|$)/g;
+                const matches = [];
+                let match;
+                
+                while ((match = pattern.exec(quickText)) !== null) {
+                    matches.push({
+                        year: match[1],
+                        content: match[2].trim()
+                    });
+                }
+                
+                if (matches.length < 2) {
+                    alert('Could not parse at least 2 memories from the text. Please ensure each memory starts with a year (e.g., "2022 Title Description...")');
+                    return;
+                }
+                
+                // Clear existing memory entries
+                memoriesContainer.innerHTML = '';
+                
+                // Create memory entries from parsed data
+                matches.forEach((memory, index) => {
+                    const content = memory.content;
+                    let title = '';
+                    let description = '';
+                    
+                    // Try to split content into title and description
+                    // Look for sentence boundaries or use word count
+                    const sentences = content.split(/[.!?]+/).filter(s => s.trim());
+                    if (sentences.length >= 2) {
+                        title = sentences[0].trim();
+                        description = sentences.slice(1).join('. ').trim();
+                    } else {
+                        // Use word count to split
+                        const words = content.split(' ');
+                        if (words.length > 8) {
+                            title = words.slice(0, 8).join(' ');
+                            description = words.slice(8).join(' ');
+                        } else {
+                            title = content.length > 50 ? content.substring(0, 50) + '...' : content;
+                            description = content;
+                        }
+                    }
+                    
+                    // Create memory entry
+                    const memoryEntry = document.createElement('div');
+                    memoryEntry.className = 'memory-entry bg-white dark:bg-slate-700 p-3 rounded-lg mb-4 shadow-sm';
+                    memoryEntry.innerHTML = `
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="text-sm font-medium text-purple-600">Memory ${index + 1}</h4>
+                            <button type="button" class="remove-memory-btn text-red-500 hover:text-red-700">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 mb-2">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Year</label>
+                                <input type="text" class="memory-year w-full rounded-md border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-200 text-gray-800 shadow-sm" value="${memory.year}">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                                <input type="text" class="memory-title w-full rounded-md border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-200 text-gray-800 shadow-sm" value="${title}">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                            <textarea class="memory-description w-full rounded-md border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-200 text-gray-800 shadow-sm" rows="2">${description}</textarea>
+                        </div>
+                    `;
+                    
+                    memoriesContainer.appendChild(memoryEntry);
+                    
+                    // Add event listeners
+                    const removeBtn = memoryEntry.querySelector('.remove-memory-btn');
+                    if (removeBtn) {
+                        removeBtn.addEventListener('click', () => {
+                            memoryEntry.remove();
+                            updateThreadOfMemoriesData();
+                        });
+                    }
+                    
+                    const inputs = memoryEntry.querySelectorAll('input, textarea');
+                    inputs.forEach(input => {
+                        input.addEventListener('input', updateThreadOfMemoriesData);
+                    });
+                });
+                
+                // Update the hidden field
+                updateThreadOfMemoriesData();
+                
+                // Clear the quick text input
+                quickTextInput.value = '';
+                
+                alert(`Successfully parsed ${matches.length} memories!`);
+            });
+        }
+
         // Add event listeners to existing memory inputs
         const memoryEntries = document.querySelectorAll('.memory-entry');
         memoryEntries.forEach(entry => {
@@ -347,16 +458,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     const title = titleInput.value.trim();
                     const description = descriptionInput.value.trim();
 
-                    if (year || title || description) {
-                        // Format as expected by the backend parser: "YEAR: Title\nDescription"
-                        const headerLine = year ? `${year}: ${title}` : title;
-                        threadData.push(headerLine);
-                        threadData.push(description);
+                    // Only add memory if at least title or description is provided
+                    if (title || description) {
+                        threadData.push({
+                            year: year,
+                            title: title,
+                            description: description
+                        });
                     }
                 }
             });
 
-            threadOfMemoriesInput.value = threadData.join('\n');
+            // Store as JSON to prevent injection attacks and parsing issues
+            threadOfMemoriesInput.value = JSON.stringify(threadData);
+            console.log(`DEBUG JS: Updated thread of memories with ${threadData.length} entries:`, threadData);
+            console.log(`DEBUG JS: Hidden field value:`, threadOfMemoriesInput.value);
         }
 
         // Initial update of thread of memories data
@@ -376,70 +492,87 @@ document.addEventListener('DOMContentLoaded', () => {
         const existingData = threadOfMemoriesInput.value;
         if (!existingData || !existingData.trim()) return;
         
-        // Parse existing thread of memories data
-        const lines = existingData.split('\n').filter(line => line.trim());
-        if (lines.length < 2) return;
+        let memoriesData = [];
+        
+        try {
+            // Try to parse as JSON (new format)
+            memoriesData = JSON.parse(existingData);
+        } catch (e) {
+            // Fallback to legacy text format parsing
+            const lines = existingData.split('\n').filter(line => line.trim());
+            if (lines.length < 2) return;
+            
+            // Parse legacy format: alternating header/description lines
+            for (let i = 0; i < lines.length; i += 2) {
+                if (i + 1 < lines.length) {
+                    const headerLine = lines[i];
+                    const description = lines[i + 1];
+                    
+                    // Extract year and title from header line
+                    let year = '';
+                    let title = headerLine;
+                    
+                    if (headerLine.includes(':')) {
+                        const parts = headerLine.split(':', 2);
+                        const firstPart = parts[0].trim();
+                        if (firstPart.match(/^\d{4}$/)) { // If first part is a 4-digit year
+                            year = firstPart;
+                            title = parts[1].trim();
+                        }
+                    }
+                    
+                    memoriesData.push({
+                        year: year,
+                        title: title,
+                        description: description
+                    });
+                }
+            }
+        }
+        
+        if (!Array.isArray(memoriesData) || memoriesData.length === 0) return;
         
         // Clear default memory entries
         memoriesContainer.innerHTML = '';
         
-        // Parse and populate memory entries
-        for (let i = 0; i < lines.length; i += 2) {
-            if (i + 1 < lines.length) {
-                const headerLine = lines[i];
-                const description = lines[i + 1];
-                
-                // Extract year and title from header line
-                let year = '';
-                let title = headerLine;
-                
-                if (headerLine.includes(':')) {
-                    const parts = headerLine.split(':', 2);
-                    const firstPart = parts[0].trim();
-                    if (firstPart.match(/^\d{4}$/)) { // If first part is a 4-digit year
-                        year = firstPart;
-                        title = parts[1].trim();
-                    }
-                }
-                
-                // Create new memory entry
-                const newMemoryEntry = document.createElement('div');
-                newMemoryEntry.className = 'memory-entry bg-white dark:bg-slate-700 p-3 rounded-lg mb-4 shadow-sm';
-                newMemoryEntry.innerHTML = `
-                    <div class="grid grid-cols-2 gap-3 mb-2">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Year</label>
-                            <input type="text" class="memory-year w-full rounded-md border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-200 text-gray-800 shadow-sm" placeholder="e.g., 2020" value="${year}">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
-                            <input type="text" class="memory-title w-full rounded-md border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-200 text-gray-800 shadow-sm" placeholder="e.g., Event Title" value="${title}">
-                        </div>
+        // Create memory entries from parsed data
+        memoriesData.forEach(memory => {
+            const newMemoryEntry = document.createElement('div');
+            newMemoryEntry.className = 'memory-entry bg-white dark:bg-slate-700 p-3 rounded-lg mb-4 shadow-sm';
+            newMemoryEntry.innerHTML = `
+                <div class="grid grid-cols-2 gap-3 mb-2">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Year</label>
+                        <input type="text" class="memory-year w-full rounded-md border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-200 text-gray-800 shadow-sm" placeholder="e.g., 2020" value="${memory.year || ''}">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-                        <textarea class="memory-description w-full rounded-md border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-200 text-gray-800 shadow-sm" rows="2" placeholder="Write a brief description of this memory...">${description}</textarea>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                        <input type="text" class="memory-title w-full rounded-md border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-200 text-gray-800 shadow-sm" placeholder="e.g., Event Title" value="${memory.title || ''}">
                     </div>
-                    <button type="button" class="remove-memory-btn mt-2 text-red-600 hover:text-red-800 text-sm">Remove</button>
-                `;
-                
-                memoriesContainer.appendChild(newMemoryEntry);
-                
-                // Add event listeners
-                const removeBtn = newMemoryEntry.querySelector('.remove-memory-btn');
-                if (removeBtn) {
-                    removeBtn.addEventListener('click', () => {
-                        newMemoryEntry.remove();
-                        updateThreadOfMemoriesData();
-                    });
-                }
-                
-                const inputs = newMemoryEntry.querySelectorAll('input, textarea');
-                inputs.forEach(input => {
-                    input.addEventListener('input', updateThreadOfMemoriesData);
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                    <textarea class="memory-description w-full rounded-md border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-200 text-gray-800 shadow-sm" rows="2" placeholder="Write a brief description of this memory...">${memory.description || ''}</textarea>
+                </div>
+                <button type="button" class="remove-memory-btn mt-2 text-red-600 hover:text-red-800 text-sm">Remove</button>
+            `;
+            
+            memoriesContainer.appendChild(newMemoryEntry);
+            
+            // Add event listeners
+            const removeBtn = newMemoryEntry.querySelector('.remove-memory-btn');
+            if (removeBtn) {
+                removeBtn.addEventListener('click', () => {
+                    newMemoryEntry.remove();
+                    updateThreadOfMemoriesData();
                 });
             }
-        }
+            
+            const inputs = newMemoryEntry.querySelectorAll('input, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('input', updateThreadOfMemoriesData);
+            });
+        });
         
         // If no entries were created, add default ones
         if (memoriesContainer.children.length === 0) {
@@ -480,7 +613,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     // Handle form submission
-
     if (form) {
         form.addEventListener('submit', event => {
             // Check if thread of memories is selected but has insufficient content
@@ -488,11 +620,91 @@ document.addEventListener('DOMContentLoaded', () => {
             if (threadRadio && threadRadio.checked) {
                 const threadOfMemoriesInput = document.getElementById('id_thread_of_memories');
                 if (threadOfMemoriesInput) {
-                    const lines = threadOfMemoriesInput.value.split('\n').filter(line => line.trim());
-                    // Check if we have at least 2 memory items (more flexible validation)
-                    if (lines.length < 2) {
-                        event.preventDefault();
-                        alert('Thread of Memories requires at least 2 memory items. Please add some memories with descriptions.');
+                    console.log(`DEBUG JS SUBMIT: Thread of memories value:`, threadOfMemoriesInput.value);
+                    
+                    try {
+                        const memoriesData = JSON.parse(threadOfMemoriesInput.value || '[]');
+                        console.log(`DEBUG JS SUBMIT: Parsed ${memoriesData.length} memories:`, memoriesData);
+                        
+                        // Check if we have at least 2 complete memory items
+                        const validMemories = memoriesData.filter(memory => 
+                            (memory.title && memory.title.trim()) || 
+                            (memory.description && memory.description.trim())
+                        );
+                        
+                        console.log(`DEBUG JS SUBMIT: Found ${validMemories.length} valid memories:`, validMemories);
+                        
+                        if (validMemories.length < 2) {
+                            event.preventDefault();
+                            alert(`Thread of Memories requires at least 2 memory items. Found ${validMemories.length} valid memories. Please add some memories with titles or descriptions.`);
+
+                        }
+                    } catch (e) {
+                        // Fallback to legacy text validation - more flexible parsing
+                        const textContent = threadOfMemoriesInput.value.trim();
+                        if (!textContent) {
+                            event.preventDefault();
+                            alert('Thread of Memories requires at least 2 memory items. Please add some memories.');
+                            return;
+                        }
+                        
+                        // For legacy text format, look for year patterns (4 digits followed by text)
+                        // Updated regex to be more flexible - allows space or no space after year
+                        const yearPattern = /^\s*\d{4}\s*.+/gm;
+                        let memoryEntries = textContent.match(yearPattern) || [];
+                        
+                        // If standard year pattern doesn't work, try alternative patterns
+                        if (memoryEntries.length < 2) {
+                            // Look for lines that start with 4 digits (more flexible)
+                            const flexibleYearPattern = /^\d{4}.*\S/gm;
+                            memoryEntries = textContent.match(flexibleYearPattern) || [];
+                        }
+                        
+                        // If still no year patterns, try looking for substantial content blocks
+                        if (memoryEntries.length < 2) {
+                            // Split by double newlines or single newlines for memory blocks
+                            let contentBlocks = textContent.split(/\n\s*\n/).filter(block => block.trim().length > 20);
+                            
+                            // If double newline split doesn't work well, try single newline blocks
+                            if (contentBlocks.length < 2) {
+                                const lines = textContent.split('\n').filter(line => line.trim().length > 0);
+                                // Group lines that seem to belong to the same memory
+                                contentBlocks = [];
+                                let currentBlock = '';
+                                
+                                for (let i = 0; i < lines.length; i++) {
+                                    const line = lines[i].trim();
+                                    if (/^\d{4}/.test(line)) {
+                                        // New year block starts
+                                        if (currentBlock.trim()) {
+                                            contentBlocks.push(currentBlock.trim());
+                                        }
+                                        currentBlock = line;
+                                    } else if (line) {
+                                        currentBlock += '\n' + line;
+                                    }
+                                }
+                                
+                                // Add the last block
+                                if (currentBlock.trim()) {
+                                    contentBlocks.push(currentBlock.trim());
+                                }
+                            }
+                            
+                            if (contentBlocks.length < 2) {
+                                event.preventDefault();
+                                alert('Thread of Memories requires at least 2 memory items. Please add more memories with descriptions.');
+                                return;
+                            }
+                        }
+                        
+                        // Additional validation: ensure we have meaningful content
+                        const totalContentLength = textContent.replace(/\s/g, '').length;
+                        if (totalContentLength < 50) {
+                            event.preventDefault();
+                            alert('Thread of Memories requires more detailed content. Please add more memories with descriptions.');
+
+                        }
                     }
                 }
             }
@@ -541,7 +753,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (eventTypeSelect && recurringField && customLabelField) {
         const toggleFields = () => {
-            const isOther = eventTypeSelect.value === 'other';
             const isRecurringEvent = ['birthday', 'anniversary'].includes(eventTypeSelect.value);
 
             recurringField.style.display = isRecurringEvent ? 'block' : 'none';

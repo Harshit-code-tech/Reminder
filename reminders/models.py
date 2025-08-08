@@ -152,9 +152,39 @@ class Event(models.Model):
 
         # Thread of memories validation
         if self.thread_of_memories:
-            memories = [m.strip() for m in self.thread_of_memories.split('\n') if m.strip()]
-            if len(memories) < 2:
-                raise ValidationError({'thread_of_memories': "Thread of Memories requires at least 2 memories."})
+            print(f"DEBUG MODEL: Validating thread_of_memories: {self.thread_of_memories[:100]}...")
+            try:
+                # Try to parse as JSON first (new format)
+                import json
+                memories_data = json.loads(self.thread_of_memories)
+                print(f"DEBUG MODEL: Parsed JSON with {len(memories_data)} entries")
+                if isinstance(memories_data, list):
+                    valid_memories = [
+                        m for m in memories_data 
+                        if isinstance(m, dict) and (
+                            (m.get('title', '').strip()) or 
+                            (m.get('description', '').strip())
+                        )
+                    ]
+                    print(f"DEBUG MODEL: Found {len(valid_memories)} valid memories")
+                    if len(valid_memories) < 2:
+                        print(f"DEBUG MODEL: FAILING validation - only {len(valid_memories)} valid memories")
+                        raise ValidationError({'thread_of_memories': "Thread of Memories requires at least 2 memories."})
+                    else:
+                        print(f"DEBUG MODEL: PASSING validation - {len(valid_memories)} valid memories found")
+                else:
+                    print(f"DEBUG MODEL: FAILING validation - not a list")
+                    raise ValidationError({'thread_of_memories': "Invalid thread of memories format."})
+                    
+            except json.JSONDecodeError as e:
+                print(f"DEBUG MODEL: JSON decode failed, trying legacy format: {e}")
+                # Fallback to legacy text format
+                memories = [m.strip() for m in self.thread_of_memories.split('\n') if m.strip()]
+                if len(memories) < 2:
+                    print(f"DEBUG MODEL: FAILING legacy validation - only {len(memories)} memories")
+                    raise ValidationError({'thread_of_memories': "Thread of Memories requires at least 2 memories."})
+                else:
+                    print(f"DEBUG MODEL: PASSING legacy validation - {len(memories)} memories found")
 
             # For structured memories, ensure even number (pairs) - only for specific event types if needed
             # Note: Removing strict pairs requirement as users should be able to add any number of memories
