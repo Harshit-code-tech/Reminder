@@ -3850,3 +3850,618 @@ html {
 @media (max-width: 480px) {
   html { font-size: 12px; }
 }
+
+/* ===== ENHANCED MOBILE RESPONSIVENESS ===== */
+
+/* Very Small Mobile Devices (320px - 480px) */
+@media (max-width: 480px) {
+  /* Reduce particle effects for performance */
+  :root {
+    --particle-count-mobile: 15;
+    --animation-duration-mobile: 1.5s;
+  }
+
+  /* Body and container adjustments */
+  body {
+    padding: 2px;
+    font-size: 14px;
+  }
+
+  .card-container {
+    max-width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    margin: 0;
+    border-radius: 12px;
+    border-width: 1px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  /* Page content optimization */
+  .page-content {
+    padding: 12px 8px;
+    gap: 8px;
+    min-height: auto;
+  }
+
+  /* Typography scaling */
+  .welcome-title, .page-title {
+    font-size: 1.2rem;
+    line-height: 1.2;
+    margin-bottom: 8px;
+    text-align: center;
+    word-wrap: break-word;
+  }
+
+  .page-subtitle {
+    font-size: 0.85rem;
+    line-height: 1.3;
+    margin-bottom: 12px;
+  }
+
+  /* Navigation improvements */
+  .page-navigator {
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 8px 4px;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+  }
+
+  .nav-item {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+  }
+
+  .nav-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .nav-item i {
+    font-size: 12px;
+  }
+
+  .nav-tooltip {
+    display: none !important;
+  }
+
+  /* Theme toggle optimization */
+  .theme-toggle-container {
+    top: 6px;
+    right: 6px;
+  }
+
+  .toggle-track {
+    width: 40px;
+    height: 20px;
+  }
+
+  .toggle-thumb {
+    width: 16px;
+    height: 16px;
+    top: 2px;
+    left: 2px;
+  }
+
+  [data-theme="dark"] .toggle-thumb {
+    transform: translateX(20px);
+  }
+
+  /* Animation and interactive elements scaling */
+  .birthday-cake {
+    width: 120px;
+    height: 95px;
+    transform: scale(0.8);
+  }
+
+  .memory-tree {
+    width: 180px;
+    height: 120px;
+    transform: scale(0.85);
+  }
+
+  .promise-tree {
+    width: 150px;
+    height: 170px;
+    transform: scale(0.8);
+  }
+
+  /* Rakhi ceremony specific */
+  .rakhi-ceremony-svg-container {
+    padding: 10px 5px;
+    min-height: 300px;
+    max-height: 60vh;
+    overflow: hidden;
+  }
+
+  .rakhi-svg {
+    max-width: 100%;
+    max-height: 250px;
+  }
+
+  .ritual-btn {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    width: 100%;
+    max-width: 240px;
+    margin: 8px auto;
+  }
+
+  /* Diya ceremony scaling */
+  .diya-ceremony-container {
+    max-width: 100%;
+    gap: 12px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+    justify-content: space-around;
+  }
+
+  .ceremony-diya {
+    transform: scale(0.8);
+    margin: 0 4px;
+  }
+
+  .ceremony-diya:hover {
+    transform: scale(0.9);
+  }
+
+  /* Thread of memories optimization */
+  .thread-of-memories-container {
+    height: 80px;
+    padding: 10px 5px;
+    overflow: hidden;
+  }
+
+  .memory-popup {
+    min-width: 120px;
+    max-width: 180px;
+    padding: 8px;
+    font-size: 0.75rem;
+    border-radius: 8px;
+  }
+
+  /* Media display improvements */
+  .media-container {
+    max-width: 100%;
+    padding: 0 5px;
+  }
+
+  .media-display {
+    min-height: 200px;
+    max-height: 300px;
+    margin: 0 auto 12px auto;
+    border-radius: 8px;
+  }
+
+  .photo-gallery {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .photo-frame {
+    padding: 6px;
+    margin: 0 2px;
+  }
+
+  .responsive-image-container {
+    max-width: 100%;
+    border-radius: 8px;
+  }
+
+  .responsive-image-container img {
+    max-height: 40vh;
+    border-radius: 6px;
+  }
+
+  /* Audio controls */
+  .audio-control, .audio-control-btn {
+    position: static;
+    margin: 8px auto;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+  }
+
+  /* Share modal optimization */
+  .share-modal-content {
+    padding: 15px 10px;
+    margin: 10px;
+    border-radius: 12px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .button-group {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .social-links {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .social-links a {
+    width: 100%;
+    font-size: 0.85rem;
+    padding: 10px;
+    text-align: center;
+  }
+
+  /* Gift popup optimization */
+  .gift-popup-content {
+    padding: 12px 8px;
+    margin: 8px;
+    border-radius: 12px;
+  }
+
+  /* Password container optimization */
+  .password-container {
+    max-width: 100%;
+    padding: 0 8px;
+    margin: 0;
+  }
+
+  .input-group {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .password-input {
+    padding: 12px 14px;
+    font-size: 16px; /* Prevents zoom on iOS */
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .unlock-button {
+    padding: 12px;
+    width: 100%;
+    font-size: 0.9rem;
+  }
+
+  /* Slider unlock optimization */
+  .slider-unlock-container {
+    width: 100%;
+    max-width: 260px;
+    margin: 0 auto;
+  }
+
+  .slider-track {
+    height: 45px;
+    border-radius: 22px;
+  }
+
+  .slider-thumb {
+    width: 38px;
+    height: 38px;
+    border-radius: 19px;
+  }
+
+  .slider-text {
+    font-size: 0.8rem;
+  }
+
+  /* Reduce complex animations for performance */
+  .petal,
+  .floating-petals .petal {
+    display: none;
+  }
+
+  /* Simplify background effects */
+  .background-effects {
+    opacity: 0.3;
+  }
+
+  .stars-container,
+  .clouds-container {
+    opacity: 0.2;
+  }
+
+  /* Sacred patterns scaling */
+  .sacred-pattern {
+    font-size: 1.5rem;
+    opacity: 0.6;
+  }
+
+  /* Form elements if any */
+  input, textarea, select {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+  }
+
+  /* Loading screen adjustments */
+  .rakhi-loading {
+    padding: 20px;
+  }
+
+  .loading-text {
+    font-size: 1rem;
+    margin-top: 20px;
+  }
+
+  .progress-garland {
+    width: 150px;
+    height: 6px;
+    margin-top: 15px;
+  }
+
+  /* Rangoli pattern scaling */
+  .rangoli-pattern {
+    width: 80px;
+    height: 80px;
+  }
+
+  .rangoli-circle {
+    border-width: 2px;
+  }
+
+  .rangoli-circle:nth-child(1) {
+    width: 60px;
+    height: 60px;
+    top: 10px;
+    left: 10px;
+  }
+
+  .rangoli-circle:nth-child(2) {
+    width: 40px;
+    height: 40px;
+    top: 20px;
+    left: 20px;
+  }
+
+  .rangoli-circle:nth-child(3) {
+    width: 20px;
+    height: 20px;
+    top: 30px;
+    left: 30px;
+  }
+}
+
+/* Extra optimizations for very small screens (< 360px) */
+@media (max-width: 360px) {
+  .card-container {
+    border-radius: 8px;
+  }
+
+  .page-content {
+    padding: 8px 4px;
+    gap: 6px;
+  }
+
+  .welcome-title, .page-title {
+    font-size: 1.1rem;
+    margin-bottom: 6px;
+  }
+
+  .page-subtitle {
+    font-size: 0.8rem;
+    margin-bottom: 10px;
+  }
+
+  .nav-item {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+  }
+
+  .nav-item i {
+    font-size: 10px;
+  }
+
+  .ritual-btn {
+    padding: 8px 16px;
+    font-size: 0.8rem;
+    max-width: 200px;
+  }
+
+  .memory-popup {
+    min-width: 100px;
+    max-width: 150px;
+    padding: 6px;
+    font-size: 0.7rem;
+  }
+
+  .responsive-image-container img {
+    max-height: 35vh;
+  }
+}
+
+/* Landscape orientation on mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .card-container {
+    max-height: 95vh;
+    height: auto;
+    overflow-y: auto;
+  }
+
+  .page-content {
+    padding: 10px 8px;
+  }
+
+  .welcome-title, .page-title {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+  }
+
+  .rakhi-ceremony-svg-container {
+    min-height: 250px;
+    max-height: 50vh;
+  }
+
+  .media-display {
+    max-height: 50vh;
+  }
+
+  .responsive-image-container img {
+    max-height: 45vh;
+  }
+
+  /* Hide some decorative elements in landscape */
+  .sacred-pattern {
+    display: none;
+  }
+
+  .floating-petals {
+    display: none;
+  }
+}
+
+/* Performance optimizations for older devices */
+@media (max-width: 480px) {
+  /* Reduce GPU-intensive effects */
+  * {
+    backface-visibility: hidden;
+    perspective: 1000;
+  }
+
+  /* Simplify gradients */
+  .card-container {
+    background: var(--bg-secondary);
+    backdrop-filter: blur(10px);
+  }
+
+  /* Reduce shadow complexity */
+  .card-container {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Optimize transforms */
+  .nav-item:hover,
+  .theme-toggle:hover,
+  .ritual-btn:hover {
+    transform: none;
+  }
+
+  .nav-item:active,
+  .theme-toggle:active,
+  .ritual-btn:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Larger touch targets */
+  .nav-item,
+  .theme-toggle,
+  .ritual-btn,
+  .action-button,
+  .ceremony-diya,
+  .unlock-button,
+  .social-links a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Remove hover effects that don't work on touch */
+  .nav-item:hover,
+  .theme-toggle:hover,
+  .ritual-btn:hover,
+  .ceremony-diya:hover {
+    transform: none;
+  }
+
+  /* Add touch feedback */
+  .nav-item:active,
+  .theme-toggle:active,
+  .ritual-btn:active,
+  .ceremony-diya:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+  }
+
+  /* Improve touch scrolling */
+  .card-container {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
+/* iOS specific optimizations */
+@supports (-webkit-touch-callout: none) {
+  /* Prevent zoom on form focus */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+
+  /* Improve scroll performance */
+  .card-container {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Fix viewport height issues */
+  @media (max-width: 768px) {
+    .card-container {
+      height: 100vh;
+      height: -webkit-fill-available;
+    }
+  }
+}
+
+/* Android specific optimizations */
+@media (max-width: 768px) {
+  /* Better font rendering */
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Improve input focus */
+  input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+}
+
+/* Accessibility improvements for mobile */
+@media (max-width: 768px) {
+  /* Larger focus indicators */
+  .nav-item:focus,
+  .theme-toggle:focus,
+  .ritual-btn:focus {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+  }
+
+  /* Better contrast for small screens */
+  .page-subtitle {
+    color: var(--text-primary);
+    opacity: 0.8;
+  }
+
+  /* Simplified animations for better performance */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* Print styles for mobile */
+@media print {
+  .theme-toggle-container,
+  .page-navigator,
+  .audio-control,
+  .share-modal {
+    display: none !important;
+  }
+
+  .card-container {
+    max-width: 100%;
+    height: auto;
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+
+  .page-content {
+    padding: 20px;
+  }
+}
