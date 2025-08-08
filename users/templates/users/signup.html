@@ -1,41 +1,1022 @@
 {% extends 'base.html' %}
-{% block header_class %}bg-blue-600 text-white p-4{% endblock %}
+
+{% block title %}Sign Up - Join the Celebration{% endblock %}
+
+{% block header_class %}p-4{% endblock %}
+
 {% block header_content %}
-    <h1 class="text-2xl font-bold flex items-center gap-2">🔐SignUp</h1>
+<h1 class="text-3xl font-bold flex items-center gap-3 text-white">
+    <span class="text-yellow-400 animate-bounce">🎉</span> Join the Celebration
+</h1>
 {% endblock %}
+
 {% block content %}
-<h2 class="text-xl font-semibold mb-4">Sign Up</h2>
-
-<form method="post" class="space-y-4 max-w-md">
-    {% csrf_token %}
-    {{ form.non_field_errors }}
-
-    <div>
-        <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700">Username:</label>
-        <input type="text" name="{{ form.username.name }}" id="{{ form.username.id_for_label }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
-        {{ form.username.errors }}
+<div class="min-h-screen flex items-center justify-center relative overflow-hidden py-8">
+    <!-- Animated background elements -->
+    <div class="absolute inset-0 overflow-hidden">
+        <!-- Floating celebration elements -->
+        <div class="celebration-bg">
+            <div class="confetti-piece"></div>
+            <div class="confetti-piece"></div>
+            <div class="confetti-piece"></div>
+            <div class="confetti-piece"></div>
+            <div class="confetti-piece"></div>
+            <div class="confetti-piece"></div>
+        </div>
+        <!-- Gradient waves -->
+        <div class="wave-container">
+            <div class="wave wave-1"></div>
+            <div class="wave wave-2"></div>
+            <div class="wave wave-3"></div>
+        </div>
+        <!-- Floating orbs -->
+        <div class="orb-container">
+            <div class="signup-orb orb-purple"></div>
+            <div class="signup-orb orb-pink"></div>
+            <div class="signup-orb orb-blue"></div>
+        </div>
     </div>
 
-    <div>
-        <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700">Email:</label>
-        <input type="email" name="{{ form.email.name }}" id="{{ form.email.id_for_label }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
-        {{ form.email.errors }}
+    <!-- Main signup container -->
+    <div class="relative z-10 w-full max-w-lg mx-auto px-6">
+        <div class="signup-card backdrop-blur-xl bg-white/5 dark:bg-slate-900/10 rounded-3xl shadow-2xl border border-white/10 dark:border-slate-700/20 overflow-hidden">
+            <!-- Header with celebration theme -->
+            <div class="signup-header bg-gradient-to-br from-purple-600/90 via-pink-600/90 to-indigo-600/90 p-8 text-center relative overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-r from-purple-600/30 to-pink-600/30 animate-pulse"></div>
+                <div class="absolute top-0 left-0 w-full h-full">
+                    <div class="celebration-particles">
+                        <div class="particle">🎊</div>
+                        <div class="particle">✨</div>
+                        <div class="particle">🎈</div>
+                        <div class="particle">🎉</div>
+                        <div class="particle">💫</div>
+                        <div class="particle">🌟</div>
+                    </div>
+                </div>
+                <div class="relative z-10">
+                    <div class="celebration-icon mb-4">
+                        <span class="text-5xl">🎊</span>
+                    </div>
+                    <h2 class="text-3xl font-bold text-white mb-2">Start Celebrating!</h2>
+                    <p class="text-purple-100 text-sm">Create your account and never miss a special moment</p>
+                </div>
+            </div>
+
+            <!-- Form content -->
+            <div class="p-8">
+                <!-- Messages -->
+                {% if messages %}
+                    <div class="mb-6 space-y-3">
+                        {% for message in messages %}
+                            <div class="signup-message
+                                        {% if message.tags == 'error' %}
+                                            bg-red-50/80 text-red-700 border border-red-200/50
+                                        {% elif message.tags == 'success' %}
+                                            bg-green-50/80 text-green-700 border border-green-200/50
+                                        {% elif message.tags == 'info' %}
+                                            bg-blue-50/80 text-blue-700 border border-blue-200/50
+                                        {% else %}
+                                            bg-gray-50/80 text-gray-700 border border-gray-200/50
+                                        {% endif %}
+                                        rounded-xl p-4 backdrop-blur-sm animate-slideIn">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-lg">
+                                        {% if message.tags == 'error' %}⚠️
+                                        {% elif message.tags == 'success' %}✅
+                                        {% elif message.tags == 'info' %}ℹ️
+                                        {% else %}💭{% endif %}
+                                    </span>
+                                    <span class="text-sm font-medium">{{ message }}</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Non-field errors -->
+                {% if form.non_field_errors %}
+                    <div class="mb-6">
+                        <div class="bg-red-50/80 text-red-700 border border-red-200/50 rounded-xl p-4 backdrop-blur-sm">
+                            {% for error in form.non_field_errors %}
+                                <div class="flex items-center gap-2">
+                                    <span class="text-lg">⚠️</span>
+                                    <span class="text-sm font-medium">{{ error }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <form method="post" class="space-y-6" id="signup-form">
+                    {% csrf_token %}
+                    
+                    <!-- Username field -->
+                    <div class="signup-input-group">
+                        <label for="{{ form.username.id_for_label }}" class="signup-label">
+                            Choose Your Username
+                        </label>
+                        <div class="signup-input-wrapper">
+                            {{ form.username }}
+                            <div class="signup-input-icon">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        {% if form.username.errors %}
+                            <div class="signup-error">
+                                <span class="text-red-500 text-sm">{{ form.username.errors.0 }}</span>
+                            </div>
+                        {% endif %}
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">This will be your unique identifier</p>
+                    </div>
+
+                    <!-- Email field -->
+                    <div class="signup-input-group">
+                        <label for="{{ form.email.id_for_label }}" class="signup-label">
+                            Email Address
+                        </label>
+                        <div class="signup-input-wrapper">
+                            {{ form.email }}
+                            <div class="signup-input-icon">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
+                                </svg>
+                            </div>
+                        </div>
+                        {% if form.email.errors %}
+                            <div class="signup-error">
+                                <span class="text-red-500 text-sm">{{ form.email.errors.0 }}</span>
+                            </div>
+                        {% endif %}
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">We'll send celebration reminders here</p>
+                    </div>
+
+                    <!-- Password field -->
+                    <div class="signup-input-group">
+                        <label for="{{ form.password1.id_for_label }}" class="signup-label">
+                            Create Password
+                        </label>
+                        <div class="signup-input-wrapper">
+                            {{ form.password1 }}
+                            <div class="signup-input-icon password-toggle" data-target="id_password1">
+                                <svg class="w-5 h-5 eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                <svg class="w-5 h-5 eye-closed hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L8.464 8.464M14.12 14.12l1.415 1.415M14.12 14.12L9.878 9.878m4.242 4.242L8.464 8.464"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18"/>
+                                </svg>
+                            </div>
+                        </div>
+                        {% if form.password1.errors %}
+                            <div class="signup-error">
+                                {% for error in form.password1.errors %}
+                                    <span class="text-red-500 text-sm block">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="password-strength mt-2">
+                            <div class="strength-meter">
+                                <div class="strength-bar"></div>
+                            </div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Choose a strong password to secure your account</p>
+                        </div>
+                    </div>
+
+                    <!-- Confirm Password field -->
+                    <div class="signup-input-group">
+                        <label for="{{ form.password2.id_for_label }}" class="signup-label">
+                            Confirm Password
+                        </label>
+                        <div class="signup-input-wrapper">
+                            {{ form.password2 }}
+                            <div class="signup-input-icon password-toggle" data-target="id_password2">
+                                <svg class="w-5 h-5 eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                <svg class="w-5 h-5 eye-closed hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L8.464 8.464M14.12 14.12l1.415 1.415M14.12 14.12L9.878 9.878m4.242 4.242L8.464 8.464"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18"/>
+                                </svg>
+                            </div>
+                        </div>
+                        {% if form.password2.errors %}
+                            <div class="signup-error">
+                                {% for error in form.password2.errors %}
+                                    <span class="text-red-500 text-sm block">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="password-match mt-2">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Make sure it matches your password above</p>
+                        </div>
+                    </div>
+
+                    <!-- Celebration signup button -->
+                    <button type="submit" class="celebration-button w-full" id="signup-btn">
+                        <div class="button-bg"></div>
+                        <span class="button-content">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            Join the Celebration
+                        </span>
+                        <div class="button-confetti">
+                            <div class="confetti-bit">🎊</div>
+                            <div class="confetti-bit">✨</div>
+                            <div class="confetti-bit">🎉</div>
+                            <div class="confetti-bit">💫</div>
+                        </div>
+                    </button>
+                </form>
+
+                <!-- Footer -->
+                <div class="signup-footer mt-8 text-center">
+                    <div class="terms-notice mb-4 p-4 bg-purple-50/50 dark:bg-slate-800/30 rounded-xl border border-purple-200/30 dark:border-slate-600/30">
+                        <p class="text-xs text-gray-600 dark:text-gray-400">
+                            By signing up, you're agreeing to join our celebration family and receive the most joyful reminders! 
+                            <span class="text-purple-600 dark:text-purple-400 font-medium">We promise to make every notification special.</span>
+                        </p>
+                    </div>
+                    
+                    <div class="divider-signup">
+                        <span>Already part of our family?</span>
+                    </div>
+                    
+                    <div class="text-gray-600 dark:text-gray-300">
+                        <a href="{% url 'login' %}" class="celebration-link">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                            </svg>
+                            Sign in to your account
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 
-    <div>
-        <label for="{{ form.password1.id_for_label }}" class="block text-sm font-medium text-gray-700">Password:</label>
-        <input type="password" name="{{ form.password1.name }}" id="{{ form.password1.id_for_label }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
-        {{ form.password1.errors }}
-    </div>
+<style>
+    /* Clean background foundation */
+    .min-h-screen {
+        background: linear-gradient(135deg, 
+            rgba(15, 23, 42, 0.98) 0%, 
+            rgba(30, 41, 59, 0.95) 25%, 
+            rgba(51, 65, 85, 0.9) 50%, 
+            rgba(71, 85, 105, 0.95) 75%, 
+            rgba(15, 23, 42, 0.98) 100%);
+        position: relative;
+        min-height: 100vh;
+    }
 
-    <div>
-        <label for="{{ form.password2.id_for_label }}" class="block text-sm font-medium text-gray-700">Confirm Password:</label>
-        <input type="password" name="{{ form.password2.name }}" id="{{ form.password2.id_for_label }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
-        {{ form.password2.errors }}
-    </div>
+    body.dark-mode .min-h-screen {
+        background: linear-gradient(135deg, 
+            rgba(0, 0, 0, 1) 0%, 
+            rgba(15, 23, 42, 0.98) 25%, 
+            rgba(30, 41, 59, 0.95) 50%, 
+            rgba(51, 65, 85, 0.98) 75%, 
+            rgba(0, 0, 0, 1) 100%);
+    }
 
-    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Sign Up</button>
-</form>
+    /* Premium animated celebration background */
+    .celebration-bg {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        pointer-events: none;
+    }
 
-<p class="mt-4">Already have an account? <a href="{% url 'login' %}" class="text-blue-600 hover:underline">Login here</a>.</p>
+    .confetti-piece {
+        position: absolute;
+        width: 8px;
+        height: 12px;
+        animation: confettiFall 8s infinite linear;
+        opacity: 0.3;
+        border-radius: 2px;
+    }
+
+    body.dark-mode .confetti-piece {
+        opacity: 0.5;
+    }
+
+    .confetti-piece:nth-child(1) {
+        background: #9333ea;
+        left: 10%;
+        animation-delay: 0s;
+        animation-duration: 6s;
+    }
+
+    .confetti-piece:nth-child(2) {
+        background: #ec4899;
+        left: 25%;
+        animation-delay: 1s;
+        animation-duration: 8s;
+    }
+
+    .confetti-piece:nth-child(3) {
+        background: #3b82f6;
+        left: 40%;
+        animation-delay: 2s;
+        animation-duration: 7s;
+    }
+
+    .confetti-piece:nth-child(4) {
+        background: #10b981;
+        left: 60%;
+        animation-delay: 3s;
+        animation-duration: 9s;
+    }
+
+    .confetti-piece:nth-child(5) {
+        background: #f59e0b;
+        left: 75%;
+        animation-delay: 4s;
+        animation-duration: 6s;
+    }
+
+    .confetti-piece:nth-child(6) {
+        background: #ef4444;
+        left: 90%;
+        animation-delay: 5s;
+        animation-duration: 8s;
+    }
+
+    .wave-container {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        pointer-events: none;
+    }
+
+    .wave {
+        position: absolute;
+        width: 200%;
+        height: 100px;
+        background: linear-gradient(90deg, transparent, rgba(147, 51, 234, 0.05), transparent);
+        animation: waveFlow 15s infinite linear;
+        opacity: 0.6;
+    }
+
+    body.dark-mode .wave {
+        opacity: 0.8;
+        background: linear-gradient(90deg, transparent, rgba(147, 51, 234, 0.08), transparent);
+    }
+
+    .wave-1 {
+        top: 20%;
+        animation-delay: 0s;
+        animation-duration: 20s;
+    }
+
+    .wave-2 {
+        top: 60%;
+        animation-delay: 5s;
+        animation-duration: 25s;
+        background: linear-gradient(90deg, transparent, rgba(236, 72, 153, 0.04), transparent);
+    }
+
+    body.dark-mode .wave-2 {
+        background: linear-gradient(90deg, transparent, rgba(236, 72, 153, 0.06), transparent);
+    }
+
+    .wave-3 {
+        bottom: 20%;
+        animation-delay: 10s;
+        animation-duration: 18s;
+        background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.03), transparent);
+    }
+
+    body.dark-mode .wave-3 {
+        background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.05), transparent);
+    }
+
+    .orb-container {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+    }
+
+    .signup-orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        animation: orbDrift 25s infinite ease-in-out;
+        opacity: 0.4;
+    }
+
+    body.dark-mode .signup-orb {
+        filter: blur(100px);
+        opacity: 0.6;
+    }
+
+    .orb-purple {
+        width: 250px;
+        height: 250px;
+        background: radial-gradient(circle, rgba(147, 51, 234, 0.15), transparent);
+        top: 10%;
+        left: -10%;
+        animation-delay: 0s;
+    }
+
+    .orb-pink {
+        width: 200px;
+        height: 200px;
+        background: radial-gradient(circle, rgba(236, 72, 153, 0.12), transparent);
+        bottom: 20%;
+        right: -5%;
+        animation-delay: 8s;
+    }
+
+    .orb-blue {
+        width: 180px;
+        height: 180px;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.2), transparent);
+        top: 50%;
+        left: 70%;
+        animation-delay: 15s;
+    }
+
+    /* Premium signup card */
+    .signup-card {
+        transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03) !important;
+    }
+
+    body.dark-mode .signup-card {
+        background: rgba(15, 23, 42, 0.6) !important;
+        border: 1px solid rgba(71, 85, 105, 0.2);
+    }
+
+    .signup-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    body.dark-mode .signup-card:hover {
+        border: 1px solid rgba(71, 85, 105, 0.4);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+    }
+
+    .signup-header {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .celebration-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        animation: celebrationPulse 4s ease-in-out infinite;
+    }
+
+    .celebration-particles {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+    }
+
+    .particle {
+        position: absolute;
+        font-size: 1rem;
+        animation: particleFloat 12s infinite linear;
+        opacity: 0.7;
+    }
+
+    .particle:nth-child(1) { left: 10%; animation-delay: 0s; }
+    .particle:nth-child(2) { left: 25%; animation-delay: 2s; }
+    .particle:nth-child(3) { left: 50%; animation-delay: 4s; }
+    .particle:nth-child(4) { left: 75%; animation-delay: 6s; }
+    .particle:nth-child(5) { left: 90%; animation-delay: 8s; }
+    .particle:nth-child(6) { left: 35%; animation-delay: 10s; }
+
+    /* Form styling */
+    .signup-input-group {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
+    .signup-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        transition: color 0.3s ease;
+    }
+
+    body.dark-mode .signup-label {
+        color: #e5e7eb;
+    }
+
+    .signup-input-wrapper {
+        position: relative;
+    }
+
+    .signup-input-wrapper input {
+        width: 100%;
+        padding: 16px 50px 16px 16px;
+        border: 2px solid transparent;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(15px);
+        font-size: 0.975rem;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    body.dark-mode .signup-input-wrapper input {
+        background: rgba(15, 23, 42, 0.8);
+        color: #e2e8f0;
+        border-color: transparent;
+    }
+
+    .signup-input-wrapper input:focus {
+        outline: none;
+        border-color: #9333ea;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 0 0 4px rgba(147, 51, 234, 0.1), 0 8px 20px rgba(0, 0, 0, 0.1);
+        transform: translateY(-3px);
+    }
+
+    body.dark-mode .signup-input-wrapper input:focus {
+        background: rgba(15, 23, 42, 0.95);
+        border-color: #a855f7;
+        box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.1), 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .signup-input-icon {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .signup-input-wrapper:focus-within .signup-input-icon {
+        color: #9333ea;
+        transform: translateY(-50%) scale(1.1);
+    }
+
+    body.dark-mode .signup-input-icon {
+        color: #6b7280;
+    }
+
+    body.dark-mode .signup-input-wrapper:focus-within .signup-input-icon {
+        color: #a855f7;
+    }
+
+    /* Password visibility toggle */
+    .password-toggle {
+        cursor: pointer;
+    }
+
+    .password-toggle:hover {
+        color: #7c3aed !important;
+        transform: translateY(-50%) scale(1.15) !important;
+    }
+
+    /* Password strength indicator */
+    .password-strength {
+        margin-top: 0.5rem;
+    }
+
+    .strength-meter {
+        width: 100%;
+        height: 3px;
+        background: rgba(209, 213, 219, 0.3);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+
+    .strength-bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #ef4444, #f59e0b, #10b981);
+        border-radius: 2px;
+        transition: width 0.3s ease;
+    }
+
+    /* Celebration button */
+    .celebration-button {
+        position: relative;
+        padding: 18px 24px;
+        border: none;
+        border-radius: 18px;
+        background: transparent;
+        color: white;
+        font-weight: 700;
+        font-size: 1.1rem;
+        cursor: pointer;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1;
+    }
+
+    .button-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #9333ea 0%, #c026d3 30%, #ec4899 60%, #f97316 100%);
+        transition: all 0.4s ease;
+        z-index: -1;
+    }
+
+    .celebration-button:hover .button-bg {
+        background: linear-gradient(135deg, #a855f7 0%, #d946ef 30%, #f472b6 60%, #fb923c 100%);
+        transform: scale(1.05);
+        filter: brightness(1.1);
+    }
+
+    .celebration-button:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 15px 35px rgba(147, 51, 234, 0.4);
+    }
+
+    .button-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .button-confetti {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .confetti-bit {
+        position: absolute;
+        font-size: 0.8rem;
+        opacity: 0;
+        animation: confettiPop 0.8s ease-out;
+    }
+
+    .celebration-button:hover .confetti-bit {
+        animation: confettiPop 0.8s ease-out;
+    }
+
+    .confetti-bit:nth-child(1) { top: 20%; left: 10%; animation-delay: 0s; }
+    .confetti-bit:nth-child(2) { top: 30%; right: 15%; animation-delay: 0.1s; }
+    .confetti-bit:nth-child(3) { bottom: 25%; left: 20%; animation-delay: 0.2s; }
+    .confetti-bit:nth-child(4) { bottom: 20%; right: 25%; animation-delay: 0.3s; }
+
+    /* Links */
+    .celebration-link {
+        color: #9333ea;
+        text-decoration: none;
+        font-weight: 600;
+        position: relative;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 12px;
+        background: rgba(147, 51, 234, 0.05);
+    }
+
+    .celebration-link:hover {
+        color: #c026d3;
+        background: rgba(147, 51, 234, 0.1);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(147, 51, 234, 0.2);
+    }
+
+    body.dark-mode .celebration-link {
+        color: #a855f7;
+        background: rgba(168, 85, 247, 0.1);
+    }
+
+    body.dark-mode .celebration-link:hover {
+        color: #d946ef;
+        background: rgba(168, 85, 247, 0.15);
+    }
+
+    /* Divider */
+    .divider-signup {
+        position: relative;
+        text-align: center;
+        margin: 2rem 0;
+        color: #6b7280;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .divider-signup:before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(147, 51, 234, 0.3), transparent);
+    }
+
+    .divider-signup span {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
+        padding: 0 1.5rem;
+        position: relative;
+        z-index: 1;
+        border-radius: 20px;
+    }
+
+    body.dark-mode .divider-signup span {
+        background: rgba(15, 23, 42, 0.9);
+        color: #9ca3af;
+    }
+
+    /* Animations */
+    @keyframes confettiFall {
+        0% {
+            transform: translateY(-100vh) rotate(0deg);
+            opacity: 1;
+        }
+        100% {
+            transform: translateY(100vh) rotate(360deg);
+            opacity: 0;
+        }
+    }
+
+    @keyframes waveFlow {
+        0% {
+            transform: translateX(-100%);
+        }
+        100% {
+            transform: translateX(100%);
+        }
+    }
+
+    @keyframes orbDrift {
+        0%, 100% {
+            transform: translate(0, 0) scale(1);
+        }
+        25% {
+            transform: translate(30px, -40px) scale(1.1);
+        }
+        50% {
+            transform: translate(-20px, 30px) scale(0.9);
+        }
+        75% {
+            transform: translate(40px, 10px) scale(1.05);
+        }
+    }
+
+    @keyframes celebrationPulse {
+        0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+        }
+        50% {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 15px rgba(255, 255, 255, 0);
+        }
+    }
+
+    @keyframes particleFloat {
+        0% {
+            transform: translateY(100px) rotate(0deg);
+            opacity: 0;
+        }
+        10%, 90% {
+            opacity: 0.7;
+        }
+        50% {
+            transform: translateY(-50px) rotate(180deg);
+        }
+        100% {
+            transform: translateY(-200px) rotate(360deg);
+            opacity: 0;
+        }
+    }
+
+    @keyframes confettiPop {
+        0% {
+            opacity: 0;
+            transform: scale(0) rotate(0deg);
+        }
+        50% {
+            opacity: 1;
+            transform: scale(1.2) rotate(180deg);
+        }
+        100% {
+            opacity: 0;
+            transform: scale(0.8) rotate(360deg);
+        }
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 640px) {
+        .signup-card {
+            margin: 1rem;
+            border-radius: 24px;
+        }
+        
+        .signup-header {
+            padding: 2rem 1.5rem;
+        }
+        
+        .signup-card > div:last-child {
+            padding: 1.5rem;
+        }
+
+        .celebration-icon {
+            width: 60px;
+            height: 60px;
+        }
+
+        .celebration-icon span {
+            font-size: 2rem;
+        }
+    }
+
+    /* Accessibility */
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const signupForm = document.getElementById('signup-form');
+    const signupBtn = document.getElementById('signup-btn');
+    const passwordInput = document.getElementById('id_password1');
+    const confirmPasswordInput = document.getElementById('id_password2');
+    const strengthBar = document.querySelector('.strength-bar');
+    const passwordToggles = document.querySelectorAll('.password-toggle');
+
+    // Password strength checker
+    function checkPasswordStrength(password) {
+        let strength = 0;
+        let width = 0;
+        
+        if (password.length >= 8) strength += 25;
+        if (password.match(/[a-z]/)) strength += 25;
+        if (password.match(/[A-Z]/)) strength += 25;
+        if (password.match(/[0-9]/)) strength += 25;
+        if (password.match(/[^A-Za-z0-9]/)) strength += 25;
+
+        width = Math.min(strength, 100);
+        
+        if (strengthBar) {
+            strengthBar.style.width = width + '%';
+            
+            if (width < 25) {
+                strengthBar.style.background = '#ef4444';
+            } else if (width < 50) {
+                strengthBar.style.background = '#f59e0b';
+            } else if (width < 75) {
+                strengthBar.style.background = '#3b82f6';
+            } else {
+                strengthBar.style.background = '#10b981';
+            }
+        }
+    }
+
+    // Password visibility toggle
+    passwordToggles.forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const targetInput = document.getElementById(targetId);
+            const eyeOpen = this.querySelector('.eye-open');
+            const eyeClosed = this.querySelector('.eye-closed');
+            
+            if (targetInput.type === 'password') {
+                targetInput.type = 'text';
+                eyeOpen.classList.add('hidden');
+                eyeClosed.classList.remove('hidden');
+            } else {
+                targetInput.type = 'password';
+                eyeOpen.classList.remove('hidden');
+                eyeClosed.classList.add('hidden');
+            }
+        });
+    });
+
+    // Real-time password strength checking
+    if (passwordInput) {
+        passwordInput.addEventListener('input', function() {
+            checkPasswordStrength(this.value);
+        });
+    }
+
+    // Password match validation
+    if (confirmPasswordInput && passwordInput) {
+        confirmPasswordInput.addEventListener('input', function() {
+            const matchIndicator = this.closest('.signup-input-group').querySelector('.password-match p');
+            if (this.value && passwordInput.value) {
+                if (this.value === passwordInput.value) {
+                    matchIndicator.textContent = '✅ Passwords match perfectly!';
+                    matchIndicator.className = 'text-xs text-green-600 dark:text-green-400';
+                } else {
+                    matchIndicator.textContent = '❌ Passwords don\'t match yet';
+                    matchIndicator.className = 'text-xs text-red-500 dark:text-red-400';
+                }
+            } else {
+                matchIndicator.textContent = 'Make sure it matches your password above';
+                matchIndicator.className = 'text-xs text-gray-500 dark:text-gray-400';
+            }
+        });
+    }
+
+    // Form submission with celebration animation
+    signupForm.addEventListener('submit', function() {
+        signupBtn.innerHTML = `
+            <div class="button-bg"></div>
+            <span class="button-content">
+                <svg class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Creating your celebration account...
+            </span>
+        `;
+        signupBtn.disabled = true;
+    });
+
+    // Input focus animations
+    const inputs = document.querySelectorAll('input');
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.closest('.signup-input-group').style.transform = 'translateY(-3px)';
+        });
+        
+        input.addEventListener('blur', function() {
+            this.closest('.signup-input-group').style.transform = 'translateY(0)';
+        });
+    });
+
+    // Celebration confetti on button hover
+    signupBtn.addEventListener('mouseenter', function() {
+        const confettiBits = this.querySelectorAll('.confetti-bit');
+        confettiBits.forEach((bit, index) => {
+            setTimeout(() => {
+                bit.style.animation = 'confettiPop 0.8s ease-out';
+            }, index * 100);
+        });
+    });
+
+    // Welcome animation for inputs
+    setTimeout(() => {
+        const inputGroups = document.querySelectorAll('.signup-input-group');
+        inputGroups.forEach((group, index) => {
+            setTimeout(() => {
+                group.style.opacity = '1';
+                group.style.transform = 'translateY(0)';
+            }, index * 150);
+        });
+    }, 300);
+
+    // Initialize input groups with fade-in animation
+    const inputGroups = document.querySelectorAll('.signup-input-group');
+    inputGroups.forEach(group => {
+        group.style.opacity = '0';
+        group.style.transform = 'translateY(20px)';
+        group.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+    });
+});
+</script>
 {% endblock %}
