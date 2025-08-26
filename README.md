@@ -6,7 +6,7 @@ Welcome! This is a modern Django web app to help you remember and celebrate birt
 
 ## 🚀 Demo
 
-- **Live Demo:** [Video Will be Updated Soon]
+- **Live Demo:** [Demo](https://github.com/user-attachments/assets/4a928d52-504f-4fa1-8eab-67b5c5f86e21)
 
 ---
 
