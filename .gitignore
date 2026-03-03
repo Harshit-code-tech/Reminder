@@ -4,6 +4,7 @@
 *.pyd
 __pycache__/
 *.env
+*.pdf
 
 # Virtual Environment
 .venv/
@@ -26,3 +27,6 @@ migrations/*
 # OS
 .DS_Store
 Thumbs.db
+
+core/supabase_test.py
+core/test_media/
