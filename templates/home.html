@@ -3,7 +3,7 @@
 {% block header_class %}p-4{% endblock %}
 {% block header_content %}
 <h1 class="text-3xl font-bold flex items-center gap-3 text-white">
-    <span class="text-yellow-400 animate-bounce">🎉</span> 
+    <span class="text-yellow-400" aria-hidden="true">🎉</span> 
     <span class="bg-gradient-to-r from-yellow-200 to-pink-200 bg-clip-text text-transparent">
         Welcome to Reminder
     </span>
@@ -18,7 +18,7 @@
         <div class="relative bg-white/10 dark:bg-slate-800/20 backdrop-blur-sm rounded-3xl p-8 border border-purple-200/30 dark:border-purple-500/30 shadow-2xl">
             <h2 class="text-5xl font-bold mb-6 leading-tight">
                 <span class="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-clip-text text-transparent">Never Miss a</span> <br>
-                <span class="text-6xl animate-pulse bg-gradient-to-r from-pink-600 via-purple-600 to-pink-600 bg-clip-text text-transparent font-black drop-shadow-lg">Celebration!</span>
+                <span class="text-6xl bg-gradient-to-r from-pink-600 via-purple-600 to-pink-600 bg-clip-text text-transparent font-black drop-shadow-lg">Celebration!</span>
             </h2>
             <p class="mb-8 text-xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
                 Transform your special moments into unforgettable experiences with our intuitive reminder app. 
@@ -46,19 +46,19 @@
                 </a>
             </div>
             
-            <!-- Stats or highlights -->
+            <!-- App highlights -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
                 <div class="text-center">
-                    <div class="text-3xl font-bold text-purple-600 dark:text-purple-400">10K+</div>
-                    <div class="text-gray-600 dark:text-gray-400">Events Tracked</div>
+                    <div class="text-3xl font-bold text-purple-600 dark:text-purple-400" aria-hidden="true">🎂</div>
+                    <div class="text-gray-600 dark:text-gray-400">Birthdays & Anniversaries</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-3xl font-bold text-pink-600 dark:text-pink-400">1K+</div>
-                    <div class="text-gray-600 dark:text-gray-400">Happy Users</div>
+                    <div class="text-3xl font-bold text-pink-600 dark:text-pink-400" aria-hidden="true">📅</div>
+                    <div class="text-gray-600 dark:text-gray-400">Smart Reminders</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">98%</div>
-                    <div class="text-gray-600 dark:text-gray-400">Reliability</div>
+                    <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400" aria-hidden="true">💌</div>
+                    <div class="text-gray-600 dark:text-gray-400">Greeting Cards</div>
                 </div>
             </div>
         </div>
@@ -95,15 +95,9 @@
             <div class="group card p-8 bg-gradient-to-br from-white/95 to-purple-50/30 dark:from-slate-800/80 dark:to-slate-700/50 backdrop-blur-sm hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 relative overflow-hidden border border-purple-200/50 dark:border-purple-500/30">
                 <div class="absolute -inset-1 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 rounded-lg blur-sm opacity-0 group-hover:opacity-30 transition duration-500"></div>
                 <div class="relative">
-                    <div class="text-5xl mb-6 group-hover:animate-bounce transition-all duration-300">📅</div>
+                    <div class="text-5xl mb-6 group-hover:scale-110 transition-all duration-300" aria-hidden="true">📅</div>
                     <h4 class="text-xl font-bold text-gray-800 dark:text-white mb-4 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">Smart Event Tracking</h4>
                     <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">Effortlessly manage birthdays, anniversaries, and special occasions with intelligent recurring reminders.</p>
-                    <div class="mt-4 flex items-center text-purple-600 dark:text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <span class="text-sm font-medium">Learn more</span>
-                        <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
-                    </div>
                 </div>
             </div>
 
@@ -111,15 +105,9 @@
             <div class="group card p-8 bg-gradient-to-br from-white/95 to-pink-50/30 dark:from-slate-800/80 dark:to-slate-700/50 backdrop-blur-sm hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 relative overflow-hidden border border-pink-200/50 dark:border-pink-500/30">
                 <div class="absolute -inset-1 bg-gradient-to-r from-pink-600 via-purple-600 to-pink-600 rounded-lg blur-sm opacity-0 group-hover:opacity-30 transition duration-500"></div>
                 <div class="relative">
-                    <div class="text-5xl mb-6 group-hover:animate-pulse transition-all duration-300">🔔</div>
+                    <div class="text-5xl mb-6 group-hover:scale-110 transition-all duration-300" aria-hidden="true">🔔</div>
                     <h4 class="text-xl font-bold text-gray-800 dark:text-white mb-4 group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors">Custom Notifications</h4>
                     <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">Get personalized alerts days before events, ensuring you're always prepared to celebrate.</p>
-                    <div class="mt-4 flex items-center text-pink-600 dark:text-pink-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <span class="text-sm font-medium">Learn more</span>
-                        <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
-                    </div>
                 </div>
             </div>
 
@@ -127,15 +115,9 @@
             <div class="group card p-8 bg-gradient-to-br from-white/95 to-indigo-50/30 dark:from-slate-800/80 dark:to-slate-700/50 backdrop-blur-sm hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 relative overflow-hidden border border-indigo-200/50 dark:border-indigo-500/30">
                 <div class="absolute -inset-1 bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-600 rounded-lg blur-sm opacity-0 group-hover:opacity-30 transition duration-500"></div>
                 <div class="relative">
-                    <div class="text-5xl mb-6 group-hover:animate-spin transition-all duration-300">🎨</div>
+                    <div class="text-5xl mb-6 group-hover:scale-110 transition-all duration-300" aria-hidden="true">🎨</div>
                     <h4 class="text-xl font-bold text-gray-800 dark:text-white mb-4 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Personalized Cards</h4>
                     <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">Create stunning greeting cards with photos, audio messages, and beautiful themes for every occasion.</p>
-                    <div class="mt-4 flex items-center text-indigo-600 dark:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <span class="text-sm font-medium">Learn more</span>
-                        <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
-                    </div>
                 </div>
             </div>
 
@@ -143,15 +125,9 @@
             <div class="group card p-8 bg-gradient-to-br from-white/95 to-green-50/30 dark:from-slate-800/80 dark:to-slate-700/50 backdrop-blur-sm hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 relative overflow-hidden border border-green-200/50 dark:border-green-500/30">
                 <div class="absolute -inset-1 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 rounded-lg blur-sm opacity-0 group-hover:opacity-30 transition duration-500"></div>
                 <div class="relative">
-                    <div class="text-5xl mb-6 group-hover:scale-110 transition-all duration-300">📱</div>
+                    <div class="text-5xl mb-6 group-hover:scale-110 transition-all duration-300" aria-hidden="true">📱</div>
                     <h4 class="text-xl font-bold text-gray-800 dark:text-white mb-4 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">Easy Sharing</h4>
                     <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">Share your beautiful greeting cards instantly via email, social media, or direct links with loved ones.</p>
-                    <div class="mt-4 flex items-center text-green-600 dark:text-green-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <span class="text-sm font-medium">Learn more</span>
-                        <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
-                    </div>
                 </div>
             </div>
         </div>

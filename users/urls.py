@@ -22,4 +22,7 @@ urlpatterns = [
     path('reset/<str:uidb64>/<str:token>/', views.password_reset_confirm, name='password_reset_confirm'),
     path('reset/done/', views.password_reset_done, name='password_reset_done'),
     path('reset/complete/', views.password_reset_complete, name='password_reset_complete'),
+
+    # Account Settings
+    path('settings/', views.account_settings, name='account_settings'),
 ]

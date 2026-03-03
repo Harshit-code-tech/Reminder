@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from .models import Event
 import json
+import re
 
 class EventForm(forms.ModelForm):
     EVENT_TYPES = [
@@ -198,7 +199,11 @@ class EventForm(forms.ModelForm):
                 self.fields['raksha_bandhan_theme'].initial = 'traditional'
 
     def clean_date(self):
+        """Validate the event date is not in the past (for new events)."""
         date = self.cleaned_data.get('date')
+        # Allow past dates when editing an existing event
+        if self.instance and self.instance.pk:
+            return date
         if date and date < timezone.now().date():
             raise ValidationError('Event date cannot be in the past.')
         return date
@@ -208,133 +213,100 @@ class EventForm(forms.ModelForm):
         event_type = cleaned_data.get('event_type')
         memory_display_type = cleaned_data.get('memory_display_type')
 
+        # ------------------------------------------------------------------
         # File validations
+        # ------------------------------------------------------------------
         image_files = self.files.getlist('image_files')
         audio_files = self.files.getlist('audio_files')
 
-        # Validate images
+        max_file_size = 50 * 1024 * 1024  # 50 MB
         allowed_image_types = ['image/jpeg', 'image/png', 'image/jpg']
-        max_file_size = 50 * 1024 * 1024  # 50MB
+        allowed_audio_types = ['audio/mpeg', 'audio/wav', 'audio/flac', 'audio/ogg', 'audio/aac', 'audio/mp3']
 
         for file in image_files:
             if file.content_type not in allowed_image_types:
                 raise ValidationError(f'Invalid image type: {file.name}. Allowed: JPG, PNG')
             if file.size > max_file_size:
-                raise ValidationError(f'Image {file.name} exceeds 50MB.')
+                raise ValidationError(f'Image {file.name} exceeds 50 MB.')
 
-        # Validate audio
-        allowed_audio_types = ['audio/mpeg', 'audio/wav', 'audio/flac', 'audio/ogg', 'audio/aac', 'audio/mp3']
         for file in audio_files:
             if file.content_type not in allowed_audio_types:
                 raise ValidationError(f'Invalid audio type: {file.name}. Allowed: MP3, WAV, FLAC, OGG, AAC')
             if file.size > max_file_size:
-                raise ValidationError(f'Audio {file.name} exceeds 50MB.')
+                raise ValidationError(f'Audio {file.name} exceeds 50 MB.')
 
-        # Event-specific validations
+        # ------------------------------------------------------------------
+        # Event-type specific validations
+        # ------------------------------------------------------------------
         if event_type == 'other':
             if not cleaned_data.get('custom_label'):
                 self.add_error('custom_label', 'Custom label is required for Other events.')
 
         elif event_type == 'raksha_bandhan':
-            # Force cultural theme for Raksha Bandhan
             cleaned_data['cultural_theme'] = True
 
-            # Validate sibling name
             name = cleaned_data.get('name')
             if not name or not name.strip():
                 self.add_error('name', 'Sibling name is required for Raksha Bandhan events.')
 
-            # Validate sacred promises format if provided
             sacred_promises = cleaned_data.get('sacred_promises')
             if sacred_promises and sacred_promises.strip():
                 promises = [p.strip() for p in sacred_promises.split('\n') if p.strip()]
                 if len(promises) < 1:
                     self.add_error('sacred_promises', 'At least one promise is required if providing sacred promises.')
 
-            # Set default theme if not provided
             if not cleaned_data.get('raksha_bandhan_theme'):
                 cleaned_data['raksha_bandhan_theme'] = 'traditional'
 
-        # Recurring event logic
+        # Recurring event constraint
         is_recurring = cleaned_data.get('is_recurring')
         if is_recurring and event_type not in ['birthday', 'anniversary']:
             raise ValidationError("Recurring events are only allowed for birthdays, anniversaries, and Raksha Bandhan.")
 
-        # Recipient email validation
+        # Recipient email guard
         recipient_email = cleaned_data.get('recipient_email')
         if recipient_email and not recipient_email.strip():
             raise ValidationError("Recipient email cannot be empty if provided.")
 
+        # ------------------------------------------------------------------
         # Memory display validation
+        # ------------------------------------------------------------------
         if memory_display_type == 'thread_of_memories':
             thread_of_memories = cleaned_data.get('thread_of_memories')
-            print(f"DEBUG: memory_display_type={memory_display_type}, thread_of_memories='{thread_of_memories}'")
-            
+
             if thread_of_memories and thread_of_memories.strip():
                 try:
                     memories_data = json.loads(thread_of_memories)
-                    print(f"DEBUG: Successfully parsed JSON with {len(memories_data)} entries: {memories_data}")
-                    
-                    # Validate JSON structure
                     if not isinstance(memories_data, list):
                         self.add_error('thread_of_memories', 'Invalid thread of memories format.')
                     else:
-                        # Filter out empty memories and count valid ones
                         valid_memories = [
-                            m for m in memories_data 
+                            m for m in memories_data
                             if isinstance(m, dict) and (
-                                (m.get('title', '').strip()) or 
-                                (m.get('description', '').strip())
+                                m.get('title', '').strip() or m.get('description', '').strip()
                             )
                         ]
-                        
-                        print(f"DEBUG: Found {len(valid_memories)} valid memories out of {len(memories_data)} total")
-                        for i, mem in enumerate(valid_memories):
-                            print(f"DEBUG: Memory {i+1}: title='{mem.get('title', '')}', desc='{mem.get('description', '')}', year='{mem.get('year', '')}'")
-                        
                         if len(valid_memories) < 2:
-                            self.add_error('thread_of_memories', f'Thread of Memories requires at least 2 memories. Currently have {len(valid_memories)} valid memories out of {len(memories_data)} total entries.')
-                            
-                except json.JSONDecodeError as e:
-                    print(f"DEBUG: JSON decode error: {e}, trying text parsing")
-                    # Fallback to legacy text format validation - more flexible
-                    text_content = thread_of_memories.strip()
-                    
-                    # Look for year patterns (4 digits at start or anywhere in line)
-                    import re
-                    
-                    # More flexible year pattern - matches year followed by content
-                    year_pattern = r'\d{4}\s+[^\n]+'
-                    memory_entries = re.findall(year_pattern, text_content, re.MULTILINE)
-                    
-                    if len(memory_entries) >= 2:
-                        # Found sufficient year-based entries
-                        print(f"DEBUG: Found {len(memory_entries)} year-based entries")
-                        pass
-                    else:
-                        # Try alternative pattern - lines that start with year
-                        alt_year_pattern = r'^\s*\d{4}\s*.+'
-                        alt_memory_entries = re.findall(alt_year_pattern, text_content, re.MULTILINE)
-                        
-                        if len(alt_memory_entries) >= 2:
-                            print(f"DEBUG: Found {len(alt_memory_entries)} alternative year-based entries")
-                            pass
-                        else:
-                            # Most lenient check - just count lines that have substantial content
-                            lines = [line.strip() for line in text_content.split('\n') if line.strip() and len(line.strip()) > 10]
-                            print(f"DEBUG: Found {len(lines)} substantial lines")
-                            if len(lines) < 2:  # At least 2 substantial lines
-                                self.add_error('thread_of_memories', f'Thread of Memories requires at least 2 memories. Found {len(lines)} substantial lines of content.')
+                            self.add_error(
+                                'thread_of_memories',
+                                f'Thread of Memories requires at least 2 memories '
+                                f'(found {len(valid_memories)} valid).',
+                            )
+                except json.JSONDecodeError:
+                    # Legacy newline-separated text format
+                    lines = [l.strip() for l in thread_of_memories.strip().split('\n') if l.strip()]
+                    if len(lines) < 2:
+                        self.add_error(
+                            'thread_of_memories',
+                            'Thread of Memories requires at least 2 memory entries.',
+                        )
             else:
-                print(f"DEBUG: thread_of_memories is empty or None")
-                # Empty thread_of_memories when that option is selected
                 self.add_error('thread_of_memories', 'Please add at least 2 memories for Thread of Memories.')
 
-            # Clear highlights if thread_of_memories is active
+            # Clear highlights when thread_of_memories is the active display
             cleaned_data['highlights'] = ''
 
         elif memory_display_type == 'highlights':
-            # Clear thread_of_memories if highlights is active
             cleaned_data['thread_of_memories'] = ''
 
         return cleaned_data
@@ -359,75 +331,41 @@ class EventForm(forms.ModelForm):
         return sacred_promises
 
     def clean_thread_of_memories(self):
-        """Clean and validate thread of memories field."""
+        """Clean and validate thread of memories, normalising to JSON."""
         thread_of_memories = self.cleaned_data.get('thread_of_memories')
         memory_display_type = self.cleaned_data.get('memory_display_type')
-        
-        print(f"DEBUG clean_thread_of_memories: memory_display_type={memory_display_type}, thread_of_memories length={len(thread_of_memories) if thread_of_memories else 0}")
 
-        if memory_display_type == 'thread_of_memories' and thread_of_memories:
-            try:
-                memories_data = json.loads(thread_of_memories)
-                print(f"DEBUG clean_thread_of_memories: Parsed {len(memories_data)} memories")
-                
-                # Validate and clean the JSON data
-                if isinstance(memories_data, list):
-                    # Clean each memory entry
-                    cleaned_memories = []
-                    for memory in memories_data:
-                        if isinstance(memory, dict):
-                            cleaned_memory = {
-                                'year': str(memory.get('year', '')).strip(),
-                                'title': str(memory.get('title', '')).strip(),
-                                'description': str(memory.get('description', '')).strip()
-                            }
-                            # Only include memories that have at least a title or description
-                            if cleaned_memory['title'] or cleaned_memory['description']:
-                                cleaned_memories.append(cleaned_memory)
-                    
-                    print(f"DEBUG clean_thread_of_memories: Returning {len(cleaned_memories)} cleaned memories")
-                    return json.dumps(cleaned_memories)
-                    
-            except json.JSONDecodeError:
-                # Try to parse legacy text format like:
-                # "2022 Title Here Description here..."
-                text_content = thread_of_memories.strip()
-                import re
-                
-                # Pattern to match: Year + Title/Description on same line
-                pattern = r'(\d{4})\s+([^.!?]*[.!?]?[^0-9]*?)(?=\d{4}|$)'
-                matches = re.findall(pattern, text_content, re.DOTALL)
-                
-                if len(matches) >= 2:
-                    # Convert to structured format
-                    structured_memories = []
-                    for year, content in matches:
-                        content = content.strip()
-                        # Try to split into title and description
-                        sentences = content.split('.')
-                        if len(sentences) >= 2:
-                            title = sentences[0].strip()
-                            description = '.'.join(sentences[1:]).strip()
-                        else:
-                            # Use first part as title, rest as description
-                            words = content.split()
-                            if len(words) > 6:
-                                title = ' '.join(words[:6])
-                                description = ' '.join(words[6:])
-                            else:
-                                title = content[:50] + '...' if len(content) > 50 else content
-                                description = content
-                        
-                        structured_memories.append({
-                            'year': year,
-                            'title': title[:100],  # Limit title length
-                            'description': description
-                        })
-                    
-                    return json.dumps(structured_memories)
-                
-                # Fallback to simple line parsing
-                memories = [m.strip() for m in thread_of_memories.split('\n') if m.strip()]
-                return '\n'.join(memories)
+        if memory_display_type != 'thread_of_memories' or not thread_of_memories:
+            return thread_of_memories
 
-        return thread_of_memories
+        # Already valid JSON — clean and return
+        try:
+            memories_data = json.loads(thread_of_memories)
+            if isinstance(memories_data, list):
+                cleaned = [
+                    {
+                        'year': str(m.get('year', '')).strip(),
+                        'title': str(m.get('title', '')).strip(),
+                        'description': str(m.get('description', '')).strip(),
+                    }
+                    for m in memories_data
+                    if isinstance(m, dict) and (
+                        str(m.get('title', '')).strip() or str(m.get('description', '')).strip()
+                    )
+                ]
+                return json.dumps(cleaned)
+        except json.JSONDecodeError:
+            pass
+
+        # Legacy plain-text format — attempt conversion to JSON
+        text = thread_of_memories.strip()
+        year_pattern = re.compile(r'^(\d{4})\s*[:\-]?\s*(.+)', re.MULTILINE)
+        matches = year_pattern.findall(text)
+
+        if len(matches) >= 2:
+            structured = [{'year': y, 'title': t.strip(), 'description': ''} for y, t in matches]
+            return json.dumps(structured)
+
+        # Fallback: treat each non-empty line as a separate memory
+        lines = [l.strip() for l in text.split('\n') if l.strip()]
+        return '\n'.join(lines)

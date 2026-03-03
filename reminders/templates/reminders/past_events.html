@@ -20,9 +20,9 @@
             Past Events Collection
         </h2>
         <div class="flex flex-wrap items-center gap-3">
-            <form class="flex flex-wrap gap-3" method="GET">
+            <form class="flex flex-wrap gap-3 items-end" method="GET">
                 <div class="relative">
-                    <select name="event_type" class="appearance-none pl-4 pr-10 py-2.5 rounded-xl border-2 border-purple-300 dark:border-purple-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all shadow-sm hover:shadow-md text-gray-700 dark:text-gray-200">
+                    <select name="event_type" aria-label="Filter by event type" class="appearance-none pl-4 pr-10 py-2.5 rounded-xl border-2 border-purple-300 dark:border-purple-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all shadow-sm hover:shadow-md text-gray-700 dark:text-gray-200">
                         <option value="">All Types</option>
                         {% for type, label in event_types %}
                             <option value="{{ type }}" {% if event_type == type %}selected{% endif %}>{{ label }}</option>
@@ -34,9 +34,18 @@
                         </svg>
                     </div>
                 </div>
-                <input type="date" name="start_date" value="{{ start_date }}" class="pl-4 py-2.5 rounded-xl border-2 border-purple-300 dark:border-purple-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all shadow-sm hover:shadow-md text-gray-700 dark:text-gray-200">
-                <input type="date" name="end_date" value="{{ end_date }}" class="pl-4 py-2.5 rounded-xl border-2 border-purple-300 dark:border-purple-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all shadow-sm hover:shadow-md text-gray-700 dark:text-gray-200">
-                <input type="text" name="search" value="{{ search_query }}" placeholder="Search by custom label..." class="pl-4 py-2.5 rounded-xl border-2 border-purple-300 dark:border-purple-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all shadow-sm hover:shadow-md text-gray-700 dark:text-gray-200">
+                <div>
+                    <label for="past-start-date" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">From</label>
+                    <input type="date" id="past-start-date" name="start_date" value="{{ start_date }}" class="pl-4 py-2.5 rounded-xl border-2 border-purple-300 dark:border-purple-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all shadow-sm hover:shadow-md text-gray-700 dark:text-gray-200">
+                </div>
+                <div>
+                    <label for="past-end-date" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">To</label>
+                    <input type="date" id="past-end-date" name="end_date" value="{{ end_date }}" class="pl-4 py-2.5 rounded-xl border-2 border-purple-300 dark:border-purple-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all shadow-sm hover:shadow-md text-gray-700 dark:text-gray-200">
+                </div>
+                <div>
+                    <label for="past-search" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Search</label>
+                    <input type="text" id="past-search" name="search" value="{{ search_query }}" placeholder="Search events…" class="pl-4 py-2.5 rounded-xl border-2 border-purple-300 dark:border-purple-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all shadow-sm hover:shadow-md text-gray-700 dark:text-gray-200">
+                </div>
                 <button type="submit" class="px-4 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-600 text-white font-medium shadow-sm transition-all hover:shadow-md">Filter</button>
             </form>
             <a href="{% url 'download_past_events' %}" class="group relative inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-green-500 hover:bg-green-600 dark:bg-green-700 dark:hover:bg-green-600 text-white font-medium shadow-sm transition-all duration-200 hover:shadow-md translate-y-0 hover:-translate-y-1">
@@ -51,13 +60,7 @@
     </div>
 
     {% if messages %}
-    <div class="mb-4">
-        {% for message in messages %}
-        <div class="p-4 rounded-lg {% if message.tags == 'success' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
-            {{ message }}
-        </div>
-        {% endfor %}
-    </div>
+    <!-- Messages handled by base.html -->
     {% endif %}
 
     {% if events %}
@@ -92,7 +95,7 @@
                     <div class="flex items-center gap-2 mt-2">
                         {% for media in event.media.all|slice:":2" %}
                             {% if media.media_type == 'image' %}
-                                <img src="{{ media.media_file }}" alt="Event Image" class="w-12 h-12 object-cover rounded-lg shadow">
+                                <img src="{{ media.media_file }}" alt="Media for {{ event.name }}" class="w-12 h-12 object-cover rounded-lg shadow">
                             {% elif media.media_type == 'audio' %}
                                 <audio controls class="w-32">
                                     <source src="{{ media.media_file }}">
@@ -136,18 +139,18 @@
     {% endif %}
 
     <!-- Modal for Media and Reflection -->
-    <div id="event-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto">
+    <div id="event-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center hidden z-50" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto mx-4 shadow-2xl">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-800 dark:text-white">Event Details</h3>
-                <button class="close-modal text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-white">
+                <h3 id="modal-title" class="text-xl font-bold text-gray-800 dark:text-white">Event Details</h3>
+                <button class="close-modal text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-white p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition" aria-label="Close modal">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
             </div>
             <div id="modal-content" class="text-gray-700 dark:text-gray-200">
-                <!-- Populated by JS -->
+                <p class="text-sm text-gray-500 dark:text-gray-400 italic">Loading event details…</p>
             </div>
         </div>
     </div>
@@ -155,7 +158,40 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Modal handling will be in past_events.js
+    const modal = document.getElementById('event-modal');
+    const modalContent = document.getElementById('modal-content');
+    const closeBtn = modal.querySelector('.close-modal');
+
+    // Open modal
+    document.querySelectorAll('.open-modal').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const card = btn.closest('[data-event-card]') || btn.closest('.bg-white, .dark\\:bg-gray-800');
+            if (card) {
+                const name = card.querySelector('h3')?.textContent || 'Event';
+                const date = card.querySelector('p')?.textContent || '';
+                const reflection = card.querySelector('.font-semibold + span, p:nth-of-type(2)');
+                modalContent.innerHTML = `
+                    <h4 class="font-semibold text-lg mb-2">${name}</h4>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">${date}</p>
+                    <p class="text-sm">Use the Edit button to add reflections and manage this event.</p>
+                `;
+            }
+            modal.classList.remove('hidden');
+            closeBtn.focus();
+        });
+    });
+
+    // Close modal
+    function closeModal() {
+        modal.classList.add('hidden');
+    }
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
+    });
 });
 </script>
 {% endblock %}

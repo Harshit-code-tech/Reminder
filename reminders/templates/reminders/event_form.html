@@ -342,7 +342,8 @@
                     <div class="form-group transition-colors duration-300 hover:shadow-md rounded-lg p-4 bg-gray-50/80 dark:bg-slate-700/90 border border-gray-200 dark:border-slate-600 backdrop-blur-sm">
                         <label for="id_auto_share_enabled" class="flex items-center gap-2 font-semibold text-gray-700 dark:text-gray-200">
                             <input type="checkbox" id="id_auto_share_enabled" name="{{ form.auto_share_enabled.name }}"
-                                class="w-5 h-5 text-purple-600 rounded border-gray-300 focus:ring-purple-500 dark:focus:ring-purple-400 dark:border-slate-500 dark:bg-slate-800" checked>
+                                class="w-5 h-5 text-purple-600 rounded border-gray-300 focus:ring-purple-500 dark:focus:ring-purple-400 dark:border-slate-500 dark:bg-slate-800"
+                                {% if form.auto_share_enabled.value %}checked{% endif %}>
                             <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 12.684a4 4 0 015.632 0m0 0a4 4 0 015.632 0m-5.632 0l-1.414-1.414m1.414 1.414l1.414 1.414M3 12a9 9 0 0118 0"></path>
                             </svg>

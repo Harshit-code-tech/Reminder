@@ -359,7 +359,6 @@ class GreetingCardApp {
             unlockButton: document.querySelector('.unlock-button'),
             passwordHint: document.querySelector('#password-hint'),
             revealPassword: document.querySelector('#reveal-password'),
-            actualPassword: document.querySelector('#actual-password'),
 
             // Slider elements
             sliderTrack: document.querySelector('.slider-track'),
@@ -797,11 +796,34 @@ class GreetingCardApp {
     }
 
     revealPassword() {
-        if (!this.elements.revealPassword || !this.elements.actualPassword) return;
+        if (!this.elements.revealPassword) return;
 
-        this.elements.revealPassword.textContent = this.elements.actualPassword.textContent;
-        this.elements.revealPassword.classList.add('unblur');
+        const eventId = this.cardContainer.dataset.eventId;
+        const csrftoken = this.getCookie('csrftoken');
+
+        this.elements.revealPassword.textContent = 'Loading...';
         this.elements.revealPassword.style.pointerEvents = 'none';
+
+        fetch(`/reminders/reveal-password/${eventId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+            },
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.password) {
+                this.elements.revealPassword.textContent = data.password;
+                this.elements.revealPassword.classList.add('unblur');
+            } else {
+                this.elements.revealPassword.textContent = 'Unable to reveal';
+            }
+        })
+        .catch(() => {
+            this.elements.revealPassword.textContent = 'Error — try again';
+            this.elements.revealPassword.style.pointerEvents = 'auto';
+        });
     }
 
 

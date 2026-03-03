@@ -141,7 +141,7 @@
 <script>
     // Chart theme helper
     const getChartTheme = () => {
-        const isDarkMode = document.documentElement.classList.contains('dark');
+        const isDarkMode = document.body.classList.contains('dark-mode');
         return {
             textColor: isDarkMode ? '#e2e8f0' : '#1f2937',
             gridColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
@@ -249,7 +249,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         updateChartThemes();
         const observer = new MutationObserver(() => updateChartThemes());
-        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+        observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
     });
 </script>
 {% endblock %}

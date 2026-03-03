@@ -1,55 +1,192 @@
-from datetime import datetime, timedelta
-import logging
+import csv
 import json
-from django.db.models import Prefetch
-from django.template.loader import render_to_string
-from django.views.decorators.csrf import csrf_protect
-from django.core.mail import send_mail
-from django.utils import timezone
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required,user_passes_test
-from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, Http404
-from django.views.decorators.csrf import csrf_exempt
+import logging
+import uuid
+from datetime import datetime, timedelta
+from urllib.parse import urlparse
+
 from django.conf import settings
 from django.contrib import messages
-from django_ratelimit.decorators import ratelimit
-from .models import Event, CelebrationCardPage, EventMedia, Reflection, CardShare
-from .forms import EventForm
-from .utils import send_upcoming_reminders, process_bulk_import, get_csv_template, get_analytics_data,get_admin_dashboard_stats
-from users.decorators import email_verified_required
-from .supabase_helpers import get_user_supabase_client
-import uuid
-from .cron import daily_reminder_job, daily_deletion_notification_job, daily_media_cleanup_job
-import csv
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.mail import send_mail
+from django.db.models import Prefetch
+from django.http import Http404, HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from django_ratelimit.decorators import ratelimit
+
+from users.decorators import email_verified_required
+
+from .forms import EventForm
+from .models import CardShare, Event, EventMedia, Reflection
+from .supabase_helpers import get_user_supabase_client
+from .utils import (
+    get_admin_dashboard_stats,
+    get_analytics_data,
+    get_csv_template,
+    process_bulk_import,
+    send_upcoming_reminders,
+)
 
 logger = logging.getLogger('app_logger')
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _validate_and_upload_media(request, event, supabase, files):
+    """Validate file constraints and upload media files to Supabase.
+
+    Returns a list of created EventMedia objects on success,
+    or a string error message on the first validation/upload failure.
+    """
+    created = []
+    for file in files:
+        if file.size > settings.MAX_FILE_SIZE:
+            return f"File '{file.name}' exceeds 50MB limit."
+        if file.content_type not in settings.ALLOWED_MEDIA_TYPES:
+            return f"Invalid file type for '{file.name}'. Allowed: .jpg, .png, .mp3, .wav, .flac"
+
+        unique_suffix = uuid.uuid4().hex[:8]
+        filename = f"{unique_suffix}_{file.name}"
+        file_path = f"{request.user.supabase_id}/{event.id}/{filename}"
+        logger.debug(f"Uploading media to path: {file_path}")
+
+        response = supabase.storage.from_('event-media').upload(
+            file_path, file.read(), file_options={"content-type": file.content_type}
+        )
+        if hasattr(response, 'error') and response.error:
+            return f"Failed to upload '{file.name}': {response.error}"
+        if hasattr(response, 'status_code') and response.status_code not in (200, 201):
+            return f"Upload failed for '{file.name}'"
+
+        public_url = supabase.storage.from_('event-media').get_public_url(file_path)
+        media = EventMedia.objects.create(
+            event=event,
+            media_file=public_url.rstrip('?'),
+            media_type='image' if file.content_type.startswith('image/') else 'audio',
+            mime_type=file.content_type,
+        )
+        created.append(media)
+    return created
+
+
+def _remove_event_media_from_storage(supabase, media_queryset):
+    """Delete media files from Supabase storage and remove DB records.
+
+    Logs warnings for already-missing files and errors on failure.
+    """
+    for media in media_queryset:
+        file_path = media.media_file
+        try:
+            dir_path = "/".join(file_path.split('/')[:-1])
+            existing_files = supabase.storage.from_('event-media').list(dir_path)
+            if any(f['name'] == file_path.split('/')[-1] for f in existing_files):
+                supabase.storage.from_('event-media').remove([file_path])
+            media.delete()
+            logger.info(f"Deleted media '{file_path}'")
+        except Exception as e:
+            logger.warning(f"Failed to delete media {file_path}: {e}")
+            raise
+
+
+def _build_card_context(event, *, is_owner, token=None, session_key_unlocked=False):
+    """Build the context dict shared by greeting_card_view and public_card_view."""
+    audio_media = event.media.filter(media_type='audio').first()
+    images = [
+        {'media_file': m.media_file, 'media_type': m.media_type}
+        for m in event.media.filter(media_type='image')
+    ]
+
+    thread_of_memories_data = event.get_memory_data()
+    is_raksha = event.event_type == 'raksha_bandhan'
+
+    return {
+        'event': event,
+        'is_owner': is_owner,
+        'requires_card_password': bool(event.card_password and not session_key_unlocked),
+        'requires_share_password': False,
+        'token': token,
+        'audio_url': audio_media.media_file if audio_media else None,
+        'audio_mime_type': audio_media.mime_type if audio_media else None,
+        'images': images,
+        'event_type': event.event_type,
+        'recipient_name': event.custom_label or event.name,
+        'message': event.message or '',
+        'has_thread_of_memories': len(thread_of_memories_data) >= 2,
+        'thread_of_memories_data': json.dumps(thread_of_memories_data),
+        'memory_data_parsed': thread_of_memories_data,
+        'highlights': event.highlights or '',
+        # password_text intentionally NOT included — fetched via AJAX to prevent
+        # leaking the plaintext password in the HTML source to unauthenticated viewers.
+        # Raksha Bandhan specific
+        'is_raksha_bandhan': is_raksha,
+        'raksha_bandhan_theme': event.raksha_bandhan_theme if is_raksha else 'traditional',
+        'sibling_relationship': event.sibling_relationship if is_raksha else 'Beloved Sibling',
+        'sacred_promises': event.sacred_promises if is_raksha else '',
+        'sacred_promises_list': event.get_promises_list() if is_raksha else [],
+        'rakhi_ceremony_notes': event.rakhi_ceremony_notes if is_raksha else '',
+    }
 
 
 @login_required
 @email_verified_required
 def event_list(request):
+    today = timezone.now().date()
+    show_archived = False
     try:
-        today=timezone.now().date()
         sort_by = request.GET.get('sort', 'date')
         if sort_by not in ['name', 'date']:
             sort_by = 'date'
+        show_archived = request.GET.get('archived') == '1'
         events = Event.objects.filter(
             user=request.user,
             date__gte=today,
-            is_archived=False
+            is_archived=show_archived,
         ).order_by(sort_by)
-        logger.info(f"Fetched {events.count()} events for user {request.user.username}")
+
+        # Quick stats for dashboard bar
+        total_upcoming = events.count()
+        next_event = events.order_by('date').first()
+        days_until_next = (next_event.date - today).days if next_event else None
+        this_month = events.filter(date__month=today.month, date__year=today.year).count()
+        archived_count = Event.objects.filter(
+            user=request.user, date__gte=today, is_archived=True,
+        ).count()
+
+        logger.info(f"Fetched {total_upcoming} events for user {request.user.username}")
     except Exception as e:
         logger.error(f"Error fetching events for user {request.user.username}: {str(e)}")
         messages.error(request, "Unable to load events. Please try again later.")
         events = []
-    return render(request, 'reminders/event_list.html', {'events': events})
+        total_upcoming = 0
+        days_until_next = None
+        next_event = None
+        this_month = 0
+        archived_count = 0
+
+    context = {
+        'events': events,
+        'today': today,
+        'total_upcoming': total_upcoming,
+        'days_until_next': days_until_next,
+        'next_event': next_event,
+        'this_month': this_month,
+        'archived_count': archived_count,
+        'show_archived': show_archived,
+    }
+    return render(request, 'reminders/event_list.html', context)
 
 
 
+@login_required
 @user_passes_test(lambda u: u.is_superuser)
 def admin_dashboard(request):
+    """Admin-only dashboard with aggregate stats."""
     stats = get_admin_dashboard_stats()
     return render(request, 'reminders/admin_dashboard.html', context=stats)
 
@@ -63,14 +200,14 @@ def toggle_recurring(request, event_id):
             event.save()
             messages.success(request, f"Recurring {'enabled' if event.is_recurring else 'disabled'} for {event.name}")
         else:
-            messages.error(request, "Recurring is only available for birthdays, anniversary"
-                                    "ries")
+            messages.error(request, "Recurring is only available for birthdays and anniversaries.")
     return redirect('event_list')
 
 
 @login_required
 @email_verified_required
 def add_event(request):
+    """Create a new event with optional media uploads."""
     if request.method == 'POST':
         form = EventForm(request.POST, request.FILES)
         if form.is_valid():
@@ -82,50 +219,18 @@ def add_event(request):
                 supabase = get_user_supabase_client(request)
                 files = request.FILES.getlist('image_files') + request.FILES.getlist('audio_files')
 
-                for file in files:
-                    if file.size > settings.MAX_FILE_SIZE:
-                        messages.error(request, f"File '{file.name}' exceeds 50MB limit.")
-                        event.delete()
-                        return redirect('event_create')
-                    if file.content_type not in settings.ALLOWED_MEDIA_TYPES:
-                        messages.error(request, f"Invalid file type for '{file.name}'. Allowed: .jpg, .png, .mp3, .wav, .flac")
-                        event.delete()
-                        return redirect('event_create')
-
-                    unique_suffix = uuid.uuid4().hex[:8]
-                    filename = f"{unique_suffix}_{file.name}"
-                    file_path = f"{request.user.supabase_id}/{event.id}/{filename}"
-                    logger.debug(f"Uploading media to path: {file_path}")
-
-                    response = supabase.storage.from_('event-media').upload(
-                        file_path, file.read(), file_options={"content-type": file.content_type}
-                    )
-                    if hasattr(response, 'error') and response.error:
-                        logger.error(f"Upload failed for '{file.name}': {response.error}")
-                        messages.error(request, f"Failed to upload '{file.name}': {response.error}")
-                        event.delete()
-                        return render(request, "reminders/event_form.html", {"form": form})
-                    elif hasattr(response, 'status_code') and response.status_code not in (200, 201):
-                        logger.error(f"Upload failed for '{file.name}' with status: {response.status_code}")
-                        messages.error(request, f"Failed to upload '{file.name}'")
-                        event.delete()
-                        return render(request, "reminders/event_form.html", {"form": form})
-
-                    public_url = supabase.storage.from_('event-media').get_public_url(file_path)
-                    clean_url = public_url.rstrip('?')
-                    EventMedia.objects.create(
-                        event=event,
-                        media_file=clean_url,
-                        media_type='image' if file.content_type.startswith('image/') else 'audio',
-                        mime_type=file.content_type
-                    )
+                result = _validate_and_upload_media(request, event, supabase, files)
+                if isinstance(result, str):
+                    messages.error(request, result)
+                    event.delete()
+                    return render(request, "reminders/event_form.html", {"form": form})
 
                 messages.success(request, "Event created successfully!")
                 logger.info(f"Event '{event.name}' created with {len(files)} media files")
                 return redirect('event_list')
             except Exception as e:
-                logger.error(f"Error saving event: {str(e)}")
-                messages.error(request, f"Failed to create event: {str(e)}")
+                logger.error(f"Error saving event: {e}")
+                messages.error(request, f"Failed to create event: {e}")
         else:
             messages.error(request, "Please correct the errors below.")
     else:
@@ -135,72 +240,33 @@ def add_event(request):
 @login_required
 @email_verified_required
 def edit_event(request, event_id):
+    """Edit an existing event with optional media changes."""
     event = get_object_or_404(Event, id=event_id, user=request.user)
     if request.method == 'POST':
-        print(f"DEBUG VIEW: Received POST data: {dict(request.POST)}")
-        print(f"DEBUG VIEW: thread_of_memories value: '{request.POST.get('thread_of_memories', 'NOT_FOUND')}'")
-        print(f"DEBUG VIEW: memory_display_type value: '{request.POST.get('memory_display_type', 'NOT_FOUND')}'")
-        
         form = EventForm(request.POST, request.FILES, instance=event)
         if form.is_valid():
             try:
                 supabase = get_user_supabase_client(request)
 
                 if request.POST.get('remove_media'):
-                    for media in event.media.all():
-                        file_path = media.media_file
-                        try:
-                            dir_path = "/".join(file_path.split('/')[:-1])
-                            existing_files = supabase.storage.from_('event-media').list(dir_path)
-                            if any(f['name'] == file_path.split('/')[-1] for f in existing_files):
-                                supabase.storage.from_('event-media').remove([file_path])
-                            if media and media.id:
-                                media.delete()
-                            else:
-                                logger.error(
-                                    f"Cannot delete EventMedia: invalid or unsaved object for event '{event.name}'")
-                            logger.info(f"Deleted media '{file_path}' for event '{event.name}'")
-                        except Exception as e:
-                            logger.warning(f"Failed to delete media {file_path}: {str(e)}")
-                            messages.error(request, f"Failed to delete media: {str(e)}")
-                            return render(request, "reminders/event_form.html", {"form": form, "event": event})
+                    try:
+                        _remove_event_media_from_storage(supabase, event.media.all())
+                    except Exception as e:
+                        messages.error(request, f"Failed to delete media: {e}")
+                        return render(request, "reminders/event_form.html", {"form": form, "event": event})
 
                 files = request.FILES.getlist('image_files') + request.FILES.getlist('audio_files')
-                for file in files:
-                    if file.size > settings.MAX_FILE_SIZE:
-                        messages.error(request, f"File '{file.name}' exceeds 50MB limit.")
-                        return render(request, "reminders/event_form.html", {"form": form, "event": event})
-                    if file.content_type not in settings.ALLOWED_MEDIA_TYPES:
-                        messages.error(request, f"Invalid file type for '{file.name}'. Allowed: .jpg, .png, .mp3, .wav, .flac")
-                        return render(request, "reminders/event_form.html", {"form": form, "event": event})
-
-                    unique_suffix = uuid.uuid4().hex[:8]
-                    filename = f"{unique_suffix}_{file.name}"
-                    file_path = f"{request.user.supabase_id}/{event.id}/{filename}"
-                    response = supabase.storage.from_('event-media').upload(
-                        file_path, file.read(), file_options={"content-type": file.content_type}
-                    )
-                    if hasattr(response, 'error') and response.error:
-                        messages.error(request, f"Failed to upload '{file.name}': {response.error}")
-                        return render(request, "reminders/event_form.html", {"form": form, "event": event})
-                    elif hasattr(response, 'status_code') and response.status_code not in (200, 201):
-                        messages.error(request, f"Upload failed for '{file.name}'")
-                        return render(request, "reminders/event_form.html", {"form": form, "event": event})
-
-                    public_url = supabase.storage.from_('event-media').get_public_url(file_path)
-                    EventMedia.objects.create(
-                        event=event,
-                        media_file=public_url,
-                        media_type='image' if file.content_type.startswith('image/') else 'audio',
-                        mime_type=file.content_type
-                    )
+                result = _validate_and_upload_media(request, event, supabase, files)
+                if isinstance(result, str):
+                    messages.error(request, result)
+                    return render(request, "reminders/event_form.html", {"form": form, "event": event})
 
                 form.save()
                 messages.success(request, f"Event '{event.name}' updated successfully!")
                 return redirect('event_list')
             except Exception as e:
-                logger.error(f"Error updating event '{event.name}': {str(e)}")
-                messages.error(request, f"Failed to update event: {str(e)}")
+                logger.error(f"Error updating event '{event.name}': {e}")
+                messages.error(request, f"Failed to update event: {e}")
         else:
             messages.error(request, "Please correct the errors below.")
     else:
@@ -248,12 +314,10 @@ def delete_event(request, event_id):
 @login_required
 @email_verified_required
 def delete_event_media(request, media_id):
-    """
-    Deletes an event media file from Supabase and updates the database record.
-    - Handles both full URLs and Supabase paths.
-    - Logs all actions with detailed information.
-    - Sends email notification if media was deleted from a past event.
-    - Keeps EventMedia row but clears fields instead of deleting record.
+    """Delete an event media file from Supabase storage and clear the DB record.
+
+    Handles both full URLs and raw Supabase paths.
+    Sends an email notification when media is removed from a past event.
     """
     media = get_object_or_404(EventMedia, id=media_id, event__user=request.user)
     event = media.event
@@ -263,43 +327,32 @@ def delete_event_media(request, media_id):
             supabase = get_user_supabase_client(request)
             file_path = media.media_file
 
-            # ✅ Handle full URLs (extract path part)
+            # Handle full URLs — extract the path component
             if file_path.startswith('http'):
-                from urllib.parse import urlparse
-                parsed = urlparse(file_path)
-                file_path = parsed.path.lstrip('/')
+                file_path = urlparse(file_path).path.lstrip('/')
 
-            # ✅ Check if file exists before attempting deletion
+            # Check if file still exists in storage before attempting deletion
             dir_path = "/".join(file_path.split('/')[:-1])
             existing_files = supabase.storage.from_('event-media').list(dir_path)
             file_name = file_path.split('/')[-1]
+
             if not any(f['name'] == file_name for f in existing_files):
                 logger.warning(f"Media already missing for event {event.name}. Clearing DB fields only.")
             else:
-                logger.debug(f"Attempting to delete file: {file_path}")
-                try:
-                    response = supabase.storage.from_('event-media').remove([file_path])
-                    logger.debug(f"Supabase delete response: {response}")
-
-                    if response is None or (isinstance(response, list) and not response):
-                        logger.error(f"Deletion failed for event {event.id}: Invalid path or permissions")
-                        messages.error(request, f"Failed to delete media for event '{event.name}'.")
-                        return redirect('event_list')
-
-                    logger.info(f"Media deleted from Supabase for event {event.id} by user {request.user.username}")
-
-                except Exception as e:
-                    logger.error(f"Exception during media deletion for event {event.id}: {str(e)}")
-                    messages.error(request, f"Media deletion failed for '{event.name}': {str(e)}")
+                response = supabase.storage.from_('event-media').remove([file_path])
+                if response is None or (isinstance(response, list) and not response):
+                    logger.error(f"Deletion failed for event {event.id}: invalid path or permissions")
+                    messages.error(request, f"Failed to delete media for event '{event.name}'.")
                     return redirect('event_list')
+                logger.info(f"Media deleted from Supabase for event {event.id}")
 
-            # ✅ Clear fields but keep record
+            # Clear fields but keep the record
             media.media_url = None
             media.media_type = None
             media.media_file = None
             media.save()
 
-            # ✅ Send notification if past event
+            # Notify user when media is removed from a past event
             if event.date < timezone.now().date():
                 try:
                     send_mail(
@@ -309,16 +362,15 @@ def delete_event_media(request, media_id):
                         recipient_list=[request.user.email],
                         fail_silently=True,
                     )
-                    logger.info(f"Notification email sent for media deletion on past event {event.id}")
                 except Exception as e:
-                    logger.error(f"Failed to send notification email for event {event.id}: {str(e)}")
+                    logger.error(f"Failed to send notification email for event {event.id}: {e}")
 
             messages.success(request, "Event media deleted successfully!")
             return redirect('event_list')
 
         except Exception as e:
-            messages.error(request, f"Unexpected error deleting media: {str(e)}")
-            logger.error(f"Media deletion failed for event {event.id}: {str(e)}")
+            messages.error(request, f"Unexpected error deleting media: {e}")
+            logger.error(f"Media deletion failed for event {event.id}: {e}")
             return redirect('event_list')
 
     return redirect('event_update', event_id=event.id)
@@ -340,20 +392,6 @@ def trigger_send_reminders(request):
     except Exception as e:
         logger.error(f"Error in trigger_send_reminders: {str(e)}")
         return JsonResponse({'error': f'An error occurred: {str(e)}'}, status=500)
-
-
-
-
-# def trigger_cron_jobs(request):
-#     secret = request.GET.get('secret')
-#     if secret != settings.REMINDER_CRON_SECRET:
-#         return HttpResponse("Invalid secret", status=403)
-#     logger.info(f"Triggering cron jobs for user {request.user.username}")
-#     daily_reminder_job()
-#     daily_deletion_notification_job()
-#     daily_media_cleanup_job()
-#     auto_share_card()
-#     return HttpResponse("Cron jobs triggered")
 
 
 @login_required
@@ -382,30 +420,8 @@ def bulk_import(request):
 @login_required
 @email_verified_required
 def download_template(request):
+    """Download a CSV template for bulk event import."""
     return get_csv_template()
-
-
-
-
-def delete_event_media(request, event_id):
-    media_id = request.POST.get('media_id')
-    media = get_object_or_404(EventMedia, id=media_id, event_id=event_id)
-    event = media.event
-    user = event.user
-
-    # Check if event is in the past
-    if event.date < timezone.now().date():
-        send_mail(
-            subject=f"Media Removed from Past Event: {event.name}",
-            message=f"Media ({media.media_type}) was removed from your past event '{event.name}' dated {event.date}.",
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            fail_silently=True,
-        )
-
-    media.delete()
-
-
 
 
 @login_required
@@ -508,6 +524,7 @@ def past_events(request):
 @login_required
 @email_verified_required
 def edit_past_event(request, event_id):
+    """Edit a past event — allows updating details and media."""
     event = get_object_or_404(Event, id=event_id, user=request.user, date__lt=timezone.now().date(), is_archived=False)
     if request.method == 'POST':
         form = EventForm(request.POST, request.FILES, instance=event)
@@ -516,60 +533,25 @@ def edit_past_event(request, event_id):
                 supabase = get_user_supabase_client(request)
 
                 if request.POST.get('remove_media'):
-                    for media in event.media.all():
-                        file_path = media.media_file
-                        try:
-                            dir_path = "/".join(file_path.split('/')[:-1])
-                            existing_files = supabase.storage.from_('event-media').list(dir_path)
-                            if any(f['name'] == file_path.split('/')[-1] for f in existing_files):
-                                supabase.storage.from_('event-media').remove([file_path])
-                            if media and media.id:
-                                media.delete()
-                            else:
-                                logger.error(
-                                    f"Cannot delete EventMedia: invalid or unsaved object for event '{event.name}'")
-                            logger.info(f"Deleted media '{file_path}' for event '{event.name}'")
-                        except Exception as e:
-                            logger.warning(f"Failed to delete media {file_path}: {str(e)}")
-                            messages.error(request, f"Failed to delete media: {str(e)}")
-                            return render(request, "reminders/event_form.html", {"form": form, "event": event})
+                    try:
+                        _remove_event_media_from_storage(supabase, event.media.all())
+                    except Exception as e:
+                        messages.error(request, f"Failed to delete media: {e}")
+                        return render(request, "reminders/event_form.html", {"form": form, "event": event})
 
                 files = request.FILES.getlist('media_files')
-                for file in files:
-                    if file.size > settings.MAX_FILE_SIZE:
-                        messages.error(request, f"File '{file.name}' exceeds 50MB limit.")
-                        return render(request, "reminders/event_form.html", {"form": form, "event": event})
-                    if file.content_type not in settings.ALLOWED_MEDIA_TYPES:
-                        messages.error(request, f"Invalid file type for '{file.name}'.")
-                        return render(request, "reminders/event_form.html", {"form": form, "event": event})
-
-                    unique_suffix = uuid.uuid4().hex[:8]
-                    filename = f"{unique_suffix}_{file.name}"
-                    file_path = f"{request.user.supabase_id}/{event.id}/{filename}"
-                    response = supabase.storage.from_('event-media').upload(
-                        file_path, file.read(), file_options={"content-type": file.content_type}
-                    )
-                    if hasattr(response, 'error') and response.error:
-                        messages.error(request, f"Failed to upload '{file.name}': {response.error}")
-                        return render(request, "reminders/event_form.html", {"form": form, "event": event})
-                    elif hasattr(response, 'status_code') and response.status_code not in (200, 201):
-                        messages.error(request, f"Upload failed for '{file.name}'")
-                        return render(request, "reminders/event_form.html", {"form": form, "event": event})
-
-                    public_url = supabase.storage.from_('event-media').get_public_url(file_path)
-                    EventMedia.objects.create(
-                        event=event,
-                        media_file=public_url,
-                        media_type=file.content_type.split('/')[0],
-                    )
+                result = _validate_and_upload_media(request, event, supabase, files)
+                if isinstance(result, str):
+                    messages.error(request, result)
+                    return render(request, "reminders/event_form.html", {"form": form, "event": event})
 
                 form.save()
                 messages.success(request, f"Past event '{event.name}' updated successfully!")
                 logger.info(f"Past event '{event.name}' updated for user {request.user.username}")
                 return redirect('past_events')
             except Exception as e:
-                logger.error(f"Error updating past event '{event.name}': {str(e)}")
-                messages.error(request, f"Failed to update past event: {str(e)}")
+                logger.error(f"Error updating past event '{event.name}': {e}")
+                messages.error(request, f"Failed to update past event: {e}")
         else:
             messages.error(request, "Please correct the errors below.")
     else:
@@ -640,126 +622,55 @@ def download_past_events(request):
         logger.info(f"Exported past events CSV for user {request.user.username}")
         return response
     except Exception as e:
-        logger.error(f"Error exporting past events CSV for user {request.user.username}: {str(e)}")
+        logger.error(f"Error exporting past events CSV for user {request.user.username}: {e}")
         messages.error(request, "Unable to export past events. Please try again later.")
         return redirect('past_events')
-
-
-# Helper function to compute password_text based on event type
-def get_password_text(event):
-    if event.event_type == 'birthday':
-        return event.name.strip().lower()
-    elif event.event_type == 'anniversary':
-        return event.date.strftime('%Y-%m-%d')
-    elif event.event_type == 'raksha_bandhan':
-        return 'rakhi'
-    else:
-        return event.card_password or ''
-
 
 
 @login_required
 @email_verified_required
 def greeting_card_view(request, event_id):
+    """Render the greeting card for the event owner."""
     session_key = f'card_unlocked_{event_id}'
 
     event = get_object_or_404(Event.objects.prefetch_related(
         Prefetch('media', queryset=EventMedia.objects.all()),
-        'reflections'
+        'reflections',
     ), id=event_id, user=request.user)
-    # Get audio media for page 4
-    audio_media = event.media.filter(media_type='audio').first()
-    audio_url = audio_media.media_file if audio_media else None
-    audio_mime_type = audio_media.mime_type if audio_media else None
 
-    # Get image media for page 3
-    images = [{'media_file': m.media_file, 'media_type': m.media_type} for m in event.media.filter(media_type='image')]
+    unlocked = request.session.get(session_key, False)
+    requires_password = bool(event.card_password and not unlocked)
+    error = request.session.pop('card_error', None) if requires_password else None
 
-    requires_card_password = bool(event.card_password and not request.session.get(session_key))
-    error = request.session.pop('card_error', None) if requires_card_password else None
-    if not requires_card_password:
+    if not requires_password:
         request.session[session_key] = True
 
-    # Compute password_text for the template
-    password_text = get_password_text(event)
-
-    thread_of_memories_data = []
-    if event.thread_of_memories:
-        try:
-            thread_of_memories_data = json.loads(event.thread_of_memories)
-        except (json.JSONDecodeError, TypeError):
-            # Fallback to old text parsing for backward compatibility
-            try:
-                # Parse thread of memories from text field (legacy format)
-                memories = [m.strip() for m in event.thread_of_memories.split('\n') if m.strip()]
-
-                for i in range(0, len(memories), 2):
-                    if i + 1 < len(memories):
-                        # Extract year and title from first line
-                        header = memories[i]
-                        description = memories[i + 1]
-
-                        year = ""
-                        title = header
-
-                        # Try to extract year if it's in the format "YEAR: Title"
-                        if ":" in header:
-                            year_part, title_part = header.split(":", 1)
-                            if year_part.strip().isdigit():
-                                year = year_part.strip()
-                                title = title_part.strip()
-
-                        thread_of_memories_data.append({
-                            "year": year,
-                            "title": title,
-                            "description": description
-                        })
-            except Exception as e:
-                logger.error(f"Error parsing thread of memories: {e}")
-                thread_of_memories_data = []
-
-    context = {
-        'event': event,
-        'is_owner': True,
-        'requires_card_password': requires_card_password,
-        'requires_share_password': False,
-        'error': error,
-        'has_thread_of_memories': bool(thread_of_memories_data) and len(thread_of_memories_data) >= 2,
-        'highlights': event.highlights or '',
-        'thread_of_memories_data': json.dumps(thread_of_memories_data),
-        'audio_url': audio_url,  # For page 4 audio player
-        'audio_mime_type': audio_mime_type,
-        'images': images,  # For page 3 slideshow
-        'event_type': event.event_type,
-        'recipient_name': event.custom_label or event.name,
-        'message': event.message or '',
-        'password_text': password_text,  # Added for reveal password feature
-        # Raksha Bandhan specific context
-        'is_raksha_bandhan': event.event_type == 'raksha_bandhan',
-        'raksha_bandhan_theme': event.raksha_bandhan_theme if event.event_type == 'raksha_bandhan' else 'traditional',
-        'sibling_relationship': event.sibling_relationship if event.event_type == 'raksha_bandhan' else 'Beloved Sibling',
-        'sacred_promises': event.sacred_promises if event.event_type == 'raksha_bandhan' else '',
-        'sacred_promises_list': event.get_promises_list() if event.event_type == 'raksha_bandhan' else [],
-        'rakhi_ceremony_notes': event.rakhi_ceremony_notes if event.event_type == 'raksha_bandhan' else '',
-        'memory_data_parsed': thread_of_memories_data,
-
-    }
-    logger.info(f"Rendering greeting card for event {event_id}: Audio URL={audio_url}, MIME type={audio_mime_type}")
+    context = _build_card_context(event, is_owner=True, session_key_unlocked=not requires_password)
+    context['error'] = error
     return render(request, 'reminders/greeting_card.html', context)
 
 
-@csrf_exempt
 def get_event_highlights(request, event_id):
+    """Return highlights and thread_of_memories JSON for a given event."""
     try:
         event = Event.objects.get(pk=event_id)
-        return JsonResponse({'highlights': event.highlights or "",
-                             "thread_of_memories": event.thread_of_memories or "",
-                             })
+        return JsonResponse({
+            'highlights': event.highlights or "",
+            'thread_of_memories': event.thread_of_memories or "",
+        })
     except Event.DoesNotExist:
         raise Http404("Event not found")
 
 @ratelimit(key='ip', rate='10/m', block=True)
 @csrf_protect
+def reveal_card_password(request, event_id):
+    """Return the card password for the reveal-hint feature (rate-limited)."""
+    event = get_object_or_404(Event, id=event_id)
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    return JsonResponse({'password': event.get_raw_card_password()})
+
+
 def validate_card_password(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
@@ -1006,109 +917,193 @@ def public_card_view(request, token):
     # All checks passed
     request.session[session_key] = True
     request.session[card_session_key] = True
-    # Get audio media for page 4
-    audio_media = event.media.filter(media_type='audio').first()
-    audio_url = audio_media.media_file if audio_media else None
-    audio_mime_type = audio_media.mime_type if audio_media else None
 
-    # Get image media for page 3
-    images = [{'media_file': m.media_file, 'media_type': m.media_type} for m in event.media.filter(media_type='image')]
-
-    # Compute password_text for the template
-    password_text = get_password_text(event)
-
-    # Parse thread of memories
-    thread_of_memories_data = []
-    if event.thread_of_memories:
-        try:
-            thread_of_memories_data = json.loads(event.thread_of_memories)
-        except (json.JSONDecodeError, TypeError):
-            # Fallback to old text parsing for backward compatibility
-            try:
-                # Parse thread of memories from text field (legacy format)
-                memories = [m.strip() for m in event.thread_of_memories.split('\n') if m.strip()]
-                for i in range(0, len(memories), 2):
-                    if i + 1 < len(memories):
-                        # Extract year and title from first line
-                        header = memories[i]
-                        description = memories[i + 1]
-
-                        year = ""
-                        title = header
-
-                        # Try to extract year if it's in the format "YEAR: Title"
-                        if ":" in header:
-                            year_part, title_part = header.split(":", 1)
-                            if year_part.strip().isdigit():
-                                year = year_part.strip()
-                                title = title_part.strip()
-
-                        thread_of_memories_data.append({
-                            "year": year,
-                            "title": title,
-                            "description": description
-                        })
-            except Exception as e:
-                logger.error(f"Error parsing thread of memories for event {event.id}: {str(e)}")
-                thread_of_memories_data = []
-
-    context = {
-        'event': event,
-        'is_owner': False,
-        'requires_card_password': bool(event.card_password),
-        'requires_share_password': False,
-        'token': token,
-        'audio_url': audio_url,  # For page 4 audio player
-        'audio_mime_type': audio_mime_type,
-        'images': images,  # For page 3 slideshow
-        'event_type': event.event_type,
-        'recipient_name': event.custom_label or event.name,
-        'message': event.message or '',
-        # Thread of Memories context
-        'has_thread_of_memories': bool(thread_of_memories_data) and len(thread_of_memories_data) >= 2,
-        'thread_of_memories_data': json.dumps(thread_of_memories_data),
-        'memory_data_parsed': thread_of_memories_data,
-        'highlights': event.highlights or '',
-        'password_text': password_text,  # Added for reveal password feature
-        # Raksha Bandhan specific context
-        'is_raksha_bandhan': event.event_type == 'raksha_bandhan',
-        'raksha_bandhan_theme': event.raksha_bandhan_theme if event.event_type == 'raksha_bandhan' else None,
-        'sibling_relationship': event.sibling_relationship if event.event_type == 'raksha_bandhan' else None,
-        'sacred_promises': event.sacred_promises if event.event_type == 'raksha_bandhan' else None,
-        'rakhi_ceremony_notes': event.rakhi_ceremony_notes if event.event_type == 'raksha_bandhan' else None,
-
-    }
-    logger.info(f"Rendering public card for event {share.event.id}: Audio URL={audio_url}, MIME type={audio_mime_type}")
+    context = _build_card_context(event, is_owner=False, token=token, session_key_unlocked=True)
     return render(request, 'reminders/greeting_card.html', context)
 
 
-@csrf_exempt
 def get_raksha_bandhan_data(request, event_id):
-    """Get Raksha Bandhan specific data for the frontend"""
+    """Return Raksha Bandhan-specific data as JSON for the frontend."""
     try:
         event = Event.objects.get(pk=event_id, event_type='raksha_bandhan')
-
-        # Parse sacred promises into array
-        promises = []
-        if event.sacred_promises:
-            promises = [p.strip() for p in event.sacred_promises.split('\n') if p.strip()]
-
         return JsonResponse({
             'raksha_bandhan_theme': event.raksha_bandhan_theme or 'traditional',
             'sibling_relationship': event.sibling_relationship or 'Beloved Sibling',
-            'sacred_promises': promises,
+            'sacred_promises': event.get_promises_list(),
             'rakhi_ceremony_notes': event.rakhi_ceremony_notes or '',
             'thread_of_memories': event.thread_of_memories or '',
             'highlights': event.highlights or '',
         })
     except Event.DoesNotExist:
-        return JsonResponse({
-            'success': False,
-            'error': 'Raksha Bandhan event not found'
-        }, status=404)
+        return JsonResponse({'error': 'Raksha Bandhan event not found'}, status=404)
     except Exception as e:
-        logger.error(f"Error fetching Raksha Bandhan data for event {event_id}: {str(e)}")
-        return JsonResponse({
-            'success': False,
-            'error': 'Internal server error'
-        }, status=500)
+        logger.error(f"Error fetching Raksha Bandhan data for event {event_id}: {e}")
+        return JsonResponse({'error': 'Internal server error'}, status=500)
+
+
+# ---------------------------------------------------------------------------
+# ICS Calendar Export
+# ---------------------------------------------------------------------------
+
+@login_required
+@email_verified_required
+def export_events_ics(request):
+    """Export upcoming events as an .ics calendar file."""
+    today = timezone.now().date()
+    events = Event.objects.filter(
+        user=request.user,
+        date__gte=today,
+        is_archived=False,
+    ).order_by('date')
+
+    lines = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Reminder App//EN',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+    ]
+
+    for event in events:
+        uid = f"event-{event.id}@reminderapp"
+        dtstart = event.date.strftime('%Y%m%d')
+        dtend = event.date.strftime('%Y%m%d')
+        summary = _ics_escape(event.name)
+        description = _ics_escape(event.message or '')
+        alarm_minutes = event.remind_days_before * 24 * 60
+
+        lines.append('BEGIN:VEVENT')
+        lines.append(f'UID:{uid}')
+        lines.append(f'DTSTART;VALUE=DATE:{dtstart}')
+        lines.append(f'DTEND;VALUE=DATE:{dtend}')
+        lines.append(f'SUMMARY:{summary}')
+        if description:
+            lines.append(f'DESCRIPTION:{description}')
+        lines.append(f'CATEGORIES:{event.get_event_type_display()}')
+        if event.is_recurring:
+            lines.append('RRULE:FREQ=YEARLY;COUNT=10')
+        # Reminder alarm
+        lines.append('BEGIN:VALARM')
+        lines.append('TRIGGER:-PT' + str(alarm_minutes) + 'M')
+        lines.append('ACTION:DISPLAY')
+        lines.append(f'DESCRIPTION:Reminder: {summary}')
+        lines.append('END:VALARM')
+        lines.append('END:VEVENT')
+
+    lines.append('END:VCALENDAR')
+
+    content = '\r\n'.join(lines)
+    response = HttpResponse(content, content_type='text/calendar; charset=utf-8')
+    response['Content-Disposition'] = 'attachment; filename="my_events.ics"'
+    return response
+
+
+def _ics_escape(text):
+    """Escape text for ICS format (RFC 5545)."""
+    return text.replace('\\', '\\\\').replace(';', '\\;').replace(',', '\\,').replace('\n', '\\n')
+
+
+@login_required
+@email_verified_required
+def export_single_event_ics(request, event_id):
+    """Export a single event as an .ics calendar file."""
+    event = get_object_or_404(Event, id=event_id, user=request.user)
+
+    dtstart = event.date.strftime('%Y%m%d')
+    summary = _ics_escape(event.name)
+    description = _ics_escape(event.message or '')
+    alarm_minutes = event.remind_days_before * 24 * 60
+
+    lines = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Reminder App//EN',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'BEGIN:VEVENT',
+        f'UID:event-{event.id}@reminderapp',
+        f'DTSTART;VALUE=DATE:{dtstart}',
+        f'DTEND;VALUE=DATE:{dtstart}',
+        f'SUMMARY:{summary}',
+    ]
+    if description:
+        lines.append(f'DESCRIPTION:{description}')
+    lines.append(f'CATEGORIES:{event.get_event_type_display()}')
+    if event.is_recurring:
+        lines.append('RRULE:FREQ=YEARLY;COUNT=10')
+    lines += [
+        'BEGIN:VALARM',
+        f'TRIGGER:-PT{alarm_minutes}M',
+        'ACTION:DISPLAY',
+        f'DESCRIPTION:Reminder: {summary}',
+        'END:VALARM',
+        'END:VEVENT',
+        'END:VCALENDAR',
+    ]
+
+    filename = f"{event.name.replace(' ', '_')}.ics"
+    content = '\r\n'.join(lines)
+    response = HttpResponse(content, content_type='text/calendar; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+# ---------------------------------------------------------------------------
+# Event Duplicate
+# ---------------------------------------------------------------------------
+
+@login_required
+@email_verified_required
+def duplicate_event(request, event_id):
+    """Create a copy of an existing event."""
+    original = get_object_or_404(Event, id=event_id, user=request.user)
+    if request.method == 'POST':
+        new_event = Event(
+            user=request.user,
+            name=f"{original.name} (Copy)",
+            event_type=original.event_type,
+            date=original.date,
+            remind_days_before=original.remind_days_before,
+            message=original.message,
+            custom_label=original.custom_label,
+            cultural_theme=original.cultural_theme,
+            is_recurring=original.is_recurring,
+            recipient_email=original.recipient_email,
+            auto_share_enabled=original.auto_share_enabled,
+            raksha_bandhan_theme=original.raksha_bandhan_theme,
+            sibling_relationship=original.sibling_relationship,
+            sacred_promises=original.sacred_promises,
+            rakhi_ceremony_notes=original.rakhi_ceremony_notes,
+        )
+        new_event.save()
+        messages.success(request, f"Event '{original.name}' duplicated! Edit the copy below.")
+        return redirect('event_update', event_id=new_event.id)
+    return redirect('event_list')
+
+
+# ---------------------------------------------------------------------------
+# Archive / Unarchive
+# ---------------------------------------------------------------------------
+
+@login_required
+@email_verified_required
+def archive_event(request, event_id):
+    """Archive an event (hide from main list)."""
+    event = get_object_or_404(Event, id=event_id, user=request.user)
+    if request.method == 'POST':
+        event.is_archived = True
+        event.save(update_fields=['is_archived'])
+        messages.success(request, f"'{event.name}' archived.")
+    return redirect('event_list')
+
+
+@login_required
+@email_verified_required
+def unarchive_event(request, event_id):
+    """Restore an archived event back to the main list."""
+    event = get_object_or_404(Event, id=event_id, user=request.user)
+    if request.method == 'POST':
+        event.is_archived = False
+        event.save(update_fields=['is_archived'])
+        messages.success(request, f"'{event.name}' restored.")
+    return redirect('event_list')

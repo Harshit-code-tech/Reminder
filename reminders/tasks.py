@@ -1,74 +1,85 @@
+import logging
+
 from django.utils import timezone
 from datetime import timedelta
 from .models import Event, ReminderLog, EventMedia
-from django.core.mail import send_mail
+from .email_utils import ReminderEmailService
 from django.conf import settings
-from celery import shared_task
+
+logger = logging.getLogger('app_logger')
 
 
-@shared_task
 def send_reminder_emails():
-    today = timezone.now().date()
-    events = Event.objects.filter(date__gte=today, notified=False)
+    """Send reminder emails for upcoming events (called via django-q).
+
+    This delegates to ReminderEmailService (MailerSend API) for consistency
+    with the cron path in utils.py.  Uses ``<=`` for catch-up resilience.
+    """
+    today = timezone.localdate()
+    events = Event.objects.filter(notified=False).select_related('user')
 
     for event in events:
-        reminder_date = event.date - timedelta(days=event.remind_days_before)
-        if reminder_date == today:
+        days_until = (event.date - today).days
+        if 0 <= days_until <= event.remind_days_before:
             try:
-                # Sending email through SMTP (MailerSend)
-                send_mail(
-                    subject=f"Reminder: {event.name}",
-                    message=event.message or "You have an upcoming event!",
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[event.user.email],
-                    fail_silently=False,
-                )
+                success = ReminderEmailService.send_reminder_email(event.user, event)
+            except Exception as e:
+                logger.error(f"All retries failed for {event.name}: {e}")
+                success = False
 
-                # Save successful log
-                ReminderLog.objects.create(
-                    user=event.user,
-                    event=event,
-                    status='Success',
-                    message='Email sent successfully.'
-                )
+            ReminderLog.objects.create(
+                user=event.user,
+                event=event,
+                status='success' if success else 'failure',
+                message='Email sent via MailerSend' if success else f'Send failed',
+            )
 
-                print(f"Reminder email sent to {event.user.email} for {event.name}'s {event.get_event_type_display()} on {event.date}.")
-
-                # Optionally mark event as notified
+            if success:
                 event.notified = True
                 event.save()
-
-            except Exception as e:
-                # Save failed log
-                ReminderLog.objects.create(
-                    user=event.user,
-                    event=event,
-                    status='Failed',
-                    message=str(e)
+                logger.info(
+                    f"Reminder email sent to {event.user.email} for "
+                    f"{event.name}'s {event.get_event_type_display()} on {event.date}."
                 )
-    return "Reminder Processed"
+            else:
+                logger.error(f"Failed to send reminder for {event.name}")
 
-@shared_task
+    return "Reminders processed"
+
+
+def _next_annual_date(original_date):
+    """Return the next anniversary of *original_date* after the current year.
+
+    Gracefully handles Feb 29 by falling back to Feb 28 in non-leap years.
+    """
+    next_year = original_date.year + 1
+    try:
+        return original_date.replace(year=next_year)
+    except ValueError:
+        # Feb 29 in a non-leap year → use Feb 28
+        return original_date.replace(year=next_year, day=28)
+
+
 def check_recurring_events():
+    """Create next-year copies for recurring birthday/anniversary events (called via django-q)."""
     today = timezone.now().date()
     events = Event.objects.filter(
         event_type__in=['birthday', 'anniversary'],
         is_recurring=True,
-        date__lt=today
+        date__lt=today,
     )
     for event in events:
         try:
-            # Check if next-year event already exists
-            next_date = event.date.replace(year=event.date.year + 1)
+            next_date = _next_annual_date(event.date)
+
             if Event.objects.filter(
                 user=event.user,
                 name=event.name,
                 event_type=event.event_type,
-                date=next_date
+                date=next_date,
             ).exists():
                 continue
 
-            # Create new event
             new_event = Event.objects.create(
                 user=event.user,
                 name=event.name,
@@ -82,19 +93,18 @@ def check_recurring_events():
                 is_recurring=True,
                 notified=False,
                 deletion_notified=False,
-                deletion_scheduled=None
+                deletion_scheduled=None,
             )
 
-            # Link existing media
             for media in event.media.all():
                 EventMedia.objects.create(
                     event=new_event,
                     media_file=media.media_file,
-                    media_type=media.media_type
+                    media_type=media.media_type,
                 )
 
-            print(f"Created recurring event: {new_event} for {event.user.username}")
+            logger.info(f"Created recurring event: {new_event} for {event.user.username}")
         except Exception as e:
-            print(f"Error creating recurring event for {event}: {str(e)}")
+            logger.error(f"Error creating recurring event for {event}: {e}")
 
     return "Recurring events processed"

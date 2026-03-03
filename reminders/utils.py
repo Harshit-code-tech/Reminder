@@ -13,19 +13,27 @@ from django.contrib.auth import get_user_model
 logger = logging.getLogger('app_logger')
 
 def send_upcoming_reminders():
+    """Send reminder emails for events approaching their reminder date.
+
+    Uses ``<=`` instead of ``==`` so that if the cron job is down for a day
+    the reminder still fires when it comes back (catch-up behaviour).
+    """
     today = timezone.localdate()
     sent_count = 0
     events = Event.objects.filter(
         notified=False,
-        user__profile__notification_email__isnull=False
-    ).select_related('user').prefetch_related('media')
+    ).select_related('user', 'user__profile').prefetch_related('media')
 
     for event in events:
         days_until_event = (event.date - today).days
-        if days_until_event == event.remind_days_before:
+        if 0 <= days_until_event <= event.remind_days_before:
             user = event.user
             logger.info(f"Sending {event.remind_days_before}-day reminder email for {event.name} to {user.email}")
-            success = ReminderEmailService.send_reminder_email(user, event)
+            try:
+                success = ReminderEmailService.send_reminder_email(user, event)
+            except Exception as e:
+                logger.error(f"All retries failed for reminder email {event.name} to {user.email}: {e}")
+                success = False
             ReminderLog.objects.create(
                 user=user,
                 event=event,
@@ -54,7 +62,11 @@ def send_deletion_notifications():
     for event in expired_events:
         user = event.user
         logger.info(f"Sending deletion notification for {event.name} to {user.email}")
-        success = ReminderEmailService.send_deletion_notification(user, event)
+        try:
+            success = ReminderEmailService.send_deletion_notification(user, event)
+        except Exception as e:
+            logger.error(f"All retries failed for deletion notification {event.name} to {user.email}: {e}")
+            success = False
         ReminderLog.objects.create(
             user=user,
             event=event,
@@ -273,64 +285,16 @@ def get_analytics_data(user, start_date=None, end_date=None):
 
 
 
-def download_analytics_report(user, start_date=None, end_date=None):
-    try:
-        logger.info(f"Downloading analytics report for user {user.username}")
-
-        analytics_data = get_analytics_data(user, start_date, end_date)
-
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="analytics_report.csv"'
-        writer = csv.writer(response)
-
-        # Write header
-        writer.writerow(['Category', 'Metric', 'Value'])
-
-        # Write event stats
-        writer.writerow(['Events', 'Total', analytics_data['event_stats']['total']])
-        for item in analytics_data['event_stats']['by_type']:
-            writer.writerow(['Events', f"Type: {item['event_type'].capitalize()}", item['count']])
-        writer.writerow(['Events', 'Upcoming', analytics_data['event_stats']['upcoming']])
-        writer.writerow(['Events', 'Past', analytics_data['event_stats']['past']])
-
-        # Write reminder stats
-        writer.writerow(['Reminders', 'Total', analytics_data['reminder_stats']['total']])
-        writer.writerow(['Reminders', 'Success', analytics_data['reminder_stats']['success']])
-        writer.writerow(['Reminders', 'Failure', analytics_data['reminder_stats']['failure']])
-
-        # Write media stats
-        writer.writerow(['Media', 'Total', analytics_data['media_stats']['total']])
-        for item in analytics_data['media_stats']['by_type']:
-            writer.writerow(['Media', f"Type: {item['media_type'].capitalize()}", item['count']])
-
-        # Write import stats
-        writer.writerow(['Imports', 'Total', analytics_data['import_stats']['total']])
-        writer.writerow(['Imports', 'Success Count', analytics_data['import_stats']['success_count']])
-        writer.writerow(['Imports', 'Failure Count', analytics_data['import_stats']['failure_count']])
-
-        return response
-
-    except Exception as e:
-        logger.error(f"Error downloading analytics report for user {user.username}: {str(e)}")
-        return HttpResponse(status=500)
-
-
-
 def get_admin_dashboard_stats():
+    """Aggregate stats for the admin dashboard."""
     User = get_user_model()
-    total_users = User.objects.count()
-    total_events = Event.objects.count()
-    total_reflections = Reflection.objects.count()
-    recurring_events = Event.objects.filter(is_recurring=True).count()
     today = timezone.localdate()
-    recent_logs = ReminderLog.objects.order_by('-timestamp')[:20]
-    # Add more metrics as needed (e.g., Redis, API usage)
     return {
-        'total_users': total_users,
-        'total_events': total_events,
-        'total_reflections': total_reflections,
-        'recurring_events': recurring_events,
-        'recent_logs': recent_logs,
+        'total_users': User.objects.count(),
+        'total_events': Event.objects.count(),
+        'total_reflections': Reflection.objects.count(),
+        'recurring_events': Event.objects.filter(is_recurring=True).count(),
+        'recent_logs': ReminderLog.objects.order_by('-timestamp')[:20],
         'today': today,
     }
 

@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Account Settings — Reminder App{% endblock %}
+
+{% block header_style %}
+<style>
+    .settings-wrapper {
+        max-width: 720px;
+        margin: 0 auto;
+    }
+    .settings-card {
+        background: var(--card-bg-light);
+        border-radius: 16px;
+        box-shadow: var(--shadow-light);
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+    body.dark-mode .settings-card {
+        background: var(--card-bg-dark);
+        box-shadow: var(--shadow-dark);
+    }
+    .settings-card h2 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    body.dark-mode .settings-card h2 {
+        border-bottom-color: #374151;
+    }
+    .settings-input {
+        width: 100%;
+        padding: 0.625rem 0.875rem;
+        border: 1.5px solid #d1d5db;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        font-family: 'Poppins', sans-serif;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        background: white;
+        color: #1f2937;
+    }
+    body.dark-mode .settings-input {
+        background: #1e293b;
+        color: #e2e8f0;
+        border-color: #475569;
+    }
+    .settings-input:focus {
+        outline: none;
+        border-color: #818cf8;
+        box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2);
+    }
+    .field-group {
+        margin-bottom: 1.25rem;
+    }
+    .field-group label {
+        display: block;
+        font-weight: 600;
+        font-size: 0.875rem;
+        margin-bottom: 0.375rem;
+        color: #374151;
+    }
+    body.dark-mode .field-group label {
+        color: #cbd5e1;
+    }
+    .field-help {
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+    body.dark-mode .field-help {
+        color: #94a3b8;
+    }
+    .field-error {
+        font-size: 0.8rem;
+        color: #ef4444;
+        margin-top: 0.25rem;
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 1rem;
+    }
+    .stat-box {
+        text-align: center;
+        padding: 1rem;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #e0e7ff, #f3e8ff);
+    }
+    body.dark-mode .stat-box {
+        background: linear-gradient(135deg, #1e293b, #312e81);
+    }
+    .stat-number {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #6366f1;
+    }
+    body.dark-mode .stat-number {
+        color: #a5b4fc;
+    }
+    .stat-label {
+        font-size: 0.8rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+    body.dark-mode .stat-label {
+        color: #94a3b8;
+    }
+    .btn-save {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 2rem;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+        font-weight: 600;
+        border: none;
+        border-radius: 10px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-save:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+    .btn-danger {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1.25rem;
+        background: transparent;
+        color: #ef4444;
+        font-weight: 600;
+        border: 1.5px solid #ef4444;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-danger:hover {
+        background: #ef4444;
+        color: white;
+    }
+    .delete-confirm {
+        display: none;
+        background: #fef2f2;
+        border: 1px solid #fca5a5;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    body.dark-mode .delete-confirm {
+        background: #450a0a;
+        border-color: #7f1d1d;
+    }
+    .delete-confirm.active {
+        display: block;
+        animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .verification-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.75rem;
+        padding: 0.125rem 0.5rem;
+        border-radius: 9999px;
+        font-weight: 600;
+    }
+    .badge-verified {
+        background: #dcfce7;
+        color: #166534;
+    }
+    body.dark-mode .badge-verified {
+        background: #064e3b;
+        color: #6ee7b7;
+    }
+    .badge-unverified {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    body.dark-mode .badge-unverified {
+        background: #78350f;
+        color: #fde68a;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-wrapper">
+    <h1 class="text-2xl md:text-3xl font-bold mb-6 flex items-center gap-3">
+        <span>⚙️</span> Account Settings
+    </h1>
+
+    <!-- Account Stats -->
+    <div class="settings-card">
+        <h2>📊 Your Stats</h2>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-number">{{ event_count }}</div>
+                <div class="stat-label">Total Events</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">{{ reminder_count }}</div>
+                <div class="stat-label">Reminders Sent</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">
+                    {% if user.is_verified %}
+                        <span class="verification-badge badge-verified">✓ Verified</span>
+                    {% else %}
+                        <span class="verification-badge badge-unverified">⚠ Unverified</span>
+                    {% endif %}
+                </div>
+                <div class="stat-label">Email Status</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Settings Form -->
+    <form method="post" action="{% url 'account_settings' %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="save">
+
+        <div class="settings-card">
+            <h2>👤 Profile</h2>
+
+            <div class="field-group">
+                <label for="id_username">Username</label>
+                {{ form.username }}
+                {% if form.username.help_text %}
+                    <p class="field-help">{{ form.username.help_text }}</p>
+                {% endif %}
+                {% for error in form.username.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="field-group">
+                <label for="id_email">
+                    Email Address
+                    {% if user.is_verified %}
+                        <span class="verification-badge badge-verified">✓ Verified</span>
+                    {% else %}
+                        <span class="verification-badge badge-unverified">⚠ Unverified</span>
+                    {% endif %}
+                </label>
+                {{ form.email }}
+                <p class="field-help">Changing your email will require re-verification.</p>
+                {% for error in form.email.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="settings-card">
+            <h2>🔔 Notifications</h2>
+
+            <div class="field-group">
+                <label for="id_notification_email">Notification Email</label>
+                {{ form.notification_email }}
+                {% if form.notification_email.help_text %}
+                    <p class="field-help">{{ form.notification_email.help_text }}</p>
+                {% endif %}
+                {% for error in form.notification_email.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="field-group">
+                <label for="id_timezone">Timezone</label>
+                {{ form.timezone }}
+                {% for error in form.timezone.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="settings-card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <button type="submit" class="btn-save">
+                💾 Save Changes
+            </button>
+            <a href="{% url 'password_reset' %}" class="text-indigo-500 hover:text-indigo-700 text-sm font-semibold" style="text-decoration: none;">
+                🔑 Change Password
+            </a>
+        </div>
+    </form>
+
+    <!-- Danger Zone -->
+    <div class="settings-card" style="border: 1.5px solid #fca5a5;">
+        <h2 style="color: #ef4444;">⚠️ Danger Zone</h2>
+        <p class="text-sm mb-3" style="color: #6b7280;">
+            Permanently delete your account and all associated events, media, and data.
+            This action <strong>cannot be undone</strong>.
+        </p>
+        <button type="button" class="btn-danger" onclick="document.getElementById('delete-confirm').classList.toggle('active')">
+            🗑️ Delete My Account
+        </button>
+        <div id="delete-confirm" class="delete-confirm">
+            <p class="text-sm font-semibold mb-2" style="color: #ef4444;">
+                Are you absolutely sure? Type your username <strong>{{ user.username }}</strong> to confirm:
+            </p>
+            <form method="post" action="{% url 'account_settings' %}" id="delete-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete_account">
+                <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                    <input type="text" id="confirm-username" class="settings-input" placeholder="Type your username" style="max-width: 250px;" autocomplete="off">
+                    <button type="submit" class="btn-danger" id="confirm-delete-btn" disabled>
+                        Confirm Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Enable delete button only when username matches
+    const confirmInput = document.getElementById('confirm-username');
+    const confirmBtn = document.getElementById('confirm-delete-btn');
+    const expectedUsername = '{{ user.username|escapejs }}';
+
+    if (confirmInput && confirmBtn) {
+        confirmInput.addEventListener('input', function() {
+            confirmBtn.disabled = this.value !== expectedUsername;
+        });
+    }
+</script>
+{% endblock %}

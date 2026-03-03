@@ -1,15 +1,15 @@
+import json
+import logging
 import secrets
 import uuid
-from datetime import datetime
 
-from django.contrib.auth.hashers import check_password, make_password
-from django.db import models
 from django.conf import settings
-from django.utils import timezone
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
+from django.contrib.auth.hashers import check_password, make_password
 from django.core.exceptions import ValidationError
-import logging
+from django.core.validators import MinValueValidator
+from django.db import models
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -152,51 +152,56 @@ class Event(models.Model):
 
         # Thread of memories validation
         if self.thread_of_memories:
-            print(f"DEBUG MODEL: Validating thread_of_memories: {self.thread_of_memories[:100]}...")
             try:
-                # Try to parse as JSON first (new format)
-                import json
                 memories_data = json.loads(self.thread_of_memories)
-                print(f"DEBUG MODEL: Parsed JSON with {len(memories_data)} entries")
-                if isinstance(memories_data, list):
-                    valid_memories = [
-                        m for m in memories_data 
-                        if isinstance(m, dict) and (
-                            (m.get('title', '').strip()) or 
-                            (m.get('description', '').strip())
-                        )
-                    ]
-                    print(f"DEBUG MODEL: Found {len(valid_memories)} valid memories")
-                    if len(valid_memories) < 2:
-                        print(f"DEBUG MODEL: FAILING validation - only {len(valid_memories)} valid memories")
-                        raise ValidationError({'thread_of_memories': "Thread of Memories requires at least 2 memories."})
-                    else:
-                        print(f"DEBUG MODEL: PASSING validation - {len(valid_memories)} valid memories found")
-                else:
-                    print(f"DEBUG MODEL: FAILING validation - not a list")
+                if not isinstance(memories_data, list):
                     raise ValidationError({'thread_of_memories': "Invalid thread of memories format."})
-                    
-            except json.JSONDecodeError as e:
-                print(f"DEBUG MODEL: JSON decode failed, trying legacy format: {e}")
-                # Fallback to legacy text format
+                valid_memories = [
+                    m for m in memories_data
+                    if isinstance(m, dict) and (
+                        m.get('title', '').strip() or m.get('description', '').strip()
+                    )
+                ]
+                if len(valid_memories) < 2:
+                    raise ValidationError(
+                        {'thread_of_memories': "Thread of Memories requires at least 2 memories."}
+                    )
+            except json.JSONDecodeError:
+                # Fallback to legacy newline-separated text format
                 memories = [m.strip() for m in self.thread_of_memories.split('\n') if m.strip()]
                 if len(memories) < 2:
-                    print(f"DEBUG MODEL: FAILING legacy validation - only {len(memories)} memories")
-                    raise ValidationError({'thread_of_memories': "Thread of Memories requires at least 2 memories."})
-                else:
-                    print(f"DEBUG MODEL: PASSING legacy validation - {len(memories)} memories found")
-
-            # For structured memories, ensure even number (pairs) - only for specific event types if needed
-            # Note: Removing strict pairs requirement as users should be able to add any number of memories
-            # if self.event_type == 'raksha_bandhan' and len(memories) % 2 != 0:
-            #     raise ValidationError(
-            #         {'thread_of_memories': "Thread of Memories should have pairs of headers and descriptions."})
+                    raise ValidationError(
+                        {'thread_of_memories': "Thread of Memories requires at least 2 memories."}
+                    )
 
     def get_memory_data(self):
-        """Parse thread_of_memories into structured data."""
+        """Parse thread_of_memories into structured data.
+
+        Supports both JSON format (list of dicts with year/title/description)
+        and legacy newline-separated text format (alternating header/description lines).
+        """
         if not self.thread_of_memories:
             return []
 
+        # Try JSON format first
+        try:
+            memories_data = json.loads(self.thread_of_memories)
+            if isinstance(memories_data, list):
+                return [
+                    {
+                        "year": str(m.get("year", "")),
+                        "title": m.get("title", ""),
+                        "description": m.get("description", ""),
+                    }
+                    for m in memories_data
+                    if isinstance(m, dict) and (
+                        m.get("title", "").strip() or m.get("description", "").strip()
+                    )
+                ]
+        except (json.JSONDecodeError, TypeError):
+            pass
+
+        # Fallback to legacy newline-separated text format
         memories = [m.strip() for m in self.thread_of_memories.split('\n') if m.strip()]
         structured_memories = []
 
@@ -205,7 +210,6 @@ class Event(models.Model):
                 header = memories[i]
                 description = memories[i + 1]
 
-                # Extract year if present
                 year = ""
                 title = header
                 if ":" in header:
@@ -217,7 +221,7 @@ class Event(models.Model):
                 structured_memories.append({
                     "year": year,
                     "title": title,
-                    "description": description
+                    "description": description,
                 })
 
         return structured_memories
@@ -303,7 +307,10 @@ class EventMedia(models.Model):
 
     class Meta:
         constraints = [
-            models.CheckConstraint(check=models.Q(media_type__in=['image', 'audio']), name='valid_media_type')
+            models.CheckConstraint(
+                condition=models.Q(media_type__in=['image', 'audio']),
+                name='valid_media_type',
+            )
         ]
 
     def __str__(self):

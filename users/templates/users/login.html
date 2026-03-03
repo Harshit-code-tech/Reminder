@@ -6,7 +6,7 @@
 
 {% block header_content %}
 <h1 class="text-3xl font-bold flex items-center gap-3 text-white">
-    <span class="text-yellow-400 animate-pulse">✨</span> Welcome Back
+    <span class="text-yellow-400" aria-hidden="true">✨</span> Welcome Back
 </h1>
 {% endblock %}
 
@@ -202,24 +202,20 @@
 </div>
 
 <style>
-    /* Clean background reset */
+    /* Clean background - theme aware */
     .min-h-screen {
         background: linear-gradient(135deg, 
-            rgba(15, 23, 42, 0.95) 0%, 
-            rgba(30, 41, 59, 0.9) 25%, 
-            rgba(51, 65, 85, 0.85) 50%, 
-            rgba(71, 85, 105, 0.9) 75%, 
-            rgba(15, 23, 42, 0.95) 100%);
+            rgba(224, 231, 255, 0.6) 0%, 
+            rgba(243, 232, 255, 0.6) 50%, 
+            rgba(224, 231, 255, 0.6) 100%);
         position: relative;
     }
 
     body.dark-mode .min-h-screen {
         background: linear-gradient(135deg, 
-            rgba(0, 0, 0, 0.98) 0%, 
-            rgba(15, 23, 42, 0.95) 25%, 
+            rgba(15, 23, 42, 0.95) 0%, 
             rgba(30, 41, 59, 0.9) 50%, 
-            rgba(51, 65, 85, 0.95) 75%, 
-            rgba(0, 0, 0, 0.98) 100%);
+            rgba(15, 23, 42, 0.95) 100%);
     }
 
     /* Premium animated background */
@@ -339,20 +335,19 @@
     /* Premium card styling */
     .premium-card {
         position: relative;
-        transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        transform-style: preserve-3d;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(147, 51, 234, 0.15);
+        background: rgba(255, 255, 255, 0.85) !important;
     }
 
     body.dark-mode .premium-card {
-        background: rgba(15, 23, 42, 0.4);
+        background: rgba(15, 23, 42, 0.85) !important;
         border: 1px solid rgba(71, 85, 105, 0.3);
     }
 
     .premium-card:hover {
-        transform: translateY(-8px) scale(1.02);
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
     }
 
     .card-header {
@@ -583,7 +578,7 @@
     }
 
     .divider span {
-        background: rgba(255, 255, 255, 0.9);
+        background: var(--card-bg-light, rgba(255, 255, 255, 0.9));
         padding: 0 1rem;
         position: relative;
         z-index: 1;
@@ -594,7 +589,7 @@
     }
 
     body.dark-mode .divider span {
-        background: rgba(15, 23, 42, 0.9);
+        background: var(--card-bg-dark, rgba(15, 23, 42, 0.9));
         color: #9ca3af;
     }
 
