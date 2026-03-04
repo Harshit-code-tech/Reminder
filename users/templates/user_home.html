@@ -1,25 +1,158 @@
 {% extends 'base.html' %}
 
+{% block title %}Dashboard | Reminder{% endblock %}
+
 {% block content %}
-{% if user.is_authenticated %}
-    <h2 class="text-xl font-semibold mb-4">Upcoming Events</h2>
+<div class="uh-page">
+    <!-- Floating sparkles -->
+    <div class="uh-sparkles">
+        <div class="uh-sparkle"></div><div class="uh-sparkle"></div>
+        <div class="uh-sparkle"></div><div class="uh-sparkle"></div>
+    </div>
+
+    <div class="uh-header">
+        <h1 class="uh-title">Your Upcoming Events</h1>
+        <a href="{% url 'event_create' %}" class="uh-add-btn">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add Event
+        </a>
+    </div>
+
     {% if upcoming_events %}
-        <ul class="space-y-2">
-            {% for event in upcoming_events %}
-                <li class="bg-white p-4 rounded shadow">
-                    <strong>{{ event.name }}</strong> - {{ event.get_event_type_display }} on {{ event.date }}
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p class="text-gray-600">No upcoming events!</p>
+    <div class="uh-grid">
+        {% for event in upcoming_events %}
+        <a href="{% url 'event_edit' event.id %}" class="uh-card">
+            <div class="uh-card-top">
+                <span class="uh-badge">{{ event.get_event_type_display }}</span>
+                <span class="uh-date">{{ event.date|date:"M j, Y" }}</span>
+            </div>
+            <h3 class="uh-name">{{ event.name }}</h3>
+            {% if event.message %}
+            <p class="uh-msg">{{ event.message|truncatewords:12 }}</p>
+            {% endif %}
+        </a>
+        {% endfor %}
+    </div>
+
+    {% if upcoming_events.has_other_pages %}
+    <div class="uh-pagination">
+        {% if upcoming_events.has_previous %}
+        <a href="?page={{ upcoming_events.previous_page_number }}" class="uh-page-btn">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            Previous
+        </a>
+        {% endif %}
+        <span class="uh-page-info">Page {{ upcoming_events.number }} of {{ upcoming_events.paginator.num_pages }}</span>
+        {% if upcoming_events.has_next %}
+        <a href="?page={{ upcoming_events.next_page_number }}" class="uh-page-btn">
+            Next
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+        {% endif %}
+    </div>
     {% endif %}
-{% else %}
-    <h2 class="text-xl font-semibold mb-4">Welcome to the Birthday Reminder App</h2>
-    <p class="text-gray-600 mb-2">Your personal reminder app for birthdays and anniversaries.</p>
-    <p class="mb-2">Please <a href="{% url 'login' %}" class="text-blue-600 hover:underline">login</a> to see your upcoming events.</p>
-    <p>
-        <a href="{% url 'signup' %}" class="text-blue-600 hover:underline">Sign up</a>
-    </p>
-{% endif %}
+
+    {% else %}
+    <div class="uh-empty">
+        <div class="uh-empty-icon">
+            <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+        </div>
+        <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">No upcoming events</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Start by adding your first birthday, anniversary, or celebration.</p>
+        <a href="{% url 'event_create' %}" class="uh-add-btn">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Create Your First Event
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .uh-page{max-width:900px;margin:0 auto;padding:2rem 1rem;position:relative}
+
+    /* ── Floating sparkles ── */
+    .uh-sparkles{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+    body.dark-mode .uh-sparkles{opacity:0.3}
+    .uh-sparkle{position:absolute;width:5px;height:5px;border-radius:50%;background:radial-gradient(circle,rgba(139,92,246,0.5),transparent);animation:uhFloat 9s ease-in-out infinite}
+    .uh-sparkle:nth-child(1){top:8%;left:5%;animation-delay:0s;animation-duration:7s}
+    .uh-sparkle:nth-child(2){top:20%;right:8%;animation-delay:-2s;animation-duration:10s;width:4px;height:4px;background:radial-gradient(circle,rgba(236,72,153,0.4),transparent)}
+    .uh-sparkle:nth-child(3){top:60%;left:10%;animation-delay:-4s;animation-duration:8s;background:radial-gradient(circle,rgba(59,130,246,0.4),transparent)}
+    .uh-sparkle:nth-child(4){bottom:15%;right:12%;animation-delay:-1s;animation-duration:11s;width:6px;height:6px;background:radial-gradient(circle,rgba(245,158,11,0.4),transparent)}
+    @keyframes uhFloat{0%,100%{transform:translate(0,0) scale(1);opacity:0.3}25%{transform:translate(10px,-15px) scale(1.4);opacity:0.8}50%{transform:translate(-6px,8px) scale(0.7);opacity:0.5}75%{transform:translate(12px,4px) scale(1.2);opacity:0.9}}
+
+    /* ── Header ── */
+    .uh-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;position:relative;z-index:1;animation:uhSlide 0.5s ease-out}
+    .uh-title{font-size:1.75rem;font-weight:800;background:linear-gradient(135deg,#1e1b4b,#6366f1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    body.dark-mode .uh-title{background:linear-gradient(135deg,#c7d2fe,#a5b4fc);-webkit-background-clip:text;background-clip:text}
+    .uh-add-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:12px;background:linear-gradient(135deg,#6366f1,#8b5cf6,#a855f7);background-size:200% 200%;color:white;font-weight:600;font-size:0.875rem;text-decoration:none;transition:all 0.3s;box-shadow:0 4px 16px rgba(99,102,241,0.3);animation:uhBtnGlow 4s ease infinite}
+    .uh-add-btn:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 8px 28px rgba(99,102,241,0.4)}
+    @keyframes uhBtnGlow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+
+    /* ── Grid ── */
+    .uh-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1rem;position:relative;z-index:1}
+
+    /* ── Card with entrance + shimmer + gradient accent ── */
+    .uh-card{display:block;text-decoration:none;background:var(--card-bg-light);border-radius:16px;padding:1.25rem 1.5rem;border:1px solid rgba(139,92,246,0.08);box-shadow:var(--shadow-light);transition:all 0.3s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;opacity:0;transform:translateY(20px);animation:uhCardIn 0.5s ease-out forwards}
+    body.dark-mode .uh-card{background:var(--card-bg-dark);box-shadow:var(--shadow-dark);border-color:rgba(139,92,246,0.12)}
+
+    /* Shimmer on hover */
+    .uh-card::before{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(139,92,246,0.07),transparent);transition:left 0.6s ease;z-index:0;pointer-events:none}
+    .uh-card:hover::before{left:120%}
+
+    /* Gradient bottom accent */
+    .uh-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#6366f1,#ec4899,#f59e0b);background-size:200% 100%;opacity:0;transition:opacity 0.3s;animation:uhGradient 4s linear infinite}
+    .uh-card:hover::after{opacity:1}
+
+    .uh-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(99,102,241,0.15)}
+    body.dark-mode .uh-card:hover{box-shadow:0 12px 40px rgba(0,0,0,0.4)}
+
+    @keyframes uhCardIn{to{opacity:1;transform:translateY(0)}}
+    @keyframes uhGradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+    /* ── Card content ── */
+    .uh-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;position:relative;z-index:1}
+    .uh-badge{padding:4px 10px;border-radius:8px;font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;background:rgba(99,102,241,0.1);color:#6366f1;transition:transform 0.2s}
+    .uh-badge:hover{transform:scale(1.08)}
+    body.dark-mode .uh-badge{background:rgba(129,140,248,0.18);color:#a5b4fc}
+    .uh-date{font-size:0.8rem;color:#6b7280;font-weight:500;position:relative;z-index:1}
+    body.dark-mode .uh-date{color:#94a3b8}
+    .uh-name{font-size:1.1rem;font-weight:700;color:#1f2937;margin-bottom:4px;position:relative;z-index:1}
+    body.dark-mode .uh-name{color:#f1f5f9}
+    .uh-msg{font-size:0.85rem;color:#6b7280;font-style:italic;position:relative;z-index:1}
+    body.dark-mode .uh-msg{color:#94a3b8}
+
+    /* ── Pagination ── */
+    .uh-pagination{display:flex;align-items:center;justify-content:center;gap:1rem;margin-top:2rem;position:relative;z-index:1;animation:uhSlide 0.8s ease-out}
+    .uh-page-btn{display:inline-flex;align-items:center;gap:4px;padding:8px 16px;border-radius:10px;font-size:0.85rem;font-weight:500;color:#6366f1;background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.15);text-decoration:none;transition:all 0.25s}
+    .uh-page-btn:hover{background:rgba(99,102,241,0.12);transform:translateY(-2px);box-shadow:0 4px 12px rgba(99,102,241,0.15)}
+    body.dark-mode .uh-page-btn{color:#a78bfa;border-color:rgba(167,139,250,0.2);background:rgba(167,139,250,0.06)}
+    .uh-page-info{font-size:0.85rem;color:#6b7280;font-weight:500}
+    body.dark-mode .uh-page-info{color:#94a3b8}
+
+    /* ── Empty state ── */
+    .uh-empty{text-align:center;padding:4rem 2rem;background:var(--card-bg-light);border-radius:20px;border:1px solid rgba(139,92,246,0.08);box-shadow:var(--shadow-light);position:relative;z-index:1;animation:uhSlide 0.6s ease-out}
+    body.dark-mode .uh-empty{background:var(--card-bg-dark);box-shadow:var(--shadow-dark);border-color:rgba(139,92,246,0.1)}
+    .uh-empty-icon{width:80px;height:80px;margin:0 auto 1.5rem;border-radius:50%;background:rgba(99,102,241,0.08);display:flex;align-items:center;justify-content:center;color:#6366f1;animation:uhEmptyPulse 3s ease-in-out infinite}
+    body.dark-mode .uh-empty-icon{background:rgba(129,140,248,0.12);color:#a5b4fc}
+    @keyframes uhEmptyPulse{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,0.15)}50%{box-shadow:0 0 0 16px rgba(99,102,241,0)}}
+
+    @keyframes uhSlide{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+    @media(max-width:480px){.uh-grid{grid-template-columns:1fr}.uh-title{font-size:1.4rem}}
+
+    @media(prefers-reduced-motion:reduce){
+        .uh-card,.uh-header,.uh-empty,.uh-pagination{animation:none;opacity:1;transform:none}
+        .uh-sparkle,.uh-card::before,.uh-card::after,.uh-add-btn{animation:none}
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.uh-card').forEach((card, i) => {
+        card.style.animationDelay = (i * 0.1) + 's';
+    });
+});
+</script>
 {% endblock %}

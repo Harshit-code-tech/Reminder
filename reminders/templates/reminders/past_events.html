@@ -1,160 +1,207 @@
-<!-- reminders/templates/reminders/past_events.html -->
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Past Events{% endblock %}
-
-{% block header_class %}bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-6 shadow-lg{% endblock %}
-
-{% block header_content %}
-<h1 class="text-3xl font-bold flex items-center gap-3">
-    <span class="text-2xl">🕰️</span> Your Past Memories
-</h1>
-{% endblock %}
+{% block title %}Past Events | Reminder{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto mt-8">
-    <!-- Filter and Controls Bar -->
-    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-        <h2 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400">
-            Past Events Collection
-        </h2>
-        <div class="flex flex-wrap items-center gap-3">
-            <form class="flex flex-wrap gap-3 items-end" method="GET">
-                <div class="relative">
-                    <select name="event_type" aria-label="Filter by event type" class="appearance-none pl-4 pr-10 py-2.5 rounded-xl border-2 border-purple-300 dark:border-purple-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all shadow-sm hover:shadow-md text-gray-700 dark:text-gray-200">
-                        <option value="">All Types</option>
-                        {% for type, label in event_types %}
-                            <option value="{{ type }}" {% if event_type == type %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-purple-500 dark:text-purple-400">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </div>
-                </div>
-                <div>
-                    <label for="past-start-date" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">From</label>
-                    <input type="date" id="past-start-date" name="start_date" value="{{ start_date }}" class="pl-4 py-2.5 rounded-xl border-2 border-purple-300 dark:border-purple-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all shadow-sm hover:shadow-md text-gray-700 dark:text-gray-200">
-                </div>
-                <div>
-                    <label for="past-end-date" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">To</label>
-                    <input type="date" id="past-end-date" name="end_date" value="{{ end_date }}" class="pl-4 py-2.5 rounded-xl border-2 border-purple-300 dark:border-purple-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all shadow-sm hover:shadow-md text-gray-700 dark:text-gray-200">
-                </div>
-                <div>
-                    <label for="past-search" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Search</label>
-                    <input type="text" id="past-search" name="search" value="{{ search_query }}" placeholder="Search events…" class="pl-4 py-2.5 rounded-xl border-2 border-purple-300 dark:border-purple-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all shadow-sm hover:shadow-md text-gray-700 dark:text-gray-200">
-                </div>
-                <button type="submit" class="px-4 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-600 text-white font-medium shadow-sm transition-all hover:shadow-md">Filter</button>
-            </form>
-            <a href="{% url 'download_past_events' %}" class="group relative inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-green-500 hover:bg-green-600 dark:bg-green-700 dark:hover:bg-green-600 text-white font-medium shadow-sm transition-all duration-200 hover:shadow-md translate-y-0 hover:-translate-y-1">
-                <span class="relative z-10 flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                    </svg>
-                    Export CSV
-                </span>
-            </a>
-        </div>
+<div class="pe-page">
+    <!-- Header -->
+    <div class="pe-header">
+        <h1 class="pe-title">Past Memories</h1>
+        <a href="{% url 'download_past_events' %}" class="pe-export-btn">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Export CSV
+        </a>
     </div>
 
-    {% if messages %}
-    <!-- Messages handled by base.html -->
-    {% endif %}
+    <!-- Filter Bar -->
+    <form class="pe-filters" method="GET">
+        <div class="pe-filter-group">
+            <label for="pe-type" class="pe-filter-label">Type</label>
+            <select id="pe-type" name="event_type" class="pe-filter-input" aria-label="Filter by event type">
+                <option value="">All Types</option>
+                {% for type, label in event_types %}
+                    <option value="{{ type }}" {% if event_type == type %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="pe-filter-group">
+            <label for="pe-start" class="pe-filter-label">From</label>
+            <input type="date" id="pe-start" name="start_date" value="{{ start_date }}" class="pe-filter-input">
+        </div>
+        <div class="pe-filter-group">
+            <label for="pe-end" class="pe-filter-label">To</label>
+            <input type="date" id="pe-end" name="end_date" value="{{ end_date }}" class="pe-filter-input">
+        </div>
+        <div class="pe-filter-group pe-filter-grow">
+            <label for="pe-search" class="pe-filter-label">Search</label>
+            <input type="text" id="pe-search" name="search" value="{{ search_query }}" placeholder="Search events…" class="pe-filter-input">
+        </div>
+        <button type="submit" class="pe-filter-btn">Filter</button>
+    </form>
 
     {% if events %}
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Events Grid -->
+    <div class="pe-grid">
         {% for event in events %}
-        <div class="card rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl relative group">
-            <div class="p-[2px] bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl">
-                <div class="bg-white dark:bg-gray-800 rounded-[10px] p-5 h-full">
-                    <div class="flex items-center gap-3 mb-2">
-                        <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
-                            {{ event.get_event_type_display }}
-                        </span>
-                        {% if event.custom_label %}
-                        <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300">
-                            {{ event.custom_label }}
-                        </span>
-                        {% endif %}
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-1">{{ event.name }}</h3>
-                    <p class="text-gray-600 dark:text-gray-300 mb-2">
-                        <span class="font-semibold">Date:</span> {{ event.date|date:"F j, Y" }}
-                    </p>
-                    {% if event.message %}
-                    <p class="italic text-gray-500 dark:text-gray-400 mb-2">"{{ event.message }}"</p>
+        <div class="pe-card" data-event-card>
+            <div class="pe-card-top">
+                <span class="pe-badge">{{ event.get_event_type_display }}</span>
+                {% if event.custom_label %}
+                <span class="pe-badge pe-badge-alt">{{ event.custom_label }}</span>
+                {% endif %}
+            </div>
+            <h3 class="pe-card-name">{{ event.name }}</h3>
+            <p class="pe-card-date">{{ event.date|date:"F j, Y" }}</p>
+            {% if event.message %}
+            <p class="pe-card-msg">"{{ event.message|truncatewords:18 }}"</p>
+            {% endif %}
+            {% if event.reflections.exists %}
+            <p class="pe-card-reflection">
+                <svg class="w-3.5 h-3.5 inline -mt-0.5 mr-1 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                {{ event.reflections.first.note|truncatewords:12 }}
+            </p>
+            {% endif %}
+            {% if event.media.exists %}
+            <div class="pe-media-row">
+                {% for media in event.media.all|slice:":2" %}
+                    {% if media.media_type == 'image' %}
+                        <img src="{{ media.media_file }}" alt="Media for {{ event.name }}" class="pe-thumb">
+                    {% elif media.media_type == 'audio' %}
+                        <audio controls class="pe-audio"><source src="{{ media.media_file }}"></audio>
                     {% endif %}
-                    {% if event.reflections.exists %}
-                    <p class="text-gray-600 dark:text-gray-300 mb-2">
-                        <span class="font-semibold">Reflection:</span> {{ event.reflections.first.note|truncatewords:10 }}
-                    </p>
-                    {% endif %}
-                    {% if event.media.exists %}
-                    <div class="flex items-center gap-2 mt-2">
-                        {% for media in event.media.all|slice:":2" %}
-                            {% if media.media_type == 'image' %}
-                                <img src="{{ media.media_file }}" alt="Media for {{ event.name }}" class="w-12 h-12 object-cover rounded-lg shadow">
-                            {% elif media.media_type == 'audio' %}
-                                <audio controls class="w-32">
-                                    <source src="{{ media.media_file }}">
-                                    Your browser does not support the audio element.
-                                </audio>
-                            {% endif %}
-                        {% endfor %}
-                        {% if event.media.count > 2 %}
-                            <span class="text-gray-500 dark:text-gray-400 text-sm">+{{ event.media.count|add:"-2" }} more</span>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                    <div class="flex gap-2 mt-4">
-                        <a href="{% url 'edit_past_event' event.id %}" class="px-3 py-1 rounded-lg bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 font-medium hover:bg-yellow-200 dark:hover:bg-yellow-700 transition">Edit</a>
-                        <button class="px-3 py-1 rounded-lg bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 font-medium hover:bg-blue-200 dark:hover:bg-blue-700 transition open-modal" data-event-id="{{ event.id }}">View/Add Reflection</button>
-                    </div>
-                </div>
+                {% endfor %}
+                {% if event.media.count > 2 %}
+                    <span class="pe-media-more">+{{ event.media.count|add:"-2" }} more</span>
+                {% endif %}
+            </div>
+            {% endif %}
+            <div class="pe-card-actions">
+                <a href="{% url 'edit_past_event' event.id %}" class="pe-action-btn pe-action-edit">Edit</a>
+                <button type="button" class="pe-action-btn pe-action-view open-modal" data-event-id="{{ event.id }}">View / Reflect</button>
             </div>
         </div>
         {% endfor %}
     </div>
     {% else %}
-    <div class="flex flex-col items-center justify-center p-12 card bg-white dark:bg-gray-800 rounded-2xl">
-        <div class="w-40 h-40 mb-6 flex items-center justify-center bg-purple-100 dark:bg-purple-900/30 rounded-full">
-            <svg class="w-20 h-20 text-purple-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 4l-2 2m16-2l2 2M4 21h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
+    <!-- Empty State -->
+    <div class="pe-empty">
+        <div class="pe-empty-icon">
+            <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
         </div>
-        <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">No Past Events Found</h3>
-        <p class="text-gray-700 dark:text-gray-300 text-center mb-6">You have no past events to display. Create events to start tracking memories!</p>
-        <a href="{% url 'event_create' %}" class="group relative inline-flex items-center justify-center px-6 py-3 rounded-xl overflow-hidden bg-gradient-to-br from-purple-600 to-pink-600 text-white font-medium shadow-lg hover:shadow-xl transition duration-300 ease-out hover:-translate-y-1">
-            <span class="relative z-20 flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Create Event
-            </span>
-            <span class="absolute inset-0 bg-gradient-to-br from-purple-700 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out"></span>
+        <h3 class="pe-empty-title">No Past Events Found</h3>
+        <p class="pe-empty-text">You have no past events to display. Create events to start tracking memories!</p>
+        <a href="{% url 'event_create' %}" class="pe-cta-btn">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Create Event
         </a>
     </div>
     {% endif %}
 
-    <!-- Modal for Media and Reflection -->
-    <div id="event-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center hidden z-50" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto mx-4 shadow-2xl">
-            <div class="flex justify-between items-center mb-4">
-                <h3 id="modal-title" class="text-xl font-bold text-gray-800 dark:text-white">Event Details</h3>
-                <button class="close-modal text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-white p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition" aria-label="Close modal">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
+    <!-- Reflection Modal -->
+    <div id="event-modal" class="pe-modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="pe-modal">
+            <div class="pe-modal-head">
+                <h3 id="modal-title" class="pe-modal-title">Event Details</h3>
+                <button class="close-modal pe-modal-close" aria-label="Close modal">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-            <div id="modal-content" class="text-gray-700 dark:text-gray-200">
-                <p class="text-sm text-gray-500 dark:text-gray-400 italic">Loading event details…</p>
+            <div id="modal-content" class="pe-modal-body">
+                <p class="text-sm opacity-60 italic">Loading event details…</p>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .pe-page{max-width:960px;margin:0 auto;padding:2rem 1rem}
+    .pe-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:1rem}
+    .pe-title{font-size:1.75rem;font-weight:700;color:#1f2937}
+    body.dark-mode .pe-title{color:#f1f5f9}
+    .pe-export-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;font-size:0.8rem;font-weight:600;color:#22c55e;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.18);text-decoration:none;transition:all 0.2s}
+    .pe-export-btn:hover{background:rgba(34,197,94,0.15);transform:translateY(-1px)}
+    body.dark-mode .pe-export-btn{color:#4ade80;border-color:rgba(74,222,128,0.2);background:rgba(74,222,128,0.08)}
+
+    /* Filter bar */
+    .pe-filters{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:1.5rem;padding:1rem 1.25rem;border-radius:14px;background:var(--card-bg-light,rgba(255,255,255,0.92));box-shadow:var(--shadow-light,0 2px 12px rgba(0,0,0,0.06))}
+    body.dark-mode .pe-filters{background:var(--card-bg-dark,rgba(22,33,55,0.92));box-shadow:var(--shadow-dark,0 2px 12px rgba(0,0,0,0.3))}
+    .pe-filter-group{display:flex;flex-direction:column;min-width:120px}
+    .pe-filter-grow{flex:1;min-width:160px}
+    .pe-filter-label{font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:#6b7280;margin-bottom:4px}
+    body.dark-mode .pe-filter-label{color:#94a3b8}
+    .pe-filter-input{padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:0.85rem;font-family:'Poppins',sans-serif;background:#fafafa;color:#1f2937;transition:border-color 0.2s}
+    body.dark-mode .pe-filter-input{background:rgba(30,41,62,0.8);border-color:#334155;color:#e2e8f0}
+    .pe-filter-input:focus{outline:none;border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(139,92,246,0.1)}
+    .pe-filter-btn{padding:8px 20px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-weight:600;font-size:0.85rem;border:none;cursor:pointer;transition:all 0.2s;align-self:flex-end}
+    .pe-filter-btn:hover{background:linear-gradient(135deg,#4f46e5,#7c3aed);transform:translateY(-1px)}
+
+    /* Event grid & cards */
+    .pe-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem}
+    .pe-card{border-radius:16px;padding:1.25rem;background:var(--card-bg-light,rgba(255,255,255,0.92));box-shadow:var(--shadow-light,0 2px 12px rgba(0,0,0,0.06));transition:transform 0.2s,box-shadow 0.2s;display:flex;flex-direction:column}
+    body.dark-mode .pe-card{background:var(--card-bg-dark,rgba(22,33,55,0.92));box-shadow:var(--shadow-dark,0 2px 12px rgba(0,0,0,0.3))}
+    .pe-card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(99,102,241,0.12)}
+    body.dark-mode .pe-card:hover{box-shadow:0 8px 28px rgba(139,92,246,0.15)}
+    .pe-card-top{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+    .pe-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.7rem;font-weight:600;background:rgba(99,102,241,0.1);color:#6366f1}
+    body.dark-mode .pe-badge{background:rgba(139,92,246,0.15);color:#a78bfa}
+    .pe-badge-alt{background:rgba(236,72,153,0.1);color:#ec4899}
+    body.dark-mode .pe-badge-alt{background:rgba(236,72,153,0.15);color:#f472b6}
+    .pe-card-name{font-size:1.1rem;font-weight:700;color:#1f2937;margin-bottom:2px}
+    body.dark-mode .pe-card-name{color:#f1f5f9}
+    .pe-card-date{font-size:0.82rem;color:#6b7280;margin-bottom:6px}
+    body.dark-mode .pe-card-date{color:#94a3b8}
+    .pe-card-msg{font-size:0.82rem;font-style:italic;color:#9ca3af;margin-bottom:6px;line-height:1.4}
+    body.dark-mode .pe-card-msg{color:#64748b}
+    .pe-card-reflection{font-size:0.8rem;color:#8b5cf6;margin-bottom:6px}
+    body.dark-mode .pe-card-reflection{color:#a78bfa}
+    .pe-media-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+    .pe-thumb{width:44px;height:44px;object-fit:cover;border-radius:8px;border:1.5px solid #e5e7eb}
+    body.dark-mode .pe-thumb{border-color:#334155}
+    .pe-audio{width:130px;height:30px}
+    .pe-media-more{font-size:0.75rem;color:#9ca3af}
+    .pe-card-actions{display:flex;gap:8px;margin-top:auto;padding-top:10px}
+    .pe-action-btn{padding:5px 14px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;border:none;font-family:'Poppins',sans-serif}
+    .pe-action-edit{background:rgba(234,179,8,0.1);color:#ca8a04}
+    .pe-action-edit:hover{background:rgba(234,179,8,0.2)}
+    body.dark-mode .pe-action-edit{background:rgba(234,179,8,0.12);color:#facc15}
+    .pe-action-view{background:rgba(99,102,241,0.1);color:#6366f1}
+    .pe-action-view:hover{background:rgba(99,102,241,0.18)}
+    body.dark-mode .pe-action-view{background:rgba(139,92,246,0.12);color:#a78bfa}
+
+    /* Empty state */
+    .pe-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4rem 2rem;border-radius:16px;background:var(--card-bg-light,rgba(255,255,255,0.92));box-shadow:var(--shadow-light,0 2px 12px rgba(0,0,0,0.06));text-align:center}
+    body.dark-mode .pe-empty{background:var(--card-bg-dark,rgba(22,33,55,0.92));box-shadow:var(--shadow-dark,0 2px 12px rgba(0,0,0,0.3))}
+    .pe-empty-icon{width:100px;height:100px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(139,92,246,0.08);color:#8b5cf6;margin-bottom:1.25rem}
+    body.dark-mode .pe-empty-icon{background:rgba(139,92,246,0.12);color:#a78bfa}
+    .pe-empty-title{font-size:1.25rem;font-weight:700;color:#1f2937;margin-bottom:6px}
+    body.dark-mode .pe-empty-title{color:#f1f5f9}
+    .pe-empty-text{font-size:0.9rem;color:#6b7280;margin-bottom:1.5rem;max-width:360px}
+    body.dark-mode .pe-empty-text{color:#94a3b8}
+    .pe-cta-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 24px;border-radius:12px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-weight:600;font-size:0.875rem;text-decoration:none;transition:all 0.25s;box-shadow:0 4px 16px rgba(99,102,241,0.25)}
+    .pe-cta-btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(99,102,241,0.35);background:linear-gradient(135deg,#4f46e5,#7c3aed)}
+
+    /* Modal */
+    .pe-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:50}
+    .pe-modal-overlay.hidden{display:none}
+    .pe-modal{background:var(--card-bg-light,#fff);border-radius:16px;padding:1.5rem;max-width:520px;width:100%;max-height:80vh;overflow-y:auto;margin:1rem;box-shadow:0 20px 60px rgba(0,0,0,0.15)}
+    body.dark-mode .pe-modal{background:var(--card-bg-dark,rgba(22,33,55,0.98));box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+    .pe-modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+    .pe-modal-title{font-size:1.15rem;font-weight:700;color:#1f2937}
+    body.dark-mode .pe-modal-title{color:#f1f5f9}
+    .pe-modal-close{background:none;border:none;cursor:pointer;padding:4px;border-radius:8px;color:#9ca3af;transition:all 0.2s}
+    .pe-modal-close:hover{color:#1f2937;background:rgba(0,0,0,0.05)}
+    body.dark-mode .pe-modal-close:hover{color:#f1f5f9;background:rgba(255,255,255,0.08)}
+    .pe-modal-body{color:#4b5563;font-size:0.9rem;line-height:1.6}
+    body.dark-mode .pe-modal-body{color:#cbd5e1}
+
+    @media(max-width:600px){
+        .pe-title{font-size:1.4rem}
+        .pe-grid{grid-template-columns:1fr}
+        .pe-filters{flex-direction:column}
+        .pe-filter-group{min-width:100%}
+    }
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -162,18 +209,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalContent = document.getElementById('modal-content');
     const closeBtn = modal.querySelector('.close-modal');
 
-    // Open modal
     document.querySelectorAll('.open-modal').forEach(btn => {
         btn.addEventListener('click', () => {
-            const card = btn.closest('[data-event-card]') || btn.closest('.bg-white, .dark\\:bg-gray-800');
+            const card = btn.closest('[data-event-card]');
             if (card) {
-                const name = card.querySelector('h3')?.textContent || 'Event';
-                const date = card.querySelector('p')?.textContent || '';
-                const reflection = card.querySelector('.font-semibold + span, p:nth-of-type(2)');
+                const name = card.querySelector('.pe-card-name')?.textContent || 'Event';
+                const date = card.querySelector('.pe-card-date')?.textContent || '';
+                const reflection = card.querySelector('.pe-card-reflection')?.textContent || '';
                 modalContent.innerHTML = `
-                    <h4 class="font-semibold text-lg mb-2">${name}</h4>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">${date}</p>
-                    <p class="text-sm">Use the Edit button to add reflections and manage this event.</p>
+                    <h4 style="font-weight:600;font-size:1.05rem;margin-bottom:6px">${name}</h4>
+                    <p style="font-size:0.82rem;opacity:0.6;margin-bottom:12px">${date}</p>
+                    ${reflection ? `<p style="font-size:0.85rem;margin-bottom:12px"><strong>Reflection:</strong> ${reflection}</p>` : ''}
+                    <p style="font-size:0.85rem">Use the <strong>Edit</strong> button to add reflections and manage this event.</p>
                 `;
             }
             modal.classList.remove('hidden');
@@ -181,17 +228,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Close modal
-    function closeModal() {
-        modal.classList.add('hidden');
-    }
+    function closeModal() { modal.classList.add('hidden'); }
     closeBtn.addEventListener('click', closeModal);
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeModal();
-    });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
-    });
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal(); });
 });
 </script>
 {% endblock %}

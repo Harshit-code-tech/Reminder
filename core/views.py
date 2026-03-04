@@ -23,7 +23,14 @@ def home(request):
     """Landing page — redirects authenticated users to their event list."""
     if request.user.is_authenticated:
         return redirect('event_list')
-    return render(request, 'home.html')
+    # Provide real stats for the landing page
+    total_users = User.objects.count()
+    total_events = Event.objects.count()
+    context = {
+        'total_users': total_users,
+        'total_events': total_events,
+    }
+    return render(request, 'home.html', context)
 
 @ratelimit(key='ip', rate='100/h', block=True)
 def health_check(request):

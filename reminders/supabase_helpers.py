@@ -1,5 +1,5 @@
 from supabase import create_client
-from supabase.lib.client_options import ClientOptions
+from supabase.lib.client_options import SyncClientOptions
 from django.conf import settings
 import requests
 import logging
@@ -56,7 +56,7 @@ def get_user_supabase_client(request):
             raise ValueError("JWT refresh failed")
 
     # Final client creation using fresh token
-    options = ClientOptions(headers={"Authorization": f"Bearer {user_jwt}"})
+    options = SyncClientOptions(headers={"Authorization": f"Bearer {user_jwt}"})
     return create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY, options)
 
 

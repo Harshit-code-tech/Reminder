@@ -61,10 +61,10 @@ def _next_annual_date(original_date):
 
 
 def check_recurring_events():
-    """Create next-year copies for recurring birthday/anniversary events (called via django-q)."""
+    """Create next-year copies for recurring birthday/anniversary/raksha_bandhan events."""
     today = timezone.now().date()
     events = Event.objects.filter(
-        event_type__in=['birthday', 'anniversary'],
+        event_type__in=['birthday', 'anniversary', 'raksha_bandhan'],
         is_recurring=True,
         date__lt=today,
     )
@@ -94,6 +94,12 @@ def check_recurring_events():
                 notified=False,
                 deletion_notified=False,
                 deletion_scheduled=None,
+                recipient_email=event.recipient_email,
+                auto_share_enabled=event.auto_share_enabled,
+                raksha_bandhan_theme=getattr(event, 'raksha_bandhan_theme', None),
+                sibling_relationship=getattr(event, 'sibling_relationship', None),
+                sacred_promises=getattr(event, 'sacred_promises', None),
+                rakhi_ceremony_notes=getattr(event, 'rakhi_ceremony_notes', None),
             )
 
             for media in event.media.all():

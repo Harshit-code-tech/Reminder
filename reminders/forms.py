@@ -167,7 +167,6 @@ class EventForm(forms.ModelForm):
         if event_type == 'other':
             self.fields['is_recurring'].initial = False
             self.fields['is_recurring'].widget.attrs['disabled'] = True
-            # Force recurring to False for 'other' events
             if hasattr(self.data, '_mutable'):
                 self.data._mutable = True
             if self.data and 'is_recurring' in self.data:
@@ -260,7 +259,7 @@ class EventForm(forms.ModelForm):
 
         # Recurring event constraint
         is_recurring = cleaned_data.get('is_recurring')
-        if is_recurring and event_type not in ['birthday', 'anniversary']:
+        if is_recurring and event_type not in ['birthday', 'anniversary', 'raksha_bandhan']:
             raise ValidationError("Recurring events are only allowed for birthdays, anniversaries, and Raksha Bandhan.")
 
         # Recipient email guard

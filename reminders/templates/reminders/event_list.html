@@ -1,218 +1,194 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}My Special Events{% endblock %}
-
-{% block header_class %}bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-6 shadow-lg{% endblock %}
-
-{% block header_content %}
-<h1 class="text-3xl font-bold flex items-center gap-3">
-    <span class="text-2xl">✨</span> Your Special Moments
-</h1>
-{% endblock %}
+{% block title %}My Events{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto mt-8">
+<div class="evt-page">
 
-    <!-- Quick Stats Dashboard -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-purple-200 dark:border-purple-800 shadow-sm text-center">
-            <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{{ total_upcoming }}</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Upcoming Events</p>
-        </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-pink-200 dark:border-pink-800 shadow-sm text-center">
-            {% if days_until_next is not None %}
-            <p class="text-2xl font-bold text-pink-600 dark:text-pink-400">
-                {% if days_until_next == 0 %}Today!{% elif days_until_next == 1 %}Tomorrow{% else %}{{ days_until_next }}d{% endif %}
-            </p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate" title="{{ next_event.name }}">Until {{ next_event.name }}</p>
-            {% else %}
-            <p class="text-2xl font-bold text-gray-400">—</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">No Upcoming</p>
+    <!-- Floating sparkles -->
+    <div class="evt-sparkles">
+        <div class="evt-sparkle"></div><div class="evt-sparkle"></div><div class="evt-sparkle"></div>
+        <div class="evt-sparkle"></div><div class="evt-sparkle"></div><div class="evt-sparkle"></div>
+    </div>
+
+    <!-- Page Header -->
+    <div class="evt-header">
+        <div>
+            <h1 class="evt-title">
+                {% if show_archived %}Archived Events{% else %}My Events{% endif %}
+            </h1>
+            {% if show_archived %}
+            <a href="{% url 'event_list' %}" class="evt-back">&larr; Back to active</a>
             {% endif %}
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-blue-200 dark:border-blue-800 shadow-sm text-center">
-            <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ this_month }}</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">This Month</p>
+        <a href="{% url 'event_create' %}" class="evt-add-btn">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add Event
+        </a>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="evt-stats">
+        <div class="evt-stat">
+            <span class="evt-stat-num purple">{{ total_upcoming }}</span>
+            <span class="evt-stat-lbl">Upcoming</span>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-amber-200 dark:border-amber-800 shadow-sm text-center">
+        <div class="evt-stat-div"></div>
+        <div class="evt-stat">
+            {% if days_until_next is not None %}
+            <span class="evt-stat-num pink">
+                {% if days_until_next == 0 %}Today!{% elif days_until_next == 1 %}1d{% else %}{{ days_until_next }}d{% endif %}
+            </span>
+            <span class="evt-stat-lbl" title="{{ next_event.name }}">{{ next_event.name|truncatechars:14 }}</span>
+            {% else %}
+            <span class="evt-stat-num muted">&mdash;</span>
+            <span class="evt-stat-lbl">No upcoming</span>
+            {% endif %}
+        </div>
+        <div class="evt-stat-div"></div>
+        <div class="evt-stat">
+            <span class="evt-stat-num blue">{{ this_month }}</span>
+            <span class="evt-stat-lbl">This Month</span>
+        </div>
+        <div class="evt-stat-div"></div>
+        <div class="evt-stat">
             {% if archived_count %}
-            <a href="?archived=1" class="block hover:opacity-80 transition-opacity">
-                <p class="text-2xl font-bold text-amber-600 dark:text-amber-400">{{ archived_count }}</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Archived</p>
+            <a href="?archived=1" class="evt-stat-link">
+                <span class="evt-stat-num amber">{{ archived_count }}</span>
+                <span class="evt-stat-lbl">Archived</span>
             </a>
             {% else %}
-            <p class="text-2xl font-bold text-gray-400">0</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Archived</p>
+            <span class="evt-stat-num muted">0</span>
+            <span class="evt-stat-lbl">Archived</span>
             {% endif %}
         </div>
     </div>
 
-    <!-- Filter and Controls Bar -->
-    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-        <div class="flex items-center gap-3">
-            <h2 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400">
-                {% if show_archived %}Archived Events{% else %}My Events Collection{% endif %}
-            </h2>
-            {% if show_archived %}
-            <a href="{% url 'event_list' %}" class="text-sm text-purple-600 dark:text-purple-400 hover:underline">&larr; Back to active</a>
-            {% endif %}
+    <!-- Toolbar -->
+    <div class="evt-toolbar">
+        <div class="evt-search-wrap">
+            <svg class="evt-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" id="event-search" placeholder="Search…" class="evt-search" aria-label="Search events">
         </div>
-
-        <div class="flex flex-wrap items-center gap-3">
-            <!-- Search -->
-            <div class="relative">
-                <input type="text" id="event-search" placeholder="Search events…" class="pl-10 pr-4 py-2.5 rounded-xl border-2 border-purple-300 dark:border-purple-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all shadow-sm hover:shadow-md text-gray-700 dark:text-gray-200 w-40 md:w-52" aria-label="Search events">
-                <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-purple-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
-            </div>
-
-            <div class="relative">
-                <select id="sort-events" aria-label="Sort events" class="appearance-none pl-4 pr-10 py-2.5 rounded-xl border-2 border-purple-300 dark:border-purple-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all shadow-sm hover:shadow-md text-gray-700 dark:text-gray-200" onchange="window.location.href=this.value">
-                    <option value="?sort=date" {% if request.GET.sort == "date" or not request.GET.sort %}selected{% endif %}>Sort by Date</option>
-                    <option value="?sort=name" {% if request.GET.sort == "name" %}selected{% endif %}>Sort by Name</option>
-                </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-purple-500 dark:text-purple-400">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                    </svg>
-                </div>
-            </div>
-
-            <a href="{% url 'analytics' %}" class="group relative inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-green-500 hover:bg-green-600 dark:bg-green-700 dark:hover:bg-green-600 text-white font-medium shadow-sm transition-all duration-200 hover:shadow-md translate-y-0 hover:-translate-y-1">
-                <span class="relative z-10 flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
-                    Analytics
-                </span>
+        <select id="sort-events" class="evt-sort" aria-label="Sort events" onchange="window.location.href=this.value">
+            <option value="?sort=date" {% if request.GET.sort == "date" or not request.GET.sort %}selected{% endif %}>Date</option>
+            <option value="?sort=name" {% if request.GET.sort == "name" %}selected{% endif %}>Name</option>
+        </select>
+        <div class="evt-toolbar-actions">
+            <a href="{% url 'analytics' %}" class="evt-tool-btn" title="Analytics">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <span class="evt-tool-label">Analytics</span>
             </a>
-
-            <a href="{% url 'download_template' %}" class="group relative inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-600 text-white font-medium shadow-sm transition-all duration-200 hover:shadow-md translate-y-0 hover:-translate-y-1">
-                <span class="relative z-10 flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                    </svg>
-                    Download CSV Template
-                </span>
+            <a href="{% url 'bulk_import' %}" class="evt-tool-btn" title="Bulk Import">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                <span class="evt-tool-label">Import</span>
             </a>
-
-            <a href="{% url 'bulk_import' %}" class="group relative inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-medium shadow-sm transition-all duration-200 hover:shadow-md translate-y-0 hover:-translate-y-1">
-                <span class="relative z-10 flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Bulk Import
-                </span>
+            <a href="{% url 'download_template' %}" class="evt-tool-btn" title="CSV Template">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span class="evt-tool-label">CSV</span>
             </a>
-
             {% if events %}
-            <a href="{% url 'export_events_ics' %}" class="group relative inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-600 dark:bg-teal-700 dark:hover:bg-teal-600 text-white font-medium shadow-sm transition-all duration-200 hover:shadow-md translate-y-0 hover:-translate-y-1" title="Export all events to your calendar app">
-                <span class="relative z-10 flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                    Export .ics
-                </span>
+            <a href="{% url 'export_events_ics' %}" class="evt-tool-btn" title="Export ICS">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <span class="evt-tool-label">.ics</span>
             </a>
             {% endif %}
-
-            <a href="{% url 'event_create' %}" class="group relative inline-flex items-center justify-center px-6 py-2.5 rounded-xl overflow-hidden bg-gradient-to-br from-purple-600 to-pink-600 text-white font-medium shadow-lg hover:shadow-xl transition duration-300 ease-out hover:-translate-y-1">
-                <span class="relative z-10 flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Add Event
-                </span>
-                <span class="absolute inset-0 bg-gradient-to-br from-purple-700 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out"></span>
-            </a>
-
-            <a href="{% url 'past_events' %}" class="group relative inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 dark:bg-indigo-700 dark:hover:bg-indigo-600 text-white font-medium shadow-sm transition-all duration-200 hover:shadow-md translate-y-0 hover:-translate-y-1">
-                <span class="relative z-10 flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 4l-2 2m16-2l2 2M4 21h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                    Past Events
-                </span>
+            <a href="{% url 'past_events' %}" class="evt-tool-btn" title="Past Events">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span class="evt-tool-label">History</span>
             </a>
         </div>
     </div>
 
     {% if events %}
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Event Cards -->
+    <div class="evt-grid">
         {% for event in events %}
-        <div class="card rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl relative group">
-            <div class="p-[2px] bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl">
-                <div class="bg-white dark:bg-gray-800 rounded-[10px] p-5 h-full" data-event-card data-event-date="{{ event.date|date:'Y-m-d' }}">
-                    <div class="flex items-center gap-3 mb-2">
-                        <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
-                            {{ event.get_event_type_display }}
-                        </span>
+        <div class="evt-card-wrap" data-searchable>
+            <div class="evt-card" data-event-card data-event-date="{{ event.date|date:'Y-m-d' }}">
+                <!-- Top row: badges + countdown -->
+                <div class="evt-card-top">
+                    <div class="evt-badges">
+                        <span class="evt-badge evt-badge-type">{{ event.get_event_type_display }}</span>
                         {% if event.custom_label %}
-                        <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300">
-                            {{ event.custom_label }}
-                        </span>
+                        <span class="evt-badge evt-badge-label">{{ event.custom_label }}</span>
                         {% endif %}
-                        {% if event.is_recurring and event.event_type == 'birthday' or event.is_recurring and event.event_type == 'anniversary' %}
-                        <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
-                            🔁 Recurs Annually
-                        </span>
+                        {% if event.is_recurring %}
+                        <span class="evt-badge evt-badge-recurring">🔁 Recurring</span>
                         {% endif %}
                     </div>
-                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-1">{{ event.name }}</h3>
-                    <p class="text-gray-600 dark:text-gray-300 mb-2">
-                        <span class="font-semibold">Date:</span> {{ event.date|date:"F j, Y" }}
-                    </p>
-                    {% if event.message %}
-                    <p class="italic text-gray-500 dark:text-gray-400 mb-2">"{{ event.message }}"</p>
+                    <!-- countdown badge injected by JS -->
+                </div>
+
+                <h3 class="evt-card-name">{{ event.name }}</h3>
+                <p class="evt-card-date">{{ event.date|date:"F j, Y" }}</p>
+
+                {% if event.message %}
+                <p class="evt-card-msg">"{{ event.message|truncatechars:80 }}"</p>
+                {% endif %}
+
+                <div class="evt-card-remind">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                    {{ event.remind_days_before }}d before
+                </div>
+
+                {% if event.media.exists %}
+                <div class="evt-card-media">
+                    {% for media in event.media.all %}
+                        {% if media.media_type == 'image' %}
+                        <img src="{{ media.media_file }}" alt="" class="evt-media-thumb">
+                        {% elif media.media_type == 'audio' %}
+                        <audio controls class="evt-media-audio"><source src="{{ media.media_file }}"></audio>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Actions -->
+                <div class="evt-card-actions">
+                    <a href="{% url 'event_update' event.id %}" class="evt-act evt-act-edit" title="Edit">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        Edit
+                    </a>
+                    <a href="{% url 'greeting_card_view' event.id %}" class="evt-act evt-act-card" title="Greeting Card">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                        Card
+                    </a>
+                    <form method="POST" action="{% url 'duplicate_event' event.id %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="evt-act evt-act-dup" title="Duplicate">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                            Copy
+                        </button>
+                    </form>
+                    {% if show_archived %}
+                    <form method="POST" action="{% url 'unarchive_event' event.id %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="evt-act evt-act-restore" title="Restore">Restore</button>
+                    </form>
+                    {% else %}
+                    <form method="POST" action="{% url 'archive_event' event.id %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="evt-act evt-act-archive" title="Archive">Archive</button>
+                    </form>
                     {% endif %}
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="text-sm text-gray-500 dark:text-gray-400">Remind {{ event.remind_days_before }} day{% if event.remind_days_before != 1 %}s{% endif %} before</span>
-                    </div>
-                    {% if event.media.exists %}
-                    <div class="flex items-center gap-2 mt-2 flex-wrap">
-                        {% for media in event.media.all %}
-                            {% if media.media_type == 'image' %}
-                                <img src="{{ media.media_file }}" alt="Media for {{ event.name }}" class="w-12 h-12 object-cover rounded-lg shadow">
-                            {% elif media.media_type == 'audio' %}
-                                <audio controls class="w-full max-w-[200px]">
-                                    <source src="{{ media.media_file }}">
-                                    Your browser does not support the audio element.
-                                </audio>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
+                    <a href="{% url 'export_single_event_ics' event.id %}" class="evt-act evt-act-ics" title="Export .ics">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        .ics
+                    </a>
+                    {% if event.event_type == 'birthday' or event.event_type == 'anniversary' or event.event_type == 'raksha_bandhan' %}
+                    <form method="POST" action="{% url 'toggle_recurring' event.id %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="evt-act evt-act-recur" title="Toggle recurring">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            {% if event.is_recurring %}Recurring On{% else %}Recurring Off{% endif %}
+                        </button>
+                    </form>
                     {% endif %}
-                    <div class="flex flex-wrap gap-2 mt-4">
-                        <a href="{% url 'event_update' event.id %}" class="px-3 py-1.5 rounded-lg bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 font-medium hover:bg-yellow-200 dark:hover:bg-yellow-700 transition text-sm">Edit</a>
-                        <a href="{% url 'event_delete' event.id %}" class="px-3 py-1.5 rounded-lg bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200 font-medium hover:bg-red-200 dark:hover:bg-red-700 transition text-sm" onclick="return confirm('Delete {{ event.name|escapejs }}? This cannot be undone.')">Delete</a>
-                        <a href="{% url 'greeting_card_view' event.id %}" class="px-3 py-1.5 rounded-lg bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 font-medium hover:bg-green-200 dark:hover:bg-green-700 transition text-sm">Card</a>
-                        <form method="POST" action="{% url 'duplicate_event' event.id %}" class="inline">
-                            {% csrf_token %}
-                            <button type="submit" class="px-3 py-1.5 rounded-lg bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200 font-medium hover:bg-indigo-200 dark:hover:bg-indigo-700 transition text-sm" title="Duplicate event">Duplicate</button>
-                        </form>
-                        {% if show_archived %}
-                        <form method="POST" action="{% url 'unarchive_event' event.id %}" class="inline">
-                            {% csrf_token %}
-                            <button type="submit" class="px-3 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-800 text-emerald-800 dark:text-emerald-200 font-medium hover:bg-emerald-200 dark:hover:bg-emerald-700 transition text-sm" title="Restore event">Restore</button>
-                        </form>
-                        {% else %}
-                        <form method="POST" action="{% url 'archive_event' event.id %}" class="inline">
-                            {% csrf_token %}
-                            <button type="submit" class="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition text-sm" title="Archive event">Archive</button>
-                        </form>
-                        {% endif %}
-                        <a href="{% url 'export_single_event_ics' event.id %}" class="px-3 py-1.5 rounded-lg bg-teal-100 dark:bg-teal-800 text-teal-800 dark:text-teal-200 font-medium hover:bg-teal-200 dark:hover:bg-teal-700 transition text-sm" title="Add to calendar">📅 .ics</a>
-                        {% if event.event_type == 'birthday' or event.event_type == 'anniversary' %}
-                        <form method="POST" action="{% url 'toggle_recurring' event.id %}" class="inline">
-                            {% csrf_token %}
-                            <button type="submit" class="px-3 py-1.5 rounded-lg bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 font-medium hover:bg-blue-200 dark:hover:bg-blue-700 transition text-sm">
-                                {% if event.is_recurring %}Disable{% else %}Enable{% endif %} Recurring
-                            </button>
-                        </form>
-                        {% endif %}
-                    </div>
+                    <a href="{% url 'event_delete' event.id %}" class="evt-act evt-act-del" title="Delete" onclick="return confirm('Delete {{ event.name|escapejs }}?')">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </a>
                 </div>
             </div>
         </div>
@@ -220,118 +196,346 @@
     </div>
 
     {% if is_paginated %}
-    <nav class="mt-8 flex justify-center" aria-label="Pagination">
-        <div class="flex items-center space-x-1">
-            {% if page_obj.has_previous %}
-            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" class="px-3 py-1.5 rounded-md bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-gray-700 dark:text-gray-200 text-sm" aria-label="Previous page">
-                &laquo; Prev
-            </a>
+    <nav class="evt-pagination" aria-label="Pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" class="evt-page-btn">&laquo; Prev</a>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <span class="evt-page-btn active" aria-current="page">{{ num }}</span>
+            {% elif num == 1 or num == page_obj.paginator.num_pages or num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+            <a href="?page={{ num }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" class="evt-page-btn">{{ num }}</a>
+            {% elif num == 2 or num == page_obj.paginator.num_pages|add:"-1" %}
+            <span class="evt-page-ellipsis">&hellip;</span>
             {% endif %}
-
-            {% for num in page_obj.paginator.page_range %}
-                {% if page_obj.number == num %}
-                <span class="px-3 py-1.5 rounded-md bg-purple-600 text-white text-sm" aria-current="page">{{ num }}</span>
-                {% elif num == 1 or num == page_obj.paginator.num_pages or num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
-                <a href="?page={{ num }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" class="px-3 py-1.5 rounded-md bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-gray-700 dark:text-gray-200 text-sm">
-                    {{ num }}
-                </a>
-                {% elif num == 2 or num == page_obj.paginator.num_pages|add:"-1" %}
-                <span class="px-1 text-gray-400" aria-hidden="true">&hellip;</span>
-                {% endif %}
-            {% endfor %}
-
-            {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" class="px-3 py-1.5 rounded-md bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-gray-700 dark:text-gray-200 text-sm" aria-label="Next page">
-                Next &raquo;
-            </a>
-            {% endif %}
-        </div>
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" class="evt-page-btn">Next &raquo;</a>
+        {% endif %}
     </nav>
     {% endif %}
 
     {% else %}
-    <!-- Empty state with illustration -->
-    <div class="flex flex-col items-center justify-center p-12 card bg-white dark:bg-gray-800 rounded-2xl">
-        <div class="w-40 h-40 mb-6 flex items-center justify-center bg-purple-100 dark:bg-purple-900/30 rounded-full">
-            <svg class="w-20 h-20 text-purple-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 4l-2 2m16-2l2 2M4 21h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
+    <!-- Empty state -->
+    <div class="evt-empty">
+        <div class="evt-empty-icon">
+            <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
         </div>
-        <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">No Events Added Yet</h3>
-        <p class="text-gray-700 dark:text-gray-300 text-center mb-6">Start by creating your first special occasion to remember</p>
-        <a href="{% url 'event_create' %}#event_create" class="group relative inline-flex items-center justify-center px-6 py-3 rounded-xl overflow-hidden bg-gradient-to-br from-purple-600 to-pink-600 text-white font-medium shadow-lg hover:shadow-xl transition duration-300 ease-out hover:-translate-y-1">
-            <span class="relative z-20 flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Create Your First Event
-            </span>
-            <span class="absolute inset-0 bg-gradient-to-br from-purple-700 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out"></span>
+        <h3 class="evt-empty-title">No Events Yet</h3>
+        <p class="evt-empty-desc">Create your first event to get started</p>
+        <a href="{% url 'event_create' %}" class="evt-add-btn" style="margin-top:1rem;">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Create Event
         </a>
     </div>
     {% endif %}
 </div>
 
+<style>
+.evt-page { max-width:860px; margin:0 auto; position:relative; }
+
+/* ── Floating sparkles (light-only) ── */
+.evt-sparkles { position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:0; }
+body.dark-mode .evt-sparkles { opacity: 0.3; }
+.evt-sparkle {
+    position:absolute; width:6px; height:6px; border-radius:50%;
+    background:radial-gradient(circle, rgba(139,92,246,0.6), transparent);
+    animation: sparkleFloat 8s ease-in-out infinite;
+}
+.evt-sparkle:nth-child(1){ top:5%; left:8%; animation-delay:0s; animation-duration:7s; }
+.evt-sparkle:nth-child(2){ top:15%; right:12%; animation-delay:-2s; animation-duration:9s; width:4px; height:4px; background:radial-gradient(circle, rgba(236,72,153,0.5), transparent); }
+.evt-sparkle:nth-child(3){ top:45%; left:3%; animation-delay:-4s; animation-duration:11s; width:5px; height:5px; background:radial-gradient(circle, rgba(59,130,246,0.5), transparent); }
+.evt-sparkle:nth-child(4){ bottom:20%; right:5%; animation-delay:-1s; animation-duration:8s; background:radial-gradient(circle, rgba(245,158,11,0.5), transparent); }
+.evt-sparkle:nth-child(5){ bottom:40%; left:15%; animation-delay:-3s; animation-duration:10s; width:4px; height:4px; }
+.evt-sparkle:nth-child(6){ top:70%; right:20%; animation-delay:-5s; animation-duration:6s; width:3px; height:3px; background:radial-gradient(circle, rgba(34,197,94,0.5), transparent); }
+@keyframes sparkleFloat {
+    0%,100% { transform:translate(0,0) scale(1); opacity:0.3; }
+    25% { transform:translate(12px,-18px) scale(1.5); opacity:0.8; }
+    50% { transform:translate(-8px,10px) scale(0.8); opacity:0.5; }
+    75% { transform:translate(15px,5px) scale(1.3); opacity:0.9; }
+}
+
+/* ── Header ── */
+.evt-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem; position:relative; z-index:1; animation: evtFadeSlide 0.5s ease-out; }
+.evt-title { font-size:1.75rem; font-weight:800; color:#1e1b4b; background:linear-gradient(135deg,#1e1b4b,#6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+body.dark-mode .evt-title { background:linear-gradient(135deg,#c7d2fe,#a5b4fc); -webkit-background-clip:text; background-clip:text; }
+.evt-back { font-size:0.8rem; color:#8b5cf6; text-decoration:none; }
+.evt-back:hover { text-decoration:underline; }
+.evt-add-btn {
+    display:inline-flex; align-items:center; gap:6px; padding:10px 20px; border-radius:12px;
+    background:linear-gradient(135deg,#6366f1,#8b5cf6,#a855f7); background-size:200% 200%; color:#fff; font-weight:600; font-size:0.875rem;
+    text-decoration:none; transition:all 0.3s; box-shadow:0 4px 16px rgba(99,102,241,0.3); border:none; cursor:pointer;
+    animation: btnGradient 4s ease infinite;
+}
+.evt-add-btn:hover { transform:translateY(-2px) scale(1.02); box-shadow:0 8px 28px rgba(99,102,241,0.4); }
+@keyframes btnGradient { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+
+/* ── Stats Bar - animated gradient border ── */
+.evt-stats {
+    display:flex; align-items:center; justify-content:center; gap:1.5rem;
+    padding:1rem 1.5rem; border-radius:14px; margin-bottom:1.25rem; position:relative; z-index:1;
+    background:var(--card-bg-light); border:1px solid transparent;
+    background-clip:padding-box;
+    animation: evtFadeSlide 0.6s ease-out;
+}
+.evt-stats::before {
+    content:''; position:absolute; inset:-2px; border-radius:16px; z-index:-1;
+    background:linear-gradient(135deg,#6366f1,#ec4899,#f59e0b,#3b82f6,#6366f1); background-size:300% 300%;
+    animation:gradientBorder 6s linear infinite; opacity:0.5;
+}
+.evt-stats::after {
+    content:''; position:absolute; inset:0; border-radius:14px;
+    background:var(--card-bg-light); z-index:-1;
+}
+body.dark-mode .evt-stats { background:var(--card-bg-dark); }
+body.dark-mode .evt-stats::after { background:var(--card-bg-dark); }
+body.dark-mode .evt-stats::before { opacity:0.4; }
+@keyframes gradientBorder { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+.evt-stat { text-align:center; }
+.evt-stat-link { text-decoration:none; display:block; transition:transform 0.2s; }
+.evt-stat-link:hover { transform:scale(1.08); }
+.evt-stat-num { display:block; font-size:1.25rem; font-weight:800; transition:transform 0.3s; }
+.evt-stat:hover .evt-stat-num { transform:scale(1.15); }
+.evt-stat-num.purple { color:#6366f1; }
+.evt-stat-num.pink { color:#ec4899; }
+.evt-stat-num.blue { color:#3b82f6; }
+.evt-stat-num.amber { color:#f59e0b; }
+.evt-stat-num.muted { color:#9ca3af; }
+body.dark-mode .evt-stat-num.purple { color:#a5b4fc; }
+body.dark-mode .evt-stat-num.pink { color:#f9a8d4; }
+body.dark-mode .evt-stat-num.blue { color:#93c5fd; }
+body.dark-mode .evt-stat-num.amber { color:#fcd34d; }
+.evt-stat-lbl { font-size:0.65rem; color:#9ca3af; text-transform:uppercase; letter-spacing:0.4px; white-space:nowrap; }
+.evt-stat-div { width:1px; height:28px; background:linear-gradient(180deg,transparent,#d1d5db,transparent); }
+body.dark-mode .evt-stat-div { background:linear-gradient(180deg,transparent,#475569,transparent); }
+@media(max-width:480px) { .evt-stats { gap:0.8rem; padding:0.75rem; } .evt-stat-num { font-size:1rem; } }
+
+/* ── Toolbar ── */
+.evt-toolbar { display:flex; align-items:center; gap:8px; margin-bottom:1.25rem; flex-wrap:wrap; position:relative; z-index:1; animation: evtFadeSlide 0.7s ease-out; }
+.evt-search-wrap { position:relative; flex:1; min-width:120px; max-width:200px; }
+.evt-search-icon { width:16px; height:16px; position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#a78bfa; pointer-events:none; transition:color 0.3s; }
+.evt-search-wrap:focus-within .evt-search-icon { color:#6366f1; }
+.evt-search {
+    width:100%; padding:8px 10px 8px 32px; border-radius:10px; font-size:0.8rem;
+    border:1.5px solid #d1d5db; background:var(--card-bg-light); color:#1f2937;
+    outline:none; transition:all 0.3s;
+}
+body.dark-mode .evt-search { background:var(--card-bg-dark); border-color:#475569; color:#e2e8f0; }
+.evt-search:focus { border-color:#8b5cf6; box-shadow:0 0 0 3px rgba(139,92,246,0.12); }
+.evt-sort {
+    padding:8px 28px 8px 10px; border-radius:10px; font-size:0.8rem;
+    border:1.5px solid #d1d5db; background:var(--card-bg-light); color:#1f2937;
+    outline:none; appearance:none; cursor:pointer; transition:all 0.3s;
+    background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7280' viewBox='0 0 24 24'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+    background-repeat:no-repeat; background-position:right 8px center;
+}
+.evt-sort:focus { border-color:#8b5cf6; box-shadow:0 0 0 3px rgba(139,92,246,0.12); }
+body.dark-mode .evt-sort { background-color:rgba(22,33,55,0.92); border-color:#475569; color:#e2e8f0; background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%239ca3af' viewBox='0 0 24 24'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e"); }
+.evt-toolbar-actions { display:flex; gap:4px; margin-left:auto; flex-wrap:wrap; }
+.evt-tool-btn {
+    display:inline-flex; align-items:center; gap:4px; padding:7px 10px; border-radius:8px; font-size:0.75rem; font-weight:500;
+    color:#6b7280; text-decoration:none; transition:all 0.25s; border:1px solid transparent;
+}
+body.dark-mode .evt-tool-btn { color:#94a3b8; }
+.evt-tool-btn:hover { background:rgba(139,92,246,0.08); color:#6366f1; border-color:rgba(139,92,246,0.12); transform:translateY(-1px); }
+body.dark-mode .evt-tool-btn:hover { background:rgba(139,92,246,0.1); color:#a5b4fc; }
+.evt-tool-label { display:none; }
+@media(min-width:640px) { .evt-tool-label { display:inline; } }
+
+/* ── Event Grid ── */
+.evt-grid { display:grid; grid-template-columns:1fr; gap:0.75rem; position:relative; z-index:1; }
+@media(min-width:640px) { .evt-grid { grid-template-columns:repeat(2,1fr); } }
+
+/* ── Card with animated border + shimmer ── */
+.evt-card-wrap {
+    opacity:0; transform:translateY(20px);
+    animation: cardEntrance 0.5s ease-out forwards;
+}
+.evt-card {
+    padding:1.25rem; border-radius:14px; position:relative; overflow:hidden;
+    transition:transform 0.3s cubic-bezier(.4,0,.2,1), box-shadow 0.3s;
+    background:var(--card-bg-light); border:1px solid rgba(139,92,246,0.08);
+}
+body.dark-mode .evt-card { background:var(--card-bg-dark); border-color:rgba(139,92,246,0.12); }
+
+/* Shimmer on hover */
+.evt-card::before {
+    content:''; position:absolute; top:0; left:-100%; width:60%; height:100%;
+    background:linear-gradient(90deg, transparent, rgba(139,92,246,0.06), transparent);
+    transition:left 0.6s ease; z-index:0; pointer-events:none;
+}
+.evt-card:hover::before { left:120%; }
+
+/* Gradient bottom accent */
+.evt-card::after {
+    content:''; position:absolute; bottom:0; left:0; right:0; height:3px;
+    background:linear-gradient(90deg,#6366f1,#ec4899,#f59e0b); background-size:200% 100%;
+    opacity:0; transition:opacity 0.3s; animation:gradientBorder 4s linear infinite;
+}
+.evt-card:hover::after { opacity:1; }
+
+.evt-card:hover { transform:translateY(-4px); box-shadow:0 12px 32px rgba(99,102,241,0.15); }
+body.dark-mode .evt-card:hover { box-shadow:0 12px 32px rgba(0,0,0,0.4); }
+
+@keyframes cardEntrance {
+    to { opacity:1; transform:translateY(0); }
+}
+
+/* ── Card content ── */
+.evt-card-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.5rem; position:relative; z-index:1; }
+.evt-badges { display:flex; gap:4px; flex-wrap:wrap; }
+.evt-badge { display:inline-block; padding:2px 8px; border-radius:100px; font-size:0.65rem; font-weight:600; transition:transform 0.2s; }
+.evt-badge:hover { transform:scale(1.08); }
+.evt-badge-type { background:rgba(99,102,241,0.1); color:#6366f1; }
+body.dark-mode .evt-badge-type { background:rgba(99,102,241,0.18); color:#a5b4fc; }
+.evt-badge-label { background:rgba(236,72,153,0.1); color:#ec4899; }
+body.dark-mode .evt-badge-label { background:rgba(236,72,153,0.18); color:#f9a8d4; }
+.evt-badge-recurring { background:rgba(59,130,246,0.1); color:#3b82f6; }
+body.dark-mode .evt-badge-recurring { background:rgba(59,130,246,0.18); color:#93c5fd; }
+
+/* Pulsing countdown for "Today" events */
+.evt-countdown-today { animation:countdownPulse 2s ease-in-out infinite; }
+@keyframes countdownPulse { 0%,100%{transform:scale(1);box-shadow:none} 50%{transform:scale(1.08);box-shadow:0 0 12px rgba(22,163,74,0.3)} }
+
+.evt-card-name { font-size:1.1rem; font-weight:700; color:#1f2937; margin-bottom:2px; position:relative; z-index:1; }
+body.dark-mode .evt-card-name { color:#f1f5f9; }
+.evt-card-date { font-size:0.8rem; color:#6b7280; margin-bottom:0.4rem; position:relative; z-index:1; }
+body.dark-mode .evt-card-date { color:#94a3b8; }
+.evt-card-msg { font-size:0.78rem; color:#9ca3af; font-style:italic; margin-bottom:0.4rem; line-height:1.5; position:relative; z-index:1; }
+.evt-card-remind { display:flex; align-items:center; gap:4px; font-size:0.7rem; color:#a78bfa; margin-bottom:0.5rem; position:relative; z-index:1; }
+body.dark-mode .evt-card-remind { color:#c4b5fd; }
+
+/* Media */
+.evt-card-media { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:0.5rem; position:relative; z-index:1; }
+.evt-media-thumb { width:40px; height:40px; object-fit:cover; border-radius:8px; transition:transform 0.2s; }
+.evt-media-thumb:hover { transform:scale(1.15) rotate(2deg); }
+.evt-media-audio { width:100%; max-width:180px; height:28px; }
+
+/* Actions */
+.evt-card-actions { display:flex; gap:4px; flex-wrap:wrap; padding-top:0.5rem; border-top:1px solid rgba(139,92,246,0.06); position:relative; z-index:1; }
+body.dark-mode .evt-card-actions { border-top-color:rgba(139,92,246,0.1); }
+.evt-act {
+    display:inline-flex; align-items:center; gap:3px; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:500;
+    text-decoration:none; transition:all 0.2s; border:none; cursor:pointer; background:transparent;
+}
+.evt-act:hover { transform:translateY(-1px); }
+.evt-act-edit { color:#ca8a04; } .evt-act-edit:hover { background:rgba(202,138,4,0.1); }
+.evt-act-card { color:#16a34a; } .evt-act-card:hover { background:rgba(22,163,74,0.1); }
+.evt-act-dup { color:#6366f1; } .evt-act-dup:hover { background:rgba(99,102,241,0.1); }
+.evt-act-archive { color:#6b7280; } .evt-act-archive:hover { background:rgba(107,114,128,0.1); }
+.evt-act-restore { color:#10b981; } .evt-act-restore:hover { background:rgba(16,185,129,0.1); }
+.evt-act-ics { color:#0d9488; } .evt-act-ics:hover { background:rgba(13,148,136,0.1); }
+.evt-act-recur { color:#3b82f6; } .evt-act-recur:hover { background:rgba(59,130,246,0.1); }
+.evt-act-del { color:#ef4444; margin-left:auto; } .evt-act-del:hover { background:rgba(239,68,68,0.1); }
+body.dark-mode .evt-act-edit { color:#facc15; }
+body.dark-mode .evt-act-card { color:#4ade80; }
+body.dark-mode .evt-act-dup { color:#a5b4fc; }
+body.dark-mode .evt-act-archive { color:#94a3b8; }
+body.dark-mode .evt-act-restore { color:#34d399; }
+body.dark-mode .evt-act-ics { color:#2dd4bf; }
+body.dark-mode .evt-act-recur { color:#93c5fd; }
+body.dark-mode .evt-act-del { color:#f87171; }
+
+/* ── Pagination ── */
+.evt-pagination { display:flex; justify-content:center; gap:4px; margin-top:2rem; position:relative; z-index:1; }
+.evt-page-btn { padding:6px 12px; border-radius:8px; font-size:0.8rem; text-decoration:none; color:#6b7280; background:var(--card-bg-light); border:1px solid #e5e7eb; transition:all 0.2s; }
+body.dark-mode .evt-page-btn { background:var(--card-bg-dark); border-color:#334155; color:#94a3b8; }
+.evt-page-btn:hover { border-color:#8b5cf6; color:#8b5cf6; transform:translateY(-1px); }
+.evt-page-btn.active { background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border-color:transparent; box-shadow:0 2px 10px rgba(99,102,241,0.3); }
+.evt-page-ellipsis { padding:6px 4px; color:#9ca3af; }
+
+/* ── Empty state ── */
+.evt-empty { text-align:center; padding:4rem 2rem; position:relative; z-index:1; animation: evtFadeSlide 0.6s ease-out; }
+.evt-empty-icon { width:80px; height:80px; margin:0 auto 1.5rem; display:flex; align-items:center; justify-content:center; border-radius:50%; background:rgba(99,102,241,0.08); color:#6366f1; animation:emptyPulse 3s ease-in-out infinite; }
+body.dark-mode .evt-empty-icon { background:rgba(99,102,241,0.12); color:#a5b4fc; }
+@keyframes emptyPulse { 0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,0.15)} 50%{box-shadow:0 0 0 16px rgba(99,102,241,0)} }
+.evt-empty-title { font-size:1.25rem; font-weight:700; color:#1f2937; margin-bottom:0.5rem; }
+body.dark-mode .evt-empty-title { color:#f1f5f9; }
+.evt-empty-desc { color:#6b7280; font-size:0.9rem; }
+body.dark-mode .evt-empty-desc { color:#94a3b8; }
+
+/* ── Shared entrance animation ── */
+@keyframes evtFadeSlide { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── Reduced motion ── */
+@media(prefers-reduced-motion:reduce) {
+    .evt-card-wrap, .evt-header, .evt-stats, .evt-toolbar, .evt-empty { animation:none; opacity:1; transform:none; }
+    .evt-sparkle, .evt-stats::before, .evt-card::before, .evt-card::after, .evt-add-btn { animation:none; }
+}
+</style>
+
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // Set current option in sort dropdown
-        const urlParams = new URLSearchParams(window.location.search);
-        const sortParam = urlParams.get('sort');
-        if (sortParam) {
-            const sortSelect = document.getElementById('sort-events');
-            const options = Array.from(sortSelect.options);
-            const option_to_select = options.find(option => option.value.includes(`sort=${sortParam}`));
-            if (option_to_select) {
-                sortSelect.value = option_to_select.value;
-            }
-        }
-
-        // Client-side search filter
-        const searchInput = document.getElementById('event-search');
-        if (searchInput) {
-            searchInput.addEventListener('input', (e) => {
-                const query = e.target.value.toLowerCase();
-                document.querySelectorAll('[data-event-card]').forEach(card => {
-                    const text = card.textContent.toLowerCase();
-                    card.closest('.card').parentElement.style.display = text.includes(query) ? '' : 'none';
-                });
-            });
-        }
-
-        // Countdown badges — inject "X days" badges into each card
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        document.querySelectorAll('[data-event-date]').forEach(card => {
-            const dateStr = card.getAttribute('data-event-date');
-            const eventDate = new Date(dateStr + 'T00:00:00');
-            const diff = Math.round((eventDate - today) / (1000 * 60 * 60 * 24));
-
-            let badgeText, badgeColor;
-            if (diff === 0) {
-                badgeText = '🎉 Today!';
-                badgeColor = 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300';
-            } else if (diff === 1) {
-                badgeText = '⏰ Tomorrow';
-                badgeColor = 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300';
-            } else if (diff <= 7) {
-                badgeText = `📅 ${diff} days`;
-                badgeColor = 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300';
-            } else if (diff <= 30) {
-                badgeText = `${diff} days`;
-                badgeColor = 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300';
-            } else {
-                badgeText = `${diff} days`;
-                badgeColor = 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300';
-            }
-
-            const badgeRow = card.querySelector('.flex.items-center.gap-3.mb-2');
-            if (badgeRow) {
-                const badge = document.createElement('span');
-                badge.className = `ml-auto inline-block px-2 py-1 rounded-full text-xs font-semibold ${badgeColor}`;
-                badge.textContent = badgeText;
-                badgeRow.appendChild(badge);
-            }
-        });
+document.addEventListener('DOMContentLoaded', () => {
+    // ── Stagger entrance animations ──
+    document.querySelectorAll('.evt-card-wrap').forEach((wrap, i) => {
+        wrap.style.animationDelay = (i * 0.08) + 's';
     });
+
+    // Sort dropdown
+    const urlParams = new URLSearchParams(window.location.search);
+    const sortParam = urlParams.get('sort');
+    if (sortParam) {
+        const sortSelect = document.getElementById('sort-events');
+        const opt = Array.from(sortSelect.options).find(o => o.value.includes('sort=' + sortParam));
+        if (opt) sortSelect.value = opt.value;
+    }
+
+    // Search with smooth hide/show
+    const searchInput = document.getElementById('event-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', e => {
+            const q = e.target.value.toLowerCase();
+            document.querySelectorAll('[data-searchable]').forEach(wrap => {
+                const match = wrap.textContent.toLowerCase().includes(q);
+                wrap.style.display = match ? '' : 'none';
+                if (match) { wrap.style.opacity = '1'; wrap.style.transform = 'translateY(0)'; }
+            });
+        });
+    }
+
+    // ── Countdown badges with "Today" pulse ──
+    const today = new Date(); today.setHours(0,0,0,0);
+    document.querySelectorAll('[data-event-date]').forEach(card => {
+        const d = new Date(card.getAttribute('data-event-date') + 'T00:00:00');
+        const diff = Math.round((d - today) / 864e5);
+        let text, cls;
+        if (diff === 0) { text = 'Today!'; cls = 'bg-green'; }
+        else if (diff === 1) { text = 'Tomorrow'; cls = 'bg-orange'; }
+        else if (diff <= 7) { text = diff + 'd'; cls = 'bg-yellow'; }
+        else if (diff <= 30) { text = diff + 'd'; cls = 'bg-blue'; }
+        else { text = diff + 'd'; cls = 'bg-gray'; }
+
+        const colors = {
+            'bg-green': 'background:rgba(22,163,74,0.12);color:#16a34a;',
+            'bg-orange': 'background:rgba(234,88,12,0.12);color:#ea580c;',
+            'bg-yellow': 'background:rgba(202,138,4,0.12);color:#ca8a04;',
+            'bg-blue': 'background:rgba(59,130,246,0.12);color:#3b82f6;',
+            'bg-gray': 'background:rgba(107,114,128,0.08);color:#6b7280;',
+        };
+
+        const top = card.querySelector('.evt-card-top');
+        if (top) {
+            const badge = document.createElement('span');
+            badge.style.cssText = colors[cls] + 'padding:2px 10px;border-radius:100px;font-size:0.65rem;font-weight:600;white-space:nowrap;transition:transform 0.2s;';
+            badge.textContent = text;
+            if (diff === 0) badge.classList.add('evt-countdown-today');
+            top.appendChild(badge);
+        }
+    });
+
+    // ── Stat number count-up animation ──
+    document.querySelectorAll('.evt-stat-num').forEach(el => {
+        const val = parseInt(el.textContent);
+        if (!isNaN(val) && val > 0) {
+            let current = 0;
+            const step = Math.max(1, Math.ceil(val / 20));
+            const interval = setInterval(() => {
+                current = Math.min(current + step, val);
+                el.textContent = current;
+                if (current >= val) clearInterval(interval);
+            }, 40);
+        }
+    });
+});
 </script>
 {% endblock %}

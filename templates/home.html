@@ -1,136 +1,230 @@
 {% extends 'base.html' %}
-{% block title %}Home - Never Miss a Celebration{% endblock %}
-{% block header_class %}p-4{% endblock %}
-{% block header_content %}
-<h1 class="text-3xl font-bold flex items-center gap-3 text-white">
-    <span class="text-yellow-400" aria-hidden="true">🎉</span> 
-    <span class="bg-gradient-to-r from-yellow-200 to-pink-200 bg-clip-text text-transparent">
-        Welcome to Reminder
-    </span>
-</h1>
-{% endblock %}
+{% block title %}Reminder | Never Miss a Celebration{% endblock %}
 
 {% block content %}
-<div class="text-center max-w-6xl mx-auto py-8">
-    <!-- Hero Section with improved animations -->
-    <div class="hero-section mb-12 relative">
-        <div class="absolute inset-0 bg-gradient-to-r from-purple-400/20 via-pink-400/20 to-purple-400/20 rounded-3xl blur-3xl"></div>
-        <div class="relative bg-white/10 dark:bg-slate-800/20 backdrop-blur-sm rounded-3xl p-8 border border-purple-200/30 dark:border-purple-500/30 shadow-2xl">
-            <h2 class="text-5xl font-bold mb-6 leading-tight">
-                <span class="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-clip-text text-transparent">Never Miss a</span> <br>
-                <span class="text-6xl bg-gradient-to-r from-pink-600 via-purple-600 to-pink-600 bg-clip-text text-transparent font-black drop-shadow-lg">Celebration!</span>
-            </h2>
-            <p class="mb-8 text-xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
-                Transform your special moments into unforgettable experiences with our intuitive reminder app. 
-                Create beautiful greeting cards, set smart notifications, and celebrate every milestone with style.
-            </p>
-            
-            <!-- Enhanced CTA buttons -->
-            <div class="flex justify-center gap-6 mb-8">
-                <a href="{% url 'signup' %}" class="group relative px-8 py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold text-lg shadow-2xl hover:shadow-purple-400/50 hover:scale-105 transition-all duration-300 overflow-hidden" aria-label="Sign up for Reminder">
-                    <span class="absolute inset-0 bg-gradient-to-r from-pink-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-                    <span class="relative z-10 flex items-center gap-2">
-                        ✨ Get Started Free
-                        <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                        </svg>
-                    </span>
-                </a>
-                <a href="{% url 'login' %}" class="group relative px-8 py-4 rounded-2xl border-2 border-purple-500 text-purple-600 dark:text-purple-400 font-semibold text-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 hover:scale-105 transition-all duration-300" aria-label="Log in to Reminder">
-                    <span class="flex items-center gap-2">
-                        🔑 Sign In
-                        <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
-                        </svg>
-                    </span>
-                </a>
-            </div>
-            
-            <!-- App highlights -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-                <div class="text-center">
-                    <div class="text-3xl font-bold text-purple-600 dark:text-purple-400" aria-hidden="true">🎂</div>
-                    <div class="text-gray-600 dark:text-gray-400">Birthdays & Anniversaries</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-3xl font-bold text-pink-600 dark:text-pink-400" aria-hidden="true">📅</div>
-                    <div class="text-gray-600 dark:text-gray-400">Smart Reminders</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400" aria-hidden="true">💌</div>
-                    <div class="text-gray-600 dark:text-gray-400">Greeting Cards</div>
-                </div>
-            </div>
+<div class="landing">
+    <!-- Hero -->
+    <section class="hero-section">
+        <div class="hero-badge">Free & Open Source</div>
+        <h1 class="hero-title">
+            Never miss a<br>
+            <span class="hero-highlight">special moment</span>
+        </h1>
+        <p class="hero-subtitle">
+            Track birthdays, anniversaries & celebrations. Get smart email reminders,
+            create beautiful greeting cards, and keep every memory alive.
+        </p>
+        <div class="hero-actions">
+            <a href="{% url 'signup' %}" class="hero-btn-primary">
+                ✨ Get Started Free
+                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                </svg>
+            </a>
+            <a href="{% url 'login' %}" class="hero-btn-secondary">🔑 Sign In</a>
         </div>
-    </div>
+    </section>
 
-    <!-- Why Choose Us Section with enhanced styling -->
-    <section class="max-w-6xl mx-auto mb-16">
-        <h3 class="text-3xl font-bold text-center mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Why Choose Us?</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="card p-8 border-l-4 border-purple-500 bg-gradient-to-r from-white/95 to-purple-50/50 dark:from-slate-800/80 dark:to-slate-700/50 backdrop-blur-sm transition-all duration-300 hover:transform hover:scale-105 hover:shadow-xl relative overflow-hidden group">
-                <div class="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div class="relative z-10">
-                    <div class="text-4xl mb-4">🎯</div>
-                    <h4 class="text-xl font-semibold text-gray-800 dark:text-white mb-3">Never Miss Important Dates</h4>
-                    <p class="text-gray-600 dark:text-gray-300">Smart notifications ensure you're always prepared for birthdays, anniversaries, and special celebrations.</p>
+    <!-- Stats bar -->
+    <section class="stats-bar">
+        <div class="stat-item">
+            <span class="stat-num">{{ total_users|default:"0" }}</span>
+            <span class="stat-label">Users</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <span class="stat-num">{{ total_events|default:"0" }}</span>
+            <span class="stat-label">Events Tracked</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <span class="stat-num">100%</span>
+            <span class="stat-label">Free Forever</span>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features-section">
+        <h2 class="section-title">Everything you need</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon fi-purple">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                 </div>
+                <h3 class="feature-title">Smart Reminders</h3>
+                <p class="feature-desc">Set custom reminder days for each event. Get notified 1 day, 7 days, or however early you want.</p>
             </div>
-            <div class="card p-8 border-l-4 border-pink-500 bg-gradient-to-r from-white/95 to-pink-50/50 dark:from-slate-800/80 dark:to-slate-700/50 backdrop-blur-sm transition-all duration-300 hover:transform hover:scale-105 hover:shadow-xl relative overflow-hidden group">
-                <div class="absolute inset-0 bg-gradient-to-r from-pink-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div class="relative z-10">
-                    <div class="text-4xl mb-4">🎨</div>
-                    <h4 class="text-xl font-semibold text-gray-800 dark:text-white mb-3">Beautiful Greeting Cards</h4>
-                    <p class="text-gray-600 dark:text-gray-300">Create personalized cards with photos, audio messages, and custom themes for every occasion.</p>
+            <div class="feature-card">
+                <div class="feature-icon fi-pink">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
                 </div>
+                <h3 class="feature-title">Greeting Cards</h3>
+                <p class="feature-desc">Create personalized cards with photos, audio messages, and beautiful themes. Share them via unique links.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon fi-blue">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                </div>
+                <h3 class="feature-title">Analytics Dashboard</h3>
+                <p class="feature-desc">See charts of your events by type, track reminder success rates, and download reports as CSV.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon fi-green">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                </div>
+                <h3 class="feature-title">Bulk Import & Export</h3>
+                <p class="feature-desc">Import events from CSV, export to .ics calendar format. Manage hundreds of events at once.</p>
             </div>
         </div>
     </section>
 
-    <!-- Features Section with enhanced cards and animations -->
-    <section class="max-w-7xl mx-auto">
-        <h3 class="text-3xl font-bold text-center mb-12 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Powerful Features</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <!-- Feature card 1 - Enhanced -->
-            <div class="group card p-8 bg-gradient-to-br from-white/95 to-purple-50/30 dark:from-slate-800/80 dark:to-slate-700/50 backdrop-blur-sm hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 relative overflow-hidden border border-purple-200/50 dark:border-purple-500/30">
-                <div class="absolute -inset-1 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 rounded-lg blur-sm opacity-0 group-hover:opacity-30 transition duration-500"></div>
-                <div class="relative">
-                    <div class="text-5xl mb-6 group-hover:scale-110 transition-all duration-300" aria-hidden="true">📅</div>
-                    <h4 class="text-xl font-bold text-gray-800 dark:text-white mb-4 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">Smart Event Tracking</h4>
-                    <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">Effortlessly manage birthdays, anniversaries, and special occasions with intelligent recurring reminders.</p>
-                </div>
-            </div>
-
-            <!-- Feature card 2 - Enhanced -->
-            <div class="group card p-8 bg-gradient-to-br from-white/95 to-pink-50/30 dark:from-slate-800/80 dark:to-slate-700/50 backdrop-blur-sm hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 relative overflow-hidden border border-pink-200/50 dark:border-pink-500/30">
-                <div class="absolute -inset-1 bg-gradient-to-r from-pink-600 via-purple-600 to-pink-600 rounded-lg blur-sm opacity-0 group-hover:opacity-30 transition duration-500"></div>
-                <div class="relative">
-                    <div class="text-5xl mb-6 group-hover:scale-110 transition-all duration-300" aria-hidden="true">🔔</div>
-                    <h4 class="text-xl font-bold text-gray-800 dark:text-white mb-4 group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors">Custom Notifications</h4>
-                    <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">Get personalized alerts days before events, ensuring you're always prepared to celebrate.</p>
-                </div>
-            </div>
-
-            <!-- Feature card 3 - Enhanced -->
-            <div class="group card p-8 bg-gradient-to-br from-white/95 to-indigo-50/30 dark:from-slate-800/80 dark:to-slate-700/50 backdrop-blur-sm hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 relative overflow-hidden border border-indigo-200/50 dark:border-indigo-500/30">
-                <div class="absolute -inset-1 bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-600 rounded-lg blur-sm opacity-0 group-hover:opacity-30 transition duration-500"></div>
-                <div class="relative">
-                    <div class="text-5xl mb-6 group-hover:scale-110 transition-all duration-300" aria-hidden="true">🎨</div>
-                    <h4 class="text-xl font-bold text-gray-800 dark:text-white mb-4 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Personalized Cards</h4>
-                    <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">Create stunning greeting cards with photos, audio messages, and beautiful themes for every occasion.</p>
-                </div>
-            </div>
-
-            <!-- Feature card 4 - Enhanced -->
-            <div class="group card p-8 bg-gradient-to-br from-white/95 to-green-50/30 dark:from-slate-800/80 dark:to-slate-700/50 backdrop-blur-sm hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 relative overflow-hidden border border-green-200/50 dark:border-green-500/30">
-                <div class="absolute -inset-1 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 rounded-lg blur-sm opacity-0 group-hover:opacity-30 transition duration-500"></div>
-                <div class="relative">
-                    <div class="text-5xl mb-6 group-hover:scale-110 transition-all duration-300" aria-hidden="true">📱</div>
-                    <h4 class="text-xl font-bold text-gray-800 dark:text-white mb-4 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">Easy Sharing</h4>
-                    <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">Share your beautiful greeting cards instantly via email, social media, or direct links with loved ones.</p>
-                </div>
-            </div>
-        </div>
+    <!-- CTA -->
+    <section class="cta-section">
+        <h2 class="cta-title">Ready to start remembering?</h2>
+        <p class="cta-subtitle">Join now - it's completely free. No credit card required.</p>
+        <a href="{% url 'signup' %}" class="hero-btn-primary">Create Free Account</a>
     </section>
 </div>
+
+<style>
+    .landing { max-width:800px; margin:0 auto; position:relative; }
+
+    /* ── Hero with entrance ── */
+    .hero-section { text-align:center; padding:3rem 0 2rem; animation:heroSlide 0.6s ease-out; }
+    .hero-badge {
+        display:inline-block; padding:4px 14px; border-radius:100px;
+        font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;
+        color:#6366f1; background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.15);
+        margin-bottom:1.5rem; animation:heroBadgePulse 3s ease-in-out infinite;
+    }
+    body.dark-mode .hero-badge { color:#a5b4fc; background:rgba(99,102,241,0.12); border-color:rgba(99,102,241,0.2); }
+    @keyframes heroBadgePulse { 0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,0.15)} 50%{box-shadow:0 0 0 8px rgba(99,102,241,0)} }
+
+    .hero-title { font-size:clamp(2rem,5vw,3.5rem); font-weight:800; line-height:1.15; color:#1e1b4b; margin-bottom:1.25rem; }
+    body.dark-mode .hero-title { color:#e0e7ff; }
+    .hero-highlight { background:linear-gradient(135deg,#6366f1,#a855f7,#ec4899,#6366f1); background-size:300% 300%; -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; animation:heroGradientText 6s ease infinite; }
+    @keyframes heroGradientText { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+
+    .hero-subtitle { font-size:1.1rem; color:#6b7280; max-width:520px; margin:0 auto 2rem; line-height:1.7; }
+    body.dark-mode .hero-subtitle { color:#94a3b8; }
+    .hero-actions { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+    .hero-btn-primary {
+        display:inline-flex; align-items:center; padding:12px 28px; border-radius:12px;
+        background:linear-gradient(135deg,#6366f1,#8b5cf6,#a855f7); background-size:200% 200%;
+        color:white; font-weight:600; font-size:0.95rem; text-decoration:none; transition:all 0.3s;
+        box-shadow:0 4px 16px rgba(99,102,241,0.25); animation:heroBtnGlow 4s ease infinite;
+    }
+    .hero-btn-primary:hover { transform:translateY(-2px) scale(1.02); box-shadow:0 8px 28px rgba(99,102,241,0.4); }
+    @keyframes heroBtnGlow { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+    .hero-btn-secondary {
+        display:inline-flex; align-items:center; padding:12px 28px; border-radius:12px;
+        border:1.5px solid #d1d5db; color:#4b5563; font-weight:600; font-size:0.95rem;
+        text-decoration:none; transition:all 0.3s;
+    }
+    body.dark-mode .hero-btn-secondary { border-color:#475569; color:#cbd5e1; }
+    .hero-btn-secondary:hover { border-color:#8b5cf6; color:#8b5cf6; transform:translateY(-2px); box-shadow:0 4px 16px rgba(139,92,246,0.1); }
+
+    /* ── Stats bar with animated gradient border ── */
+    .stats-bar {
+        display:flex; align-items:center; justify-content:center; gap:2rem;
+        padding:1.5rem 2rem; border-radius:16px; margin:1.5rem 0 3rem; position:relative;
+        background:var(--card-bg-light); border:1px solid transparent; background-clip:padding-box;
+        animation:heroSlide 0.7s ease-out;
+    }
+    .stats-bar::before {
+        content:''; position:absolute; inset:-2px; border-radius:18px; z-index:-1;
+        background:linear-gradient(135deg,#6366f1,#ec4899,#f59e0b,#3b82f6,#6366f1); background-size:300% 300%;
+        animation:statsGradient 6s linear infinite; opacity:0.4;
+    }
+    .stats-bar::after { content:''; position:absolute; inset:0; border-radius:16px; background:var(--card-bg-light); z-index:-1; }
+    body.dark-mode .stats-bar { background:var(--card-bg-dark); }
+    body.dark-mode .stats-bar::after { background:var(--card-bg-dark); }
+    body.dark-mode .stats-bar::before { opacity:0.3; }
+    @keyframes statsGradient { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+    .stat-item { text-align:center; }
+    .stat-num { display:block; font-size:1.5rem; font-weight:800; color:#6366f1; transition:transform 0.3s; }
+    .stat-item:hover .stat-num { transform:scale(1.12); }
+    body.dark-mode .stat-num { color:#a5b4fc; }
+    .stat-label { font-size:0.75rem; color:#9ca3af; text-transform:uppercase; letter-spacing:0.5px; }
+    .stat-divider { width:1px; height:32px; background:linear-gradient(180deg,transparent,#d1d5db,transparent); }
+    body.dark-mode .stat-divider { background:linear-gradient(180deg,transparent,#475569,transparent); }
+    @media (max-width:480px) { .stats-bar { gap:1rem; padding:1rem; } .stat-num { font-size:1.2rem; } }
+
+    /* ── Features with stagger entrance ── */
+    .features-section { margin-bottom:3rem; }
+    .section-title { text-align:center; font-size:1.5rem; font-weight:800; background:linear-gradient(135deg,#1e1b4b,#6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:2rem; }
+    body.dark-mode .section-title { background:linear-gradient(135deg,#c7d2fe,#a5b4fc); -webkit-background-clip:text; background-clip:text; }
+    .features-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; }
+    @media (max-width:600px) { .features-grid { grid-template-columns:1fr; } }
+    .feature-card {
+        padding:1.5rem; border-radius:16px; position:relative; overflow:hidden;
+        background:var(--card-bg-light); border:1px solid rgba(139,92,246,0.06);
+        transition:all 0.3s cubic-bezier(.4,0,.2,1);
+        opacity:0; transform:translateY(20px); animation:featureIn 0.5s ease-out forwards;
+    }
+    body.dark-mode .feature-card { background:var(--card-bg-dark); border-color:rgba(139,92,246,0.1); }
+
+    /* Shimmer on hover */
+    .feature-card::before { content:''; position:absolute; top:0; left:-100%; width:60%; height:100%; background:linear-gradient(90deg,transparent,rgba(139,92,246,0.06),transparent); transition:left 0.6s ease; pointer-events:none; }
+    .feature-card:hover::before { left:120%; }
+
+    /* Gradient bottom accent */
+    .feature-card::after { content:''; position:absolute; bottom:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#6366f1,#ec4899,#f59e0b); background-size:200% 100%; opacity:0; transition:opacity 0.3s; animation:featureAccent 4s linear infinite; }
+    .feature-card:hover::after { opacity:1; }
+    @keyframes featureAccent { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+
+    .feature-card:hover { transform:translateY(-4px); box-shadow:0 12px 32px rgba(99,102,241,0.12); }
+    body.dark-mode .feature-card:hover { box-shadow:0 12px 32px rgba(0,0,0,0.35); }
+    @keyframes featureIn { to{opacity:1;transform:translateY(0)} }
+
+    .feature-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:0.75rem; color:white; transition:transform 0.3s; position:relative; z-index:1; }
+    .feature-card:hover .feature-icon { transform:scale(1.1) rotate(3deg); }
+    .fi-purple { background:linear-gradient(135deg,#6366f1,#8b5cf6); }
+    .fi-pink { background:linear-gradient(135deg,#ec4899,#f472b6); }
+    .fi-blue { background:linear-gradient(135deg,#3b82f6,#60a5fa); }
+    .fi-green { background:linear-gradient(135deg,#10b981,#34d399); }
+    .feature-title { font-size:1rem; font-weight:700; color:#1f2937; margin-bottom:0.4rem; position:relative; z-index:1; }
+    body.dark-mode .feature-title { color:#f1f5f9; }
+    .feature-desc { font-size:0.85rem; color:#6b7280; line-height:1.6; position:relative; z-index:1; }
+    body.dark-mode .feature-desc { color:#94a3b8; }
+
+    /* ── CTA ── */
+    .cta-section { text-align:center; padding:2rem 1rem 1rem; animation:heroSlide 0.9s ease-out; }
+    .cta-title { font-size:1.5rem; font-weight:800; background:linear-gradient(135deg,#1e1b4b,#6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:0.5rem; }
+    body.dark-mode .cta-title { background:linear-gradient(135deg,#c7d2fe,#a5b4fc); -webkit-background-clip:text; background-clip:text; }
+    .cta-subtitle { color:#6b7280; margin-bottom:1.5rem; }
+    body.dark-mode .cta-subtitle { color:#94a3b8; }
+
+    @keyframes heroSlide { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+    @media(prefers-reduced-motion:reduce) {
+        .hero-section,.stats-bar,.feature-card,.cta-section{animation:none;opacity:1;transform:none}
+        .hero-badge,.hero-highlight,.hero-btn-primary,.stats-bar::before,.feature-card::before,.feature-card::after{animation:none}
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Stagger feature card entrances
+    document.querySelectorAll('.feature-card').forEach((card, i) => {
+        card.style.animationDelay = (0.2 + i * 0.12) + 's';
+    });
+    // Count-up stat numbers (preserve any suffix like %)
+    document.querySelectorAll('.stat-num').forEach(el => {
+        const raw = el.textContent.trim();
+        const val = parseInt(raw);
+        if (!isNaN(val) && val > 0) {
+            const suffix = raw.replace(/^\d+/, '');
+            el.textContent = '0' + suffix;
+            let current = 0;
+            const step = Math.max(1, Math.ceil(val / 20));
+            const interval = setInterval(() => {
+                current = Math.min(current + step, val);
+                el.textContent = current + suffix;
+                if (current >= val) clearInterval(interval);
+            }, 50);
+        }
+    });
+});
+</script>
 {% endblock %}

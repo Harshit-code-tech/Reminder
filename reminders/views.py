@@ -190,17 +190,18 @@ def admin_dashboard(request):
     stats = get_admin_dashboard_stats()
     return render(request, 'reminders/admin_dashboard.html', context=stats)
 
+
 @login_required
 @email_verified_required
 def toggle_recurring(request, event_id):
     if request.method == 'POST':
         event = get_object_or_404(Event, id=event_id, user=request.user)
-        if event.event_type in ['birthday', 'anniversary']:
+        if event.event_type in ['birthday', 'anniversary', 'raksha_bandhan']:
             event.is_recurring = not event.is_recurring
             event.save()
             messages.success(request, f"Recurring {'enabled' if event.is_recurring else 'disabled'} for {event.name}")
         else:
-            messages.error(request, "Recurring is only available for birthdays and anniversaries.")
+            messages.error(request, "Recurring is only available for birthdays, anniversaries, and Raksha Bandhan.")
     return redirect('event_list')
 
 
@@ -294,7 +295,7 @@ def delete_event(request, event_id):
                         if not response or (isinstance(response, list) and len(response) == 0):
                             logger.error(f"Media deletion failed for event {event.name}: Invalid path or permissions")
                             messages.error(request, f"Failed to delete media for event {event.name}. Please try again.")
-                            raise Exception("Delete returned empty response—possible permission error")
+                            raise Exception("Delete returned empty response, possible permission error")
                         logger.info(f"Deleted media from storage: {file_path}")
                         logger.info(f"Removed media for event {event.name}")
                 except Exception as e:

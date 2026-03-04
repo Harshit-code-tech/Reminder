@@ -1,15 +1,42 @@
 {% extends 'base.html' %}
-{% block title %}Too Many Requests{% endblock %}
-{% block header_class %}bg-blue-600 text-white p-4{% endblock %}
-{% block header_content %}
-    <h1 class="text-2xl font-bold flex items-center gap-2">
-        🔐 Rate Limit Exceeded
-    </h1>
-{% endblock %}
+{% block title %}Too Many Requests | Reminder{% endblock %}
+
 {% block content %}
-    <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md mt-6">
-        <h2 class="text-xl font-semibold mb-4">Too Many Requests</h2>
-        <p class="text-gray-600">You've made too many requests. Please wait a minute and try again.</p>
-        <a href="{% url 'home' %}" class="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition" aria-label="Return to home">Back to Home</a>
+<div class="auth-page">
+    <div class="auth-card" style="text-align:center">
+        <div class="auth-header">
+            <div class="auth-icon" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mt-4">Too many requests</h2>
+            <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Please wait a moment before trying again</p>
+        </div>
+
+        <div style="padding:1.25rem;border-radius:12px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.15);margin-bottom:1.5rem">
+            <p class="text-sm text-gray-600 dark:text-gray-300">
+                You've made too many requests in a short time. This limit helps protect our service. Please wait about a minute and try again.
+            </p>
+        </div>
+
+        <a href="{% url 'home' %}" class="auth-submit" style="text-decoration:none;display:flex" aria-label="Return to home">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+            <span>Back to Home</span>
+        </a>
     </div>
+</div>
+
+<style>
+    .auth-page{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 200px);padding:2rem 1rem}
+    .auth-card{width:100%;max-width:420px;background:var(--card-bg-light);border-radius:20px;padding:2.5rem;box-shadow:0 8px 40px rgba(99,102,241,0.08);border:1px solid rgba(139,92,246,0.08)}
+    body.dark-mode .auth-card{background:var(--card-bg-dark);box-shadow:0 8px 40px rgba(0,0,0,0.25);border-color:rgba(139,92,246,0.12)}
+    .auth-header{text-align:center;margin-bottom:2rem}
+    .auth-icon{width:56px;height:56px;margin:0 auto;border-radius:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(245,158,11,0.3)}
+    .auth-submit{display:flex;align-items:center;justify-content:center;width:100%;padding:12px;border:none;border-radius:12px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;font-weight:600;font-size:0.95rem;font-family:'Poppins',sans-serif;cursor:pointer;transition:all 0.25s ease;box-shadow:0 4px 16px rgba(99,102,241,0.25)}
+    .auth-submit:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(99,102,241,0.35);background:linear-gradient(135deg,#4f46e5,#7c3aed)}
+    @media(max-width:480px){.auth-card{padding:1.75rem 1.5rem}}
+</style>
 {% endblock %}

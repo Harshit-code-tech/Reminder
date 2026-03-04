@@ -753,7 +753,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (eventTypeSelect && recurringField && customLabelField) {
         const toggleFields = () => {
-            const isRecurringEvent = ['birthday', 'anniversary'].includes(eventTypeSelect.value);
+            const isRecurringEvent = ['birthday', 'anniversary', 'raksha_bandhan'].includes(eventTypeSelect.value);
 
             recurringField.style.display = isRecurringEvent ? 'block' : 'none';
 

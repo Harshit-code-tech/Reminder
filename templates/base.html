@@ -4,14 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Reminder App — Never miss a birthday, anniversary or celebration">
+    <meta name="description" content="Reminder App - Never miss a birthday, anniversary or celebration">
     <meta name="keywords" content="birthday reminder, anniversary tracker, event planner">
     <meta name="author" content="Reminder App">
     <meta name="theme-color" content="#7c3aed">
     <!-- Favicon -->
-    <link rel="icon" href="{% static 'images/favicon.ico' %}" sizes="any">
     <link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
-    <link rel="icon" type="image/png" sizes="96x96" href="{% static 'images/favicon-96x96.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/favicon-16x16.png' %}">
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/apple-touch-icon.png' %}">
     <link rel="manifest" href="{% static 'site.webmanifest' %}">
     <title>{% block title %}Reminder{% endblock %}</title>
@@ -21,19 +21,19 @@
 
     <style>
         :root {
-            --bg-gradient-light: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
-            --bg-gradient-dark: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --bg-gradient-light: linear-gradient(135deg, #f0f0ff 0%, #faf5ff 50%, #f0f0ff 100%);
+            --bg-gradient-dark: linear-gradient(135deg, #0c1222 0%, #141e33 50%, #0c1222 100%);
             --text-color-light: #1f2937;
             --text-color-dark: #e2e8f0;
-            --header-gradient-light: linear-gradient(to right, #a5b4fc, #818cf8);
-            --header-gradient-dark: linear-gradient(to right, #1e3a8a, #3b82f6);
-            --card-bg-light: rgba(255, 255, 255, 0.95);
-            --card-bg-dark: rgba(30, 41, 59, 0.95);
+            --header-gradient-light: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
+            --header-gradient-dark: linear-gradient(135deg, #1e1b4b, #312e81, #3730a3);
+            --card-bg-light: rgba(255, 255, 255, 0.92);
+            --card-bg-dark: rgba(22, 33, 55, 0.92);
             --lamp-gradient-light: linear-gradient(to bottom, #fef3c7, #fef3c7);
             --lamp-gradient-dark: linear-gradient(to bottom, #fbbf24, #f59e0b);
-            --shadow-light: 0 10px 15px rgba(0, 0, 0, 0.05);
-            --shadow-dark: 0 10px 15px rgba(0, 0, 0, 0.2);
-            --purple-glow: 0 0 20px rgba(147, 51, 234, 0.7);
+            --shadow-light: 0 4px 24px rgba(99, 102, 241, 0.08);
+            --shadow-dark: 0 4px 24px rgba(0, 0, 0, 0.3);
+            --purple-glow: 0 0 20px rgba(139, 92, 246, 0.5);
             --x: 50%;
             --y: 50%;
         }
@@ -102,19 +102,155 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(167,139,250,0.15)" fill-opacity="1" d="M0,160L48,170.7C96,181,192,203,288,197.3C384,192,480,160,576,138.7C672,117,768,107,864,128C960,149,1056,203,1152,202.7C1248,203,1344,149,1392,122.7L1440,96L1440,320L0,320Z"></path></svg>') repeat-x bottom,
-                        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(196,181,253,0.2)" fill-opacity="1" d="M0,224L48,213.3C96,203,192,181,288,186.7C384,192,480,224,576,213.3C672,203,768,149,864,149.3C960,149,1056,203,1152,213.3C1248,224,1344,192,1392,176L1440,160L1440,320L0,320Z"></path></svg>') repeat-x bottom,
-                        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(216,180,254,0.1)" fill-opacity="1" d="M0,128L40,138.7C80,149,160,171,240,160C320,149,400,107,480,106.7C560,107,640,149,720,165.3C800,181,880,171,960,149.3C1040,128,1120,96,1200,96C1280,96,1360,128,1400,144L1440,160L1440,320L0,320Z"></path></svg>') repeat-x bottom;
-            animation: waveFlow 30s linear infinite;
+            background:
+                radial-gradient(ellipse at 20% 80%, rgba(167, 139, 250, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(196, 181, 253, 0.10) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 100%, rgba(216, 180, 254, 0.08) 0%, transparent 40%);
             z-index: -1;
             pointer-events: none;
             opacity: 1;
             transition: opacity 1s ease;
         }
-        @keyframes waveFlow {
-            0% { background-position: 0 bottom, 1440px bottom, 720px bottom; }
-            100% { background-position: 1440px bottom, 0 bottom, -720px bottom; }
+
+        /* === Interactive Light-Mode Background === */
+        .bg-orbs {
+            position: fixed; inset: 0; z-index: -2; pointer-events: none; overflow: hidden;
+            opacity: 0; /* Hidden in light mode now */
         }
+        body.dark-mode .bg-orbs { opacity: 0; }
+        .bg-orb {
+            position: absolute; border-radius: 50%; filter: blur(50px); opacity: 0.5;
+            animation: orbFloat linear infinite;
+        }
+        .bg-orb:nth-child(1) { width: 350px; height: 350px; background: rgba(167,139,250,0.55); top: -60px; left: 10%; animation-duration: 22s; }
+        .bg-orb:nth-child(2) { width: 280px; height: 280px; background: rgba(244,114,182,0.45); top: 40%; right: 5%; animation-duration: 28s; animation-delay: -5s; }
+        .bg-orb:nth-child(3) { width: 220px; height: 220px; background: rgba(96,165,250,0.40); bottom: 10%; left: 25%; animation-duration: 25s; animation-delay: -10s; }
+        .bg-orb:nth-child(4) { width: 300px; height: 300px; background: rgba(52,211,153,0.35); top: 20%; left: 55%; animation-duration: 30s; animation-delay: -8s; }
+        .bg-orb:nth-child(5) { width: 200px; height: 200px; background: rgba(251,191,36,0.30); bottom: 30%; right: 20%; animation-duration: 20s; animation-delay: -14s; }
+        @keyframes orbFloat {
+            0%   { transform: translate(0, 0) scale(1); }
+            25%  { transform: translate(40px, -50px) scale(1.08); }
+            50%  { transform: translate(-30px, 30px) scale(0.95); }
+            75%  { transform: translate(50px, 20px) scale(1.05); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+
+        /* Mouse-following glow (light mode only) */
+        .cursor-glow {
+            position: fixed; width: 350px; height: 350px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%);
+            pointer-events: none; z-index: -1; transform: translate(-50%, -50%);
+            transition: opacity 0.4s ease;
+            will-change: left, top;
+        }
+        body.dark-mode .cursor-glow { opacity: 0; }
+
+        /* Subtle dot pattern overlay (light mode) */
+        .dot-pattern {
+            position: fixed; inset: 0; z-index: -3; pointer-events: none;
+            background-image: radial-gradient(circle, rgba(139,92,246,0.06) 1px, transparent 1px);
+            background-size: 28px 28px;
+            transition: opacity 0.5s ease;
+        }
+        body.dark-mode .dot-pattern { opacity: 0; }
+
+        /* ── Light-mode: animated gradient mesh ── */
+        .light-mesh {
+            position: fixed; inset: 0; z-index: -4; pointer-events: none;
+            background:
+                radial-gradient(ellipse 600px 400px at 15% 20%, rgba(167,139,250,0.10) 0%, transparent 100%),
+                radial-gradient(ellipse 500px 500px at 85% 70%, rgba(244,114,182,0.08) 0%, transparent 100%),
+                radial-gradient(ellipse 400px 300px at 50% 90%, rgba(96,165,250,0.07) 0%, transparent 100%);
+            animation: meshShift 20s ease-in-out infinite alternate;
+            transition: opacity 0.5s ease;
+        }
+        body.dark-mode .light-mesh { opacity: 0; }
+        @keyframes meshShift {
+            0%   { background-position: 0% 0%, 100% 100%, 50% 50%; }
+            100% { background-position: 30% 60%, 60% 20%, 80% 10%; }
+        }
+
+        /* ── Light-mode: animated SVG waves at bottom ── */
+        .light-waves {
+            position: fixed; bottom: 0; left: 0; right: 0; height: 220px;
+            z-index: -2; pointer-events: none; overflow: hidden;
+            transition: opacity 0.5s ease;
+        }
+        body.dark-mode .light-waves { opacity: 0; }
+        .light-waves svg { position: absolute; bottom: 0; width: 200%; min-width: 1200px; }
+        .light-waves .wave-1 { animation: lightWaveDrift1 8s ease-in-out infinite alternate; }
+        .light-waves .wave-2 { animation: lightWaveDrift2 10s ease-in-out infinite alternate; bottom: -10px; }
+        .light-waves .wave-3 { animation: lightWaveDrift3 12s ease-in-out infinite alternate; bottom: -20px; }
+        @keyframes lightWaveDrift1 {
+            0%   { transform: translateX(0); }
+            100% { transform: translateX(-25%); }
+        }
+        @keyframes lightWaveDrift2 {
+            0%   { transform: translateX(-10%); }
+            100% { transform: translateX(5%); }
+        }
+        @keyframes lightWaveDrift3 {
+            0%   { transform: translateX(5%); }
+            100% { transform: translateX(-15%); }
+        }
+
+        /* ── Light-mode: floating particle canvas ── */
+        #lightParticles {
+            position: fixed; inset: 0; z-index: -2; pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        body.dark-mode #lightParticles { opacity: 0; }
+
+        /* ── Dark-mode: aurora wave ── */
+        .dark-aurora {
+            position: fixed; bottom: 0; left: 0; right: 0; height: 40vh; z-index: -2;
+            pointer-events: none; opacity: 0; transition: opacity 0.8s ease;
+            overflow: hidden;
+        }
+        body.dark-mode .dark-aurora { opacity: 1; }
+        .aurora-band {
+            position: absolute; bottom: -20%; left: -10%; width: 120%; height: 100%;
+            border-radius: 50% 50% 0 0;
+            filter: blur(60px);
+            opacity: 0.25;
+        }
+        .aurora-band:nth-child(1) {
+            background: linear-gradient(90deg, rgba(99,102,241,0.4), rgba(139,92,246,0.3), rgba(168,85,247,0.2));
+            animation: auroraWave1 12s ease-in-out infinite alternate;
+        }
+        .aurora-band:nth-child(2) {
+            background: linear-gradient(90deg, rgba(236,72,153,0.3), rgba(139,92,246,0.2), rgba(59,130,246,0.3));
+            animation: auroraWave2 15s ease-in-out infinite alternate;
+            bottom: -30%;
+        }
+        .aurora-band:nth-child(3) {
+            background: linear-gradient(90deg, rgba(52,211,153,0.2), rgba(96,165,250,0.25), rgba(167,139,250,0.2));
+            animation: auroraWave3 18s ease-in-out infinite alternate;
+            bottom: -40%; opacity: 0.18;
+        }
+        @keyframes auroraWave1 {
+            0% { transform: translateX(-5%) scaleY(1); }
+            100% { transform: translateX(5%) scaleY(1.15); }
+        }
+        @keyframes auroraWave2 {
+            0% { transform: translateX(5%) scaleY(1.1); }
+            100% { transform: translateX(-8%) scaleY(0.9); }
+        }
+        @keyframes auroraWave3 {
+            0% { transform: translateX(-3%) scaleY(0.9) rotate(-1deg); }
+            100% { transform: translateX(6%) scaleY(1.2) rotate(1deg); }
+        }
+
+        /* ── Dark-mode: subtle grid ── */
+        .dark-grid {
+            position: fixed; inset: 0; z-index: -3; pointer-events: none;
+            opacity: 0; transition: opacity 0.5s ease;
+            background-image:
+                linear-gradient(rgba(139,92,246,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(139,92,246,0.04) 1px, transparent 1px);
+            background-size: 48px 48px;
+        }
+        body.dark-mode .dark-grid { opacity: 1; }
         header {
             background: var(--header-gradient-light);
             box-shadow: var(--shadow-light);
@@ -162,37 +298,107 @@
             padding: 8px;
         }
 
-        /* Responsive navigation styles */
-        nav a, nav button {
-            transition: all 0.3s ease;
-            position: relative;
-            padding: 8px 12px;
-            border: 2px solid #9333ea;
+        /* Navigation link styles */
+        .nav-link {
+            transition: all 0.25s ease;
+            padding: 6px 14px;
             border-radius: 8px;
-            background: linear-gradient(45deg, rgba(147, 51, 234, 0.1), rgba(147, 51, 234, 0.3));
-            box-shadow: 0 0 10px rgba(147, 51, 234, 0.5);
-            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(4px);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             text-align: center;
             font-size: 0.875rem;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.15);
         }
-        nav a:hover, nav button:hover {
-            color: #facc15;
-            transform: translateY(-2px);
-            box-shadow: var(--purple-glow);
-            background: linear-gradient(45deg, rgba(147, 51, 234, 0.3), rgba(147, 51, 234, 0.5));
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.22);
+            transform: translateY(-1px);
         }
-        nav a::after, nav button::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: -2px;
-            left: 0;
-            background-color: #facc15;
-            transition: width 0.3s ease;
+        .nav-link:focus-visible {
+            outline: 2px solid #facc15;
+            outline-offset: 2px;
         }
-        nav a:hover::after, nav button:hover::after {
-            width: 100%;
+
+        /* Toast notification styles */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 400px;
+            width: calc(100% - 40px);
+        }
+        .toast-message {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+            animation: toastSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .toast-exit {
+            animation: toastSlideOut 0.3s ease-in forwards;
+        }
+        .toast-error {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #dc2626;
+        }
+        body.dark-mode .toast-error {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            border-color: rgba(239, 68, 68, 0.25);
+        }
+        .toast-success {
+            background: rgba(34, 197, 94, 0.12);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #16a34a;
+        }
+        body.dark-mode .toast-success {
+            background: rgba(34, 197, 94, 0.15);
+            color: #86efac;
+            border-color: rgba(34, 197, 94, 0.25);
+        }
+        .toast-info {
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #2563eb;
+        }
+        body.dark-mode .toast-info {
+            background: rgba(59, 130, 246, 0.15);
+            color: #93c5fd;
+            border-color: rgba(59, 130, 246, 0.25);
+        }
+        .toast-icon { flex-shrink: 0; }
+        .toast-text { flex: 1; }
+        .toast-close {
+            flex-shrink: 0;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+            color: inherit;
+            padding: 0 4px;
+        }
+        .toast-close:hover { opacity: 1; }
+        @keyframes toastSlideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes toastSlideOut {
+            to { transform: translateX(100%); opacity: 0; }
         }
 
         .message-container {
@@ -203,26 +409,36 @@
             to { transform: translateY(0); opacity: 1; }
         }
         .card {
-            border-radius: 12px;
+            border-radius: 16px;
             background: var(--card-bg-light);
             box-shadow: var(--shadow-light);
+            border: 1px solid rgba(139, 92, 246, 0.08);
             transition: background 0.5s ease, transform 0.3s ease, box-shadow 0.3s ease;
         }
         body.dark-mode .card {
             background: var(--card-bg-dark);
             box-shadow: var(--shadow-dark);
+            border-color: rgba(139, 92, 246, 0.1);
         }
         .card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-dark);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(99, 102, 241, 0.12);
+        }
+        body.dark-mode .card:hover {
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
         }
         footer {
-            background: var(--header-gradient-light);
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-            transition: background 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, rgba(255,255,255,0.30), rgba(240,240,255,0.25));
+            backdrop-filter: blur(6px);
+            border-top: 1px solid rgba(139, 92, 246, 0.10);
+            transition: background 0.5s ease, border-color 0.5s ease;
+            position: relative;
+            z-index: 10;
         }
         body.dark-mode footer {
-            background: var(--header-gradient-dark);
+            background: linear-gradient(135deg, rgba(30,41,62,0.50), rgba(25,35,55,0.40));
+            backdrop-filter: blur(10px);
+            border-top-color: rgba(139, 92, 246, 0.20);
         }
 
         /* Enhanced lamp positioning and animations */
@@ -236,19 +452,34 @@
             transform-origin: top center;
             cursor: pointer;
         }
+        /* Wire connecting lamp to header */
+        .lamp-wire {
+            width: 2px;
+            background: linear-gradient(to bottom, #92400e, #b45309);
+            border-radius: 1px;
+            flex-shrink: 0;
+            /* Height is set by JS based on gap from header to lamp body */
+            height: 0px;
+            transition: height 0.3s ease;
+        }
+        body.dark-mode .lamp-wire {
+            background: linear-gradient(to bottom, #78350f, #92400e);
+        }
         .lamp-container:hover {
-            transform: scale(0.95);
-            filter: brightness(1.2) drop-shadow(0 0 15px rgba(245, 158, 11, 0.7));
+            filter: brightness(1.15) drop-shadow(0 0 12px rgba(245, 158, 11, 0.5));
         }
         .lamp-container.mode-switching {
-            animation: lampSwitch 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: lampSwitch 0.6s ease-out;
+        }
+        /* Disable hover transform during switching to prevent visual break */
+        .lamp-container.mode-switching:hover {
+            filter: none;
         }
         @keyframes lampSwitch {
-            0% { transform: scale(1) rotate(0deg); }
-            25% { transform: scale(0.9) rotate(-2deg); }
-            50% { transform: scale(0.8) rotate(2deg); }
-            75% { transform: scale(0.95) rotate(-1deg); }
-            100% { transform: scale(1) rotate(0deg); }
+            0% { transform: none; }
+            30% { transform: translateY(4px); }
+            60% { transform: translateY(-2px); }
+            100% { transform: none; }
         }
         .lamp-wrapper {
             display: flex;
@@ -357,7 +588,7 @@
             transform: scaleY(0.7);
         }
         .lamp-wrapper.pulling {
-            transform: translateY(12px) scale(0.95);
+            transform: translateY(8px);
         }
         @keyframes pullString {
             0% { transform: scaleY(1) scaleX(1); }
@@ -593,72 +824,79 @@
     {% block header_style %}{% endblock %}
 </head>
 <body class="min-h-screen flex flex-col">
+    <!-- Interactive background elements -->
+    <div class="dot-pattern" aria-hidden="true"></div>
+    <div class="light-mesh" aria-hidden="true"></div>
+    <div class="light-waves" aria-hidden="true">
+        <svg class="wave-1" viewBox="0 0 1440 180" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,80 C240,140 480,20 720,80 C960,140 1200,20 1440,80 L1440,180 L0,180Z" fill="rgba(167,139,250,0.12)"/>
+        </svg>
+        <svg class="wave-2" viewBox="0 0 1440 180" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,100 C320,40 640,160 960,90 C1120,55 1280,130 1440,100 L1440,180 L0,180Z" fill="rgba(236,72,153,0.08)"/>
+        </svg>
+        <svg class="wave-3" viewBox="0 0 1440 180" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,120 C200,80 400,150 600,110 C800,70 1000,140 1200,100 C1320,80 1380,120 1440,110 L1440,180 L0,180Z" fill="rgba(96,165,250,0.10)"/>
+        </svg>
+    </div>
+    <canvas id="lightParticles" aria-hidden="true"></canvas>
+    <div class="dark-aurora" aria-hidden="true">
+        <div class="aurora-band"></div>
+        <div class="aurora-band"></div>
+        <div class="aurora-band"></div>
+    </div>
+    <div class="dark-grid" aria-hidden="true"></div>
+    <div class="bg-orbs" aria-hidden="true">
+        <div class="bg-orb"></div>
+        <div class="bg-orb"></div>
+        <div class="bg-orb"></div>
+        <div class="bg-orb"></div>
+        <div class="bg-orb"></div>
+    </div>
+    <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[200] focus:bg-purple-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg">Skip to main content</a>
-    {% if messages %}
-        <div class="container mx-auto mt-4 md:mt-6 message-container px-4 md:px-0" role="alert" aria-live="polite">
-            {% for message in messages %}
-                <div class="flex items-center gap-2 rounded-lg py-3 px-4 mb-2 shadow-sm
-                    {% if message.tags == 'error' %}
-                        bg-red-50 text-red-800 border border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700
-                    {% elif message.tags == 'success' %}
-                        bg-green-50 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700
-                    {% elif message.tags == 'info' %}
-                        bg-blue-50 text-blue-800 border border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700
-                    {% else %}
-                        bg-gray-50 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600
-                    {% endif %}">
-                    <span aria-hidden="true">
-                        {% if message.tags == 'error' %}⚠️{% elif message.tags == 'success' %}✅{% elif message.tags == 'info' %}ℹ️{% else %}💬{% endif %}
-                    </span>
-                    <span>{{ message }}</span>
-                    <button type="button" onclick="this.parentElement.remove()" class="ml-auto text-current opacity-50 hover:opacity-100" aria-label="Dismiss message">&times;</button>
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
+
     <header class="{% block header_class %}p-3 md:p-4 relative{% endblock %}">
-        <div class="container mx-auto flex justify-between items-center">
+        <div class="w-full px-4 md:px-6 lg:px-8 flex justify-between items-center">
             {% block header_content %}
             <a href="{% if user.is_authenticated %}{% url 'event_list' %}{% else %}{% url 'home' %}{% endif %}" class="flex items-center gap-2 md:gap-3 no-underline">
                 <h1 class="text-xl md:text-2xl lg:text-3xl font-bold flex items-center gap-2 md:gap-3 text-white">
-                    <span class="text-yellow-400" aria-hidden="true">🎉</span>
-                    <span class="hidden sm:inline">Reminder</span>
-                    <span class="sm:hidden">Reminder</span>
+                    <span class="text-yellow-400" aria-hidden="true">✨</span>
+                    <span>Reminder</span>
                 </h1>
             </a>
             {% endblock %}
 
             <!-- Mobile menu toggle -->
             <button class="mobile-menu-toggle" aria-label="Toggle mobile menu" onclick="toggleMobileMenu()">
-                ☰
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>
 
             <!-- Desktop navigation -->
             <nav class="desktop-nav">
-                <ul class="flex flex-wrap gap-2 md:gap-4 lg:gap-6 items-center">
+                <ul class="flex flex-wrap gap-2 md:gap-3 items-center">
                     {% if user.is_authenticated %}
-                        <li class="text-xs md:text-sm text-white hidden md:block">Welcome, {{ user.username }}!</li>
-                        <li><a href="{% url 'event_list' %}" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" aria-label="View your events">My Events</a></li>
-                        <li><a href="{% url 'analytics' %}" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" aria-label="View analytics">Analytics</a></li>
-                        <li class="hidden lg:block"><a href="{% url 'past_events' %}" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400">Past Events</a></li>
-                        <li><a href="{% url 'account_settings' %}" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" aria-label="Account settings">⚙️</a></li>
+                        <li><a href="{% url 'event_list' %}" class="nav-link text-white" aria-label="View your events">My Events</a></li>
+                        <li><a href="{% url 'analytics' %}" class="nav-link text-white" aria-label="View analytics">Analytics</a></li>
+                        <li class="hidden lg:block"><a href="{% url 'past_events' %}" class="nav-link text-white">History</a></li>
+                        <li><a href="{% url 'account_settings' %}" class="nav-link text-white" aria-label="Account settings">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        </a></li>
                         {% if user.is_superuser %}
                             <li class="hidden lg:block">
-                                <a href="{% url 'admin_tools' %}" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" aria-label="Admin tools">
-                                    Admin Tools
-                                </a>
+                                <a href="{% url 'admin_tools' %}" class="nav-link text-white" aria-label="Admin tools">Admin</a>
                             </li>
                         {% endif %}
                         <li>
                             <form action="{% url 'logout' %}" method="post" class="inline">
                                 {% csrf_token %}
-                                <button type="submit" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" aria-label="Log out">Logout</button>
+                                <button type="submit" class="nav-link text-white" aria-label="Log out">Logout</button>
                             </form>
                         </li>
                     {% else %}
-                        <li><a href="{% url 'home' %}" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" aria-label="Go to home page">Home</a></li>
-                        <li><a href="{% url 'login' %}" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" aria-label="Log in">Login</a></li>
-                        <li><a href="{% url 'signup' %}" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" aria-label="Sign up">Sign Up</a></li>
+                        <li><a href="{% url 'home' %}" class="nav-link text-white" aria-label="Go to home page">Home</a></li>
+                        <li><a href="{% url 'login' %}" class="nav-link text-white" aria-label="Log in">Login</a></li>
+                        <li><a href="{% url 'signup' %}" class="nav-link text-white bg-white/20 hover:bg-white/30" aria-label="Sign up">Sign Up</a></li>
                     {% endif %}
                 </ul>
             </nav>
@@ -669,35 +907,51 @@
             <nav>
                 <ul class="flex flex-col gap-3 p-4">
                     {% if user.is_authenticated %}
-                        <li class="text-sm text-white text-center">Welcome, {{ user.username }}!</li>
-                        <li><a href="{% url 'event_list' %}" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" aria-label="View your events">My Events</a></li>
-                        <li><a href="{% url 'analytics' %}" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" aria-label="View analytics">Analytics</a></li>
-                        <li><a href="{% url 'past_events' %}" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400">Past Events</a></li>
-                        <li><a href="{% url 'account_settings' %}" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" aria-label="Account settings">⚙️ Settings</a></li>
+                        <li><a href="{% url 'event_list' %}" class="nav-link text-white" aria-label="View your events">My Events</a></li>
+                        <li><a href="{% url 'analytics' %}" class="nav-link text-white" aria-label="View analytics">Analytics</a></li>
+                        <li><a href="{% url 'past_events' %}" class="nav-link text-white">History</a></li>
+                        <li><a href="{% url 'account_settings' %}" class="nav-link text-white" aria-label="Account settings">Settings</a></li>
                         {% if user.is_superuser %}
-                            <li>
-                                <a href="{% url 'admin_tools' %}" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" aria-label="Admin tools">
-                                    Admin Tools
-                                </a>
-                            </li>
+                            <li><a href="{% url 'admin_tools' %}" class="nav-link text-white" aria-label="Admin tools">Admin</a></li>
                         {% endif %}
                         <li>
                             <form action="{% url 'logout' %}" method="post" class="inline w-full">
                                 {% csrf_token %}
-                                <button type="submit" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 w-full" aria-label="Log out">Logout</button>
+                                <button type="submit" class="nav-link text-white w-full" aria-label="Log out">Logout</button>
                             </form>
                         </li>
                     {% else %}
-                        <li><a href="{% url 'home' %}" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" aria-label="Go to home page">Home</a></li>
-                        <li><a href="{% url 'login' %}" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" aria-label="Log in">Login</a></li>
-                        <li><a href="{% url 'signup' %}" class="text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" aria-label="Sign up">Sign Up</a></li>
+                        <li><a href="{% url 'home' %}" class="nav-link text-white" aria-label="Go to home page">Home</a></li>
+                        <li><a href="{% url 'login' %}" class="nav-link text-white" aria-label="Log in">Login</a></li>
+                        <li><a href="{% url 'signup' %}" class="nav-link text-white" aria-label="Sign up">Sign Up</a></li>
                     {% endif %}
                 </ul>
             </nav>
         </div>
     </header>
 
+    {% if messages %}
+    <div class="toast-container" id="toast-container" role="alert" aria-live="polite">
+        {% for message in messages %}
+            <div class="toast-message toast-{{ message.tags|default:'info' }}">
+                <span class="toast-icon" aria-hidden="true">
+                    {% if message.tags == 'error' %}
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    {% elif message.tags == 'success' %}
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    {% else %}
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    {% endif %}
+                </span>
+                <span class="toast-text">{{ message }}</span>
+                <button type="button" onclick="this.parentElement.classList.add('toast-exit');setTimeout(()=>this.parentElement.remove(),300)" class="toast-close" aria-label="Dismiss">&times;</button>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <div class="lamp-container">
+        <div class="lamp-wire"></div>
         <div class="lamp-wrapper">
             <div class="lamp">
                 <div class="lamp-light"></div>
@@ -708,22 +962,14 @@
     </div>
     <div class="mode-transition"></div>
 
-
     <main id="main-content" class="container mx-auto flex-grow p-4 md:p-6 lg:p-8">
         {% block content %}
         {% endblock %}
     </main>
 
-    <footer class="p-4 md:p-6 text-center text-white" role="contentinfo">
-        <div class="container mx-auto flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6">
-            <p class="text-sm md:text-base">© 2025 Reminder App</p>
-            {% if user.is_authenticated %}
-            <nav class="flex gap-4 text-sm opacity-80" aria-label="Footer navigation">
-                <a href="{% url 'event_list' %}" class="hover:text-yellow-300 transition-colors" style="border:none;box-shadow:none;background:none;padding:0;">Events</a>
-                <a href="{% url 'analytics' %}" class="hover:text-yellow-300 transition-colors" style="border:none;box-shadow:none;background:none;padding:0;">Analytics</a>
-                <a href="{% url 'account_settings' %}" class="hover:text-yellow-300 transition-colors" style="border:none;box-shadow:none;background:none;padding:0;">Settings</a>
-            </nav>
-            {% endif %}
+    <footer class="py-6 text-center" role="contentinfo">
+        <div class="container mx-auto">
+            <p class="text-sm text-gray-500 dark:text-gray-400">© 2026 Reminder App - Made with <span class="text-pink-500">♥</span></p>
         </div>
     </footer>
 
@@ -754,18 +1000,31 @@
             positionLampBasedOnHeader();
         });
 
-        // Function to position lamp container based on header height
+        // Function to position lamp container anchored to header bottom
         function positionLampBasedOnHeader() {
             const header = document.querySelector('header');
             const lampContainer = document.querySelector('.lamp-container');
+            const lampWire = document.querySelector('.lamp-wire');
             if (header && lampContainer) {
-                const headerHeight = header.offsetHeight;
-                const headerRect = header.getBoundingClientRect();
-                lampContainer.style.top = `${headerHeight + 10}px`;
+                const headerBottom = header.getBoundingClientRect().bottom;
+                // Anchor lamp-container at the header bottom edge
+                lampContainer.style.top = `${header.offsetHeight}px`;
+                // Wire height: space between header bottom and lamp body
+                if (lampWire) {
+                    lampWire.style.height = '10px';
+                }
             }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Auto-dismiss toast notifications after 5 seconds
+            document.querySelectorAll('.toast-message').forEach((toast, i) => {
+                setTimeout(() => {
+                    toast.classList.add('toast-exit');
+                    setTimeout(() => toast.remove(), 300);
+                }, 5000 + i * 500);
+            });
+
             // Create stars for dark mode
             const starsContainer = document.createElement('div');
             starsContainer.className = 'stars';
@@ -800,8 +1059,12 @@
             const lampContainer = document.querySelector('.lamp-container');
 
             if (lampString && lampWrapper && lampContainer) {
+                // Flag to prevent multiple simultaneous animations
+                let isAnimating = false;
+
                 // Enhanced pull animation on mousedown
                 lampString.addEventListener('mousedown', (e) => {
+                    if (isAnimating) return; // Prevent action if already animating
                     lampString.classList.add('pulling');
                     lampWrapper.classList.add('pulling');
                     lampContainer.classList.add('mode-switching');
@@ -813,6 +1076,9 @@
                 });
 
                 lampString.addEventListener('click', (e) => {
+                    if (isAnimating) return; // Prevent multiple rapid clicks
+                    isAnimating = true;
+
                     const transition = document.querySelector('.mode-transition');
                     const modeLabel = document.querySelector('.mode-label');
 
@@ -857,6 +1123,7 @@
                         }
                         
                         document.body.classList.remove('animating');
+                        isAnimating = false; // Reset flag after animation completes
                     }, 1000);
                 });
 
@@ -889,18 +1156,97 @@
 
                 if (header && lampContainer) {
                     const headerRect = header.getBoundingClientRect();
-                    // If header is no longer at the top (scrolled out of view)
-                    if (headerRect.bottom <= 0) {
-                        lampContainer.style.top = '10px'; // Position from top of viewport
-                    } else {
-                        // Keep it below header
-                        lampContainer.style.top = `${headerRect.bottom + 10}px`;
-                    }
+                    // Keep lamp anchored to header bottom (header is sticky so always visible)
+                    lampContainer.style.top = `${headerRect.bottom}px`;
                 }
             });
 
             // Update lamp position whenever window is resized
             window.addEventListener('resize', positionLampBasedOnHeader);
+
+            // Cursor glow follow (light mode interactive background)
+            const cursorGlow = document.getElementById('cursorGlow');
+            if (cursorGlow) {
+                let glowX = 0, glowY = 0, targetX = 0, targetY = 0;
+                document.addEventListener('mousemove', (e) => {
+                    targetX = e.clientX; targetY = e.clientY;
+                });
+                (function animateGlow() {
+                    glowX += (targetX - glowX) * 0.08;
+                    glowY += (targetY - glowY) * 0.08;
+                    cursorGlow.style.left = glowX + 'px';
+                    cursorGlow.style.top = glowY + 'px';
+                    requestAnimationFrame(animateGlow);
+                })();
+            }
+
+            // Light-mode floating particles (canvas)
+            const pCanvas = document.getElementById('lightParticles');
+            if (pCanvas) {
+                const ctx = pCanvas.getContext('2d');
+                let particles = [];
+                function resizeCanvas() {
+                    pCanvas.width = window.innerWidth;
+                    pCanvas.height = window.innerHeight;
+                }
+                resizeCanvas();
+                window.addEventListener('resize', resizeCanvas);
+
+                const colors = [
+                    'rgba(139,92,246,0.25)', 'rgba(244,114,182,0.20)',
+                    'rgba(96,165,250,0.22)', 'rgba(52,211,153,0.18)',
+                    'rgba(251,191,36,0.16)', 'rgba(167,139,250,0.20)'
+                ];
+                for (let i = 0; i < 40; i++) {
+                    particles.push({
+                        x: Math.random() * pCanvas.width,
+                        y: Math.random() * pCanvas.height,
+                        r: Math.random() * 2.5 + 1,
+                        dx: (Math.random() - 0.5) * 0.4,
+                        dy: (Math.random() - 0.5) * 0.3,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        pulse: Math.random() * Math.PI * 2
+                    });
+                }
+                function drawParticles() {
+                    ctx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+                    if (document.body.classList.contains('dark-mode')) {
+                        requestAnimationFrame(drawParticles);
+                        return;
+                    }
+                    particles.forEach(p => {
+                        p.x += p.dx; p.y += p.dy;
+                        p.pulse += 0.02;
+                        if (p.x < 0) p.x = pCanvas.width;
+                        if (p.x > pCanvas.width) p.x = 0;
+                        if (p.y < 0) p.y = pCanvas.height;
+                        if (p.y > pCanvas.height) p.y = 0;
+                        const scale = 0.7 + Math.sin(p.pulse) * 0.3;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.r * scale, 0, Math.PI * 2);
+                        ctx.fillStyle = p.color;
+                        ctx.fill();
+                    });
+                    // Draw faint connecting lines for nearby particles
+                    for (let i = 0; i < particles.length; i++) {
+                        for (let j = i + 1; j < particles.length; j++) {
+                            const dx = particles[i].x - particles[j].x;
+                            const dy = particles[i].y - particles[j].y;
+                            const dist = Math.sqrt(dx * dx + dy * dy);
+                            if (dist < 120) {
+                                ctx.beginPath();
+                                ctx.moveTo(particles[i].x, particles[i].y);
+                                ctx.lineTo(particles[j].x, particles[j].y);
+                                ctx.strokeStyle = `rgba(139,92,246,${0.06 * (1 - dist / 120)})`;
+                                ctx.lineWidth = 0.5;
+                                ctx.stroke();
+                            }
+                        }
+                    }
+                    requestAnimationFrame(drawParticles);
+                }
+                drawParticles();
+            }
         });
     </script>
 </body>

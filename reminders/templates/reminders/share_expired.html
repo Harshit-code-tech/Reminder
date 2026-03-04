@@ -1,11 +1,43 @@
 <!-- reminders/share_expired.html -->
 {% extends 'base.html' %}
-{% block title %}Link Expired{% endblock %}
+{% block title %}Link Expired | Reminder{% endblock %}
+
 {% block content %}
-<div class="expired-container">
-  <h2>⏰ Link Expired</h2>
-  <p>This share link has expired.</p>
-  <p>Please ask the sender to generate a new link for you.</p>
-  <a href="/" class="btn">Go to Home</a>
+<div class="auth-page">
+    <div class="auth-card" style="text-align:center">
+        <div class="auth-header">
+            <div class="auth-icon" style="background:linear-gradient(135deg,#ef4444,#dc2626)">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mt-4">Link expired</h2>
+            <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">This share link is no longer valid</p>
+        </div>
+
+        <div style="padding:1.25rem;border-radius:12px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);margin-bottom:1.5rem">
+            <p class="text-sm text-gray-600 dark:text-gray-300">
+                Please ask the sender to generate a new link for you.
+            </p>
+        </div>
+
+        <a href="/" class="auth-submit" style="text-decoration:none;display:flex">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+            <span>Go to Home</span>
+        </a>
+    </div>
 </div>
+
+<style>
+    .auth-page{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 200px);padding:2rem 1rem}
+    .auth-card{width:100%;max-width:420px;background:var(--card-bg-light);border-radius:20px;padding:2.5rem;box-shadow:0 8px 40px rgba(99,102,241,0.08);border:1px solid rgba(139,92,246,0.08)}
+    body.dark-mode .auth-card{background:var(--card-bg-dark);box-shadow:0 8px 40px rgba(0,0,0,0.25);border-color:rgba(139,92,246,0.12)}
+    .auth-header{text-align:center;margin-bottom:2rem}
+    .auth-icon{width:56px;height:56px;margin:0 auto;border-radius:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(239,68,68,0.3)}
+    .auth-submit{display:flex;align-items:center;justify-content:center;width:100%;padding:12px;border:none;border-radius:12px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;font-weight:600;font-size:0.95rem;font-family:'Poppins',sans-serif;cursor:pointer;transition:all 0.25s ease;box-shadow:0 4px 16px rgba(99,102,241,0.25)}
+    .auth-submit:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(99,102,241,0.35);background:linear-gradient(135deg,#4f46e5,#7c3aed)}
+    @media(max-width:480px){.auth-card{padding:1.75rem 1.5rem}}
+</style>
 {% endblock %}

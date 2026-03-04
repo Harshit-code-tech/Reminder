@@ -323,4 +323,5 @@ CRONJOBS = [
     ('0 8 * * *', 'reminders.cron.daily_reminder_job'),
     ('0 9 * * *', 'reminders.cron.daily_deletion_notification_job'),
     ('0 10 * * *', 'reminders.cron.daily_media_cleanup_job'),
+    ('30 0 * * *', 'reminders.cron.daily_recurring_events_job'),
 ]

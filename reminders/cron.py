@@ -1,5 +1,6 @@
 import logging
 from .utils import send_upcoming_reminders, send_deletion_notifications, cleanup_expired_media
+from .tasks import check_recurring_events as _check_recurring
 
 logger = logging.getLogger('app_logger')
 
@@ -26,3 +27,12 @@ def daily_media_cleanup_job():
         logger.info(f"Daily media cleanup job completed: Deleted media for {result['deleted_count']} of {result['total_events']} events")
     except Exception as e:
         logger.error(f"Error in daily media cleanup job: {str(e)}")
+
+def daily_recurring_events_job():
+    """Create next-year copies of recurring events whose date has passed."""
+    try:
+        logger.info("Starting daily recurring events job...")
+        result = _check_recurring()
+        logger.info(f"Daily recurring events job completed: {result}")
+    except Exception as e:
+        logger.error(f"Error in daily recurring events job: {str(e)}")

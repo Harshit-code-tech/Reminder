@@ -736,7 +736,7 @@ class GreetingCardApp {
         this.elements.unlockButton.disabled = true;
         this.elements.unlockButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
 
-        fetch(`/validate-password/${eventId}/`, {
+        fetch(`/reminders/card/${eventId}/validate-password/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -821,7 +821,7 @@ class GreetingCardApp {
             }
         })
         .catch(() => {
-            this.elements.revealPassword.textContent = 'Error — try again';
+            this.elements.revealPassword.textContent = 'Error - try again';
             this.elements.revealPassword.style.pointerEvents = 'auto';
         });
     }
@@ -1301,7 +1301,7 @@ class GreetingCardApp {
         const eventId = this.cardContainer.dataset.eventId;
         const csrftoken = this.getCookie('csrftoken');
 
-        fetch(`/get_event_highlights/${eventId}/`, {
+        fetch(`/reminders/api/event/${eventId}/highlights/`, {
             method: 'GET',
             headers: { 'X-CSRFToken': csrftoken }
         })
@@ -2134,7 +2134,7 @@ class GreetingCardApp {
         const eventId = this.elements.shareButton.dataset.eventId;
         const csrftoken = this.getCookie('csrftoken');
 
-        fetch(`/share/generate/${eventId}/`, {
+        fetch(`/reminders/card/${eventId}/generate-share/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
