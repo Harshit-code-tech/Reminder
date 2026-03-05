@@ -1,0 +1,351 @@
+/**
+ * Birthday Card Styles
+ * Supplemental CSS loaded only for birthday cards.
+ * Adds birthday-specific enhancements on top of base greeting_card.css.
+ */
+
+/* Birthday color accents */
+.card-container[data-theme="birthday"] {
+    --birthday-primary: #f472b6;
+    --birthday-secondary: #fbbf24;
+    --birthday-accent: #a78bfa;
+    --birthday-bg: linear-gradient(135deg, #fce7f3, #fef3c7);
+}
+
+/* Birthday cake styling */
+.cake-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+}
+
+.birthday-cake {
+    position: relative;
+    width: 180px;
+    height: 200px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.birthday-cake:hover {
+    transform: scale(1.05);
+}
+
+.birthday-cake .cake-base {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 160px;
+    height: 80px;
+    background: linear-gradient(180deg, #f472b6, #ec4899);
+    border-radius: 10px 10px 20px 20px;
+    box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
+}
+
+.birthday-cake .cake-base::before {
+    content: '';
+    position: absolute;
+    top: -15px;
+    left: -5px;
+    right: -5px;
+    height: 20px;
+    background: linear-gradient(180deg, #fbcfe8, #f9a8d4);
+    border-radius: 50%;
+}
+
+.birthday-cake .cake-layers {
+    position: absolute;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 130px;
+    height: 60px;
+    background: linear-gradient(180deg, #a78bfa, #8b5cf6);
+    border-radius: 10px 10px 15px 15px;
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+}
+
+.birthday-cake .cake-layers::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -5px;
+    right: -5px;
+    height: 15px;
+    background: linear-gradient(180deg, #ddd6fe, #c4b5fd);
+    border-radius: 50%;
+}
+
+/* Candles */
+.birthday-cake .candles-container {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 15px;
+}
+
+.birthday-cake .candles-container::before,
+.birthday-cake .candles-container::after {
+    content: '🕯️';
+    font-size: 2rem;
+    animation: candleFlicker 1.5s ease-in-out infinite alternate;
+}
+
+.birthday-cake .candles-container::before {
+    animation-delay: 0.2s;
+}
+
+@keyframes candleFlicker {
+    0% { transform: scaleY(1); }
+    50% { transform: scaleY(1.1); }
+    100% { transform: scaleY(0.95); }
+}
+
+.birthday-cake.blown-out .candles-container::before,
+.birthday-cake.blown-out .candles-container::after {
+    animation: none;
+    opacity: 0.3;
+    filter: grayscale(1);
+}
+
+.cake-instruction {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    text-align: center;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Countdown for birthday */
+.countdown-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+}
+
+.countdown {
+    font-size: 4rem;
+    font-weight: 700;
+    color: var(--birthday-primary, var(--accent-primary));
+    text-shadow: 0 0 20px rgba(244, 114, 182, 0.5);
+}
+
+.countdown-hint {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+/* Birthday-specific welcome title enhancement */
+.welcome-title[data-event-type="birthday"] {
+    background: linear-gradient(135deg, #f472b6, #fbbf24);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Birthday final animation */
+.card-container[data-theme="birthday"] .final-animation {
+    min-height: 200px;
+    position: relative;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+}
+
+/* ─── Birthday Surprise Reveal ─── */
+.birthday-surprise {
+    text-align: center;
+    padding: 20px;
+}
+
+.surprise-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.gift-box-animation {
+    perspective: 400px;
+}
+
+.gift-box {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    transition: transform 0.6s ease;
+}
+
+.gift-box.opened {
+    transform: scale(1.2);
+}
+
+.gift-body {
+    width: 80px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--birthday-primary, #f472b6), var(--birthday-secondary, #fbbf24));
+    border-radius: 8px;
+    position: absolute;
+    bottom: 0;
+}
+
+.gift-lid {
+    width: 90px;
+    height: 20px;
+    background: linear-gradient(135deg, var(--birthday-accent, #a78bfa), var(--birthday-primary, #f472b6));
+    border-radius: 6px;
+    position: absolute;
+    top: 0;
+    left: -5px;
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-origin: bottom left;
+}
+
+.gift-box.opened .gift-lid {
+    transform: rotate(-45deg) translateY(-20px);
+}
+
+.gift-ribbon {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 70px;
+    background: var(--birthday-secondary, #fbbf24);
+    border-radius: 3px;
+}
+
+.surprise-text {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes birthdaySurpriseReveal {
+    from { transform: scale(0.3); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* ─── Birthday Wish Container ─── */
+.wish-container {
+    margin-top: 20px;
+    padding: 20px;
+}
+
+.wish-card {
+    background: linear-gradient(135deg, rgba(244, 114, 182, 0.1), rgba(167, 139, 250, 0.1));
+    border: 1px solid rgba(244, 114, 182, 0.2);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+}
+
+.wish-card h3 {
+    font-size: 1.3rem;
+    color: var(--birthday-primary, #f472b6);
+    margin-bottom: 10px;
+}
+
+.wish-prompt {
+    font-style: italic;
+    color: var(--text-secondary);
+    margin-bottom: 15px;
+}
+
+.wish-stars {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 15px 0;
+}
+
+.wish-star {
+    font-size: 1.5rem;
+    opacity: 0.3;
+    transition: all 0.3s ease;
+}
+
+@keyframes wishStarSparkle {
+    0% { transform: scale(0.5); opacity: 0.3; }
+    50% { transform: scale(1.4); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.wish-result {
+    opacity: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--birthday-accent, #a78bfa);
+}
+
+@keyframes wishReveal {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fadeInUp {
+    from { transform: translateY(10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* ─── Birthday Farewell ─── */
+.birthday-farewell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+}
+
+.birthday-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, var(--birthday-primary, #f472b6), var(--birthday-accent, #a78bfa));
+    color: white;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(244, 114, 182, 0.3);
+    transform: scale(0);
+}
+
+@keyframes badgePop {
+    from { transform: scale(0); }
+    to { transform: scale(1); }
+}
+
+@keyframes sparkleRotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.birthday-balloons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+    position: relative;
+    min-height: 80px;
+}
+
+.birthday-balloons .balloon {
+    font-size: 2rem;
+    display: inline-block;
+}
+
+@keyframes balloonFloat {
+    0% { transform: translateY(0) rotate(-5deg); }
+    100% { transform: translateY(-15px) rotate(5deg); }
+}

@@ -1,0 +1,33 @@
+{% comment %}Page 4: Anniversary — Dance & Love Letter{% endcomment %}
+
+<div class="dance-container">
+  <button class="dance-button" aria-label="Start dance animation">
+    <i class="fas fa-music"></i>
+    Shall We Dance?
+  </button>
+  <div class="dance-animation" aria-live="polite"></div>
+</div>
+
+<!-- Love Letter Reveal -->
+<div class="love-letter-container" id="love-letter">
+  <div class="letter-envelope" id="letter-envelope" tabindex="0" aria-label="Click to open love letter">
+    <div class="envelope-flap"></div>
+    <div class="envelope-body">
+      <div class="heart-seal"><i class="fas fa-heart"></i></div>
+    </div>
+  </div>
+  <div class="letter-content hidden" id="letter-content">
+    <div class="letter-paper">
+      <p class="letter-greeting">My Dearest {{ event.name }},</p>
+      <p class="letter-body">
+        {% if event.message %}
+          {{ event.message|linebreaksbr }}
+        {% else %}
+          Every moment with you feels like a page from the most beautiful love story ever written.
+          Through all our seasons together, my love for you has only grown deeper.
+        {% endif %}
+      </p>
+      <p class="letter-closing">Forever yours ❤️</p>
+    </div>
+  </div>
+</div>

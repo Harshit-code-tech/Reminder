@@ -1,0 +1,23 @@
+{% comment %}Page 4: Other Events — Memory Tree & Wishes{% endcomment %}
+
+<div class="memory-tree-container">
+  <div class="memory-tree" tabindex="0" aria-label="Interactive memory tree. Click to add memories."></div>
+  <div class="tree-instruction" aria-live="polite">Click to plant a memory</div>
+  <div class="tree-message">
+    {{ event.message|default:"Each click represents a moment we've shared." }}
+  </div>
+</div>
+
+<!-- Wish Jar -->
+<div class="wish-jar-container" id="wish-jar">
+  <div class="wish-jar">
+    <div class="jar-body">
+      <div class="jar-label">Wishes</div>
+    </div>
+    <div class="jar-lid"></div>
+  </div>
+  <button class="wish-jar-btn action-button" id="add-wish-btn">
+    <i class="fas fa-plus"></i> Add a Wish
+  </button>
+  <div class="wish-notes" id="wish-notes"></div>
+</div>

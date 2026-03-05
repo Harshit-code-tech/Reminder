@@ -1,0 +1,52 @@
+{% comment %}Page 2: Anniversary — Timeline Journey{% endcomment %}
+<h2 class="page-title">Our Journey Together, <span class="recipient-name">{{ event.name }}</span></h2>
+
+<div class="anniversary-journey-container">
+  <!-- Animated Heart Timeline -->
+  <div class="heart-timeline">
+    <div class="timeline-line"></div>
+    <div class="timeline-heart start-heart">
+      <i class="fas fa-heart"></i>
+      <span class="timeline-label">The Beginning</span>
+    </div>
+    <div class="timeline-heart mid-heart">
+      <i class="fas fa-heart"></i>
+      <span class="timeline-label">Growing Together</span>
+    </div>
+    <div class="timeline-heart end-heart">
+      <i class="fas fa-heart"></i>
+      <span class="timeline-label">Today & Beyond</span>
+    </div>
+  </div>
+
+  <!-- Milestone Text -->
+  <div class="milestone-display">
+    <div class="milestone-text" aria-live="polite">
+      {% if highlights %}
+        {{ highlights|linebreaksbr }}
+      {% else %}
+        Every day with you is a new chapter in our beautiful story.
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Love Counter -->
+  <div class="love-counter">
+    <div class="counter-item">
+      <span class="counter-number" id="years-together">—</span>
+      <span class="counter-label">Years</span>
+    </div>
+    <div class="counter-divider">•</div>
+    <div class="counter-item">
+      <span class="counter-number" id="months-together">—</span>
+      <span class="counter-label">Months</span>
+    </div>
+    <div class="counter-divider">•</div>
+    <div class="counter-item">
+      <span class="counter-number" id="days-together">—</span>
+      <span class="counter-label">Days</span>
+    </div>
+  </div>
+
+  <p class="journey-note">Every moment with you is special.</p>
+</div>

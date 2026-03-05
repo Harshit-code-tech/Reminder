@@ -2276,10 +2276,7 @@ body {
       100% { width: 100%; }
     }
 
-    @keyframes flicker {
-      0%, 100% { transform: translateX(-50%) scale(1) rotate(-2deg); }
-      50% { transform: translateX(-50%) scale(1.1) rotate(2deg); }
-    }
+    /* flicker keyframes defined globally — not duplicated here */
 
     @keyframes floatDown {
       0% {

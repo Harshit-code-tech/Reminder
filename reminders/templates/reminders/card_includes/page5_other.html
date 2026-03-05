@@ -1,0 +1,24 @@
+{% comment %}Page 5: Other Events Farewell{% endcomment %}
+<h2 class="page-title">
+  <span class="recipient-name">{{ event.name }}</span>, You're Unforgettable ✨
+</h2>
+
+<div class="other-farewell">
+  <div class="farewell-message">
+    {% if event.message %}
+    {{ event.message|linebreaksbr }}
+    {% else %}
+    Wishing you joy and happiness today and always.
+    May every day bring you closer to your dreams. 🌟
+    {% endif %}
+  </div>
+
+  <!-- Floating Stars -->
+  <div class="farewell-stars">
+    <span class="farewell-star" style="--x: 10%; --delay: 0s">✨</span>
+    <span class="farewell-star" style="--x: 30%; --delay: 0.5s">🌟</span>
+    <span class="farewell-star" style="--x: 50%; --delay: 1s">⭐</span>
+    <span class="farewell-star" style="--x: 70%; --delay: 1.5s">💫</span>
+    <span class="farewell-star" style="--x: 90%; --delay: 2s">🌠</span>
+  </div>
+</div>

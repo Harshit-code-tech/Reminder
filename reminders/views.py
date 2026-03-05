@@ -282,26 +282,29 @@ def delete_event(request, event_id):
     if request.method == 'POST':
         try:
             supabase = get_user_supabase_client(request)
+
+            # Delete all EventMedia files from Supabase storage
+            if event.media.exists():
+                try:
+                    _remove_event_media_from_storage(supabase, event.media.all())
+                    logger.info(f"Removed all media for event {event.name}")
+                except Exception as e:
+                    logger.error(f"Exception deleting EventMedia for event {event.name}: {str(e)}")
+                    messages.error(request, f"Failed to delete media for event {event.name}: {str(e)}")
+                    return render(request, "reminders/confirm_delete.html", {"event": event})
+
+            # Also handle legacy media_path if it exists
             if event.media_path:
                 try:
                     file_path = event.media_path
                     dir_path = "/".join(file_path.split('/')[:-1])
                     existing_files = supabase.storage.from_('event-media').list(dir_path)
-                    if not any(f['name'] == file_path.split('/')[-1] for f in existing_files):
-                        logger.warning(f"Media already deleted for event {event.name}: {file_path}")
-                    else:
-                        response = supabase.storage.from_('event-media').remove([file_path])
-                        logger.debug(f"Supabase delete response: {response}")
-                        if not response or (isinstance(response, list) and len(response) == 0):
-                            logger.error(f"Media deletion failed for event {event.name}: Invalid path or permissions")
-                            messages.error(request, f"Failed to delete media for event {event.name}. Please try again.")
-                            raise Exception("Delete returned empty response, possible permission error")
-                        logger.info(f"Deleted media from storage: {file_path}")
-                        logger.info(f"Removed media for event {event.name}")
+                    if any(f['name'] == file_path.split('/')[-1] for f in existing_files):
+                        supabase.storage.from_('event-media').remove([file_path])
+                        logger.info(f"Deleted legacy media from storage: {file_path}")
                 except Exception as e:
-                    logger.error(f"Exception checking/deleting media for event {event.name}: {str(e)}")
-                    messages.error(request, f"Failed to delete media for event {event.name}: {str(e)}")
-                    return render(request, "reminders/confirm_delete.html", {"event": event})
+                    logger.warning(f"Failed to delete legacy media_path for event {event.name}: {str(e)}")
+
             event.delete()
             messages.success(request, f"Event '{event.name}' deleted successfully!")
             logger.info(f"Event deleted: {event.name} for user {request.user.username}")
@@ -540,7 +543,7 @@ def edit_past_event(request, event_id):
                         messages.error(request, f"Failed to delete media: {e}")
                         return render(request, "reminders/event_form.html", {"form": form, "event": event})
 
-                files = request.FILES.getlist('media_files')
+                files = request.FILES.getlist('image_files') + request.FILES.getlist('audio_files')
                 result = _validate_and_upload_media(request, event, supabase, files)
                 if isinstance(result, str):
                     messages.error(request, result)

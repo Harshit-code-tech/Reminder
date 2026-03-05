@@ -1,0 +1,29 @@
+{% comment %}Page 2: Other Events — Inspirational Reveal{% endcomment %}
+<h2 class="page-title">Something Special for <span class="recipient-name">{{ event.name }}</span></h2>
+
+<div class="inspiration-container">
+  <!-- Animated Quote Reveal -->
+  <div class="quote-reveal">
+    <div class="quote-card">
+      <div class="quote-icon"><i class="fas fa-quote-left"></i></div>
+      <blockquote class="inspiration-quote" aria-live="polite"></blockquote>
+      <div class="quote-icon-end"><i class="fas fa-quote-right"></i></div>
+    </div>
+  </div>
+
+  <!-- Custom Label Display -->
+  {% if event.custom_label %}
+  <div class="custom-label-display">
+    <span class="label-tag"><i class="fas fa-tag"></i> {{ event.custom_label }}</span>
+  </div>
+  {% endif %}
+
+  <!-- Particle Effect Trigger -->
+  <div class="magic-trigger-container">
+    <button class="magic-trigger-btn action-button" id="magic-reveal-btn">
+      <i class="fas fa-magic"></i>
+      Reveal the Magic
+    </button>
+    <div class="magic-particles" id="magic-particles"></div>
+  </div>
+</div>

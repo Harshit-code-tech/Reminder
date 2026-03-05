@@ -1,0 +1,31 @@
+{% comment %}Page 5: Birthday Farewell{% endcomment %}
+<h2 class="page-title">
+  Happy Birthday, <span class="recipient-name">{{ event.name }}</span>! 🎂
+</h2>
+
+<div class="birthday-farewell">
+  <!-- Age Badge (optional) -->
+  <div class="birthday-badge">
+    <div class="badge-sparkle">✨</div>
+    <div class="badge-text">Another Year of Amazing You!</div>
+  </div>
+
+  <div class="farewell-message">
+    {% if event.message %}
+    {{ event.message|linebreaksbr }}
+    {% else %}
+    May this year bring you countless moments of happiness, success, and beautiful memories.
+    You deserve all the wonderful things life has to offer.
+    Here's to you — today, tomorrow, and always! 🎉
+    {% endif %}
+  </div>
+
+  <!-- Birthday Balloons Animation -->
+  <div class="birthday-balloons">
+    <div class="balloon" style="--color: #FF6B6B; --delay: 0s">🎈</div>
+    <div class="balloon" style="--color: #4ECDC4; --delay: 0.5s">🎈</div>
+    <div class="balloon" style="--color: #45B7D1; --delay: 1s">🎈</div>
+    <div class="balloon" style="--color: #96CEB4; --delay: 1.5s">🎈</div>
+    <div class="balloon" style="--color: #FFEAA7; --delay: 2s">🎈</div>
+  </div>
+</div>

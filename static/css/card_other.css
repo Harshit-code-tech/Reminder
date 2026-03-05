@@ -1,0 +1,311 @@
+/**
+ * Other/Generic Card Styles
+ * Supplemental CSS loaded only for 'other' event type cards.
+ */
+
+/* Other event color accents */
+.card-container[data-theme="other"] {
+    --other-primary: #06b6d4;
+    --other-secondary: #0891b2;
+    --other-accent: #a78bfa;
+}
+
+/* Memory tree container */
+.memory-tree-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+}
+
+.memory-tree {
+    position: relative;
+    width: 240px;
+    height: 260px;
+    cursor: pointer;
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(6, 182, 212, 0.05), rgba(6, 182, 212, 0.1));
+    transition: transform 0.3s ease;
+    overflow: hidden;
+}
+
+.memory-tree:hover {
+    transform: scale(1.02);
+}
+
+.memory-leaf {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: var(--other-primary, #06b6d4);
+    border-radius: 50%;
+    animation: leafAppear 0.5s ease-out;
+    box-shadow: 0 0 8px rgba(6, 182, 212, 0.4);
+}
+
+@keyframes leafAppear {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.tree-message {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    font-style: italic;
+    padding: 10px;
+}
+
+/* Quote container for generic events */
+.card-container[data-theme="other"] .quote-container {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(167, 139, 250, 0.1));
+    border-color: rgba(6, 182, 212, 0.2);
+}
+
+/* Other event welcome enhancement */
+.welcome-title[data-event-type="other"] {
+    background: linear-gradient(135deg, #06b6d4, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Generic final animation */
+.card-container[data-theme="other"] .final-animation {
+    min-height: 200px;
+    position: relative;
+}
+
+@keyframes twinkle {
+    0% { opacity: 0.3; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
+    100% { opacity: 0.5; transform: scale(1); }
+}
+
+/* ─── Quote Reveal ─── */
+.inspiration-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+}
+
+.quote-reveal {
+    width: 100%;
+    max-width: 360px;
+}
+
+.quote-card {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.08), rgba(167, 139, 250, 0.08));
+    border: 1px solid rgba(6, 182, 212, 0.2);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+}
+
+.quote-icon, .quote-icon-end {
+    color: var(--other-primary, #06b6d4);
+    font-size: 1.2rem;
+    opacity: 0.6;
+}
+
+.inspiration-quote {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+    font-style: italic;
+    margin: 10px 0;
+}
+
+@keyframes quoteGlow {
+    from { text-shadow: 0 0 0 transparent; }
+    to { text-shadow: 0 0 10px rgba(6, 182, 212, 0.2); }
+}
+
+/* ─── Custom Label ─── */
+.custom-label-display {
+    margin: 10px 0;
+}
+
+.label-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(167, 139, 250, 0.15));
+    color: var(--other-primary, #06b6d4);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* ─── Magic Trigger ─── */
+.magic-trigger-container {
+    position: relative;
+    text-align: center;
+}
+
+.magic-trigger-btn {
+    background: linear-gradient(135deg, var(--other-primary, #06b6d4), var(--other-accent, #a78bfa));
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 14px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+}
+
+.magic-trigger-btn:hover:not(:disabled) {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(6, 182, 212, 0.4);
+}
+
+.magic-trigger-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.magic-particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 150px;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+@keyframes magicFall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 0; }
+    20% { opacity: 1; }
+    100% { transform: translateY(130px) rotate(360deg); opacity: 0; }
+}
+
+/* ─── Wish Jar ─── */
+.wish-jar-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+    position: relative;
+}
+
+.wish-jar {
+    position: relative;
+    width: 100px;
+    height: 120px;
+}
+
+.jar-body {
+    width: 80px;
+    height: 100px;
+    background: rgba(6, 182, 212, 0.1);
+    border: 2px solid rgba(6, 182, 212, 0.3);
+    border-radius: 0 0 20px 20px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+}
+
+.jar-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--other-primary, #06b6d4);
+    font-weight: 600;
+}
+
+.jar-lid {
+    width: 90px;
+    height: 15px;
+    background: linear-gradient(135deg, var(--other-primary, #06b6d4), var(--other-accent, #a78bfa));
+    border-radius: 6px;
+    margin: 0 auto -2px;
+    position: relative;
+    top: -102px;
+}
+
+@keyframes jarShake {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(3deg); }
+    75% { transform: rotate(-3deg); }
+}
+
+.wish-jar-btn {
+    background: linear-gradient(135deg, var(--other-primary, #06b6d4), var(--other-accent, #a78bfa));
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.wish-jar-btn:hover {
+    transform: scale(1.05);
+}
+
+.wish-notes {
+    position: relative;
+    width: 100%;
+    min-height: 60px;
+}
+
+.wish-note {
+    position: absolute;
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(167, 139, 250, 0.1));
+    border: 1px solid rgba(6, 182, 212, 0.2);
+    padding: 6px 14px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+@keyframes wishFloat {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-8px); }
+}
+
+/* ─── Other Farewell ─── */
+.other-farewell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+}
+
+.farewell-stars {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 15px 0;
+    min-height: 40px;
+}
+
+.farewell-star {
+    font-size: 1.5rem;
+    display: inline-block;
+}

@@ -1,0 +1,32 @@
+{% comment %}Page 4: Birthday — Make a Wish with Cake{% endcomment %}
+
+<div class="cake-container">
+  <div class="birthday-cake" tabindex="0" aria-label="Birthday cake with candles. Click to blow out candles.">
+    <div class="cake-base"></div>
+    <div class="cake-layers"></div>
+    <div class="candles-container">
+      <div class="candle"><div class="candle-flame"></div></div>
+      <div class="candle"><div class="candle-flame"></div></div>
+      <div class="candle"><div class="candle-flame"></div></div>
+      <div class="candle"><div class="candle-flame"></div></div>
+      <div class="candle"><div class="candle-flame"></div></div>
+    </div>
+  </div>
+  <div class="cake-instruction" aria-live="polite">Click to blow out the candles and make a wish!</div>
+
+  <!-- Birthday Wish Input (revealed after blowing candles) -->
+  <div class="wish-container hidden" id="birthday-wish-container">
+    <div class="wish-card">
+      <h3><i class="fas fa-star"></i> Your Wish</h3>
+      <p class="wish-prompt">Close your eyes, make a wish...</p>
+      <div class="wish-stars">
+        <span class="wish-star" style="--delay: 0s">⭐</span>
+        <span class="wish-star" style="--delay: 0.3s">🌟</span>
+        <span class="wish-star" style="--delay: 0.6s">✨</span>
+        <span class="wish-star" style="--delay: 0.9s">💫</span>
+        <span class="wish-star" style="--delay: 1.2s">⭐</span>
+      </div>
+      <p class="wish-result">Your wish has been sent to the stars! 🌠</p>
+    </div>
+  </div>
+</div>

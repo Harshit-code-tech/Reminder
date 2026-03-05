@@ -1,0 +1,39 @@
+{% comment %}Page 2: Birthday — Countdown with Slider Unlock & Gift Reveal{% endcomment %}
+<h2 class="page-title">Want a gift, <span class="recipient-name">{{ event.name }}</span>?</h2>
+
+<div class="countdown-container">
+  <div class="countdown" aria-live="assertive">5</div>
+
+  <div class="countdown-hint" aria-live="polite">
+    <span class="hint-icon">💡</span>
+    <strong>Hint:</strong> Slide to unlock <b>"YES!"</b> to start the countdown!
+  </div>
+
+  <div class="slider-unlock-container">
+    <div class="slider-track">
+      <div class="slider-thumb" tabindex="0" aria-label="Slide to unlock Yes">
+        <i class="fas fa-arrow-right"></i>
+      </div>
+      <span class="slider-label">Slide to unlock <b>YES!</b></span>
+    </div>
+  </div>
+
+  <button id="yes-unlocked-button" class="action-button hidden" aria-label="Start countdown">
+    <i class="fas fa-gift"></i>
+    YES!
+  </button>
+
+  <!-- Birthday Surprise Reveal (shown after countdown) -->
+  <div class="birthday-surprise hidden" id="birthday-surprise">
+    <div class="surprise-content">
+      <div class="gift-box-animation">
+        <div class="gift-box">
+          <div class="gift-lid"></div>
+          <div class="gift-body"></div>
+          <div class="gift-ribbon"></div>
+        </div>
+      </div>
+      <p class="surprise-text">🎁 A surprise is waiting on the next page!</p>
+    </div>
+  </div>
+</div>

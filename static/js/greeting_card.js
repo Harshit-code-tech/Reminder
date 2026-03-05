@@ -24,7 +24,8 @@ const CONFIG = {
 
 
 class AudioManager {
-    constructor() {
+    constructor(eventType) {
+        this.eventType = eventType || 'birthday';
         this.backgroundVolume = 0.3;
         this.effectVolume = 0.6;
         this.isBackgroundPlaying = false;
@@ -43,15 +44,22 @@ class AudioManager {
 
     loadAudioTracks() {
         try {
-            // Load actual audio files with error handling
+            // Event-type-specific audio mapping
             const audioFiles = {
-                background: '/static/audio/background-rakhi.mp3',
-                bell: '/static/audio/bell-sacred.mp3',
-                success: '/static/audio/success-chime.mp3',
                 pageTransition: '/static/audio/page-turn.mp3',
-                blessing: '/static/audio/blessing-sound.mp3',
+                success: '/static/audio/success-chime.mp3',
                 celebration: '/static/audio/celebration.mp3'
             };
+
+            // Only load Raksha Bandhan-specific audio for that event type
+            if (this.eventType === 'raksha_bandhan') {
+                audioFiles.background = '/static/audio/background-rakhi.mp3';
+                audioFiles.bell = '/static/audio/bell-sacred.mp3';
+                audioFiles.blessing = '/static/audio/blessing-sound.mp3';
+            } else {
+                // Generic ambient background for other events
+                audioFiles.background = '/static/audio/Whispering Wind.mp3';
+            }
 
             Object.keys(audioFiles).forEach(key => {
                 try {
@@ -301,7 +309,10 @@ class GreetingCardApp {
         this.elements = {};
         this.storageKey = '';
         this.savedData = {};
-        this.audioManager = new AudioManager();
+        // Detect event type early so AudioManager can use it
+        const tempContainer = document.querySelector('.card-container');
+        const detectedType = tempContainer ? (tempContainer.dataset.theme || 'birthday') : 'birthday';
+        this.audioManager = new AudioManager(detectedType);
         this.lastPage = 1;
         this.init();
     }
@@ -1395,16 +1406,20 @@ class GreetingCardApp {
     }
     // ===== INTERACTIVE ELEMENTS =====
     setupInteractiveElements() {
-        console.log('Setting up Rakhi blessings');
+        console.log('Setting up interactive elements for:', this.eventType);
         this.setupBirthdayCake();
         this.setupDanceButton();
         this.setupMemoryTree();
         this.setupMediaDisplays();
         this.setupAudioControls();
 
-        // Add Rakhi-specific interactions
+        // Event-specific page 4 interactions
         if (this.eventType === 'raksha_bandhan') {
             this.setupRakhiBlessings();
+        } else if (this.eventType === 'anniversary') {
+            this.setupLoveLetter();
+        } else if (this.eventType === 'other') {
+            this.setupWishJar();
         }
     }
     setupRakhiBlessings() {
@@ -1755,6 +1770,26 @@ class GreetingCardApp {
         leaf.style.top = `${y}px`;
         this.elements.memoryTree.appendChild(leaf);
     }
+
+    // ===== PAGE-SPECIFIC STUBS (overridden by event modules) =====
+    // These no-ops prevent errors when a module hasn't loaded.
+    setupBirthdayPage2() {}
+    setupBirthdayPage5() {}
+    revealBirthdaySurprise() {}
+    revealBirthdayWish() {}
+    setupAnniversaryPage2() {}
+    setupAnniversaryPage5() {}
+    setupLoveLetter() {}
+    setupLoveCounter() {}
+    animateHeartTimeline() {}
+    animateIntertwinedHearts() {}
+    animatePromiseRings() {}
+    setupOtherPage2() {}
+    setupOtherPage5() {}
+    setupQuoteReveal() {}
+    setupMagicReveal() {}
+    setupWishJar() {}
+    animateFarewellStars() {}
 
     // ===== MEDIA AND AUDIO =====
     setupMediaDisplays() {
@@ -2126,11 +2161,7 @@ class GreetingCardApp {
     }
 
     generateShareLink(password) {
-        if (!password) {
-            this.showFeedback('Please enter a password for sharing.', 'error');
-            return;
-        }
-
+        // password is optional — backend handles empty password gracefully
         const eventId = this.elements.shareButton.dataset.eventId;
         const csrftoken = this.getCookie('csrftoken');
 
@@ -2197,9 +2228,12 @@ class GreetingCardApp {
             case 2:
                 if (this.eventType === 'raksha_bandhan') {
                     this.setupRakhiSVGCeremony();
-
                 } else if (this.eventType === 'birthday') {
-                    this.setupSliderUnlock();
+                    this.setupBirthdayPage2();
+                } else if (this.eventType === 'anniversary') {
+                    this.setupAnniversaryPage2();
+                } else {
+                    this.setupOtherPage2();
                 }
                 break;
             case 3:
@@ -2216,6 +2250,13 @@ class GreetingCardApp {
                 break;
             case 5:
                 this.playFinalAnimation();
+                if (this.eventType === 'birthday') {
+                    this.setupBirthdayPage5();
+                } else if (this.eventType === 'anniversary') {
+                    this.setupAnniversaryPage5();
+                } else if (this.eventType !== 'raksha_bandhan') {
+                    this.setupOtherPage5();
+                }
                 break;
         }
     }
@@ -2643,9 +2684,30 @@ function initPage1Decor() {
 }
 
 
+// ===== APPLY EVENT-SPECIFIC MIXINS =====
+// Module files loaded after this script set window._*Mixin objects.
+// Apply them to the prototype before DOMContentLoaded creates the instance.
+function _applyPendingMixins() {
+    const mixins = [
+        window._rakhiMixin,
+        window._birthdayMixin,
+        window._anniversaryMixin,
+        window._otherMixin
+    ];
+    mixins.forEach(mixin => {
+        if (mixin) {
+            Object.keys(mixin).forEach(key => {
+                GreetingCardApp.prototype[key] = mixin[key];
+            });
+        }
+    });
+}
+
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', () => {
     try {
+        // Apply any event-specific mixins before creating the instance
+        _applyPendingMixins();
         // Initialize the greeting card application
         window.greetingCard = new GreetingCardApp();
 

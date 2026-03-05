@@ -1,0 +1,32 @@
+{% comment %}Page 5: Anniversary Farewell{% endcomment %}
+<h2 class="page-title">
+  Here's to Us, <span class="recipient-name">{{ event.name }}</span> 💕
+</h2>
+
+<div class="anniversary-farewell">
+  <!-- Intertwined Hearts -->
+  <div class="intertwined-hearts">
+    <svg width="120" height="100" viewBox="0 0 120 100">
+      <path class="heart-path heart-left" d="M 30 40 Q 30 20 45 20 Q 60 20 60 40 Q 60 60 30 80 Q 0 60 0 40 Q 0 20 15 20 Q 30 20 30 40"
+            fill="none" stroke="#E91E63" stroke-width="2" opacity="0.8"/>
+      <path class="heart-path heart-right" d="M 90 40 Q 90 20 105 20 Q 120 20 120 40 Q 120 60 90 80 Q 60 60 60 40 Q 60 20 75 20 Q 90 20 90 40"
+            fill="none" stroke="#E91E63" stroke-width="2" opacity="0.8"/>
+    </svg>
+  </div>
+
+  <div class="farewell-message">
+    {% if event.message %}
+    {{ event.message|linebreaksbr }}
+    {% else %}
+    Through every season, every challenge, and every celebration — I'd choose you again and again.
+    Our love story is my favorite story, and the best chapters are yet to come.
+    Forever yours, always and forever. 💍
+    {% endif %}
+  </div>
+
+  <!-- Promise Ring Animation -->
+  <div class="promise-rings">
+    <div class="ring ring-1">💍</div>
+    <div class="ring ring-2">💍</div>
+  </div>
+</div>
