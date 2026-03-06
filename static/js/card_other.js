@@ -231,7 +231,8 @@
 
     // Export EventModule interface — engine calls these hooks directly.
     // No prototype mutation.
-    window.EventModule = {
+    window.EventModules = window.EventModules || {};
+    window.EventModules['other'] = {
         initialize(app) {},
         onPageEnter(page, app) {
             if (page === 2) OtherMixin.setupOtherPage2.call(app);

@@ -303,7 +303,8 @@
 
     // Export EventModule interface — engine calls these hooks directly.
     // No prototype mutation.
-    window.EventModule = {
+    window.EventModules = window.EventModules || {};
+    window.EventModules['birthday'] = {
         initialize(app) {},
         onPageEnter(page, app) {
             if (page === 2) BirthdayMixin.setupBirthdayPage2.call(app);

@@ -432,7 +432,8 @@
 
     // Export EventModule interface — engine calls these hooks directly.
     // No prototype mutation.
-    window.EventModule = {
+    window.EventModules = window.EventModules || {};
+    window.EventModules['raksha_bandhan'] = {
         initialize(app) {
             app.initializeRakhiLoadingScreen();
             if (typeof glowrangoli === 'function') glowrangoli();

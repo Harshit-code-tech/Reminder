@@ -192,7 +192,7 @@ class GreetingCardApp {
 
     // ===== EVENT MODULE API =====
     getEventModule() {
-        return window.EventModule || null;
+        return (window.EventModules && window.EventModules[this.eventType]) || null;
     }
 
     // ===== THEME MANAGER DELEGATORS =====
@@ -772,7 +772,7 @@ function initPage1Decor() {
 // Apply them to the prototype before DOMContentLoaded creates the instance.
 function _applyPendingMixins() {
     // Prototype mutation replaced by EventModule API.
-    // Event modules now expose window.EventModule instead of modifying the prototype.
+    // Event modules now register on window.EventModules[eventType] instead of modifying the prototype.
 }
 
 // ===== INITIALIZATION =====
