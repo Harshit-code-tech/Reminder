@@ -12,8 +12,8 @@
         /* ─── Page 2: Quote Reveal + Magic Particles ─── */
 
         setupOtherPage2() {
-            this.setupQuoteReveal();
-            this.setupMagicReveal();
+            OtherMixin.setupQuoteReveal.call(this);
+            OtherMixin.setupMagicReveal.call(this);
         },
 
         setupQuoteReveal() {
@@ -94,12 +94,12 @@
 
             if (this.savedData.leaves && Array.isArray(this.savedData.leaves)) {
                 this.savedData.leaves.forEach(leaf => {
-                    this.createMemoryLeaf(leaf.x, leaf.y);
+                    OtherMixin.createMemoryLeaf.call(this, leaf.x, leaf.y);
                 });
             }
 
             this.elements.memoryTree.addEventListener('click', (e) => {
-                this.addMemoryLeaf(e);
+                OtherMixin.addMemoryLeaf.call(this, e);
             });
         },
 
@@ -108,7 +108,7 @@
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
 
-            this.createMemoryLeaf(x, y);
+            OtherMixin.createMemoryLeaf.call(this, x, y);
 
             if (!this.savedData.leaves) this.savedData.leaves = [];
             this.savedData.leaves.push({ x, y });
@@ -140,7 +140,7 @@
             const wishes = this.savedData.wishes || [];
 
             // Restore saved wishes
-            wishes.forEach(wish => this._createWishNote(wishNotes, wish));
+            wishes.forEach(wish => OtherMixin._createWishNote.call(this, wishNotes, wish));
 
             addWishBtn.addEventListener('click', () => {
                 const defaultWishes = [
@@ -155,7 +155,7 @@
                 ];
 
                 const wish = defaultWishes[Math.floor(Math.random() * defaultWishes.length)];
-                this._createWishNote(wishNotes, wish);
+                OtherMixin._createWishNote.call(this, wishNotes, wish);
 
                 // Save wish
                 if (!this.savedData.wishes) this.savedData.wishes = [];
@@ -185,7 +185,7 @@
         /* ─── Page 5: Farewell Stars ─── */
 
         setupOtherPage5() {
-            this.animateFarewellStars();
+            OtherMixin.animateFarewellStars.call(this);
         },
 
         animateFarewellStars() {

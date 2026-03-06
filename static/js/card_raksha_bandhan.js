@@ -16,7 +16,7 @@
                 return;
             }
             console.log('Rakhi loading screen found');
-            this.createFloatingPetals();
+            RakshaBandhanMixin.createFloatingPetals.call(this);
 
             setTimeout(() => {
                 loadingScreen.classList.add('fade-out');
@@ -57,10 +57,10 @@
             if (this.animationInProgress) return;
 
             startRitualBtn.addEventListener('click', () => {
-                this.startRakhiRitual();
+                RakshaBandhanMixin.startRakhiRitual.call(this);
             });
 
-            this.setupRakhiGiftHandlers();
+            RakshaBandhanMixin.setupRakhiGiftHandlers.call(this);
         },
 
         startRakhiRitual() {
@@ -74,7 +74,7 @@
             startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sacred Ritual in Progress...';
 
             this.audioManager.playBellSound();
-            this.runRakhiAnimationSequence(instruction);
+            RakshaBandhanMixin.runRakhiAnimationSequence.call(this, instruction);
         },
 
         runRakhiAnimationSequence(instruction) {
@@ -109,7 +109,7 @@
 
                         setTimeout(() => {
                             instruction.textContent = '✨ The sacred bond is blessed with divine grace... | यह पवित्र बंधन अब ईश्वर की कृपा से संजोया गया है...';
-                            this.showBeautifulRakhiDisplay();
+                            RakshaBandhanMixin.showBeautifulRakhiDisplay.call(this);
                             this.audioManager.playSuccessSound();
 
                             setTimeout(() => {
@@ -133,17 +133,17 @@
         setupRakhiGiftHandlers() {
             const giftIcon = document.getElementById('gift-icon');
             if (giftIcon) {
-                giftIcon.addEventListener('click', () => this.showRakhiGiftPopup());
+                giftIcon.addEventListener('click', () => RakshaBandhanMixin.showRakhiGiftPopup.call(this));
             }
 
             const closeRakhi = document.getElementById('close-rakhi');
             if (closeRakhi) {
-                closeRakhi.addEventListener('click', () => this.closeRakhiDisplay());
+                closeRakhi.addEventListener('click', () => RakshaBandhanMixin.closeRakhiDisplay.call(this));
             }
 
             const closeGift = document.getElementById('close-gift-popup');
             if (closeGift) {
-                closeGift.addEventListener('click', () => this.closeRakhiGiftPopup());
+                closeGift.addEventListener('click', () => RakshaBandhanMixin.closeRakhiGiftPopup.call(this));
             }
         },
 
@@ -161,7 +161,7 @@
             if (rakhiContainer) {
                 rakhiContainer.classList.remove('show');
             }
-            setTimeout(() => this.triggerRakhiNextSection(), 500);
+            setTimeout(() => RakshaBandhanMixin.triggerRakhiNextSection.call(this), 500);
         },
 
         closeRakhiGiftPopup() {
@@ -170,7 +170,7 @@
                 giftPopup.classList.remove('show');
             }
             setTimeout(() => {
-                this.closeRakhiDisplay();
+                RakshaBandhanMixin.closeRakhiDisplay.call(this);
             }, 300);
         },
 
@@ -201,7 +201,7 @@
             RakshaBandhanMixin.setupBlessingShower.call(this);
             RakshaBandhanMixin.setupDiyaCeremony.call(this);
             RakshaBandhanMixin.setupPromiseTree.call(this);
-            this.initializeBlessingRain();
+            RakshaBandhanMixin.initializeBlessingRain.call(this);
             console.log('Rakhi blessings setup completed');
         },
 
@@ -227,7 +227,7 @@
                 { top: '75%', left: '40%', rotate: '-12deg' }
             ];
 
-            this.addDecorativeLeaves(treeBranches);
+            RakshaBandhanMixin.addDecorativeLeaves.call(this, treeBranches);
 
             promiseTree.addEventListener('click', () => {
                 if (promiseIndex < promises.length) {
@@ -295,7 +295,7 @@
                 blessingBtn.addEventListener('click', () => {
                     console.log('Blessing button clicked');
                     this.audioManager.playBlessingSound();
-                    this.createBlessingParticles(blessingShower);
+                    RakshaBandhanMixin.createBlessingParticles.call(this, blessingShower);
                 });
             } else {
                 console.error('Blessing button or shower container not found');
@@ -423,9 +423,9 @@
             const rakhiContainer = document.getElementById('beautiful-rakhi');
 
             if (giftPopup && giftPopup.classList.contains('show')) {
-                this.closeRakhiGiftPopup();
+                RakshaBandhanMixin.closeRakhiGiftPopup.call(this);
             } else if (rakhiContainer && rakhiContainer.classList.contains('show')) {
-                this.closeRakhiDisplay();
+                RakshaBandhanMixin.closeRakhiDisplay.call(this);
             }
         }
     };

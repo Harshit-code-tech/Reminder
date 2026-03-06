@@ -12,8 +12,8 @@
         /* ─── Page 2: Heart Timeline + Love Counter ─── */
 
         setupAnniversaryPage2() {
-            this.animateHeartTimeline();
-            this.setupLoveCounter();
+            AnniversaryMixin.animateHeartTimeline.call(this);
+            AnniversaryMixin.setupLoveCounter.call(this);
         },
 
         animateHeartTimeline() {
@@ -69,9 +69,9 @@
             }
 
             // Animate the counter numbers
-            this._animateCounter(yearsEl, Math.max(0, years));
-            setTimeout(() => this._animateCounter(monthsEl, Math.max(0, months)), 300);
-            setTimeout(() => this._animateCounter(daysEl, Math.max(0, days)), 600);
+            AnniversaryMixin._animateCounter.call(this, yearsEl, Math.max(0, years));
+            setTimeout(() => AnniversaryMixin._animateCounter.call(this, monthsEl, Math.max(0, months)), 300);
+            setTimeout(() => AnniversaryMixin._animateCounter.call(this, daysEl, Math.max(0, days)), 600);
         },
 
         _animateCounter(el, target) {
@@ -196,8 +196,8 @@
         /* ─── Page 5: Farewell — Intertwined Hearts + Promise Rings ─── */
 
         setupAnniversaryPage5() {
-            this.animateIntertwinedHearts();
-            this.animatePromiseRings();
+            AnniversaryMixin.animateIntertwinedHearts.call(this);
+            AnniversaryMixin.animatePromiseRings.call(this);
         },
 
         animateIntertwinedHearts() {

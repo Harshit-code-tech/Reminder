@@ -12,7 +12,7 @@
         /* ─── Page 2: Slider + Countdown + Surprise Reveal ─── */
 
         setupBirthdayPage2() {
-            this.setupSliderUnlock();
+            BirthdayMixin.setupSliderUnlock.call(this);
         },
 
         setupSliderUnlock() {
@@ -49,7 +49,7 @@
                 this.elements.sliderThumb.style.left = currentX + 'px';
 
                 if (currentX >= maxMove - 5) {
-                    this.unlockYesButton();
+                    BirthdayMixin.unlockYesButton.call(this);
                 }
             };
 
@@ -77,7 +77,7 @@
                     e.preventDefault();
                     currentX = Math.min(currentX + step, maxMove);
                     this.elements.sliderThumb.style.left = currentX + 'px';
-                    if (currentX >= maxMove - 5) this.unlockYesButton();
+                    if (currentX >= maxMove - 5) BirthdayMixin.unlockYesButton.call(this);
                 } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
                     e.preventDefault();
                     currentX = Math.max(currentX - step, 0);
@@ -86,7 +86,7 @@
             });
 
             if (this.elements.yesButton) {
-                this.elements.yesButton.addEventListener('click', () => this.startCountdown());
+                this.elements.yesButton.addEventListener('click', () => BirthdayMixin.startCountdown.call(this));
             }
         },
 
@@ -121,7 +121,7 @@
                     countdownElement.style.display = 'none';
 
                     // Show birthday surprise reveal
-                    this.revealBirthdaySurprise();
+                    BirthdayMixin.revealBirthdaySurprise.call(this);
 
                     const hasThreadOfMemories = this.cardContainer.dataset.threadOfMemories === 'true';
                     if (hasThreadOfMemories) {
@@ -194,7 +194,7 @@
 
             setTimeout(() => {
                 this.showConfetti();
-                this.revealBirthdayWish();
+                BirthdayMixin.revealBirthdayWish.call(this);
                 this.revealAudioOrQuote();
                 blowEffect.remove();
             }, 1000);
@@ -241,8 +241,8 @@
         /* ─── Page 5: Farewell — Balloons + Badge ─── */
 
         setupBirthdayPage5() {
-            this.animateBirthdayBalloons();
-            this.animateBirthdayBadge();
+            BirthdayMixin.animateBirthdayBalloons.call(this);
+            BirthdayMixin.animateBirthdayBadge.call(this);
         },
 
         animateBirthdayBalloons() {
