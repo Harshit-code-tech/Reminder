@@ -470,6 +470,18 @@
   <script>
     document.cookie = "csrftoken={{ csrf_token }}; path=/";
   </script>
+
+  <!-- Manager subsystems (loaded before main app) -->
+  <script src="{% static 'js/managers/AudioManager.js' %}"></script>
+  <script src="{% static 'js/managers/ThemeManager.js' %}"></script>
+  <script src="{% static 'js/managers/EffectManager.js' %}"></script>
+  <script src="{% static 'js/managers/MediaManager.js' %}"></script>
+  <script src="{% static 'js/managers/NavigationManager.js' %}"></script>
+  <script src="{% static 'js/managers/UnlockManager.js' %}"></script>
+  <script src="{% static 'js/managers/SharingManager.js' %}"></script>
+  <script src="{% static 'js/managers/InteractionManager.js' %}"></script>
+
+  <!-- Core application engine -->
   <script src="{% static 'js/greeting_card.js' %}"></script>
   <!-- Event-specific modules override methods on GreetingCardApp prototype -->
   {% if event.event_type == 'raksha_bandhan' %}

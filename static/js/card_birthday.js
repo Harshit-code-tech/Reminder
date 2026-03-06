@@ -157,13 +157,13 @@
             if (!this.elements.birthdayCake || this.eventType !== 'birthday') return;
 
             this.elements.birthdayCake.addEventListener('click', () => {
-                this.blowOutCandles();
+                BirthdayMixin.blowOutCandles.call(this);
             });
 
             this.elements.birthdayCake.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    this.blowOutCandles();
+                    BirthdayMixin.blowOutCandles.call(this);
                 }
             });
         },
@@ -301,13 +301,17 @@
         }
     };
 
-    // Apply mixin to GreetingCardApp prototype when available
-    if (typeof GreetingCardApp !== 'undefined') {
-        Object.keys(BirthdayMixin).forEach(key => {
-            GreetingCardApp.prototype[key] = BirthdayMixin[key];
-        });
-        console.log('Birthday module loaded');
-    } else {
-        window._birthdayMixin = BirthdayMixin;
-    }
+    // Export EventModule interface — engine calls these hooks directly.
+    // No prototype mutation.
+    window.EventModule = {
+        initialize(app) {},
+        onPageEnter(page, app) {
+            if (page === 2) BirthdayMixin.setupBirthdayPage2.call(app);
+            else if (page === 4) BirthdayMixin.setupBirthdayCake.call(app);
+            else if (page === 5) BirthdayMixin.setupBirthdayPage5.call(app);
+        },
+        onUnlock(app) {}
+    };
+
+    console.log('Birthday module loaded');
 })();

@@ -198,9 +198,9 @@
 
         setupRakhiBlessings() {
             this.initializeMemoryThread();
-            this.setupBlessingShower();
-            this.setupDiyaCeremony();
-            this.setupPromiseTree();
+            RakshaBandhanMixin.setupBlessingShower.call(this);
+            RakshaBandhanMixin.setupDiyaCeremony.call(this);
+            RakshaBandhanMixin.setupPromiseTree.call(this);
             this.initializeBlessingRain();
             console.log('Rakhi blessings setup completed');
         },
@@ -430,21 +430,29 @@
         }
     };
 
-    // Apply mixin to GreetingCardApp prototype when available
-    function applyMixin() {
-        if (typeof GreetingCardApp !== 'undefined') {
-            Object.keys(RakshaBandhanMixin).forEach(key => {
-                GreetingCardApp.prototype[key] = RakshaBandhanMixin[key];
+    // Export EventModule interface — engine calls these hooks directly.
+    // No prototype mutation.
+    window.EventModule = {
+        initialize(app) {
+            app.initializeRakhiLoadingScreen();
+            if (typeof glowrangoli === 'function') glowrangoli();
+            // Own the Escape key for raksha-specific popups — engine stays generic
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') RakshaBandhanMixin.closeAllRakhiPopups.call(app);
             });
-            console.log('Raksha Bandhan module loaded');
+        },
+        onPageEnter(page, app) {
+            if (page === 2) RakshaBandhanMixin.setupRakhiSVGCeremony.call(app);
+            else if (page === 4) RakshaBandhanMixin.setupRakhiBlessings.call(app);
+        },
+        onUnlock(app) {},
+        onMemoryPopupCreate(popup, app) {
+            popup.classList.add('rakhi-popup');
+        },
+        onMemoryPopupShow(app) {
+            app.audioManager.playBellSound();
         }
-    }
+    };
 
-    // Try immediately, or wait for script load
-    if (typeof GreetingCardApp !== 'undefined') {
-        applyMixin();
-    } else {
-        // Will be applied after greeting_card.js defines the class
-        window._rakhiMixin = RakshaBandhanMixin;
-    }
+    console.log('Raksha Bandhan module loaded');
 })();

@@ -32,3 +32,5 @@ core/supabase_test.py
 core/test_media/
 
 *.sql
+
+reviews/

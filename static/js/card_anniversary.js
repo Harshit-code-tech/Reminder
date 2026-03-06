@@ -91,7 +91,7 @@
             if (!this.elements.danceButton || this.eventType !== 'anniversary') return;
 
             this.elements.danceButton.addEventListener('click', () => {
-                this.startDanceAnimation();
+                AnniversaryMixin.startDanceAnimation.call(this);
             });
         },
 
@@ -277,13 +277,20 @@
         }
     };
 
-    // Apply mixin
-    if (typeof GreetingCardApp !== 'undefined') {
-        Object.keys(AnniversaryMixin).forEach(key => {
-            GreetingCardApp.prototype[key] = AnniversaryMixin[key];
-        });
-        console.log('Anniversary module loaded');
-    } else {
-        window._anniversaryMixin = AnniversaryMixin;
-    }
+    // Export EventModule interface — engine calls these hooks directly.
+    // No prototype mutation.
+    window.EventModule = {
+        initialize(app) {},
+        onPageEnter(page, app) {
+            if (page === 2) AnniversaryMixin.setupAnniversaryPage2.call(app);
+            else if (page === 4) {
+                AnniversaryMixin.setupDanceButton.call(app);
+                AnniversaryMixin.setupLoveLetter.call(app);
+            }
+            else if (page === 5) AnniversaryMixin.setupAnniversaryPage5.call(app);
+        },
+        onUnlock(app) {}
+    };
+
+    console.log('Anniversary module loaded');
 })();

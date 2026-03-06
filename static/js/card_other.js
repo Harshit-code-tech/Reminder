@@ -229,13 +229,17 @@
         }
     };
 
-    // Apply mixin
-    if (typeof GreetingCardApp !== 'undefined') {
-        Object.keys(OtherMixin).forEach(key => {
-            GreetingCardApp.prototype[key] = OtherMixin[key];
-        });
-        console.log('Other/Generic module loaded');
-    } else {
-        window._otherMixin = OtherMixin;
-    }
+    // Export EventModule interface — engine calls these hooks directly.
+    // No prototype mutation.
+    window.EventModule = {
+        initialize(app) {},
+        onPageEnter(page, app) {
+            if (page === 2) OtherMixin.setupOtherPage2.call(app);
+            else if (page === 4) OtherMixin.setupWishJar.call(app);
+            else if (page === 5) OtherMixin.setupOtherPage5.call(app);
+        },
+        onUnlock(app) {}
+    };
+
+    console.log('Other/Generic module loaded');
 })();

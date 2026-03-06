@@ -23,278 +23,6 @@ const CONFIG = {
 };
 
 
-class AudioManager {
-    constructor(eventType) {
-        this.eventType = eventType || 'birthday';
-        this.backgroundVolume = 0.3;
-        this.effectVolume = 0.6;
-        this.isBackgroundPlaying = false;
-
-        this.tracks = {
-            background: null,
-            bell: null,
-            success: null,
-            pageTransition: null,
-            blessing: null,
-            celebration: null
-        };
-        this.isEnabled = true;
-        this.loadAudioTracks();
-    }
-
-    loadAudioTracks() {
-        try {
-            // Event-type-specific audio mapping
-            const audioFiles = {
-                pageTransition: '/static/audio/page-turn.mp3',
-                success: '/static/audio/success-chime.mp3',
-                celebration: '/static/audio/celebration.mp3'
-            };
-
-            // Only load Raksha Bandhan-specific audio for that event type
-            if (this.eventType === 'raksha_bandhan') {
-                audioFiles.background = '/static/audio/background-rakhi.mp3';
-                audioFiles.bell = '/static/audio/bell-sacred.mp3';
-                audioFiles.blessing = '/static/audio/blessing-sound.mp3';
-            } else {
-                // Generic ambient background for other events
-                audioFiles.background = '/static/audio/Whispering Wind.mp3';
-            }
-
-            Object.keys(audioFiles).forEach(key => {
-                try {
-                    const audio = new Audio(audioFiles[key]);
-
-                    // Set up error handling
-                    audio.addEventListener('error', (e) => {
-                        console.warn(`Failed to load audio: ${audioFiles[key]}`, e);
-                        this.tracks[key] = null;
-                    });
-
-                    // Set up success handler
-                    audio.addEventListener('canplaythrough', () => {
-                        // Set volumes only after audio is loaded and validate they're finite numbers
-                        if (key === 'background') {
-                            if (typeof this.backgroundVolume === 'number' && isFinite(this.backgroundVolume)) {
-                                audio.volume = Math.max(0, Math.min(1, this.backgroundVolume));
-                            } else {
-                                audio.volume = 0.3; // Safe fallback
-                            }
-                            audio.loop = true;
-                        } else {
-                            if (typeof this.effectVolume === 'number' && isFinite(this.effectVolume)) {
-                                audio.volume = Math.max(0, Math.min(1, this.effectVolume));
-                            } else {
-                                audio.volume = 0.6; // Safe fallback
-                            }
-                        }
-                    });
-
-                    this.tracks[key] = audio;
-                } catch (error) {
-                    console.warn(`Error creating audio for ${key}:`, error);
-                    this.tracks[key] = null;
-                }
-            });
-
-        } catch (error) {
-            console.warn('AudioManager initialization failed:', error);
-            this.isEnabled = false;
-        }
-    }
-
-
-    // Fallback audio generation for missing files
-    generateTone(frequency, duration, type = 'sine') {
-        if (!this.isEnabled || !(window.AudioContext || window.webkitAudioContext)) {
-            return;
-        }
-
-        try {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-
-            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-            oscillator.type = type;
-
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + duration);
-        } catch (error) {
-            console.warn('Tone generation failed:', error);
-        }
-    }
-
-    // Duck background music when other sounds play
-    duckBackgroundAudio(shouldDuck = true) {
-        if (this.tracks.background && this.isBackgroundPlaying) {
-            // FIXED: Validate volumes are finite numbers
-            const baseVolume = (typeof this.backgroundVolume === 'number' && isFinite(this.backgroundVolume))
-                ? this.backgroundVolume : 0.3;
-            const targetVolume = shouldDuck ? baseVolume * 0.2 : baseVolume;
-
-            // Validate current volume
-            const currentVolume = (typeof this.tracks.background.volume === 'number' && isFinite(this.tracks.background.volume))
-                ? this.tracks.background.volume : 0.3;
-
-            const step = (targetVolume - currentVolume) / 10;
-
-            let steps = 0;
-            const fadeInterval = setInterval(() => {
-                if (steps >= 10 || !this.tracks.background) {
-                    if (this.tracks.background && isFinite(targetVolume)) {
-                        this.tracks.background.volume = Math.max(0, Math.min(1, targetVolume));
-                    }
-                    clearInterval(fadeInterval);
-                    return;
-                }
-
-                const newVolume = currentVolume + (step * steps);
-                if (this.tracks.background && isFinite(newVolume)) {
-                    this.tracks.background.volume = Math.max(0, Math.min(1, newVolume));
-                }
-                steps++;
-            }, 50);
-        }
-    }
-
-    // Specific audio methods with fallbacks
-    playBellSound() {
-        if (this.tracks.bell && this.tracks.bell.readyState >= 2) {
-            this.duckBackgroundAudio(true);
-            this.tracks.bell.currentTime = 0;
-            this.tracks.bell.play().catch(e => console.log('Audio blocked:', e));
-
-            // Restore background volume after bell finishes
-            setTimeout(() => {
-                this.duckBackgroundAudio(false);
-            }, 2000);
-        } else {
-            this.generateTone(800, 1.0, 'triangle');
-        }
-    }
-
-    playSuccessSound() {
-        if (this.tracks.success && this.tracks.success.readyState >= 2) {
-            this.duckBackgroundAudio(true);
-            this.tracks.success.currentTime = 0;
-            this.tracks.success.play().catch(e => console.log('Audio blocked:', e));
-
-            // Restore background volume after success sound
-            setTimeout(() => {
-                this.duckBackgroundAudio(false);
-            }, 2000);
-        } else {
-            [523.25, 659.25, 783.99].forEach((freq, index) => {
-                setTimeout(() => this.generateTone(freq, 0.5, 'triangle'), index * 100);
-            });
-        }
-    }
-
-
-    playPageTransition() {
-        // For: Page navigation - keep minimal
-        if (this.tracks.pageTransition && this.tracks.pageTransition.readyState >= 2) {
-            this.tracks.pageTransition.currentTime = 0;
-            this.tracks.pageTransition.play().catch(e => console.log('Page Turn Audio blocked:', e));
-        }
-        else{
-            this.generateTone(220, 0.3, 'sine');
-        }
-    }
-
-    playBlessingSound() {
-        console.log('Playing blessing sound');
-        if (this.tracks.blessing && this.tracks.blessing.readyState >= 2) {
-            this.duckBackgroundAudio(true);
-            this.tracks.blessing.currentTime = 0;
-            this.tracks.blessing.play().catch(e => console.log('Blessing audio blocked:', e));
-
-            // Restore background volume after blessing
-            setTimeout(() => {
-                this.duckBackgroundAudio(false);
-            }, 3000);
-        } else {
-            // Fallback: Gentle blessing chime
-            this.generateTone(659.25, 0.8, 'sine');
-        }
-    }
-
-    // FIXED: Celebration sound should only play on page 5 or ceremony completion
-    playCelebrationSound() {
-        console.log('Playing celebration sound');
-        if (this.tracks.celebration && this.tracks.celebration.readyState >= 2) {
-            this.duckBackgroundAudio(true);
-            this.tracks.celebration.currentTime = 0;
-            this.tracks.celebration.play().catch(e => console.log('Celebration audio blocked:', e));
-
-            // Restore background volume after celebration
-            setTimeout(() => {
-                this.duckBackgroundAudio(false);
-            }, 4000);
-        } else {
-            // Fallback: Celebration chord progression
-            const frequencies = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-            frequencies.forEach((freq, index) => {
-                setTimeout(() => this.generateTone(freq, 0.8, 'triangle'), index * 200);
-            });
-        }
-    }
-    startBackgroundMusic() {
-        if (this.tracks.background && this.tracks.background.readyState >= 2) {
-            // FIXED: Validate volume before setting
-            const volume = (typeof this.backgroundVolume === 'number' && isFinite(this.backgroundVolume))
-                ? Math.max(0, Math.min(1, this.backgroundVolume)) : 0.3;
-
-            this.tracks.background.volume = volume;
-            this.tracks.background.play()
-                .then(() => {
-                    this.isBackgroundPlaying = true;
-                    console.log('Background music started');
-                })
-                .catch(e => {
-                    console.log('Background music blocked:', e);
-                    // Try to start on first user interaction
-                    this.setupUserInteractionAudio();
-                });
-        }
-    }
-
-
-    stopBackgroundMusic() {
-        if (this.tracks.background) {
-            this.tracks.background.pause();
-            this.tracks.background.currentTime = 0;
-            this.isBackgroundPlaying = false;
-        }
-    }
-
-    // Setup background music to start on user interaction
-    setupUserInteractionAudio() {
-        const startAudioOnInteraction = () => {
-            if (!this.isBackgroundPlaying) {
-                this.startBackgroundMusic();
-            }
-            document.removeEventListener('click', startAudioOnInteraction);
-            document.removeEventListener('keydown', startAudioOnInteraction);
-        };
-
-        document.addEventListener('click', startAudioOnInteraction, { once: true });
-        document.addEventListener('keydown', startAudioOnInteraction, { once: true });
-    }
-    initBackgroundMusic() {
-
-        console.log('Background music system initialized (files not found, using fallbacks)');
-    }
-}
-
-
 // ===== MAIN APPLICATION CLASS =====
 class GreetingCardApp {
     constructor() {
@@ -305,7 +33,8 @@ class GreetingCardApp {
         this.cardContainer = null;
         this.eventType = 'birthday';
         this.animationInProgress = false;
-        this.themes = this.initializeThemes();
+        this.themeManager = new ThemeManager(this);
+        this.themes = this.themeManager.themes;
         this.elements = {};
         this.storageKey = '';
         this.savedData = {};
@@ -313,6 +42,12 @@ class GreetingCardApp {
         const tempContainer = document.querySelector('.card-container');
         const detectedType = tempContainer ? (tempContainer.dataset.theme || 'birthday') : 'birthday';
         this.audioManager = new AudioManager(detectedType);
+        this.effectManager = new EffectManager(this);
+        this.mediaManager = new MediaManager(this);
+        this.navigationManager = new NavigationManager(this);
+        this.unlockManager = new UnlockManager(this);
+        this.sharingManager = new SharingManager(this);
+        this.interactionManager = new InteractionManager(this);
         this.lastPage = 1;
         this.init();
     }
@@ -326,15 +61,14 @@ class GreetingCardApp {
             }
             this.eventType = this.cardContainer.dataset.theme || 'birthday';
 
-            if (this.eventType === 'raksha_bandhan') {
-                this.initializeRakhiLoadingScreen();
-                 glowrangoli();
+            // Fire event module early initialization (e.g. raksha loading screen)
+            const initEventModule = this.getEventModule();
+            if (initEventModule?.initialize) initEventModule.initialize(this);
 
-            }
             this.cacheElements();
             this.setupEventListeners();
             this.initializeCard();
-            this.setupThemeSystem();
+            this.themeManager.setupThemeSystem();
             this.setupNavigation();
             this.initializeBackgroundEffects();
 
@@ -456,737 +190,65 @@ class GreetingCardApp {
         document.addEventListener('keydown', this.handleKeyboardNavigation.bind(this));
     }
 
-    // ===== THEME SYSTEM =====
-    initializeThemes() {
-        return {
-            birthday: {
-                password: (name) => name.trim().toLowerCase(),
-                quotes: [
-                    "May your day be as bright as your smile!",
-                    "Another year of awesome you!",
-                    "Age is merely the number of years the world has been enjoying you.",
-                    "Shine bright today and always!",
-                    "You're not getting older, you're getting better!",
-                    "May your birthday be filled with laughter and joy!"
-                ],
-                confettiColors: ['#fde68a', '#fbbf24', '#f59e0b', '#d97706']
-            },
-            anniversary: {
-                password: (date) => date,
-                quotes: [
-                    "Love grows stronger every year!",
-                    "The best is yet to come.",
-                    "Forever isn't long enough with you.",
-                    "Through all the seasons, my love for you grows.",
-                    "Every moment with you is a blessing.",
-                    "Here's to many more years of happiness together."
-                ],
-                confettiColors: ['#fbcfe8', '#f472b6', '#db2777', '#be185d']
-            },
-            raksha_bandhan: {
-                password: (input) => {
-                    const normalized = input.trim().toLowerCase();
-                    return ['rakhi', 'thread', 'bond', 'राखी', 'धागा'].includes(normalized);
-                },
-                quotes: [
-                    "भाई-बहन का प्यार, जीवन का सबसे प्यारा उपहार",
-                    "Siblings are the threads that weave the fabric of our hearts",
-                    "In you, I found a lifelong friend and protector",
-                    "The sacred thread binds us not just for today, but for all lifetimes",
-                    "Through all seasons of life, our bond remains unbreakable",
-                    "राखी का धागा, प्रेम का प्रसाद"
-                ],
-                confettiColors: ['#DC2626', '#F59E0B', '#FF6B35', '#10B981', '#7C3AED']
-            },
-            other: {
-                password: (label) => label.trim().toLowerCase(),
-                quotes: [
-                    "Cherish every moment of your journey!",
-                    "Keep shining your light on the world!",
-                    "The adventure continues!",
-                    "You're making a difference every day.",
-                    "The best journeys are shared with friends like you.",
-                    "Celebrating this special occasion with you!"
-                ],
-                confettiColors: ['#a5f3fc', '#22d3ee', '#0891b2', '#0e7490']
-            }
-        };
+    // ===== EVENT MODULE API =====
+    getEventModule() {
+        return window.EventModule || null;
     }
 
-    setupThemeSystem() {
-        if (!this.elements.themeToggle) return;
-
-        // Get saved theme or system preference
-        const savedTheme = localStorage.getItem('cardTheme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const isDark = savedTheme ? savedTheme === 'dark' : prefersDark;
-
-        // Apply initial theme
-        this.setTheme(isDark ? 'dark' : 'light');
-
-        // Theme toggle click handler
-        this.elements.themeToggle.addEventListener('click', () => {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            this.setTheme(newTheme);
-        });
-
-        // Listen for system preference changes
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-            if (!localStorage.getItem('cardTheme')) {
-                this.setTheme(e.matches ? 'dark' : 'light');
-            }
-        });
-    }
-
-    setTheme(theme) {
-        // Add transition class
-        document.documentElement.classList.add('theme-transition');
-
-        // Set theme
-        document.documentElement.setAttribute('data-theme', theme);
-
-        // Update toggle button
-        this.elements.themeToggle.setAttribute('aria-pressed', theme === 'dark');
-
-        // Add active animation
-        this.elements.themeToggle.style.transform = 'scale(0.95)';
-        setTimeout(() => {
-            this.elements.themeToggle.style.transform = '';
-        }, 150);
-
-        // Update background effects
-        this.updateBackgroundEffects(theme);
-
-        // Save preference
-        localStorage.setItem('cardTheme', theme);
-
-        // Remove transition class
-        setTimeout(() => {
-            document.documentElement.classList.remove('theme-transition');
-        }, CONFIG.TRANSITIONS.THEME);
-    }
+    // ===== THEME MANAGER DELEGATORS =====
+    initializeThemes() { return this.themeManager.initializeThemes(); }
+    setupThemeSystem() { return this.themeManager.setupThemeSystem(); }
+    setTheme(theme) { return this.themeManager.setTheme(theme); }
 
 
+    // ===== EFFECT MANAGER DELEGATORS (background effects) =====
     initializeRakhiLoadingScreen() {
-        const loadingScreen = document.getElementById('rakhi-loading');
-        if (!loadingScreen) {
-            console.error('Rakhi loading screen element not found');
-            return;
-        }
-        console.log('Rakhi loading screen found');
-
-        // Start petal animation
-        this.createFloatingPetals();
-
-        // Hide loading screen after 3 seconds
-        setTimeout(() => {
-            loadingScreen.classList.add('fade-out');
-            setTimeout(() => {
-                loadingScreen.style.display = 'none';
-            }, 1000);
-        }, 3000);
+        return this.effectManager.initializeRakhiLoadingScreen();
     }
 
     createFloatingPetals() {
-        const petalsContainer = document.querySelector('.floating-petals');
-        if (!petalsContainer) return;
-
-        const petalTypes = ['petal', 'petal marigold', 'petal rose'];
-
-        setInterval(() => {
-            if (this.eventType !== 'raksha_bandhan') return;
-
-            const petal = document.createElement('div');
-            petal.className = petalTypes[Math.floor(Math.random() * petalTypes.length)];
-            petal.style.left = Math.random() * 100 + '%';
-            petal.style.animationDuration = (Math.random() * 3 + 2) + 's';
-            petal.style.animationDelay = Math.random() * 2 + 's';
-
-            petalsContainer.appendChild(petal);
-
-            // Remove petal after animation
-            setTimeout(() => {
-                if (petal.parentNode) {
-                    petal.parentNode.removeChild(petal);
-                }
-            }, 6000);
-        }, 800);
+        return this.effectManager.createFloatingPetals();
     }
 
-    // ===== BACKGROUND EFFECTS =====
     initializeBackgroundEffects() {
-        this.createStars();
-        this.createClouds();
+        return this.effectManager.initializeBackgroundEffects();
     }
-
 
     createStars() {
-        const starsContainer = document.querySelector('.stars-container');
-        if (!starsContainer) return;
-
-        const fragment = document.createDocumentFragment();
-        for (let i = 0; i < 50; i++) {
-            const star = document.createElement('div');
-            star.className = 'star-bg';
-            star.style.left = `${Math.random() * 100}%`;
-            star.style.top = `${Math.random() * 100}%`;
-            star.style.animationDelay = `${Math.random() * 5}s`;
-            star.style.animationDuration = `${3 + Math.random() * 7}s`;
-            fragment.appendChild(star);
-        }
-        starsContainer.appendChild(fragment);
+        return this.effectManager.createStars();
     }
 
     createClouds() {
-        const cloudsContainer = document.querySelector('.clouds-container');
-        if (!cloudsContainer) return;
-
-        const fragment = document.createDocumentFragment();
-        for (let i = 0; i < 5; i++) {
-            const cloud = document.createElement('div');
-            cloud.className = 'cloud-bg';
-            cloud.style.left = `${Math.random() * 100}%`;
-            cloud.style.top = `${Math.random() * 40}%`;
-            cloud.style.animationDelay = `${Math.random() * 20}s`;
-            cloud.style.animationDuration = `${30 + Math.random() * 30}s`;
-            cloud.style.opacity = `${0.2 + Math.random() * 0.3}`;
-            cloud.style.transform = `scale(${0.5 + Math.random() * 0.5})`;
-            fragment.appendChild(cloud);
-        }
-        cloudsContainer.appendChild(fragment);
+        return this.effectManager.createClouds();
     }
 
     updateBackgroundEffects(theme) {
-        const starsContainer = document.querySelector('.stars-container');
-        const cloudsContainer = document.querySelector('.clouds-container');
-        const petalsContainer = document.querySelector('.floating-petals');
-
-        if (starsContainer && cloudsContainer) {
-            if (theme === 'dark') {
-                starsContainer.style.opacity = '1';
-                cloudsContainer.style.opacity = '0';
-            } else {
-                starsContainer.style.opacity = '0';
-                cloudsContainer.style.opacity = '1';
-            }
-        }
-        // Special handling for Raksha Bandhan theme
-        if (this.eventType === 'raksha_bandhan') {
-            if (petalsContainer) {
-                petalsContainer.style.opacity = theme === 'dark' ? '0.5' : '0.8';
-            }
-        }
+        return this.effectManager.updateBackgroundEffects(theme);
     }
 
-    // ===== NAVIGATION SYSTEM =====
-    setupNavigation() {
-        this.updateNavigationState();
-    }
-
-    goToPage(pageNum) {
-        if (pageNum < 1 || pageNum > this.totalPages) return;
-
-        // Check if page is unlocked
-        if (pageNum > 1 && !this.unlocked) {
-            this.shakePasswordInput('Please unlock the card first');
-            return;
-        }
-
-        if (Math.abs(pageNum - this.currentPage) >= 1 && this.currentPage !== 0) {
-            this.audioManager.playPageTransition();
-        }
-
-        this.currentPage = pageNum;
-        this.saveData({ lastPage: this.currentPage });
-
-        // Update page visibility
-        this.elements.cardPages.forEach((page, index) => {
-            const isActive = index + 1 === this.currentPage;
-            page.classList.toggle('active', isActive);
-            page.style.display = isActive ? 'flex' : 'none';
-            page.setAttribute('aria-hidden', !isActive);
-        });
-
-        // Update navigation state
-        this.updateNavigationState();
-
-        // Initialize page-specific features
-        this.initializePage(pageNum);
-
-
-        // Smooth scroll to top
-        this.cardContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-
-    updateNavigationState() {
-        this.elements.navItems.forEach((item, index) => {
-            const pageNum = index + 1;
-            const isActive = pageNum === this.currentPage;
-            const isAccessible = pageNum <= this.currentPage + 1 || this.unlocked;
-
-            item.classList.toggle('active', isActive);
-            item.style.opacity = isAccessible ? '1' : '0.5';
-            item.style.pointerEvents = isAccessible ? 'auto' : 'none';
-            item.setAttribute('aria-current', isActive ? 'page' : 'false');
-        });
-    }
-
-    // ===== PASSWORD SYSTEM =====
-    validatePassword() {
-        const inputValue = this.elements.passwordInput?.value?.trim() || '';
-        const eventId = this.cardContainer.dataset.eventId;
-        const csrftoken = this.getCookie('csrftoken');
-
-        if (!inputValue) {
-            this.shakePasswordInput('Please enter a password');
-            return;
-        }
-
-        // Show loading state
-        this.elements.unlockButton.disabled = true;
-        this.elements.unlockButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
-
-        fetch(`/reminders/card/${eventId}/validate-password/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken
-            },
-            body: JSON.stringify({ card_password: inputValue })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                this.unlocked = true;
-                this.saveData({ unlocked: true });
-                localStorage.removeItem('incorrectAttempts');
-
-                this.elements.passwordInput.classList.add('success');
-                this.audioManager.playSuccessSound();
-                this.showConfetti();
-                this.showFeedback('Card unlocked successfully! 🎉', 'success');
-
-                setTimeout(() => this.goToPage(2), 1000);
-            } else {
-                this.incorrectAttempts++;
-                localStorage.setItem('incorrectAttempts', this.incorrectAttempts);
-
-                if (this.incorrectAttempts >= 2 && this.elements.passwordHint) {
-                    this.elements.passwordHint.classList.remove('hidden');
-                }
-
-                this.shakePasswordInput(data.error || 'Incorrect password');
-            }
-        })
-        .catch(error => {
-            console.error('Password validation error:', error);
-            this.shakePasswordInput('An error occurred. Please try again.');
-        })
-        .finally(() => {
-            // Reset button state
-            this.elements.unlockButton.disabled = false;
-            this.elements.unlockButton.innerHTML = '<i class="fas fa-unlock"></i> Unlock';
-        });
-    }
-
-    shakePasswordInput(message) {
-        if (!this.elements.passwordInput) return;
-
-        this.elements.passwordInput.classList.add('error');
-        this.elements.passwordInput.style.animation = 'shake 0.5s ease';
-
-        if (message) {
-            this.showFeedback(message, 'error');
-        }
-
-        setTimeout(() => {
-            this.elements.passwordInput.style.animation = '';
-            this.elements.passwordInput.classList.remove('error');
-        }, 500);
-    }
-
-    revealPassword() {
-        if (!this.elements.revealPassword) return;
-
-        const eventId = this.cardContainer.dataset.eventId;
-        const csrftoken = this.getCookie('csrftoken');
-
-        this.elements.revealPassword.textContent = 'Loading...';
-        this.elements.revealPassword.style.pointerEvents = 'none';
-
-        fetch(`/reminders/reveal-password/${eventId}/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken,
-            },
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.password) {
-                this.elements.revealPassword.textContent = data.password;
-                this.elements.revealPassword.classList.add('unblur');
-            } else {
-                this.elements.revealPassword.textContent = 'Unable to reveal';
-            }
-        })
-        .catch(() => {
-            this.elements.revealPassword.textContent = 'Error - try again';
-            this.elements.revealPassword.style.pointerEvents = 'auto';
-        });
-    }
-
-
-
-    setupRakhiSVGCeremony() {
-        const startRitualBtn = document.getElementById('start-ritual-btn');
-        if (!startRitualBtn) return;
-
-        if (this.animationInProgress) return;
-
-        startRitualBtn.addEventListener('click', () => {
-            this.startRakhiRitual();
-        });
-
-        // Setup gift and popup handlers
-        this.setupRakhiGiftHandlers();
-    }
-
-    startRakhiRitual() {
-        if (this.animationInProgress) return;
-
-        this.animationInProgress = true;
-        const startBtn = document.getElementById('start-ritual-btn');
-        const instruction = document.querySelector('.ritual-instruction');
-
-        // Update button
-        startBtn.disabled = true;
-        startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sacred Ritual in Progress...';
-
-        // Play sound
-        this.audioManager.playBellSound();
-
-        // Start animation sequence
-        this.runRakhiAnimationSequence(instruction);
-    }
-
-     runRakhiAnimationSequence(instruction) {
-        const sister = document.getElementById('sister');
-        const brotherLeftHand = document.querySelector('.brother-left-hand');
-        const wristRakhi = document.getElementById('wrist-rakhi');
-        const foreheadTilak = document.getElementById('forehead-tilak');
-
-        // Step 1: Sister walks toward brother
-        instruction.textContent = '👣 Sister approaches with love and ready to annoy his brother... | बहन प्यार से पास आ रही है, शरारत का पूरा मूड है...';
-        sister.classList.add('sister-walking');
-
-        setTimeout(() => {
-            // Step 2: Brother extends hand
-            instruction.textContent = '🤝 Brother extends his hand for the sacred thread... | भाई ने रक्षासूत्र के लिए हाथ बढ़ाया...';
-            if (brotherLeftHand) {
-                brotherLeftHand.classList.add('brother-extending-hand');
-            }
-            this.audioManager.playBellSound();
-
-            setTimeout(() => {
-                // Step 3: Sister ties rakhi to brother's wrist
-                instruction.textContent = '🔗 Sister ties the sacred rakhi with prayers... | बहन ने प्रेम और प्रार्थनाओं के साथ राखी बाँधी...';
-                if (wristRakhi) {
-                    wristRakhi.classList.add('wrist-rakhi-appearing');
-                }
-                this.audioManager.playBellSound();
-
-                setTimeout(() => {
-                    // Step 4: Sister applies tilak on brother's forehead
-                    instruction.textContent = '🌺 Applying tilak for divine blessings... | ईश्वर की कृपा के लिए बहन तिलक लगा रही है...';
-                    if (foreheadTilak) {
-                        foreheadTilak.classList.add('forehead-tilak-appearing');
-                    }
-                    this.audioManager.playBellSound();
-
-                    setTimeout(() => {
-                        // Step 5: Ceremony complete, show beautiful rakhi display
-                        instruction.textContent = '✨ The sacred bond is blessed with divine grace... | यह पवित्र बंधन अब ईश्वर की कृपा से संजोया गया है...';
-                        this.showBeautifulRakhiDisplay();
-                        this.audioManager.playSuccessSound();
-
-                        // Update instruction after rakhi appears
-                        setTimeout(() => {
-                            instruction.innerHTML = '🎁 <strong>Click the gift</strong> to receive your blessing!<br>🎁 <strong>तोहफ़ा खोलो</strong> और आशीर्वाद पाओ!';
-                        }, 2000);
-
-                    }, 2000); // Wait for tilak animation
-                }, 2500); // Wait for rakhi tying animation
-            }, 2000); // Wait for brother extending hand
-        }, 3000); // Wait for sister walking animation
-    }
-
-
-    showBeautifulRakhiDisplay() {
-        const rakhiContainer = document.getElementById('beautiful-rakhi');
-        if (rakhiContainer) {
-            rakhiContainer.classList.add('show');
-            // Play blessing sound
-            setTimeout(() => this.audioManager.playBlessingSound(), 500);
-        }
-    }
-
-    setupRakhiGiftHandlers() {
-        // Gift icon click
-        const giftIcon = document.getElementById('gift-icon');
-        if (giftIcon) {
-            giftIcon.addEventListener('click', () => this.showRakhiGiftPopup());
-
-        }
-
-        // Close buttons
-        const closeRakhi = document.getElementById('close-rakhi');
-        if (closeRakhi) {
-            closeRakhi.addEventListener('click', () => this.closeRakhiDisplay());
-        }
-
-        const closeGift = document.getElementById('close-gift-popup');
-        if (closeGift) {
-            closeGift.addEventListener('click', () => this.closeRakhiGiftPopup());
-        }
-    }
-
-    showRakhiGiftPopup() {
-        const giftPopup = document.getElementById('gift-popup');
-        if (giftPopup) {
-            giftPopup.classList.add('show');
-            this.audioManager.playSuccessSound();
-            this.showConfetti();
-        }
-    }
-
-    closeRakhiDisplay() {
-        const rakhiContainer = document.getElementById('beautiful-rakhi');
-        if (rakhiContainer) {
-            rakhiContainer.classList.remove('show');
-        }
-        // Continue to next section
-        setTimeout(() => this.triggerRakhiNextSection(), 500);
-    }
-
-    closeRakhiGiftPopup() {
-        const giftPopup = document.getElementById('gift-popup');
-        if (giftPopup) {
-            giftPopup.classList.remove('show');
-        }
-        // Also close the rakhi display
-        setTimeout(() => {
-            this.closeRakhiDisplay();
-        }, 300);
-    }
-
-    triggerRakhiNextSection() {
-        // Update ritual instruction
-        const instruction = document.querySelector('.ritual-instruction');
-        if (instruction) {
-            instruction.innerHTML = '✨ <strong>पवित्र रस्म पूरी हुई!</strong> Sacred ceremony completed! <br>आपका बंधन ईश्वर के प्रेम से पवित्र हुआ है। Your bond is blessed with divine love.';
-
-        }
-
-        // Show success feedback
-        this.showFeedback('🎉 Sacred Raksha Bandhan ceremony completed! May your bond grow stronger.', 'success');
-
-        // Reset animation state
-        this.animationInProgress = false;
-
-        // Hide the start button since ceremony is complete
-        const startBtn = document.getElementById('start-ritual-btn');
-        if (startBtn) {
-            startBtn.style.display = 'none';
-        }
-
-        // Check for thread of memories or show milestone popup
-        const hasThreadOfMemories = this.cardContainer.dataset.threadOfMemories === 'true';
-        if (hasThreadOfMemories) {
-            setTimeout(() => this.showThreadOfMemories(), 2000);
-        } else {
-            setTimeout(() => this.showMilestonePopup(), 2000);
-        }
-    }
-
-
-
-    initializeMemoryThread() {
-        const memoryPoints = document.querySelectorAll('.memory-point');
-        const memoryPopup = document.getElementById('memory-popup');
-
-        if (!memoryPopup) return;
-
-        memoryPoints.forEach(point => {
-            point.addEventListener('mouseenter', () => this.showMemoryPopup(point, memoryPopup));
-            point.addEventListener('mouseleave', () => this.hideMemoryPopup(memoryPopup));
-            point.addEventListener('click', () => this.showMemoryPopup(point, memoryPopup));
-            point.addEventListener('focus', () => this.showMemoryPopup(point, memoryPopup));
-            point.addEventListener('blur', () => this.hideMemoryPopup(memoryPopup));
-        });
-    }
-
-
-    showMemoryPopup(point, popup) {
-        const year = point.getAttribute('data-year');
-        const title = point.getAttribute('data-title');
-        const description = point.getAttribute('data-description');
-
-        popup.querySelector('.popup-year').textContent = year || 'Memory';
-        popup.querySelector('.popup-title').textContent = title || 'Special Moment';
-        popup.querySelector('.popup-description').textContent = description || 'A cherished memory';
-
-        popup.classList.remove('hidden');
-
-        const rect = point.getBoundingClientRect();
-        const containerRect = point.closest('.thread-of-memories-container').getBoundingClientRect();
-        popup.style.left = (rect.left - containerRect.left) + 'px';
-        popup.style.opacity = '1';
-
-        if (this.eventType === 'raksha_bandhan') {
-            this.audioManager.playBellSound();
-        }
-    }
-
-    hideMemoryPopup(popup) {
-        if (popup) {
-            popup.style.opacity = '0';
-            setTimeout(() => popup.classList.add('hidden'), 300);
-        }
-    }
-
-    // ===== SLIDER UNLOCK SYSTEM =====
-    setupSliderUnlock() {
-        if (!this.elements.sliderTrack || !this.elements.sliderThumb || !this.elements.yesButton) return;
-
-        let isDragging = false;
-        let startX = 0;
-        let currentX = 0;
-        let maxMove = 0;
-
-        const updateMaxMove = () => {
-            maxMove = this.elements.sliderTrack.offsetWidth - this.elements.sliderThumb.offsetWidth;
-        };
-
-        // Calculate initial max move
-        updateMaxMove();
-
-        // Recalculate on resize
-        window.addEventListener('resize', updateMaxMove);
-
-        const onDragStart = (e) => {
-            isDragging = true;
-            startX = (e.touches ? e.touches[0].clientX : e.clientX) - this.elements.sliderThumb.offsetLeft;
-
-            this.elements.sliderThumb.style.cursor = 'grabbing';
-
-            document.addEventListener('mousemove', onDragMove);
-            document.addEventListener('touchmove', onDragMove, { passive: false });
-            document.addEventListener('mouseup', onDragEnd);
-            document.addEventListener('touchend', onDragEnd);
-        };
-
-        const onDragMove = (e) => {
-            if (!isDragging) return;
-
-            e.preventDefault();
-            currentX = (e.touches ? e.touches[0].clientX : e.clientX) - startX;
-            currentX = Math.max(0, Math.min(currentX, maxMove));
-
-            this.elements.sliderThumb.style.left = currentX + 'px';
-
-            // Check if fully unlocked
-            if (currentX >= maxMove - 5) {
-                this.unlockYesButton();
-            }
-        };
-
-        const onDragEnd = () => {
-            if (!isDragging) return;
-
-            // Snap back if not fully unlocked
-            if (currentX < maxMove - 5) {
-                this.elements.sliderThumb.style.left = '0px';
-                currentX = 0;
-            }
-
-            isDragging = false;
-            this.elements.sliderThumb.style.cursor = 'grab';
-
-            document.removeEventListener('mousemove', onDragMove);
-            document.removeEventListener('touchmove', onDragMove);
-            document.removeEventListener('mouseup', onDragEnd);
-            document.removeEventListener('touchend', onDragEnd);
-        };
-
-        // Mouse and touch events
-        this.elements.sliderThumb.addEventListener('mousedown', onDragStart);
-        this.elements.sliderThumb.addEventListener('touchstart', onDragStart, { passive: false });
-
-        // Keyboard navigation
-        this.elements.sliderThumb.addEventListener('keydown', (e) => {
-            const step = 20;
-            if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-                e.preventDefault();
-                currentX = Math.min(currentX + step, maxMove);
-                this.elements.sliderThumb.style.left = currentX + 'px';
-                if (currentX >= maxMove - 5) this.unlockYesButton();
-            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
-                e.preventDefault();
-                currentX = Math.max(currentX - step, 0);
-                this.elements.sliderThumb.style.left = currentX + 'px';
-            }
-        });
-
-        // Yes button click
-        if (this.elements.yesButton) {
-            this.elements.yesButton.addEventListener('click', () => this.startCountdown());
-        }
-    }
-
-    unlockYesButton() {
-        if (!this.elements.sliderTrack || !this.elements.yesButton) return;
-
-        this.elements.sliderTrack.classList.add('unlocked');
-
-        setTimeout(() => {
-            this.elements.sliderTrack.style.display = 'none';
-            this.elements.yesButton.classList.remove('hidden');
-            this.elements.yesButton.style.display = 'flex';
-            this.elements.yesButton.focus();
-        }, 300);
-    }
-
-    startCountdown() {
-        const countdownElement = document.querySelector('.countdown');
-        if (!countdownElement || !this.elements.yesButton) return;
-
-        this.elements.yesButton.style.display = 'none';
-
-        let count = 5;
-        countdownElement.textContent = count;
-        countdownElement.setAttribute('aria-live', 'assertive');
-
-        const interval = setInterval(() => {
-            count--;
-            countdownElement.textContent = count;
-
-            if (count <= 0) {
-                clearInterval(interval);
-                countdownElement.style.display = 'none';
-
-                // Check for thread of memories or show milestone popup
-                const hasThreadOfMemories = this.cardContainer.dataset.threadOfMemories === 'true';
-
-                if (hasThreadOfMemories) {
-                    this.showThreadOfMemories();
-                } else {
-                    this.showMilestonePopup();
-                }
-            }
-        }, 1000);
-    }
+    // ===== NAVIGATION MANAGER DELEGATORS =====
+    setupNavigation() { return this.navigationManager.setupNavigation(); }
+    goToPage(pageNum) { return this.navigationManager.goToPage(pageNum); }
+    updateNavigationState() { return this.navigationManager.updateNavigationState(); }
+
+    // ===== UNLOCK MANAGER DELEGATORS =====
+    validatePassword() { return this.unlockManager.validatePassword(); }
+    shakePasswordInput(message) { return this.unlockManager.shakePasswordInput(message); }
+    revealPassword() { return this.unlockManager.revealPassword(); }
+
+    // ===== INTERACTION MANAGER DELEGATORS (memory thread) =====
+    initializeMemoryThread() { return this.interactionManager.initializeMemoryThread(); }
+    showMemoryPopup(point, popup) { return this.interactionManager.showMemoryPopup(point, popup); }
+    hideMemoryPopup(popup) { return this.interactionManager.hideMemoryPopup(popup); }
+
+    // DEAD CODE REMOVED: setupRakhiSVGCeremony and related methods were duplicates
+    // of the card_raksha_bandhan.js mixin which overrides them on the prototype.
+
+
+    // ===== UNLOCK MANAGER DELEGATORS (slider) =====
+    setupSliderUnlock() { return this.unlockManager.setupSliderUnlock(); }
+    unlockYesButton() { return this.unlockManager.unlockYesButton(); }
+    startCountdown() { return this.unlockManager.startCountdown(); }
 
     // ===== THREAD OF MEMORIES =====
     showThreadOfMemories() {
@@ -1247,9 +309,7 @@ class GreetingCardApp {
             // Create popup
             const memoryPopup = document.createElement('div');
             memoryPopup.className = 'memory-popup hidden';
-            if (this.eventType === 'raksha_bandhan') {
-                memoryPopup.classList.add('rakhi-popup');
-            }
+            this.getEventModule()?.onMemoryPopupCreate?.(memoryPopup, this);
             memoryPopup.innerHTML = `
                 <h4 class="popup-year">${memory.year || 'Memory'}</h4>
                 <h3 class="popup-title">${memory.title || 'Special Moment'}</h3>
@@ -1266,10 +326,7 @@ class GreetingCardApp {
                 });
                 memoryPopup.classList.remove('hidden');
                 memoryPopup.style.opacity = '1';
-                // Play bell sound for Rakhi
-                if (this.eventType === 'raksha_bandhan') {
-                    this.audioManager.playBellSound();
-                }
+                this.getEventModule()?.onMemoryPopupShow?.(this);
             };
 
             const hidePopup = () => {
@@ -1381,395 +438,25 @@ class GreetingCardApp {
     // Loading Screen Blessing
 
     initializeBlessingRain() {
-        const blessingRainContainer = document.getElementById('blessing-rain');
-        if (!blessingRainContainer) return;
-
-        const blessings = ['🌸', '🌼', '🙏', '✨', '💝', '❤️'];
-        const createBlessing = () => {
-            const blessing = document.createElement('div');
-            blessing.className = 'blessing-particle';
-            blessing.textContent = blessings[Math.floor(Math.random() * blessings.length)];
-            blessing.style.left = `${Math.random() * 100}%`;
-            blessing.style.animationDuration = `${Math.random() * 2 + 2}s`;
-            blessing.style.animationDelay = `${Math.random() * 1}s`;
-            blessingRainContainer.appendChild(blessing);
-
-            setTimeout(() => {
-                if (blessing.parentNode) {
-                    blessing.parentNode.removeChild(blessing);
-                }
-            }, 4000);
-        };
-
-        // Create blessings at intervals
-        setInterval(createBlessing, 300);
+        return this.effectManager.initializeBlessingRain();
     }
-    // ===== INTERACTIVE ELEMENTS =====
-    setupInteractiveElements() {
-        console.log('Setting up interactive elements for:', this.eventType);
-        this.setupBirthdayCake();
-        this.setupDanceButton();
-        this.setupMemoryTree();
-        this.setupMediaDisplays();
-        this.setupAudioControls();
-
-        // Event-specific page 4 interactions
-        if (this.eventType === 'raksha_bandhan') {
-            this.setupRakhiBlessings();
-        } else if (this.eventType === 'anniversary') {
-            this.setupLoveLetter();
-        } else if (this.eventType === 'other') {
-            this.setupWishJar();
-        }
-    }
-    setupRakhiBlessings() {
-        this.initializeMemoryThread();
-        this.setupBlessingShower();
-        this.setupDiyaCeremony();
-        this.setupPromiseTree();
-        this.initializeBlessingRain();
-        console.log('Rakhi blessings setup completed');
-    }
-
-
-    setupPromiseTree() {
-        const promiseTree = document.getElementById('promise-tree');
-        const treeBranches = document.querySelector('.tree-branches');
-        if (!promiseTree) return;
-
-        const promises = [
-            "I promise to always support you",
-            "I promise to be there in tough times",
-            "I promise to celebrate your successes",
-            "I promise to protect your dreams",
-            "I promise to share your joys"
-        ];
-
-        let promiseIndex = 0;
-        const branchPositions = [
-            { top: '10%', left: '15%', rotate: '-15deg' },
-            { top: '25%', left: '75%', rotate: '10deg' },
-            { top: '45%', left: '30%', rotate: '-5deg' },
-            { top: '60%', left: '65%', rotate: '8deg' },
-            { top: '75%', left: '40%', rotate: '-12deg' }
-        ];
-
-        // Add small decorative leaves to the tree
-        this.addDecorativeLeaves(treeBranches);
-
-        promiseTree.addEventListener('click', () => {
-            if (promiseIndex < promises.length) {
-                const branch = document.createElement('div');
-                branch.className = 'promise-branch';
-                branch.textContent = promises[promiseIndex];
-
-                // Position based on predefined spots
-                const position = branchPositions[promiseIndex];
-                branch.style.top = position.top;
-                branch.style.left = position.left;
-                branch.style.transform = `rotate(${position.rotate}) scale(0)`;
-
-                // Add to tree
-                treeBranches.appendChild(branch);
-
-                // Add growing animation
-                setTimeout(() => {
-                    branch.style.animation = 'branchGrow 0.5s forwards';
-                }, 50);
-
-                // Play bell sound for immersion
-                this.audioManager.playBellSound();
-
-                promiseIndex++;
-
-                // Update instruction text
-                const instruction = document.querySelector('.tree-instruction');
-                if (instruction) {
-                    instruction.textContent = promiseIndex >= promises.length ?
-                        "Your tree of promises is complete! ✨" :
-                        `Click to add ${5 - promiseIndex} more ${promiseIndex === 4 ? 'promise' : 'promises'}`;
-                }
-
-                if (promiseIndex >= promises.length) {
-                    // Tree completion effect
-                    setTimeout(() => {
-                        const foliage = promiseTree.querySelector('.tree-foliage');
-                        if (foliage) {
-                            foliage.style.animation = 'pulse 2s infinite';
-                        }
-                        this.showConfetti();
-                        this.revealAudioOrQuote();
-                    }, 1000);
-                }
-            }
-        });
-    }
-
-    addDecorativeLeaves(container) {
-        const leafEmojis = ['🍃', '🌿', '☘️'];
-        for (let i = 0; i < 8; i++) {
-            const leaf = document.createElement('div');
-            leaf.textContent = leafEmojis[Math.floor(Math.random() * leafEmojis.length)];
-            leaf.style.position = 'absolute';
-            leaf.style.fontSize = `${Math.random() * 8 + 12}px`;
-            leaf.style.top = `${Math.random() * 80 + 10}%`;
-            leaf.style.left = `${Math.random() * 80 + 10}%`;
-            leaf.style.opacity = '0.7';
-            leaf.style.transform = `rotate(${Math.random() * 360}deg)`;
-            leaf.style.pointerEvents = 'none';
-            container.appendChild(leaf);
-        }
-    }
-    setupBlessingShower() {
-        const blessingBtn = document.getElementById('blessing-shower-btn');
-        const blessingShower = document.getElementById('blessing-shower');
-
-        if (blessingBtn && blessingShower) {
-            blessingBtn.addEventListener('click', () => {
-                console.log('Blessing button clicked');
-                this.audioManager.playBlessingSound();
-                this.createBlessingParticles(blessingShower);
-            });
-        }else {
-            console.error('Blessing button or shower container not found');
-        }
-    }
-
-    createBlessingParticles(blessingShower) {
-        const blessings = ['🌸', '🌼', '💰', '🪙', '✨', '💝', '🙏', '❤️'];
-
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-        for (let i = 0; i < 20; i++) {
-            setTimeout(() => {
-                const particle = document.createElement('div');
-                particle.className = 'blessing-particle';
-                particle.textContent = blessings[Math.floor(Math.random() * blessings.length)];
-                particle.style.position = 'fixed';
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.top = -30 + 'px';
-                particle.style.animationDelay = `${Math.random()}s`;
-                blessingShower.appendChild(particle);
-
-                setTimeout(() => {
-                    if (particle.parentNode) {
-                        particle.parentNode.removeChild(particle);
-                    }
-                }, 3500);
-            }, i * 100);
-        }
-    }
-
-    setupDiyaCeremony() {
-        const diyas = document.querySelectorAll('.ceremony-diya');
-        let litDiyas = 0;
-
-        diyas.forEach(diya => {
-            // Add hover tooltip functionality
-            const wish = diya.getAttribute('data-wish');
-            if (wish) {
-                // Create tooltip element
-                const tooltip = document.createElement('div');
-                tooltip.className = 'diya-tooltip';
-                tooltip.textContent = wish.charAt(0).toUpperCase() + wish.slice(1);
-                diya.appendChild(tooltip);
-
-                // Show tooltip on hover
-                diya.addEventListener('mouseenter', () => {
-                    tooltip.style.opacity = '1';
-                    tooltip.style.transform = 'translateY(-5px)';
-                });
-
-                // Hide tooltip when mouse leaves
-                diya.addEventListener('mouseleave', () => {
-                    tooltip.style.opacity = '0';
-                    tooltip.style.transform = 'translateY(0)';
-                });
-            }
-
-            // Original click behavior
-            diya.addEventListener('click', () => {
-                if (diya.classList.contains('lit')) return;
-
-                diya.classList.add('lit');
-                const flame = diya.querySelector('.diya-flame-unlit');
-                if (flame) {
-                    flame.className = 'diya-flame-lit';
-                }
-
-                this.audioManager.playBellSound();
-                litDiyas++;
-
-                if (litDiyas >= diyas.length) {
-                    setTimeout(() => {
-                        this.audioManager.playSuccessSound();
-                        alert('🎉 All diyas lit! Your blessings are complete. The divine light shines upon you!');
-                        this.revealAudioOrQuote();
-                    }, 1000);
-                }
-            });
-        });
-    }
-
-    setupBirthdayCake() {
-        if (!this.elements.birthdayCake || this.eventType !== 'birthday') return;
-
-        this.elements.birthdayCake.addEventListener('click', () => {
-            this.blowOutCandles();
-        });
-
-        this.elements.birthdayCake.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                this.blowOutCandles();
-            }
-        });
-    }
-
-    blowOutCandles() {
-        if (this.elements.birthdayCake.classList.contains('blown-out')) return;
-
-        this.elements.birthdayCake.classList.add('blown-out');
-
-        // Add blow effect
-        const blowEffect = document.createElement('div');
-        blowEffect.className = 'blow-effect';
-        blowEffect.textContent = '💨';
-        blowEffect.style.cssText = `
-            position: absolute;
-            top: 20%;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 2rem;
-            animation: blowAway 1s ease-out forwards;
-            pointer-events: none;
-        `;
-        this.elements.birthdayCake.appendChild(blowEffect);
-
-        // Update instruction
-        const instruction = document.querySelector('.cake-instruction');
-        if (instruction) {
-            instruction.textContent = 'Your wish has been made! 🌟';
-        }
-
-        // Show confetti and reveal audio/quote
-        setTimeout(() => {
-            this.showConfetti();
-            this.revealAudioOrQuote();
-            blowEffect.remove();
-        }, 1000);
-
-        // Add blow away animation
-        if (!document.querySelector('#blow-away-animation')) {
-            const style = document.createElement('style');
-            style.id = 'blow-away-animation';
-            style.textContent = `
-                @keyframes blowAway {
-                    0% { transform: translateX(-50%) scale(1); opacity: 1; }
-                    100% { transform: translateX(-50%) translateY(-50px) scale(2); opacity: 0; }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-    }
-
-    setupDanceButton() {
-        if (!this.elements.danceButton || this.eventType !== 'anniversary') return;
-
-        this.elements.danceButton.addEventListener('click', () => {
-            this.startDanceAnimation();
-        });
-    }
-
-    startDanceAnimation() {
-        const danceAnimation = document.querySelector('.dance-animation');
-        if (!danceAnimation) return;
-
-        danceAnimation.innerHTML = '';
-        danceAnimation.classList.add('active');
-
-        // Create dancers
-        const dancers = document.createElement('div');
-        dancers.textContent = '💃 🕺';
-        dancers.style.fontSize = '3rem';
-        dancers.style.animation = 'bounce 2s infinite';
-
-        // Create floating hearts
-        const heartsContainer = document.createElement('div');
-        heartsContainer.style.position = 'absolute';
-        heartsContainer.style.width = '100%';
-        heartsContainer.style.height = '100%';
-
-        for (let i = 0; i < 15; i++) {
-            const heart = document.createElement('span');
-            heart.textContent = '❤️';
-            heart.style.cssText = `
-                position: absolute;
-                left: ${Math.random() * 80 + 10}%;
-                animation: float-up ${Math.random() * 2 + 2}s ease-out ${Math.random() * 3}s infinite;
-                font-size: ${Math.random() * 10 + 15}px;
-                opacity: ${Math.random() * 0.5 + 0.5};
-            `;
-            heartsContainer.appendChild(heart);
-        }
-
-        danceAnimation.appendChild(dancers);
-        danceAnimation.appendChild(heartsContainer);
-
-        this.elements.danceButton.textContent = 'Keep Dancing! 💃';
-
-        // Reveal audio/quote after animation
-        setTimeout(() => {
-            this.revealAudioOrQuote();
-        }, 2000);
-    }
-
-    setupMemoryTree() {
-        if (!this.elements.memoryTree) return;
-
-        // Load saved leaves
-        if (this.savedData.leaves && Array.isArray(this.savedData.leaves)) {
-            this.savedData.leaves.forEach(leaf => {
-                this.createMemoryLeaf(leaf.x, leaf.y);
-            });
-        }
-
-        this.elements.memoryTree.addEventListener('click', (e) => {
-            this.addMemoryLeaf(e);
-        });
-    }
-
-    addMemoryLeaf(event) {
-        const rect = this.elements.memoryTree.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-
-        this.createMemoryLeaf(x, y);
-
-        // Save leaf position
-        if (!this.savedData.leaves) this.savedData.leaves = [];
-        this.savedData.leaves.push({ x, y });
-        this.saveData();
-
-        // Update instruction
-        const instruction = document.querySelector('.tree-instruction');
-        if (instruction && this.elements.memoryTree.children.length > 5) {
-            instruction.textContent = 'Your tree is flourishing! 🌳';
-        }
-
-        // Reveal audio/quote after several clicks
-        if (this.elements.memoryTree.children.length >= 3) {
-            this.revealAudioOrQuote();
-        }
-    }
-
-    createMemoryLeaf(x, y) {
-        const leaf = document.createElement('div');
-        leaf.className = 'memory-leaf';
-        leaf.style.left = `${x}px`;
-        leaf.style.top = `${y}px`;
-        this.elements.memoryTree.appendChild(leaf);
-    }
+    // ===== INTERACTION MANAGER DELEGATORS =====
+    setupPage4()          { return this.interactionManager.setupPage4(); }
+    setupInteractiveElements() { return this.interactionManager.setupInteractiveElements(); }
+    addDecorativeLeaves(container)              { return this.interactionManager.addDecorativeLeaves(container); }
+    setupBlessingShower()                       { return this.interactionManager.setupBlessingShower(); }
+    createBlessingParticles(blessingShower)     { return this.interactionManager.createBlessingParticles(blessingShower); }
+    setupMemoryTree()                           { return this.interactionManager.setupMemoryTree(); }
+    addMemoryLeaf(event)                        { return this.interactionManager.addMemoryLeaf(event); }
+    createMemoryLeaf(x, y)                      { return this.interactionManager.createMemoryLeaf(x, y); }
+    // Ceremony stubs — actual logic lives in each EventModule.onPageEnter(4)
+    setupRakhiBlessings() {}
+    setupPromiseTree()    {}
+    setupDiyaCeremony()   {}
+    setupBirthdayCake()   {}
+    blowOutCandles()      {}
+    setupDanceButton()    {}
+    startDanceAnimation() {}
 
     // ===== PAGE-SPECIFIC STUBS (overridden by event modules) =====
     // These no-ops prevent errors when a module hasn't loaded.
@@ -1791,308 +478,41 @@ class GreetingCardApp {
     setupWishJar() {}
     animateFarewellStars() {}
 
-    // ===== MEDIA AND AUDIO =====
+    // ===== MEDIA MANAGER DELEGATORS =====
     setupMediaDisplays() {
-        this.elements.mediaDisplays.forEach(display => {
-            this.initializeMediaDisplay(display);
-        });
+        return this.mediaManager.setupMediaDisplays();
     }
 
     initializeMediaDisplay(display) {
-        const mediaUrls = display.dataset.mediaUrls
-            ? display.dataset.mediaUrls.split(',').map(url => url.trim()).filter(url => url)
-            : [];
-        let fallbackUrl = display.dataset.fallbackUrl || 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e';
-        // Rakhi-specific fallback
-        if (this.eventType === 'raksha_bandhan' && !mediaUrls.length) {
-            fallbackUrl = 'https://images.unsplash.com/photo-1597149493807-4b9f73995e45'; // Rakhi siblings image
-        }
-
-        if (!mediaUrls.length) {
-            mediaUrls.push(fallbackUrl);
-        }
-
-        display.innerHTML = '';
-        const fragment = document.createDocumentFragment();
-
-        mediaUrls.forEach((url, index) => {
-            const img = document.createElement('img');
-            img.src = decodeURIComponent(url);
-            img.alt = `Event media ${index + 1}`;
-            img.className = 'media-image';
-
-            img.loading = 'lazy';
-            img.style.display = index === 0 ? 'block' : 'none';
-
-            // Calculate and maintain aspect ratio
-            img.onload = () => {
-                const aspectRatio = img.naturalWidth / img.naturalHeight;
-                const containerWidth = display.clientWidth;
-                const maxHeight = window.innerWidth <= 768 ? 300 : 500;
-                
-                if (aspectRatio > 1.5) {
-                    // Wide images
-                    img.style.width = '100%';
-                    img.style.height = 'auto';
-                    img.style.maxHeight = maxHeight + 'px';
-                } else {
-                    // Portrait or square images
-                    img.style.height = 'auto';
-                    img.style.width = '100%';
-                    img.style.maxHeight = maxHeight + 'px';
-                }
-                
-                // Center the image in container
-                display.style.alignItems = 'center';
-                display.style.justifyContent = 'center';
-            };
-
-            img.onerror = () => {
-                console.error(`Failed to load image: ${url}`);
-                // Fallback to default Rakhi image
-                if (this.eventType === 'raksha_bandhan') {
-                    img.src = fallbackUrl;
-                }
-            };
-            fragment.appendChild(img);
-        });
-
-        display.appendChild(fragment);
-
-        // Add click handler for full-size view
-        display.addEventListener('click', (e) => {
-            if (e.target.classList.contains('media-image')) {
-                this.showImageModal(e.target.src, e.target.alt);
-            }
-        });
-
-        // Add zoom hint
-        const zoomHint = document.createElement('div');
-        zoomHint.className = 'zoom-hint';
-        zoomHint.innerHTML = '🔍 Click to zoom';
-        display.appendChild(zoomHint);
-
-        // Add fit toggle button
-        const fitToggle = document.createElement('button');
-        fitToggle.className = 'image-fit-toggle';
-        fitToggle.innerHTML = '📐 Fit: Contain';
-        fitToggle.title = 'Toggle image fit mode';
-        
-        let fitMode = 'contain';
-        fitToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            fitMode = fitMode === 'contain' ? 'cover' : fitMode === 'cover' ? 'fill' : 'contain';
-            
-            display.className = display.className.replace(/fit-(contain|cover|fill)/, '') + ` fit-${fitMode}`;
-            fitToggle.innerHTML = `📐 Fit: ${fitMode.charAt(0).toUpperCase() + fitMode.slice(1)}`;
-        });
-        
-        display.appendChild(fitToggle);
-        display.classList.add('fit-contain'); // Default fit mode
-
-        // Setup slideshow if multiple images
-        if (mediaUrls.length > 1) {
-            this.setupSlideshow(display);
-        }
-        // Add traditional frame animation for Rakhi
-        if (this.eventType === 'raksha_bandhan') {
-            this.addTraditionalFrame(display);
-        }
+        return this.mediaManager.initializeMediaDisplay(display);
     }
 
     addTraditionalFrame(display) {
-        const frame = document.createElement('div');
-        frame.className = 'traditional-frame';
-        frame.style.cssText = `
-            position: absolute;
-            top: -10px;
-            left: -10px;
-            right: -10px;
-            bottom: -10px;
-            border: 5px solid var(--rakhi-gold);
-            border-image: linear-gradient(45deg, var(--rakhi-gold), var(--rakshi-saffron)) 1;
-            pointer-events: none;
-            border-radius: 10px;
-        `;
-
-        display.style.position = 'relative';
-        display.appendChild(frame);
+        return this.mediaManager.addTraditionalFrame(display);
     }
 
-    // ===== IMAGE MODAL FUNCTIONALITY =====
     showImageModal(imageSrc, imageAlt) {
-        // Create modal if it doesn't exist
-        let modal = document.getElementById('imageModal');
-        if (!modal) {
-            modal = document.createElement('div');
-            modal.id = 'imageModal';
-            modal.className = 'image-modal';
-            modal.innerHTML = `
-                <div class="image-modal-content">
-                    <span class="image-modal-close">&times;</span>
-                    <img src="" alt="" />
-                </div>
-            `;
-            document.body.appendChild(modal);
-
-            // Close modal handlers
-            const closeBtn = modal.querySelector('.image-modal-close');
-            closeBtn.addEventListener('click', () => this.hideImageModal());
-            
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    this.hideImageModal();
-                }
-            });
-
-            // ESC key handler
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && modal.classList.contains('show')) {
-                    this.hideImageModal();
-                }
-            });
-        }
-
-        // Set image and show modal
-        const modalImg = modal.querySelector('img');
-        modalImg.src = imageSrc;
-        modalImg.alt = imageAlt;
-        modal.classList.add('show');
-        document.body.style.overflow = 'hidden';
+        return this.mediaManager.showImageModal(imageSrc, imageAlt);
     }
 
     hideImageModal() {
-        const modal = document.getElementById('imageModal');
-        if (modal) {
-            modal.classList.remove('show');
-            document.body.style.overflow = '';
-        }
+        return this.mediaManager.hideImageModal();
     }
 
     setupSlideshow(display) {
-        const existingControls = display.parentElement.querySelector('.slideshow-controls');
-        if (existingControls) {
-            existingControls.remove();
-        }
-        const images = display.querySelectorAll('.media-image');
-        const container = display.parentElement;
-
-        let currentIndex = 0;
-
-        // Create controls
-        const controls = document.createElement('div');
-        controls.className = 'slideshow-controls';
-
-        const prevBtn = document.createElement('button');
-        prevBtn.className = 'slideshow-btn prev';
-        prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
-        prevBtn.setAttribute('aria-label', 'Previous image');
-
-        const nextBtn = document.createElement('button');
-        nextBtn.className = 'slideshow-btn next';
-        nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
-        nextBtn.setAttribute('aria-label', 'Next image');
-
-        const indicators = document.createElement('div');
-        indicators.className = 'slideshow-indicators';
-
-        // Create indicators
-        images.forEach((_, index) => {
-            const dot = document.createElement('span');
-            dot.className = index === 0 ? 'indicator active' : 'indicator';
-            dot.setAttribute('data-index', index);
-            indicators.appendChild(dot);
-        });
-
-        const showSlide = (index) => {
-            currentIndex = (index + images.length) % images.length;
-
-            images.forEach((img, i) => {
-                img.style.display = i === currentIndex ? 'block' : 'none';
-            });
-
-            indicators.querySelectorAll('.indicator').forEach((dot, i) => {
-                dot.classList.toggle('active', i === currentIndex);
-            });
-        };
-
-        // Event listeners
-        prevBtn.addEventListener('click', () => showSlide(currentIndex - 1));
-        nextBtn.addEventListener('click', () => showSlide(currentIndex + 1));
-
-        indicators.addEventListener('click', (e) => {
-            if (e.target.classList.contains('indicator')) {
-                showSlide(parseInt(e.target.dataset.index));
-            }
-        });
-
-        // Touch/swipe support
-        let touchStartX = 0;
-        display.addEventListener('touchstart', (e) => {
-            touchStartX = e.touches[0].clientX;
-        }, { passive: true });
-
-        display.addEventListener('touchend', (e) => {
-            const touchEndX = e.changedTouches[0].clientX;
-            const diff = touchEndX - touchStartX;
-
-            if (Math.abs(diff) > 50) {
-                showSlide(currentIndex + (diff > 0 ? -1 : 1));
-            }
-        }, { passive: true });
-
-        // Auto-advance
-        let autoAdvance = setInterval(() => showSlide(currentIndex + 1), CONFIG.TIMEOUTS.SLIDESHOW);
-
-        container.addEventListener('mouseenter', () => clearInterval(autoAdvance));
-        container.addEventListener('mouseleave', () => {
-            autoAdvance = setInterval(() => showSlide(currentIndex + 1), CONFIG.TIMEOUTS.SLIDESHOW);
-        });
-
-        // Append controls
-        controls.appendChild(prevBtn);
-        controls.appendChild(indicators);
-        controls.appendChild(nextBtn);
-        container.appendChild(controls);
+        return this.mediaManager.setupSlideshow(display);
     }
 
     setupAudioControls() {
-        if (this.elements.audioControl && this.elements.calmingSound) {
-            this.elements.audioControl.addEventListener('click', () => {
-                this.toggleAudio(this.elements.calmingSound, this.elements.audioControl);
-            });
-        }
+        return this.mediaManager.setupAudioControls();
     }
 
     toggleAudio(audioElement, controlButton) {
-        if (audioElement.paused) {
-            audioElement.play().catch(e => {
-                console.error('Audio playback failed:', e);
-                this.showFeedback('Unable to play audio. Please check your browser settings.', 'error');
-            });
-            controlButton.innerHTML = '<i class="fas fa-pause"></i> Pause Sound';
-        } else {
-            audioElement.pause();
-            controlButton.innerHTML = '<i class="fas fa-play"></i> Play Sound';
-        }
+        return this.mediaManager.toggleAudio(audioElement, controlButton);
     }
 
     revealAudioOrQuote() {
-        const audioContainer = document.querySelector('.audio-player-container');
-        const quoteContainer = document.querySelector('.fallback-quote');
-        const audioUrl = this.cardContainer.dataset.audioUrl;
-
-        if (audioUrl && audioUrl !== 'null' && audioContainer) {
-            audioContainer.style.display = 'block';
-            this.showFeedback('🎵 Click to listen to a special message!');
-        } else if (quoteContainer) {
-            quoteContainer.style.display = 'block';
-            const quoteEl = quoteContainer.querySelector('.inspiration-quote');
-            if (quoteEl) {
-                const quotes = this.themes[this.eventType]?.quotes || this.themes.birthday.quotes;
-                quoteEl.textContent = quotes[Math.floor(Math.random() * quotes.length)];
-            }
-        }
+        return this.mediaManager.revealAudioOrQuote();
     }
 
     // ===== VOICE NOTE =====
@@ -2122,337 +542,38 @@ class GreetingCardApp {
         });
     }
 
-    // ===== SHARING SYSTEM =====
-    setupSharing() {
-        if (!this.elements.shareButton || !this.elements.shareModal) return;
+    // ===== SHARING MANAGER DELEGATORS =====
+    setupSharing() { return this.sharingManager.setupSharing(); }
+    generateShareLink(password) { return this.sharingManager.generateShareLink(password); }
+    updateSocialLinks(shareUrl) { return this.sharingManager.updateSocialLinks(shareUrl); }
 
-        const sharePasswordInput = document.querySelector('#share-password');
-        const generateLinkButton = document.querySelector('#generate-share-link');
-        const closeModalButton = document.querySelector('#close-share-modal');
-        const shareUrlContainer = document.querySelector('#share-url-container');
+    // ===== NAVIGATION MANAGER DELEGATORS (page init) =====
+    initializePage(pageNum) { return this.navigationManager.initializePage(pageNum); }
+    initializeQuotes() { return this.navigationManager.initializeQuotes(); }
 
-        this.elements.shareButton.addEventListener('click', () => {
-            this.elements.shareModal.style.display = 'flex';
-            sharePasswordInput.focus();
-        });
-
-        closeModalButton.addEventListener('click', () => {
-            this.elements.shareModal.style.display = 'none';
-            sharePasswordInput.value = '';
-            shareUrlContainer.classList.add('hidden');
-        });
-
-        generateLinkButton.addEventListener('click', () => {
-            this.generateShareLink(sharePasswordInput.value.trim());
-        });
-
-        // Close modal on escape or outside click
-        this.elements.shareModal.addEventListener('click', (e) => {
-            if (e.target === this.elements.shareModal) {
-                closeModalButton.click();
-            }
-        });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.elements.shareModal.style.display === 'flex') {
-                closeModalButton.click();
-            }
-        });
-    }
-
-    generateShareLink(password) {
-        // password is optional — backend handles empty password gracefully
-        const eventId = this.elements.shareButton.dataset.eventId;
-        const csrftoken = this.getCookie('csrftoken');
-
-        fetch(`/reminders/card/${eventId}/generate-share/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken
-            },
-            body: JSON.stringify({ password })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                this.showFeedback(`Error: ${data.error}`, 'error');
-                return;
-            }
-
-            const shareUrlContainer = document.querySelector('#share-url-container');
-            const shareUrlElement = document.querySelector('#share-url');
-
-            shareUrlElement.textContent = data.share_url;
-            shareUrlContainer.classList.remove('hidden');
-
-            // Update social links
-            this.updateSocialLinks(data.share_url);
-
-            if (data.warning) {
-                this.showFeedback(data.warning, 'warning');
-            } else {
-                this.showFeedback('Share link generated successfully!', 'success');
-            }
-        })
-        .catch(error => {
-            console.error('Share link generation error:', error);
-            this.showFeedback('Failed to generate share link.', 'error');
-        });
-    }
-
-    updateSocialLinks(shareUrl) {
-        const whatsappLink = document.querySelector('#whatsapp-share');
-        const twitterLink = document.querySelector('#twitter-share');
-        const emailLink = document.querySelector('#email-share');
-
-        if (whatsappLink) {
-            whatsappLink.href = `https://api.whatsapp.com/send?text=Check%20out%20my%20greeting%20card:%20${encodeURIComponent(shareUrl)}`;
-        }
-
-        if (twitterLink) {
-            twitterLink.href = `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=Check%20out%20my%20greeting%20card!`;
-        }
-
-        if (emailLink) {
-            emailLink.href = `mailto:?subject=Greeting%20Card&body=Check%20out%20my%20greeting%20card:%20${encodeURIComponent(shareUrl)}`;
-        }
-    }
-
-    // ===== PAGE INITIALIZATION =====
-    initializePage(pageNum) {
-        switch (pageNum) {
-            case 1:
-                this.initializeQuotes();
-                break;
-            case 2:
-                if (this.eventType === 'raksha_bandhan') {
-                    this.setupRakhiSVGCeremony();
-                } else if (this.eventType === 'birthday') {
-                    this.setupBirthdayPage2();
-                } else if (this.eventType === 'anniversary') {
-                    this.setupAnniversaryPage2();
-                } else {
-                    this.setupOtherPage2();
-                }
-                break;
-            case 3:
-                this.setupMediaDisplays();
-                if (this.elements.calmingSound) {
-                    this.elements.calmingSound.volume = 0.5;
-                    this.elements.calmingSound.play().catch(e =>
-                        console.log('Audio autoplay prevented:', e)
-                    );
-                }
-                break;
-            case 4:
-                this.setupInteractiveElements();
-                break;
-            case 5:
-                this.playFinalAnimation();
-                if (this.eventType === 'birthday') {
-                    this.setupBirthdayPage5();
-                } else if (this.eventType === 'anniversary') {
-                    this.setupAnniversaryPage5();
-                } else if (this.eventType !== 'raksha_bandhan') {
-                    this.setupOtherPage5();
-                }
-                break;
-        }
-    }
-
-    initializeQuotes() {
-        const quoteElements = document.querySelectorAll('.inspiration-quote');
-        const quotes = this.themes[this.eventType]?.quotes || this.themes.birthday.quotes;
-
-        quoteElements.forEach(quoteEl => {
-            quoteEl.textContent = quotes[Math.floor(Math.random() * quotes.length)];
-        });
-    }
-
-    // ===== ANIMATIONS =====
+    // ===== EFFECT MANAGER DELEGATORS (animations) =====
     showConfetti() {
-        const colors = this.themes[this.eventType]?.confettiColors || this.themes.birthday.confettiColors;
-        const container = this.cardContainer;
-
-        const confettiPieces = [];
-        const confettiCount = Math.min(50, window.innerWidth / 20);
-
-        for (let i = 0; i < confettiCount; i++) {
-            const confetti = document.createElement('div');
-            confetti.className = 'confetti-piece';
-            confetti.style.cssText = `
-                position: absolute;
-                left: ${Math.random() * 100}%;
-                top: -20px;
-                width: ${Math.random() * 10 + 5}px;
-                height: ${Math.random() * 10 + 5}px;
-                background-color: ${colors[Math.floor(Math.random() * colors.length)]};
-                z-index: 1000;
-                pointer-events: none;
-            `;
-
-            container.appendChild(confetti);
-            confettiPieces.push(confetti);
-        }
-
-        // Remove confetti after animation
-        setTimeout(() => {
-            confettiPieces.forEach(piece => {
-                if (piece.parentNode) {
-                    piece.parentNode.removeChild(piece);
-                }
-            });
-        }, CONFIG.TIMEOUTS.CONFETTI);
+        return this.effectManager.showConfetti();
     }
 
     playFinalAnimation() {
-        const finalAnimation = document.querySelector('.final-animation');
-        if (!finalAnimation) return;
-        this.audioManager.playCelebrationSound();
-        finalAnimation.innerHTML = '';
-
-        let animationElements = [];
-
-        if (this.eventType === 'raksha_bandhan') {
-            animationElements = this.createRakhiAnimation();
-
-        } else if (this.eventType === 'birthday') {
-            animationElements = this.createBirthdayAnimation();
-        } else if (this.eventType === 'anniversary') {
-            animationElements = this.createAnniversaryAnimation();
-        } else {
-            animationElements = this.createGenericAnimation();
-        }
-
-        const fragment = document.createDocumentFragment();
-        animationElements.forEach(el => fragment.appendChild(el));
-        finalAnimation.appendChild(fragment);
-
-        // Clean up after animation
-        setTimeout(() => {
-            animationElements.forEach(el => {
-                if (el.parentNode) {
-                    el.parentNode.removeChild(el);
-                }
-            });
-        }, 10000);
+        return this.effectManager.playFinalAnimation();
     }
 
-
     createRakhiAnimation() {
-        const elements = [];
-
-        // Sacred symbols
-        const symbols = ['🕉️', '🪔', '🌸', '🌺', '💐', '✨'];
-        for (let i = 0; i < 20; i++) { // Increased count for better coverage
-            const symbol = document.createElement('div');
-            symbol.innerHTML = symbols[Math.floor(Math.random() * symbols.length)];
-            symbol.style.cssText = `
-                position: fixed;
-                left: ${Math.random() * 95}vw;
-                top: ${Math.random() * 95}vh;
-                font-size: ${Math.random() * 15 + 25}px;
-                animation: floatUp ${Math.random() * 3 + 3}s ease-out ${Math.random() * 2}s infinite;
-                pointer-events: none;
-                color: var(--rakhi-gold);
-                z-index: 9999;
-                text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
-            `;
-            document.body.appendChild(symbol);
-            elements.push(symbol);
-        }
-
-
-        return elements;
+        return this.effectManager.createRakhiAnimation();
     }
 
     createBirthdayAnimation() {
-        const elements = [];
-
-        // Balloons
-        for (let i = 0; i < 8; i++) {
-            const balloon = document.createElement('div');
-            balloon.innerHTML = '🎈';
-            balloon.style.cssText = `
-                position: absolute;
-                left: ${Math.random() * 80 + 10}%;
-                font-size: ${Math.random() * 20 + 20}px;
-                animation: float-up ${Math.random() * 3 + 4}s ease-out ${Math.random() * 2}s infinite;
-                pointer-events: none;
-            `;
-            elements.push(balloon);
-        }
-
-        // Gifts
-        for (let i = 0; i < 4; i++) {
-            const gift = document.createElement('div');
-            gift.innerHTML = '🎁';
-            gift.style.cssText = `
-                position: absolute;
-                left: ${Math.random() * 80 + 10}%;
-                font-size: ${Math.random() * 15 + 25}px;
-                animation: bounce ${Math.random() * 2 + 2}s ease-in-out ${Math.random() * 2}s infinite;
-                pointer-events: none;
-            `;
-            elements.push(gift);
-        }
-
-        return elements;
+        return this.effectManager.createBirthdayAnimation();
     }
 
     createAnniversaryAnimation() {
-        const elements = [];
-
-        // Hearts
-        for (let i = 0; i < 12; i++) {
-            const heart = document.createElement('div');
-            heart.innerHTML = ['❤️', '💖', '💘', '💕', '💗'][Math.floor(Math.random() * 5)];
-            heart.style.cssText = `
-                position: absolute;
-                left: ${Math.random() * 80 + 10}%;
-                font-size: ${Math.random() * 15 + 20}px;
-                animation: float-up ${Math.random() * 3 + 3}s ease-out ${Math.random() * 3}s infinite;
-                pointer-events: none;
-            `;
-            elements.push(heart);
-        }
-
-        // Rings
-        const rings = document.createElement('div');
-        rings.innerHTML = '💍 💍';
-        rings.style.cssText = `
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 3rem;
-            animation: pulse 2s ease-in-out infinite;
-            pointer-events: none;
-        `;
-        elements.push(rings);
-
-        return elements;
+        return this.effectManager.createAnniversaryAnimation();
     }
 
     createGenericAnimation() {
-        const elements = [];
-
-        // Stars
-        for (let i = 0; i < 15; i++) {
-            const star = document.createElement('div');
-            star.innerHTML = ['✨', '🌟', '⭐', '💫', '🌠'][Math.floor(Math.random() * 5)];
-            star.style.cssText = `
-                position: absolute;
-                left: ${Math.random() * 80 + 10}%;
-                font-size: ${Math.random() * 15 + 18}px;
-                animation: twinkle ${Math.random() * 2 + 2}s ease-in-out ${Math.random() * 2}s infinite alternate;
-                pointer-events: none;
-            `;
-            elements.push(star);
-        }
-
-        return elements;
+        return this.effectManager.createGenericAnimation();
     }
 
     // ===== UTILITY FUNCTIONS =====
@@ -2487,12 +608,6 @@ class GreetingCardApp {
         }
     }
     handleKeyboardNavigation(e) {
-
-        // Handle escape key for popups
-        if (e.key === 'Escape' && this.eventType === 'raksha_bandhan') {
-            this.closeAllRakhiPopups();
-            return;
-        }
 
         // Arrow key navigation
         if (e.key === 'ArrowLeft' && this.currentPage > 1) {
@@ -2557,39 +672,7 @@ class GreetingCardApp {
     }
 
     showFeedback(message, type = 'info') {
-        // Remove existing toasts
-        document.querySelectorAll('.feedback-toast').forEach(toast => toast.remove());
-
-        const toast = document.createElement('div');
-        toast.className = `feedback-toast toast-${type}`;
-        toast.textContent = message;
-        toast.setAttribute('aria-live', 'assertive');
-        toast.setAttribute('role', 'alert');
-
-        // Style based on type
-        const colors = {
-            success: 'var(--accent-primary)',
-            error: '#ef4444',
-            warning: '#f59e0b',
-            info: 'var(--text-primary)'
-        };
-
-        toast.style.backgroundColor = colors[type] || colors.info;
-
-        document.body.appendChild(toast);
-
-        // Animate in
-        setTimeout(() => {
-            toast.style.opacity = '1';
-            toast.style.transform = 'translateX(-50%) translateY(0)';
-        }, 10);
-
-        // Animate out
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(-50%) translateY(20px)';
-            setTimeout(() => toast.remove(), 300);
-        }, CONFIG.TIMEOUTS.FEEDBACK);
+        return this.effectManager.showFeedback(message, type);
     }
 
     // ===== PUBLIC API =====
@@ -2688,19 +771,8 @@ function initPage1Decor() {
 // Module files loaded after this script set window._*Mixin objects.
 // Apply them to the prototype before DOMContentLoaded creates the instance.
 function _applyPendingMixins() {
-    const mixins = [
-        window._rakhiMixin,
-        window._birthdayMixin,
-        window._anniversaryMixin,
-        window._otherMixin
-    ];
-    mixins.forEach(mixin => {
-        if (mixin) {
-            Object.keys(mixin).forEach(key => {
-                GreetingCardApp.prototype[key] = mixin[key];
-            });
-        }
-    });
+    // Prototype mutation replaced by EventModule API.
+    // Event modules now expose window.EventModule instead of modifying the prototype.
 }
 
 // ===== INITIALIZATION =====
