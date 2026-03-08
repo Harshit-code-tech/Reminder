@@ -1,0 +1,73 @@
+{% comment %}Page 3: Birthday — Pseudo-dynamic micro sections (photos / message / timeline / audio){% endcomment %}
+
+<h2 class="page-title">Memory Snapshot</h2>
+
+<div class="birthday-page3" data-page3-sections="true">
+  <div class="birthday-page3-tabs" role="tablist" aria-label="Birthday memories sections">
+    <button class="page3-tab active" type="button" data-section="0" role="tab" aria-selected="true">Photos</button>
+    <button class="page3-tab" type="button" data-section="1" role="tab" aria-selected="false">Message</button>
+    <button class="page3-tab" type="button" data-section="2" role="tab" aria-selected="false">Timeline</button>
+    <button class="page3-tab" type="button" data-section="3" role="tab" aria-selected="false">Audio</button>
+  </div>
+
+  <div class="birthday-page3-stage" aria-live="polite">
+    <section class="page3-section active" data-section-index="0" role="tabpanel">
+      <div class="media-display"
+           data-media-urls="{% for media in event.media.all %}{% if media.media_type == 'image' %}{{ media.media_file|urlencode }}{% if not forloop.last %},{% endif %}{% endif %}{% endfor %}"
+           data-fallback-url="{% static 'images/nature.jpg' %}"
+           tabindex="0">
+      </div>
+      <div class="media-caption">
+        {% if event.media.exists %}
+        {{ event.media.first.caption|default:"Some special moments" }}
+        {% else %}
+        A moment inspired by nature
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="page3-section" data-section-index="1" role="tabpanel" aria-hidden="true">
+      <div class="birthday-message-card">
+        <div class="birthday-message-lead">A note for you</div>
+        <div class="birthday-message-typewriter" id="birthday-message-typewriter"
+             data-message="{% if event.message %}{{ event.message|escapejs }}{% else %}Another year older — but definitely not wiser 😄\n\nMay your day be full of laughs, love, and tiny surprises.{% endif %}">
+        </div>
+      </div>
+    </section>
+
+    <section class="page3-section" data-section-index="2" role="tabpanel" aria-hidden="true">
+      <div class="birthday-timeline-card">
+        <div class="timeline-title">Time Capsule</div>
+        <div class="timeline-subtitle">Moments through the years</div>
+        <div class="birthday-timeline" id="birthday-timeline" aria-label="Birthday timeline"></div>
+        <div class="timeline-fallback">Add 2+ memories to see the timeline.</div>
+      </div>
+    </section>
+
+    <section class="page3-section" data-section-index="3" role="tabpanel" aria-hidden="true">
+      <div class="birthday-audio-card">
+        <div class="audio-title">🎧 A calm moment</div>
+
+        <audio id="calming-sound" loop>
+          <source src="{% static 'audio/Whispering Wind.mp3' %}" type="audio/mpeg">
+          Your browser does not support the audio element.
+        </audio>
+        <button class="audio-control" aria-label="Toggle calming sound" type="button">
+          <i class="fas fa-pause"></i>
+          Pause Sound
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <div class="birthday-page3-nav">
+    <button class="action-button secondary" type="button" id="page3-prev-section" aria-label="Previous section">Back</button>
+    <div class="page3-progress" aria-label="Section progress">
+      <span class="page3-dot active" data-dot="0"></span>
+      <span class="page3-dot" data-dot="1"></span>
+      <span class="page3-dot" data-dot="2"></span>
+      <span class="page3-dot" data-dot="3"></span>
+    </div>
+    <button class="action-button" type="button" id="page3-next-section" aria-label="Next section">Next</button>
+  </div>
+</div>

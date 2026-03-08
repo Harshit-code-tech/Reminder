@@ -12,7 +12,7 @@
       <div class="candle"><div class="candle-flame"></div></div>
     </div>
   </div>
-  <div class="cake-instruction" aria-live="polite">Click to blow out the candles and make a wish!</div>
+  <div class="cake-instruction" aria-live="polite">Blow into your mic (or click the cake) to blow out the candles and make a wish!</div>
 
   <!-- Birthday Wish Input (revealed after blowing candles) -->
   <div class="wish-container hidden" id="birthday-wish-container">
@@ -28,5 +28,21 @@
       </div>
       <p class="wish-result">Your wish has been sent to the stars! 🌠</p>
     </div>
+  </div>
+
+  <!-- Night Sky Wish Stars (revealed after blowing candles) -->
+  <div class="birthday-night-sky hidden" id="birthday-night-sky" aria-label="Night sky wish stars">
+    <div class="night-sky-title">Tap a star to send your wish</div>
+    <div class="night-sky-stars" role="group" aria-label="Wish stars">
+      <button class="birthday-star" type="button" aria-label="Wish star">✦</button>
+      <button class="birthday-star" type="button" aria-label="Wish star">✦</button>
+      <button class="birthday-star" type="button" aria-label="Wish star">✦</button>
+      <button class="birthday-star" type="button" aria-label="Wish star">✦</button>
+      <button class="birthday-star" type="button" aria-label="Wish star">✦</button>
+      <button class="birthday-star" type="button" aria-label="Wish star">✦</button>
+      <button class="birthday-star" type="button" aria-label="Wish star">✦</button>
+      <button class="birthday-star" type="button" aria-label="Wish star">✦</button>
+    </div>
+    <div class="night-sky-toast" id="birthday-wish-toast" aria-live="polite"></div>
   </div>
 </div>

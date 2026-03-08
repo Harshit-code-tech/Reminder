@@ -38,6 +38,27 @@
     </div>
   </div>
   {% endif %}
+
+  <!-- Birthday Loading Screen (Diya Wish Loader) -->
+  {% if event.event_type == 'birthday' %}
+  <div class="birthday-loading" id="birthday-loading" aria-label="Birthday celebration loading">
+    <div class="birthday-loading-diya">
+      <div class="diya-loader-spark"></div>
+      <div class="diya-loader-body">
+        <div class="diya-loader-base"></div>
+        <div class="diya-loader-flame-wrap">
+          <div class="diya-loader-flame"></div>
+          <div class="diya-loader-flame-inner"></div>
+        </div>
+      </div>
+      <div class="diya-loader-glow"></div>
+    </div>
+    <div class="birthday-loading-text" aria-live="polite">
+      A special birthday moment is about to begin&hellip;
+    </div>
+    <div class="birthday-loading-confetti" id="birthday-loading-confetti"></div>
+  </div>
+  {% endif %}
   <!-- Background Elements -->
   <div class="background-effects">
     <div class="stars-container"></div>
@@ -278,61 +299,63 @@
       <!-- Page 3: Memory/Media -->
       <div class="card-page" id="page-3" role="tabpanel" aria-labelledby="nav-3">
         <div class="page-content">
-          <h2 class="page-title">
-            {% if event.event_type == 'raksha_bandhan' %}
-            Rakhi Recap<br>
-            <span style="font-size: 1.2rem; color: var(--rakhi-saffron);">Sibling Memories Through the Years</span>
-            {% elif event.event_type == 'birthday' %}Memory Snapshot
-            {% elif event.event_type == 'anniversary' %}Our Story
-            {% else %}Special Moments
-            {% endif %}
-          </h2>
+          {% if event.event_type == 'birthday' %}
+            {% include "reminders/card_includes/page3_birthday.html" %}
+          {% else %}
+            <h2 class="page-title">
+              {% if event.event_type == 'raksha_bandhan' %}
+              Rakhi Recap<br>
+              <span style="font-size: 1.2rem; color: var(--rakhi-saffron);">Sibling Memories Through the Years</span>
+              {% elif event.event_type == 'anniversary' %}Our Story
+              {% else %}Special Moments
+              {% endif %}
+            </h2>
 
-          <div class="media-container">
-            {% if event.event_type == 'raksha_bandhan' %}
-            <div class="photo-gallery">
-              <div class="photo-frame">
-                <div class="media-display"
-                     data-media-urls="{% for media in event.media.all %}{% if media.media_type == 'image' %}{{ media.media_file|urlencode }}{% if not forloop.last %},{% endif %}{% endif %}{% endfor %}"
-                     data-fallback-url="{% static 'images/nature.jpg' %}"
-                     role="img"
-                     aria-label="Raksha Bandhan celebration">
-                </div>
-                <div class="marigold-decoration" style="position: absolute; top: 10px; right: 10px; font-size: 2rem; z-index: 2;">🌼</div>
-                <div class="photo-caption" style="text-align: center; margin-top: 15px; color: var(--rakhi-gold);">
-                  {% if event.media.exists %}
-                  {{ event.media.first.caption|default:"Some special moments" }}
-                  {% else %}
-                  A moment inspired by nature
-                  {% endif %}
+            <div class="media-container">
+              {% if event.event_type == 'raksha_bandhan' %}
+              <div class="photo-gallery">
+                <div class="photo-frame">
+                  <div class="media-display"
+                       data-media-urls="{% for media in event.media.all %}{% if media.media_type == 'image' %}{{ media.media_file|urlencode }}{% if not forloop.last %},{% endif %}{% endif %}{% endfor %}"
+                       data-fallback-url="{% static 'images/nature.jpg' %}"
+                       role="img"
+                       aria-label="Raksha Bandhan celebration">
+                  </div>
+                  <div class="marigold-decoration" style="position: absolute; top: 10px; right: 10px; font-size: 2rem; z-index: 2;">🌼</div>
+                  <div class="photo-caption" style="text-align: center; margin-top: 15px; color: var(--rakhi-gold);">
+                    {% if event.media.exists %}
+                    {{ event.media.first.caption|default:"Some special moments" }}
+                    {% else %}
+                    A moment inspired by nature
+                    {% endif %}
+                  </div>
                 </div>
               </div>
-            </div>
-            {% else %}
-            <div class="media-display"
-                 data-media-urls="{% for media in event.media.all %}{% if media.media_type == 'image' %}{{ media.media_file|urlencode }}{% if not forloop.last %},{% endif %}{% endif %}{% endfor %}"
-                 data-fallback-url="{% static 'images/nature.jpg' %}"
-                 tabindex="0">
-            </div>
-            <div class="media-caption">
-              {% if event.media.exists %}
-              {{ event.media.first.caption|default:"Some special moments" }}
               {% else %}
-              A moment inspired by nature
+              <div class="media-display"
+                   data-media-urls="{% for media in event.media.all %}{% if media.media_type == 'image' %}{{ media.media_file|urlencode }}{% if not forloop.last %},{% endif %}{% endif %}{% endfor %}"
+                   data-fallback-url="{% static 'images/nature.jpg' %}"
+                   tabindex="0">
+              </div>
+              <div class="media-caption">
+                {% if event.media.exists %}
+                {{ event.media.first.caption|default:"Some special moments" }}
+                {% else %}
+                A moment inspired by nature
+                {% endif %}
+              </div>
               {% endif %}
+
+              <audio id="calming-sound" loop>
+                <source src="{% static 'audio/Whispering Wind.mp3' %}" type="audio/mpeg">
+                Your browser does not support the audio element.
+              </audio>
+              <button class="audio-control" aria-label="Toggle calming sound">
+                <i class="fas fa-pause"></i>
+                Pause Sound
+              </button>
             </div>
-            {% endif %}
-
-
-            <audio id="calming-sound" loop>
-              <source src="{% static 'audio/Whispering Wind.mp3' %}" type="audio/mpeg">
-              Your browser does not support the audio element.
-            </audio>
-            <button class="audio-control" aria-label="Toggle calming sound">
-              <i class="fas fa-pause"></i>
-              Pause Sound
-            </button>
-          </div>
+          {% endif %}
         </div>
       </div>
 

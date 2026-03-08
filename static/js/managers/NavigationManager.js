@@ -26,6 +26,8 @@ class NavigationManager {
     goToPage(pageNum) {
         if (pageNum < 1 || pageNum > this.totalPages) return;
 
+        const previousPage = this.currentPage;
+
         // Check if page is unlocked
         if (pageNum > 1 && !this.unlocked) {
             this.app.shakePasswordInput('Please unlock the card first');
@@ -34,6 +36,22 @@ class NavigationManager {
 
         if (Math.abs(pageNum - this.currentPage) >= 1 && this.currentPage !== 0) {
             this.audioManager.playPageTransition();
+        }
+
+        // Give event modules (and core) a chance to clean up loops/streams.
+        if (previousPage && previousPage !== pageNum) {
+            const eventModule = this.app.getEventModule();
+            try {
+                eventModule?.onPageLeave?.(previousPage, this.app);
+            } catch (e) {
+                console.warn('Error in eventModule.onPageLeave:', e);
+            }
+
+            // Core cleanup for known looping media
+            if (previousPage === 3 && this.elements.calmingSound) {
+                this.elements.calmingSound.pause();
+                this.elements.calmingSound.currentTime = 0;
+            }
         }
 
         this.currentPage = pageNum;
@@ -88,6 +106,7 @@ class NavigationManager {
                         console.log('Audio autoplay prevented:', e)
                     );
                 }
+                if (eventModule?.onPageEnter) eventModule.onPageEnter(3, this.app);
                 break;
             case 4:
                 this.app.setupInteractiveElements();
