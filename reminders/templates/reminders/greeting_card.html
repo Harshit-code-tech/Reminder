@@ -11,6 +11,43 @@
   <!-- Event-specific supplemental styles -->
   {% if event.event_type == 'birthday' %}
   <link rel="stylesheet" href="{% static 'css/card_birthday.css' %}">
+  <style>
+    /* Critical inline: loader MUST block card visibility at first paint */
+    .bday-loader{position:fixed;inset:0;z-index:99999;background:#0a0a0f;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;overflow:hidden;transition:opacity 0.8s ease-out}
+    .bday-loader.done{opacity:0;pointer-events:none}
+    .card-container.bday-loader-hidden,.bday-loader-hidden-nav{opacity:0!important;pointer-events:none!important}
+
+    /* Critical inline loader art (diya + light). This guarantees visibility even if card_birthday.css is late/blocked. */
+    .bday-loader__bloom{position:absolute;bottom:0;left:50%;width:0;height:0;border-radius:50%;transform:translate(-50%,40%);background:radial-gradient(circle,rgba(255,183,77,0.45) 0%,rgba(255,152,0,0.25) 25%,rgba(255,111,0,0.12) 45%,rgba(30,20,10,0.06) 65%,transparent 80%);opacity:0;transition:width 2.2s cubic-bezier(0.22,1,0.36,1),height 2.2s cubic-bezier(0.22,1,0.36,1),opacity 1s ease;pointer-events:none}
+    .bday-loader__bloom.lit{width:280vmax;height:280vmax;opacity:1}
+    .bday-loader__room{position:absolute;inset:0;background:radial-gradient(circle at 50% 95%,rgba(255,191,36,0.10) 0%,transparent 60%),linear-gradient(180deg,#1a1520 0%,#1e1728 30%,#2a1f35 50%,#352842 70%,#3d2f4a 85%,#4a3655 100%);opacity:0;transition:opacity 2s ease;pointer-events:none}
+    .bday-loader__room.visible{opacity:1}
+    .bday-loader__diya{position:relative;width:180px;height:260px;margin-bottom:8vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;z-index:2}
+    .bday-loader__spark{position:absolute;top:22%;left:50%;width:5px;height:5px;background:#fbbf24;border-radius:50%;transform:translate(-50%,-50%) scale(0);transition:transform 0.4s ease-out,box-shadow 0.4s ease-out;z-index:5}
+    .bday-loader__diya.spark .bday-loader__spark{transform:translate(-50%,-50%) scale(1);box-shadow:0 0 14px 5px rgba(251,191,36,0.7);animation:bdaySparkPulse 0.6s ease-in-out infinite alternate}
+    .bday-loader__flame-wrap{position:absolute;top:8%;left:50%;transform:translateX(-50%);width:50px;height:90px;z-index:4}
+    .bday-loader__flame-outer{position:absolute;bottom:0;left:50%;width:40px;height:80px;transform:translateX(-50%) scaleY(0);transform-origin:bottom center;background:radial-gradient(ellipse at 50% 85%,#fbbf24 0%,#f59e0b 30%,#ef4444 70%,rgba(239,68,68,0) 100%);border-radius:50% 50% 50% 50%/60% 60% 40% 40%;opacity:0;transition:transform 0.8s cubic-bezier(0.34,1.56,0.64,1),opacity 0.5s ease;filter:blur(0.5px)}
+    .bday-loader__diya.ignite .bday-loader__flame-outer{transform:translateX(-50%) scaleY(1);opacity:1;animation:bdayFlameFlicker 1.4s ease-in-out infinite alternate}
+    .bday-loader__flame-inner{position:absolute;bottom:4px;left:50%;width:18px;height:40px;transform:translateX(-50%) scaleY(0);transform-origin:bottom center;background:radial-gradient(ellipse at 50% 75%,#ffffff 0%,#fde68a 50%,rgba(253,230,138,0) 100%);border-radius:50% 50% 50% 50%/60% 60% 40% 40%;opacity:0;transition:transform 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.15s,opacity 0.4s ease 0.15s;filter:blur(0.3px)}
+    .bday-loader__diya.ignite .bday-loader__flame-inner{transform:translateX(-50%) scaleY(1);opacity:1;animation:bdayFlameFlickerInner 1.0s ease-in-out 0.1s infinite alternate}
+    .bday-loader__wick{position:absolute;top:38%;left:50%;width:3px;height:12px;background:#292524;transform:translateX(-50%);border-radius:1px;z-index:3}
+    .bday-loader__oil{position:absolute;bottom:55px;left:50%;width:90px;height:14px;transform:translateX(-50%);background:linear-gradient(180deg,#fbbf24 0%,#d97706 100%);border-radius:50%;z-index:3;opacity:0;transition:opacity 0.4s ease}
+    .bday-loader__diya.grown .bday-loader__oil{opacity:1}
+    .bday-loader__bowl{position:absolute;bottom:0;left:50%;transform:translateX(-50%) scale(0);transform-origin:bottom center;transition:transform 0.6s cubic-bezier(0.34,1.56,0.64,1);display:flex;flex-direction:column;align-items:center;z-index:2}
+    .bday-loader__diya.grown .bday-loader__bowl{transform:translateX(-50%) scale(1)}
+    .bday-loader__bowl-rim{width:110px;height:12px;background:linear-gradient(180deg,#fbbf24 0%,#d97706 50%,#b45309 100%);border-radius:50%;box-shadow:0 2px 8px rgba(217,119,6,0.4)}
+    .bday-loader__bowl-body{width:100px;height:45px;background:linear-gradient(180deg,#d97706 0%,#b45309 40%,#92400e 100%);border-radius:0 0 50% 50%/0 0 100% 100%;margin-top:-2px;box-shadow:inset 0 -8px 16px rgba(0,0,0,0.2),0 6px 20px rgba(180,83,9,0.4)}
+    .bday-loader__bowl-base{width:50px;height:10px;background:linear-gradient(180deg,#92400e 0%,#78350f 100%);border-radius:0 0 8px 8px/0 0 100% 100%;margin-top:-1px;box-shadow:0 4px 10px rgba(0,0,0,0.3)}
+    .bday-loader__glow{position:absolute;bottom:-20px;left:50%;width:300px;height:250px;transform:translateX(-50%);background:radial-gradient(ellipse at 50% 80%,rgba(255,183,77,0.35) 0%,rgba(255,152,0,0.15) 40%,transparent 70%);border-radius:50%;opacity:0;transition:opacity 0.8s ease;z-index:1;pointer-events:none}
+    .bday-loader__diya.ignite .bday-loader__glow{opacity:1;animation:bdayGlowPulse 2.5s ease-in-out infinite alternate}
+    .bday-loader__text{position:absolute;bottom:3vh;left:50%;transform:translateX(-50%);color:#a78bfa;font-size:1rem;font-weight:500;text-align:center;letter-spacing:0.03em;white-space:nowrap;opacity:0;transition:opacity 0.6s ease,color 1.5s ease;z-index:3}
+    .bday-loader__text.visible{opacity:1}
+    .bday-loader__text.bright{color:#fde68a;text-shadow:0 0 20px rgba(251,191,36,0.4)}
+    @keyframes bdaySparkPulse{from{box-shadow:0 0 8px 3px rgba(251,191,36,0.5)}to{box-shadow:0 0 20px 8px rgba(251,191,36,0.9)}}
+    @keyframes bdayFlameFlicker{0%{transform:translateX(-50%) scaleX(1) scaleY(1)}25%{transform:translateX(-50%) scaleX(0.90) scaleY(1.06)}50%{transform:translateX(-50%) scaleX(1.08) scaleY(0.94)}75%{transform:translateX(-50%) scaleX(0.95) scaleY(1.04)}100%{transform:translateX(-50%) scaleX(1.03) scaleY(0.97)}}
+    @keyframes bdayFlameFlickerInner{0%{transform:translateX(-50%) scaleX(1) scaleY(1)}50%{transform:translateX(-50%) scaleX(0.88) scaleY(1.1)}100%{transform:translateX(-50%) scaleX(1.06) scaleY(0.92)}}
+    @keyframes bdayGlowPulse{from{opacity:0.7;transform:translateX(-50%) scale(0.95)}to{opacity:1;transform:translateX(-50%) scale(1.08)}}
+  </style>
   {% elif event.event_type == 'anniversary' %}
   <link rel="stylesheet" href="{% static 'css/card_anniversary.css' %}">
   {% elif event.event_type != 'raksha_bandhan' %}
@@ -39,28 +76,47 @@
   </div>
   {% endif %}
 
-  <!-- Birthday Loading Screen (Diya Wish Loader) -->
+  <!-- Birthday World-Entry Loader (full-screen blocking ceremony) -->
   {% if event.event_type == 'birthday' %}
-  <div class="birthday-loading" id="birthday-loading" aria-label="Birthday celebration loading">
-    <div class="birthday-loading-diya">
-      <div class="diya-loader-spark"></div>
-      <div class="diya-loader-body">
-        <div class="diya-loader-base"></div>
-        <div class="diya-loader-flame-wrap">
-          <div class="diya-loader-flame"></div>
-          <div class="diya-loader-flame-inner"></div>
-        </div>
+  <div class="bday-loader" id="bday-loader" aria-label="Birthday celebration loading">
+    <!-- Light bloom layer — starts invisible, expands from diya -->
+    <div class="bday-loader__bloom" id="bday-loader-bloom"></div>
+
+    <!-- Room / wallpaper that gets revealed by light -->
+    <div class="bday-loader__room" id="bday-loader-room"></div>
+
+    <!-- Diya at bottom center -->
+    <div class="bday-loader__diya" id="bday-loader-diya">
+      <!-- Spark dot -->
+      <div class="bday-loader__spark"></div>
+
+      <!-- Flame -->
+      <div class="bday-loader__flame-wrap">
+        <div class="bday-loader__flame-outer"></div>
+        <div class="bday-loader__flame-inner"></div>
       </div>
-      <div class="diya-loader-glow"></div>
+
+      <!-- Diya body -->
+      <div class="bday-loader__wick"></div>
+      <div class="bday-loader__oil"></div>
+      <div class="bday-loader__bowl">
+        <div class="bday-loader__bowl-rim"></div>
+        <div class="bday-loader__bowl-body"></div>
+        <div class="bday-loader__bowl-base"></div>
+      </div>
+
+      <!-- Local glow behind the diya -->
+      <div class="bday-loader__glow"></div>
     </div>
-    <div class="birthday-loading-text" aria-live="polite">
+
+    <!-- Text -->
+    <div class="bday-loader__text" id="bday-loader-text" aria-live="polite">
       A special birthday moment is about to begin&hellip;
     </div>
-    <div class="birthday-loading-confetti" id="birthday-loading-confetti"></div>
   </div>
   {% endif %}
   <!-- Background Elements -->
-  <div class="background-effects">
+  <div class="background-effects{% if event.event_type == 'birthday' %} bday-loader-hidden-nav{% endif %}">
     <div class="stars-container"></div>
     <div class="clouds-container"></div>
 
@@ -78,7 +134,7 @@
   </div>
 
   <!-- Theme Toggle Button -->
-  <div class="theme-toggle-container">
+  <div class="theme-toggle-container{% if event.event_type == 'birthday' %} bday-loader-hidden-nav{% endif %}">
     <button class="theme-toggle" aria-label="Toggle dark mode" aria-pressed="false">
       <div class="toggle-track">
         <div class="toggle-thumb">
@@ -98,7 +154,7 @@
   </div>
 
   <!-- Vertical Navigation Sidebar -->
-  <nav class="page-navigator" role="navigation" aria-label="Card Pages Navigation">
+  <nav class="page-navigator{% if event.event_type == 'birthday' %} bday-loader-hidden-nav{% endif %}" role="navigation" aria-label="Card Pages Navigation">
     <div class="nav-item active" data-page="1" tabindex="0" role="button" aria-label="Welcome Page">
       <i class="fas fa-home"></i>
       <span class="nav-tooltip">
@@ -138,7 +194,7 @@
   {% endif %}
 
   <!-- Main Card Container -->
-  <div class="card-container"
+  <div class="card-container{% if event.event_type == 'birthday' %} bday-loader-hidden{% endif %}"
        data-theme="{{ event.event_type }}"
        data-cultural-theme="{{ event.cultural_theme|yesno:'true,false' }}"
        data-recipient-name="{{ recipient_name }}"

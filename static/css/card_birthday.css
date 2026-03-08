@@ -4,219 +4,340 @@
  * Adds birthday-specific enhancements on top of base greeting_card.css.
  */
 
-/* ─── Birthday Loading Screen (Diya Wish Loader) ─── */
+/* ══════════════════════════════════════════════════════════
+   Birthday World-Entry Loader — Full-screen blocking overlay
+   ══════════════════════════════════════════════════════════ */
 
-.birthday-loading {
+/* --- Hide card UI while loader is active --- */
+.card-container.bday-loader-hidden,
+.bday-loader-hidden-nav {
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* --- Overlay base --- */
+.bday-loader {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4c1d95 100%);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    opacity: 1;
-    transition: opacity 0.6s ease-out;
-    overflow: hidden;
-}
-
-.birthday-loading.fade-out {
-    opacity: 0;
-    pointer-events: none;
-}
-
-/* Diya structure */
-.birthday-loading-diya {
-    position: relative;
-    width: 120px;
-    height: 140px;
+    inset: 0;
+    z-index: 99999;
+    background: #0a0a0f;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-end;
+    overflow: hidden;
+    transition: opacity 0.8s ease-out;
 }
 
-/* Spark (initial dot before diya grows) */
-.diya-loader-spark {
-    position: absolute;
-    top: 20%;
-    left: 50%;
-    width: 6px;
-    height: 6px;
-    background: #fbbf24;
-    border-radius: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    transition: transform 0.3s ease-out;
-    box-shadow: 0 0 12px 4px rgba(251, 191, 36, 0.6);
+.bday-loader.done {
+    opacity: 0;
+    pointer-events: none;
 }
 
-.birthday-loading-diya.spark-visible .diya-loader-spark {
-    transform: translate(-50%, -50%) scale(1);
-    animation: sparkPulse 0.6s ease-in-out infinite alternate;
-}
-
-/* Diya body (base + flame wrapper) */
-.diya-loader-body {
-    position: relative;
-    transform: scale(0);
-    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.birthday-loading-diya.diya-grown .diya-loader-body {
-    transform: scale(1);
-}
-
-.diya-loader-base {
-    width: 60px;
-    height: 30px;
-    background: linear-gradient(180deg, #d97706, #b45309);
-    border-radius: 0 0 50% 50% / 0 0 100% 100%;
-    position: relative;
-    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4);
-}
-
-.diya-loader-base::before {
-    content: '';
-    position: absolute;
-    top: -4px;
-    left: -4px;
-    right: -4px;
-    height: 8px;
-    background: linear-gradient(180deg, #fbbf24, #d97706);
-    border-radius: 50%;
-}
-
-/* Flame */
-.diya-loader-flame-wrap {
-    position: relative;
-    width: 24px;
-    height: 40px;
-    margin-bottom: -2px;
-}
-
-.diya-loader-flame,
-.diya-loader-flame-inner {
+/* --- Light bloom (radial gradient expanding from diya position) --- */
+.bday-loader__bloom {
     position: absolute;
     bottom: 0;
     left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    transform: translate(-50%, 40%);
+    background: radial-gradient(
+        circle,
+        rgba(255, 183, 77, 0.45) 0%,
+        rgba(255, 152, 0, 0.25) 25%,
+        rgba(255, 111, 0, 0.12) 45%,
+        rgba(30, 20, 10, 0.06) 65%,
+        transparent 80%
+    );
+    opacity: 0;
+    transition: width 2.2s cubic-bezier(0.22, 1, 0.36, 1),
+                height 2.2s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 1s ease;
+    pointer-events: none;
+}
+
+.bday-loader__bloom.lit {
+    width: 280vmax;
+    height: 280vmax;
+    opacity: 1;
+}
+
+/* --- Room / wallpaper revealed by light --- */
+.bday-loader__room {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 50% 95%, rgba(255, 191, 36, 0.10) 0%, transparent 60%),
+        linear-gradient(180deg,
+            #1a1520 0%,
+            #1e1728 30%,
+            #2a1f35 50%,
+            #352842 70%,
+            #3d2f4a 85%,
+            #4a3655 100%
+        );
+    opacity: 0;
+    transition: opacity 2s ease;
+    pointer-events: none;
+}
+
+.bday-loader__room.visible {
+    opacity: 1;
+}
+
+/* --- Diya container (bottom center) --- */
+.bday-loader__diya {
+    position: relative;
+    width: 180px;
+    height: 260px;
+    margin-bottom: 8vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    z-index: 2;
+}
+
+/* Spark */
+.bday-loader__spark {
+    position: absolute;
+    top: 22%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: #fbbf24;
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform 0.4s ease-out, box-shadow 0.4s ease-out;
+    z-index: 5;
+}
+
+.bday-loader__diya.spark .bday-loader__spark {
+    transform: translate(-50%, -50%) scale(1);
+    box-shadow: 0 0 14px 5px rgba(251, 191, 36, 0.7);
+    animation: bdaySparkPulse 0.6s ease-in-out infinite alternate;
+}
+
+/* Flame wrapper */
+.bday-loader__flame-wrap {
+    position: absolute;
+    top: 8%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 90px;
+    z-index: 4;
+}
+
+/* Outer flame */
+.bday-loader__flame-outer {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 40px;
+    height: 80px;
+    transform: translateX(-50%) scaleY(0);
+    transform-origin: bottom center;
+    background: radial-gradient(ellipse at 50% 85%,
+        #fbbf24 0%,
+        #f59e0b 30%,
+        #ef4444 70%,
+        rgba(239, 68, 68, 0) 100%
+    );
     border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease;
+    filter: blur(0.5px);
 }
 
-.diya-loader-flame {
-    width: 20px;
-    height: 36px;
+.bday-loader__diya.ignite .bday-loader__flame-outer {
+    transform: translateX(-50%) scaleY(1);
+    opacity: 1;
+    animation: bdayFlameFlicker 1.4s ease-in-out infinite alternate;
+}
+
+/* Inner flame (white-hot core) */
+.bday-loader__flame-inner {
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    width: 18px;
+    height: 40px;
+    transform: translateX(-50%) scaleY(0);
+    transform-origin: bottom center;
+    background: radial-gradient(ellipse at 50% 75%,
+        #ffffff 0%,
+        #fde68a 50%,
+        rgba(253, 230, 138, 0) 100%
+    );
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    opacity: 0;
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s, opacity 0.4s ease 0.15s;
+    filter: blur(0.3px);
+}
+
+.bday-loader__diya.ignite .bday-loader__flame-inner {
+    transform: translateX(-50%) scaleY(1);
+    opacity: 1;
+    animation: bdayFlameFlickerInner 1.0s ease-in-out 0.1s infinite alternate;
+}
+
+/* Wick */
+.bday-loader__wick {
+    position: absolute;
+    top: 38%;
+    left: 50%;
+    width: 3px;
+    height: 12px;
+    background: #292524;
     transform: translateX(-50%);
-    background: radial-gradient(ellipse at 50% 80%, #fbbf24, #f59e0b 40%, #ef4444 100%);
+    border-radius: 1px;
+    z-index: 3;
 }
 
-.diya-loader-flame-inner {
-    width: 10px;
-    height: 20px;
+/* Oil surface (visible through the bowl top) */
+.bday-loader__oil {
+    position: absolute;
+    bottom: 55px;
+    left: 50%;
+    width: 90px;
+    height: 14px;
     transform: translateX(-50%);
-    background: radial-gradient(ellipse at 50% 70%, #fff, #fde68a 80%);
-    bottom: 2px;
+    background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
+    border-radius: 50%;
+    z-index: 3;
+    opacity: 0;
+    transition: opacity 0.4s ease;
 }
 
-.birthday-loading-diya.flame-lit .diya-loader-flame,
-.birthday-loading-diya.flame-lit .diya-loader-flame-inner {
+.bday-loader__diya.grown .bday-loader__oil {
     opacity: 1;
 }
 
-.birthday-loading-diya.flame-lit .diya-loader-flame {
-    animation: flameFlicker 1.2s ease-in-out infinite alternate;
-}
-
-.birthday-loading-diya.flame-lit .diya-loader-flame-inner {
-    animation: flameFlickerInner 0.9s ease-in-out 0.1s infinite alternate;
-}
-
-/* Glow behind diya */
-.diya-loader-glow {
+/* Bowl */
+.bday-loader__bowl {
     position: absolute;
-    bottom: 10%;
+    bottom: 0;
     left: 50%;
-    width: 160px;
-    height: 160px;
+    transform: translateX(-50%) scale(0);
+    transform-origin: bottom center;
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 2;
+}
+
+.bday-loader__diya.grown .bday-loader__bowl {
+    transform: translateX(-50%) scale(1);
+}
+
+.bday-loader__bowl-rim {
+    width: 110px;
+    height: 12px;
+    background: linear-gradient(180deg, #fbbf24 0%, #d97706 50%, #b45309 100%);
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(217, 119, 6, 0.4);
+}
+
+.bday-loader__bowl-body {
+    width: 100px;
+    height: 45px;
+    background: linear-gradient(180deg, #d97706 0%, #b45309 40%, #92400e 100%);
+    border-radius: 0 0 50% 50% / 0 0 100% 100%;
+    margin-top: -2px;
+    box-shadow: inset 0 -8px 16px rgba(0, 0, 0, 0.2), 0 6px 20px rgba(180, 83, 9, 0.4);
+}
+
+.bday-loader__bowl-base {
+    width: 50px;
+    height: 10px;
+    background: linear-gradient(180deg, #92400e 0%, #78350f 100%);
+    border-radius: 0 0 8px 8px / 0 0 100% 100%;
+    margin-top: -1px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Local glow behind diya */
+.bday-loader__glow {
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    width: 300px;
+    height: 250px;
     transform: translateX(-50%);
-    background: radial-gradient(circle, rgba(251, 191, 36, 0.25) 0%, transparent 70%);
+    background: radial-gradient(ellipse at 50% 80%,
+        rgba(255, 183, 77, 0.35) 0%,
+        rgba(255, 152, 0, 0.15) 40%,
+        transparent 70%
+    );
     border-radius: 50%;
     opacity: 0;
-    transition: opacity 0.5s ease;
+    transition: opacity 0.8s ease;
+    z-index: 1;
+    pointer-events: none;
 }
 
-.birthday-loading-diya.flame-lit .diya-loader-glow {
+.bday-loader__diya.ignite .bday-loader__glow {
     opacity: 1;
-    animation: glowPulse 2s ease-in-out infinite alternate;
+    animation: bdayGlowPulse 2.5s ease-in-out infinite alternate;
 }
 
-/* Loading text */
-.birthday-loading-text {
-    margin-top: 32px;
-    color: #e0e7ff;
+/* Text */
+.bday-loader__text {
+    position: absolute;
+    bottom: 3vh;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #a78bfa;
     font-size: 1rem;
     font-weight: 500;
     text-align: center;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
     opacity: 0;
-    transform: translateY(8px);
-    animation: fadeInUp 0.5s ease-out 0.5s forwards;
+    transition: opacity 0.6s ease, color 1.5s ease;
+    z-index: 3;
 }
 
-/* Confetti container */
-.birthday-loading-confetti {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    overflow: hidden;
+.bday-loader__text.visible {
+    opacity: 1;
 }
 
-.birthday-loading-confetti-piece {
-    position: absolute;
-    width: 8px;
-    height: 8px;
-    border-radius: 2px;
-    animation: loadingConfettiBurst 0.7s ease-out forwards;
+.bday-loader__text.bright {
+    color: #fde68a;
+    text-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
 }
 
-/* ─── Loading keyframes ─── */
+/* ─── Loader keyframes ─── */
 
-@keyframes sparkPulse {
+@keyframes bdaySparkPulse {
     from { box-shadow: 0 0 8px 3px rgba(251, 191, 36, 0.5); }
-    to   { box-shadow: 0 0 18px 6px rgba(251, 191, 36, 0.8); }
+    to   { box-shadow: 0 0 20px 8px rgba(251, 191, 36, 0.9); }
 }
 
-@keyframes flameFlicker {
+@keyframes bdayFlameFlicker {
     0%   { transform: translateX(-50%) scaleX(1) scaleY(1); }
-    30%  { transform: translateX(-50%) scaleX(0.92) scaleY(1.05); }
-    60%  { transform: translateX(-50%) scaleX(1.06) scaleY(0.95); }
-    100% { transform: translateX(-50%) scaleX(0.96) scaleY(1.03); }
+    25%  { transform: translateX(-50%) scaleX(0.90) scaleY(1.06); }
+    50%  { transform: translateX(-50%) scaleX(1.08) scaleY(0.94); }
+    75%  { transform: translateX(-50%) scaleX(0.95) scaleY(1.04); }
+    100% { transform: translateX(-50%) scaleX(1.03) scaleY(0.97); }
 }
 
-@keyframes flameFlickerInner {
+@keyframes bdayFlameFlickerInner {
     0%   { transform: translateX(-50%) scaleX(1) scaleY(1); }
-    50%  { transform: translateX(-50%) scaleX(0.9) scaleY(1.08); }
-    100% { transform: translateX(-50%) scaleX(1.05) scaleY(0.94); }
+    50%  { transform: translateX(-50%) scaleX(0.88) scaleY(1.1); }
+    100% { transform: translateX(-50%) scaleX(1.06) scaleY(0.92); }
 }
 
-@keyframes glowPulse {
-    from { opacity: 0.8; transform: translateX(-50%) scale(0.95); }
-    to   { opacity: 1;   transform: translateX(-50%) scale(1.05); }
+@keyframes bdayGlowPulse {
+    from { opacity: 0.7; transform: translateX(-50%) scale(0.95); }
+    to   { opacity: 1;   transform: translateX(-50%) scale(1.08); }
 }
 
-@keyframes loadingConfettiBurst {
-    0%   { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
-    100% { transform: translate(var(--dx), var(--dy)) rotate(720deg) scale(0.3); opacity: 0; }
-}
-
-/* ─── End Loading Screen ─── */
+/* ─── End Loader ─── */
 
 /* Birthday color accents */
 .card-container[data-theme="birthday"] {
@@ -862,4 +983,268 @@
 @keyframes blowAway {
     0% { transform: translateX(-50%) scale(1); opacity: 1; }
     100% { transform: translateX(-50%) translateY(-50px) scale(2); opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   Page 2 — Open the Gift (3-step unwrap ritual)
+   ═══════════════════════════════════════════════════════ */
+
+.gift-ceremony-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+}
+
+.birthday-gift {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    cursor: pointer;
+    perspective: 600px;
+    outline: none;
+}
+
+.birthday-gift:focus-visible {
+    outline: 2px solid var(--birthday-primary, #f472b6);
+    outline-offset: 4px;
+    border-radius: 12px;
+}
+
+/* Gift layer shared styles */
+.gift-wrapping,
+.gift-ribbon-layer,
+.gift-lid-layer {
+    position: absolute;
+    inset: 0;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+                opacity 0.35s ease;
+    pointer-events: none;
+    z-index: 3;
+}
+
+/* Layer 1: Wrapping */
+.gift-wrapping {
+    background: linear-gradient(135deg, var(--birthday-primary, #f472b6), #ec4899);
+    border-radius: 16px;
+    overflow: hidden;
+    z-index: 3;
+}
+
+.gift-wrapping-pattern {
+    width: 100%;
+    height: 100%;
+    background:
+        repeating-linear-gradient(45deg, transparent, transparent 12px, rgba(255,255,255,0.12) 12px, rgba(255,255,255,0.12) 14px),
+        repeating-linear-gradient(-45deg, transparent, transparent 12px, rgba(255,255,255,0.12) 12px, rgba(255,255,255,0.12) 14px);
+}
+
+.gift-wrapping.removing {
+    transform: scale(1.08) rotate(3deg);
+}
+
+.gift-wrapping.removed {
+    transform: scale(0.6) rotate(15deg);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Layer 2: Ribbon */
+.gift-ribbon-layer {
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gift-ribbon-bow {
+    position: absolute;
+    top: 12%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 30px;
+    z-index: 2;
+}
+
+.gift-ribbon-bow::before,
+.gift-ribbon-bow::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 24px;
+    height: 28px;
+    background: var(--birthday-secondary, #fbbf24);
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+}
+
+.gift-ribbon-bow::before {
+    left: 0;
+    transform: rotate(-20deg);
+}
+
+.gift-ribbon-bow::after {
+    right: 0;
+    transform: rotate(20deg);
+}
+
+.gift-ribbon-vertical {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 100%;
+    background: var(--birthday-secondary, #fbbf24);
+}
+
+.gift-ribbon-horizontal {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    width: 100%;
+    height: 16px;
+    background: var(--birthday-secondary, #fbbf24);
+}
+
+.gift-ribbon-layer.removing {
+    transform: scale(1.06) rotate(-2deg);
+}
+
+.gift-ribbon-layer.removed {
+    transform: translateY(-30px) scale(0.5) rotate(-20deg);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Layer 3: Lid */
+.gift-lid-layer {
+    z-index: 5;
+}
+
+.gift-lid-top {
+    position: absolute;
+    top: 0;
+    left: -6px;
+    right: -6px;
+    height: 45%;
+    background: linear-gradient(180deg, var(--birthday-accent, #a78bfa), #8b5cf6);
+    border-radius: 14px 14px 4px 4px;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.gift-lid-layer.removing {
+    transform: translateY(-8px) rotate(-3deg);
+}
+
+.gift-lid-layer.removed {
+    transform: translateY(-60px) rotate(-25deg) scale(0.7);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Gift glow state (all removed) */
+.birthday-gift.glow {
+    animation: giftGlow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes giftGlow {
+    from { box-shadow: 0 0 15px 5px rgba(244, 114, 182, 0.25); }
+    to   { box-shadow: 0 0 30px 12px rgba(244, 114, 182, 0.5); }
+}
+
+/* Gift reveal content */
+.gift-reveal-content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.85), rgba(252, 231, 243, 0.9));
+    border-radius: 16px;
+    border: 2px solid rgba(244, 114, 182, 0.3);
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    z-index: 2;
+}
+
+.gift-reveal-content.visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.gift-reveal-emoji {
+    font-size: 3rem;
+    animation: bounce 1.5s ease-in-out infinite;
+}
+
+.gift-reveal-text {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: center;
+    padding: 0 12px;
+}
+
+.gift-step-hint {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    text-align: center;
+    min-height: 1.4em;
+    transition: opacity 0.2s ease;
+}
+
+/* ═══════════════════════════════════════════════════════
+   Page 3 — Caption spotlight flash
+   ═══════════════════════════════════════════════════════ */
+
+.media-caption.spotlight-flash {
+    animation: captionSpotlight 1.2s ease-out;
+}
+
+@keyframes captionSpotlight {
+    0%   { background: transparent; box-shadow: none; }
+    15%  { background: rgba(244, 114, 182, 0.12); box-shadow: 0 0 20px rgba(244, 114, 182, 0.3); }
+    50%  { background: rgba(244, 114, 182, 0.08); box-shadow: 0 0 12px rgba(244, 114, 182, 0.15); }
+    100% { background: transparent; box-shadow: none; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   Page 4 — Individual candle blown-out states
+   ═══════════════════════════════════════════════════════ */
+
+.birthday-cake .candle {
+    position: relative;
+    transition: opacity 0.3s ease;
+}
+
+.birthday-cake .candle .candle-flame {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.birthday-cake .candle.blown-out .candle-flame {
+    opacity: 0;
+    transform: scale(0.3) translateY(-8px);
+}
+
+.birthday-cake .candle.blown-out {
+    opacity: 0.5;
+    filter: grayscale(0.4);
+}
+
+/* Candle smoke particles */
+.birthday-cake .candle-smoke {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(120, 120, 120, 0.45);
+    filter: blur(0.5px);
+    animation: smokeRise 1.2s ease-out forwards;
+    pointer-events: none;
 }

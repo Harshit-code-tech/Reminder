@@ -1,486 +1,328 @@
 /**
- * Birthday Card Module
- * Contains birthday-specific interactive logic.
- * Methods are mixed into GreetingCardApp prototype.
+ * Birthday Card Module — Full Interactive Ceremony (5-Page)
+ *
+ * Ceremony arc:
+ *   Page 1 — Welcome / Unlock (engine-owned, birthday-assisted via onUnlock)
+ *   Page 2 — Open the Gift (3-step unwrap ritual, replaces old slider)
+ *   Page 3 — Memory Snapshot (pseudo-dynamic micro-sections + caption spotlight)
+ *   Page 4 — Make a Wish (multi-step candle blow + night-sky wish stars)
+ *   Page 5 — Farewell / Celebration (balloons + badge + share cue)
+ *
+ * Registered via window.EventModules['birthday'].
+ * No prototype mutation on GreetingCardApp.
  */
 
-(function() {
+(function () {
     'use strict';
+
+    /* ═══════════════════════════════════════════════════
+       Helpers
+       ═══════════════════════════════════════════════════ */
 
     const BirthdayMixin = {
 
-        _getBirthdayRuntime() {
-            this.runtime = this.runtime || {};
-            this.runtime.event = this.runtime.event || {};
-            this.runtime.event.birthday = this.runtime.event.birthday || {};
-            return this.runtime.event.birthday;
+        _getBirthdayRuntime(app) {
+            const ctx = app || this;
+            ctx.runtime = ctx.runtime || {};
+            ctx.runtime.event = ctx.runtime.event || {};
+            ctx.runtime.event.birthday = ctx.runtime.event.birthday || {};
+            return ctx.runtime.event.birthday;
         },
 
-        _runOnce(key, fn) {
-            const rt = BirthdayMixin._getBirthdayRuntime.call(this);
+        /** Run fn at most once per key (runtime-scoped, not persisted). */
+        _runOnce(app, key, fn) {
+            const rt = BirthdayMixin._getBirthdayRuntime(app);
             rt._once = rt._once || {};
             if (rt._once[key]) return;
             rt._once[key] = true;
             fn();
         },
 
-        /* ─── Page 2: Slider + Countdown + Surprise Reveal ─── */
+        /* ═══════════════════════════════════════════════════
+           Loading Screen — World-Entry Ceremony
+           Full-screen blocking overlay. Card stays hidden
+           until this completes.
+           Timeline: spark → grow bowl → ignite → bloom light → room reveal → done → reveal card
+           ═══════════════════════════════════════════════════ */
 
-        /* ─── Birthday Loading Screen (Diya Wish Loader) ─── */
+        initBirthdayLoadingScreen(app) {
+            var loader = document.getElementById('bday-loader');
+            if (!loader) {
+                // No loader in DOM — just reveal card immediately
+                BirthdayMixin._revealCardUI();
+                return;
+            }
 
-        initBirthdayLoadingScreen() {
-            const loadingScreen = document.getElementById('birthday-loading');
-            if (!loadingScreen) return;
+            // Prevent double-start (e.g. EventModule.initialize + fallback boot)
+            if (window.__bdayLoaderStarted) return;
+            window.__bdayLoaderStarted = true;
 
-            const confettiContainer = document.getElementById('birthday-loading-confetti');
+            var log = function () {
+                try {
+                    var args = Array.prototype.slice.call(arguments);
+                    args.unshift('[bday-loader]');
+                    console.log.apply(console, args);
+                } catch (e) {}
+            };
 
-            // Phase timeline:
-            // 0ms    — spark appears (CSS handles this automatically)
-            // 400ms  — diya grows (add class)
-            // 800ms  — flame lights (add class)
-            // 1200ms — flame flickers (CSS keyframe kicks in)
-            // 1800ms — confetti burst
-            // 2200ms — fade out + card begins
+            var diya  = document.getElementById('bday-loader-diya');
+            var bloom = document.getElementById('bday-loader-bloom');
+            var room  = document.getElementById('bday-loader-room');
+            var text  = document.getElementById('bday-loader-text');
 
-            const diya = loadingScreen.querySelector('.birthday-loading-diya');
-            if (!diya) return;
+            if (!diya) {
+                loader.remove();
+                BirthdayMixin._revealCardUI();
+                return;
+            }
 
-            setTimeout(() => diya.classList.add('spark-visible'), 100);
-            setTimeout(() => diya.classList.add('diya-grown'), 400);
-            setTimeout(() => diya.classList.add('flame-lit'), 800);
+            log('start', {
+                hasDiya: !!diya,
+                hasBloom: !!bloom,
+                hasRoom: !!room,
+                hasText: !!text
+            });
 
-            // Confetti burst before exit
-            setTimeout(() => {
-                if (confettiContainer) {
-                    BirthdayMixin.spawnLoadingConfetti(confettiContainer);
-                }
+            // Timeline (all ms values from page-load):
+            // 0ms       — text appears
+            // 200ms     — spark appears
+            // 700ms     — bowl grows in
+            // 1200ms    — flame ignites + local glow
+            // 1800ms    — bloom light starts expanding, room wallpaper fades in
+            // 3200ms    — text changes to "bright" color
+            // 3800ms    — loader fades out
+            // 4600ms    — loader removed from DOM, card revealed
+
+            // Step 0: Show text
+            setTimeout(function() {
+                if (text) text.classList.add('visible');
+                log('step: text visible');
+            }, 0);
+
+            // Step 1: Spark
+            setTimeout(function() {
+                diya.classList.add('spark');
+                log('step: spark');
+            }, 200);
+
+            // Step 2: Bowl grows
+            setTimeout(function() {
+                diya.classList.add('grown');
+                log('step: grown');
+            }, 700);
+
+            // Step 3: Ignite (flame + glow)
+            setTimeout(function() {
+                diya.classList.remove('spark'); // spark dot hides, flame takes over
+                diya.classList.add('ignite');
+                log('step: ignite');
+            }, 1200);
+
+            // Step 4: Light bloom expands + room reveals
+            setTimeout(function() {
+                if (bloom) bloom.classList.add('lit');
+                if (room) room.classList.add('visible');
+                if (text) text.classList.add('bright');
+                log('step: bloom+room');
             }, 1800);
 
-            // Fade out and remove
-            setTimeout(() => {
-                loadingScreen.classList.add('fade-out');
-                setTimeout(() => {
-                    loadingScreen.style.display = 'none';
-                }, 600);
+            // Step 5: Fade out loader
+            setTimeout(function() {
+                loader.classList.add('done');
+                log('step: done (fade out)');
+            }, 3800);
+
+            // Step 6: Remove loader, reveal card
+            setTimeout(function() {
+                loader.remove();
+                BirthdayMixin._revealCardUI();
+                log('step: removed, revealed card');
+            }, 4600);
+
+            // Watchdog: if for any reason the timeline doesn't apply classes,
+            // force a visible state so users never see "only dark".
+            setTimeout(function () {
+                if (!diya.isConnected) return;
+                if (!diya.classList.contains('grown')) {
+                    log('watchdog: forcing grown');
+                    diya.classList.add('grown');
+                }
+            }, 900);
+
+            setTimeout(function () {
+                if (!diya.isConnected) return;
+                if (!diya.classList.contains('ignite')) {
+                    log('watchdog: forcing ignite');
+                    diya.classList.add('ignite');
+                }
+            }, 1500);
+
+            setTimeout(function () {
+                if (bloom && bloom.isConnected && !bloom.classList.contains('lit')) {
+                    log('watchdog: forcing bloom');
+                    bloom.classList.add('lit');
+                }
+                if (room && room.isConnected && !room.classList.contains('visible')) {
+                    log('watchdog: forcing room');
+                    room.classList.add('visible');
+                }
+                if (text && text.isConnected) {
+                    text.classList.add('visible');
+                    text.classList.add('bright');
+                }
             }, 2200);
         },
 
-        spawnLoadingConfetti(container) {
-            const colors = ['#f472b6', '#fbbf24', '#a78bfa', '#60a5fa', '#34d399', '#fb923c'];
-            const count = 30;
-            for (let i = 0; i < count; i++) {
-                const piece = document.createElement('div');
-                piece.className = 'birthday-loading-confetti-piece';
-                piece.style.left = `${40 + Math.random() * 20}%`;
-                piece.style.top = `${35 + Math.random() * 10}%`;
-                piece.style.background = colors[i % colors.length];
-                const dx = (Math.random() - 0.5) * 300;
-                const dy = (Math.random() - 0.7) * 350;
-                piece.style.setProperty('--dx', `${dx}px`);
-                piece.style.setProperty('--dy', `${dy}px`);
-                piece.style.animationDelay = `${Math.random() * 0.15}s`;
-                container.appendChild(piece);
-            }
-        },
-
-        setupBirthdayPage2() {
-            BirthdayMixin.setupSliderUnlock.call(this);
-        },
-
-        setupSliderUnlock() {
-            if (!this.elements.sliderTrack || !this.elements.sliderThumb || !this.elements.yesButton) return;
-
-            let isDragging = false;
-            let startX = 0;
-            let currentX = 0;
-            let maxMove = 0;
-
-            const updateMaxMove = () => {
-                maxMove = this.elements.sliderTrack.offsetWidth - this.elements.sliderThumb.offsetWidth;
-            };
-
-            updateMaxMove();
-            window.addEventListener('resize', updateMaxMove);
-
-            const onDragStart = (e) => {
-                isDragging = true;
-                startX = (e.touches ? e.touches[0].clientX : e.clientX) - this.elements.sliderThumb.offsetLeft;
-                this.elements.sliderThumb.style.cursor = 'grabbing';
-
-                document.addEventListener('mousemove', onDragMove);
-                document.addEventListener('touchmove', onDragMove, { passive: false });
-                document.addEventListener('mouseup', onDragEnd);
-                document.addEventListener('touchend', onDragEnd);
-            };
-
-            const onDragMove = (e) => {
-                if (!isDragging) return;
-                e.preventDefault();
-                currentX = (e.touches ? e.touches[0].clientX : e.clientX) - startX;
-                currentX = Math.max(0, Math.min(currentX, maxMove));
-                this.elements.sliderThumb.style.left = currentX + 'px';
-
-                if (currentX >= maxMove - 5) {
-                    BirthdayMixin.unlockYesButton.call(this);
-                }
-            };
-
-            const onDragEnd = () => {
-                if (!isDragging) return;
-                if (currentX < maxMove - 5) {
-                    this.elements.sliderThumb.style.left = '0px';
-                    currentX = 0;
-                }
-                isDragging = false;
-                this.elements.sliderThumb.style.cursor = 'grab';
-
-                document.removeEventListener('mousemove', onDragMove);
-                document.removeEventListener('touchmove', onDragMove);
-                document.removeEventListener('mouseup', onDragEnd);
-                document.removeEventListener('touchend', onDragEnd);
-            };
-
-            this.elements.sliderThumb.addEventListener('mousedown', onDragStart);
-            this.elements.sliderThumb.addEventListener('touchstart', onDragStart, { passive: false });
-
-            this.elements.sliderThumb.addEventListener('keydown', (e) => {
-                const step = 20;
-                if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    currentX = Math.min(currentX + step, maxMove);
-                    this.elements.sliderThumb.style.left = currentX + 'px';
-                    if (currentX >= maxMove - 5) BirthdayMixin.unlockYesButton.call(this);
-                } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    currentX = Math.max(currentX - step, 0);
-                    this.elements.sliderThumb.style.left = currentX + 'px';
-                }
-            });
-
-            if (this.elements.yesButton) {
-                this.elements.yesButton.addEventListener('click', () => BirthdayMixin.startCountdown.call(this));
-            }
-        },
-
-        unlockYesButton() {
-            if (!this.elements.sliderTrack || !this.elements.yesButton) return;
-
-            this.elements.sliderTrack.classList.add('unlocked');
-            setTimeout(() => {
-                this.elements.sliderTrack.style.display = 'none';
-                this.elements.yesButton.classList.remove('hidden');
-                this.elements.yesButton.style.display = 'flex';
-                this.elements.yesButton.focus();
-            }, 300);
-        },
-
-        startCountdown() {
-            const countdownElement = document.querySelector('.countdown');
-            if (!countdownElement || !this.elements.yesButton) return;
-
-            this.elements.yesButton.style.display = 'none';
-
-            let count = 5;
-            countdownElement.textContent = count;
-            countdownElement.setAttribute('aria-live', 'assertive');
-
-            const interval = setInterval(() => {
-                count--;
-                countdownElement.textContent = count;
-
-                if (count <= 0) {
-                    clearInterval(interval);
-                    countdownElement.style.display = 'none';
-
-                    // Show birthday surprise reveal
-                    BirthdayMixin.revealBirthdaySurprise.call(this);
-
-                    const hasThreadOfMemories = this.cardContainer.dataset.threadOfMemories === 'true';
-                    if (hasThreadOfMemories) {
-                        this.showThreadOfMemories();
-                    } else {
-                        this.showMilestonePopup();
-                    }
-                }
-            }, 1000);
-        },
-
-        revealBirthdaySurprise() {
-            const surprise = document.getElementById('birthday-surprise');
-            if (!surprise) return;
-
-            surprise.classList.remove('hidden');
-            surprise.style.animation = 'birthdaySurpriseReveal 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
-
-            // Animate the gift box
-            const giftBox = surprise.querySelector('.gift-box');
-            if (giftBox) {
-                setTimeout(() => {
-                    giftBox.classList.add('opened');
-                }, 400);
-            }
-
-            this.showConfetti();
-        },
-
-        /* ─── Page 4: Cake + Wish ─── */
-
-        setupBirthdayCake() {
-            if (!this.elements.birthdayCake || this.eventType !== 'birthday') return;
-
-            BirthdayMixin.setupCandleBlowDetection.call(this);
-            BirthdayMixin.setupWishStarSystem.call(this);
-
-            this.elements.birthdayCake.addEventListener('click', () => {
-                BirthdayMixin.blowOutCandles.call(this);
-            });
-
-            this.elements.birthdayCake.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    BirthdayMixin.blowOutCandles.call(this);
-                }
-            });
-        },
-
-        blowOutCandles() {
-            if (this.elements.birthdayCake.classList.contains('blown-out')) return;
-
-            this.elements.birthdayCake.classList.add('blown-out');
-
-            BirthdayMixin.teardownCandleBlowDetection.call(this);
-            BirthdayMixin.createCandleSmoke.call(this);
-
-            const blowEffect = document.createElement('div');
-            blowEffect.className = 'blow-effect';
-            blowEffect.textContent = '💨';
-            blowEffect.style.cssText = `
-                position: absolute;
-                top: 20%;
-                left: 50%;
-                transform: translateX(-50%);
-                font-size: 2rem;
-                animation: blowAway 1s ease-out forwards;
-                pointer-events: none;
-            `;
-            this.elements.birthdayCake.appendChild(blowEffect);
-
-            const instruction = document.querySelector('.cake-instruction');
-            if (instruction) {
-                instruction.textContent = 'Your wish has been made! 🌟 Tap a star…';
-            }
-
-            setTimeout(() => {
-                this.showConfetti();
-                BirthdayMixin.revealBirthdayWish.call(this);
-                this.revealAudioOrQuote();
-                BirthdayMixin.showNightSky.call(this);
-                blowEffect.remove();
-            }, 1000);
-        },
-
-        setupCandleBlowDetection() {
-            const rt = BirthdayMixin._getBirthdayRuntime.call(this);
-            if (rt.mic?.active) return;
-            if (!navigator.mediaDevices?.getUserMedia) return;
-
-            rt.mic = {
-                active: true,
-                stream: null,
-                audioContext: null,
-                analyser: null,
-                data: null,
-                rafId: null,
-                baseline: 0,
-                baselineSamples: 0,
-                lastTriggerAt: 0
-            };
-
-            navigator.mediaDevices.getUserMedia({ audio: true })
-                .then((stream) => {
-                    if (!rt.mic?.active) {
-                        stream.getTracks().forEach(t => t.stop());
-                        return;
-                    }
-
-                    rt.mic.stream = stream;
-                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                    if (!AudioCtx) return;
-
-                    rt.mic.audioContext = new AudioCtx();
-                    rt.mic.audioContext.resume?.().catch(() => {});
-                    const source = rt.mic.audioContext.createMediaStreamSource(stream);
-                    rt.mic.analyser = rt.mic.audioContext.createAnalyser();
-                    rt.mic.analyser.fftSize = 1024;
-                    rt.mic.data = new Uint8Array(rt.mic.analyser.fftSize);
-                    source.connect(rt.mic.analyser);
-
-                    const detect = () => {
-                        if (!rt.mic?.active || !rt.mic.analyser || !rt.mic.data) return;
-                        rt.mic.analyser.getByteTimeDomainData(rt.mic.data);
-
-                        // RMS amplitude in ~[0,1]
-                        let sumSq = 0;
-                        for (let i = 0; i < rt.mic.data.length; i++) {
-                            const v = (rt.mic.data[i] - 128) / 128;
-                            sumSq += v * v;
-                        }
-                        const rms = Math.sqrt(sumSq / rt.mic.data.length);
-
-                        // Baseline calibration (first ~0.6s)
-                        if (rt.mic.baselineSamples < 40) {
-                            rt.mic.baseline = (rt.mic.baseline * rt.mic.baselineSamples + rms) / (rt.mic.baselineSamples + 1);
-                            rt.mic.baselineSamples++;
-                        } else {
-                            // Slow baseline adaptation (ignore spikes)
-                            const capped = Math.min(rms, rt.mic.baseline + 0.05);
-                            rt.mic.baseline = rt.mic.baseline * 0.985 + capped * 0.015;
-                        }
-
-                        const now = Date.now();
-                        const cooldownOk = now - rt.mic.lastTriggerAt > 1200;
-                        const threshold = Math.max(0.06, rt.mic.baseline * 3.2 + 0.02);
-                        if (cooldownOk && rms > threshold && this.elements.birthdayCake && !this.elements.birthdayCake.classList.contains('blown-out')) {
-                            rt.mic.lastTriggerAt = now;
-                            BirthdayMixin.blowOutCandles.call(this);
-                            return;
-                        }
-
-                        rt.mic.rafId = window.requestAnimationFrame(detect);
-                    };
-
-                    rt.mic.rafId = window.requestAnimationFrame(detect);
-                })
-                .catch(() => {
-                    // Permission denied / no mic — click fallback remains.
-                });
-        },
-
-        teardownCandleBlowDetection() {
-            const rt = BirthdayMixin._getBirthdayRuntime.call(this);
-            if (!rt.mic) return;
-
-            rt.mic.active = false;
-            if (rt.mic.rafId) {
-                window.cancelAnimationFrame(rt.mic.rafId);
-            }
-            if (rt.mic.stream) {
-                rt.mic.stream.getTracks().forEach(t => t.stop());
-            }
-            if (rt.mic.audioContext) {
-                rt.mic.audioContext.close?.().catch(() => {});
-            }
-            rt.mic = null;
-        },
-
-        createCandleSmoke() {
-            const cake = this.elements.birthdayCake;
-            if (!cake) return;
-
-            const flames = cake.querySelectorAll('.candle-flame');
-            const smokeCount = Math.max(3, Math.min(8, flames.length || 5));
-
-            for (let i = 0; i < smokeCount; i++) {
-                const smoke = document.createElement('div');
-                smoke.className = 'candle-smoke';
-                smoke.style.left = `${40 + Math.random() * 20}%`;
-                smoke.style.top = `${12 + Math.random() * 10}%`;
-                smoke.style.animationDelay = `${i * 0.07}s`;
-                cake.appendChild(smoke);
-                setTimeout(() => smoke.remove(), 1400);
-            }
-        },
-
-        setupWishStarSystem() {
-            BirthdayMixin._runOnce.call(this, 'wishStarsBound', () => {
-                const sky = document.getElementById('birthday-night-sky');
-                if (!sky) return;
-
-                const starContainer = sky.querySelector('.night-sky-stars');
-                const stars = Array.from(sky.querySelectorAll('.birthday-star'));
-                const toast = document.getElementById('birthday-wish-toast');
-                if (!starContainer || !stars.length) return;
-
-                const positionStars = () => {
-                    const rect = starContainer.getBoundingClientRect();
-                    const pad = 14;
-                    stars.forEach((star, idx) => {
-                        const x = pad + Math.random() * Math.max(0, rect.width - pad * 2);
-                        const y = pad + Math.random() * Math.max(0, rect.height - pad * 2);
-                        star.style.left = `${x}px`;
-                        star.style.top = `${y}px`;
-                        star.style.opacity = `${0.65 + (idx % 3) * 0.1}`;
-                    });
-                };
-
-                const fireShootingStar = (fromEl) => {
-                    const starRect = fromEl.getBoundingClientRect();
-                    const contRect = starContainer.getBoundingClientRect();
-                    const x = starRect.left - contRect.left;
-                    const y = starRect.top - contRect.top;
-
-                    const shooting = document.createElement('div');
-                    shooting.className = 'shooting-star';
-                    shooting.style.left = `${x}px`;
-                    shooting.style.top = `${y}px`;
-                    starContainer.appendChild(shooting);
-                    setTimeout(() => shooting.remove(), 900);
-
-                    if (toast) {
-                        toast.textContent = 'A wish has been sent to the stars ✨';
-                        toast.style.opacity = '1';
-                    }
-
-                    // Small celebratory tone (safe, no dependency)
-                    this.audioManager?.generateTone?.(659.25, 0.12, 'triangle');
-                };
-
-                // Reposition stars on resize (reposition on show happens in showNightSky)
-                window.addEventListener('resize', positionStars);
-
-                stars.forEach((star) => {
-                    star.addEventListener('click', () => {
-                        fireShootingStar(star);
+        /** Remove the hiding class from card container + show nav/toggle */
+        _revealCardUI() {
+            var cc = document.querySelector('.card-container.bday-loader-hidden');
+            if (cc) {
+                cc.classList.remove('bday-loader-hidden');
+                cc.style.opacity = '0';
+                cc.style.transition = 'opacity 0.6s ease';
+                requestAnimationFrame(function() {
+                    requestAnimationFrame(function() {
+                        cc.style.opacity = '1';
                     });
                 });
-
-                // Store for reuse when the sky is shown.
-                const rt = BirthdayMixin._getBirthdayRuntime.call(this);
-                rt._positionWishStars = positionStars;
+            }
+            // Reveal nav, theme toggle, background effects
+            document.querySelectorAll('.bday-loader-hidden-nav').forEach(function(el) {
+                el.classList.remove('bday-loader-hidden-nav');
+                el.style.opacity = '0';
+                el.style.transition = 'opacity 0.6s ease';
+                requestAnimationFrame(function() {
+                    requestAnimationFrame(function() {
+                        el.style.opacity = '1';
+                    });
+                });
             });
         },
 
-        showNightSky() {
-            const sky = document.getElementById('birthday-night-sky');
-            if (!sky) return;
-            sky.classList.remove('hidden');
+        /* ═══════════════════════════════════════════════════
+           Page 1 — onUnlock: Birthday welcome toast
+           ═══════════════════════════════════════════════════ */
 
-            const toast = document.getElementById('birthday-wish-toast');
-            if (toast) toast.textContent = '';
-
-            const rt = BirthdayMixin._getBirthdayRuntime.call(this);
-            if (typeof rt._positionWishStars === 'function') {
-                // Wait one frame so layout has non-zero dimensions
-                window.requestAnimationFrame(() => rt._positionWishStars());
-            }
+        onBirthdayUnlock(app) {
+            if (app.savedData.birthday_unlock_toast_shown) return;
+            app.showFeedback('🎉 Welcome to your birthday celebration!', 'success');
+            app.saveData({ birthday_unlock_toast_shown: true });
+            app.audioManager?.startBackgroundMusic?.();
         },
 
-        hideNightSky() {
-            const sky = document.getElementById('birthday-night-sky');
-            if (!sky) return;
-            sky.classList.add('hidden');
+        /* ═══════════════════════════════════════════════════
+           Page 2 — Open the Gift (3-step unwrap ritual)
+           ═══════════════════════════════════════════════════ */
+
+        setupBirthdayPage2(app) {
+            const gift = document.getElementById('birthday-gift');
+            if (!gift) return;
+
+            const rt = BirthdayMixin._getBirthdayRuntime(app);
+            rt.page2 = rt.page2 || {};
+
+            var step = app.savedData.birthday_unwrap_step || 0;
+
+            const layers = [
+                gift.querySelector('.gift-wrapping'),
+                gift.querySelector('.gift-ribbon-layer'),
+                gift.querySelector('.gift-lid-layer')
+            ];
+            const revealContent = gift.querySelector('.gift-reveal-content');
+            const continueBtn = document.getElementById('birthday-gift-continue');
+            const stepHint = gift.querySelector('.gift-step-hint');
+            const ariaLive = gift.querySelector('.gift-aria-live');
+
+            const stepLabels = [
+                'Tap to tear the wrapping!',
+                'Tap to unwrap the ribbon!',
+                'Tap to open the lid!'
+            ];
+            const ariaMessages = [
+                'Wrapping removed',
+                'Ribbon unwrapped',
+                'Surprise revealed!'
+            ];
+
+            var applyState = function(s) {
+                for (var i = 0; i < 3; i++) {
+                    if (layers[i]) {
+                        layers[i].classList.toggle('removed', i < s);
+                    }
+                }
+                if (s >= 3) {
+                    if (revealContent) revealContent.classList.add('visible');
+                    if (continueBtn) continueBtn.classList.remove('hidden');
+                    if (stepHint) stepHint.textContent = '🎁 Surprise ready!';
+                    gift.removeAttribute('tabindex');
+                    gift.removeAttribute('role');
+                } else {
+                    if (stepHint) stepHint.textContent = stepLabels[s];
+                }
+            };
+
+            applyState(step);
+            if (step >= 3) return;
+
+            var advance = function() {
+                if (step >= 3) return;
+
+                if (layers[step]) {
+                    layers[step].classList.add('removing');
+                    setTimeout(function() { layers[step - 1] && layers[step - 1].classList.add('removed'); }, 350);
+                    // The current layer being removed
+                    var currentLayer = layers[step];
+                    setTimeout(function() { currentLayer.classList.add('removed'); }, 350);
+                }
+
+                step++;
+                app.saveData({ birthday_unwrap_step: step });
+
+                if (ariaLive) ariaLive.textContent = ariaMessages[step - 1];
+
+                if (step < 3) {
+                    if (stepHint) stepHint.textContent = stepLabels[step];
+                } else {
+                    setTimeout(function() {
+                        gift.classList.add('glow');
+                        app.showConfetti();
+                        if (revealContent) revealContent.classList.add('visible');
+                        if (continueBtn) continueBtn.classList.remove('hidden');
+                        if (stepHint) stepHint.textContent = '🎁 Surprise ready!';
+                        gift.removeAttribute('tabindex');
+                        gift.removeAttribute('role');
+                        app.saveData({ birthday_page2_completed: true });
+                        app.audioManager?.generateTone?.(523.25, 0.15, 'triangle');
+                    }, 400);
+                }
+            };
+
+            BirthdayMixin._runOnce(app, 'page2Bound', function() {
+                gift.addEventListener('click', advance);
+                gift.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        advance();
+                    }
+                });
+                if (continueBtn) {
+                    continueBtn.addEventListener('click', function() { app.goToPage(3); });
+                }
+            });
         },
 
-        /* ─── Page 3: Pseudo-dynamic micro-sections ─── */
+        /* ═══════════════════════════════════════════════════
+           Page 3 — Memory Snapshot (micro-sections + spotlight)
+           ═══════════════════════════════════════════════════ */
 
-        setupBirthdayPage3() {
-            if (this.eventType !== 'birthday') return;
+        setupBirthdayPage3(app) {
+            if (app.eventType !== 'birthday') return;
 
             const container = document.querySelector('.birthday-page3[data-page3-sections="true"]');
             if (!container) return;
 
-            const rt = BirthdayMixin._getBirthdayRuntime.call(this);
-            rt.page3 = rt.page3 || { index: 0, messageTyped: false, timers: [] };
+            const rt = BirthdayMixin._getBirthdayRuntime(app);
+            rt.page3 = rt.page3 || { index: 0, messageTyped: false, timers: [], spotlightShown: false };
 
             const sections = Array.from(container.querySelectorAll('.page3-section'));
             const tabs = Array.from(container.querySelectorAll('.page3-tab'));
@@ -488,55 +330,63 @@
             const prevBtn = document.getElementById('page3-prev-section');
             const nextBtn = document.getElementById('page3-next-section');
 
-            const clampIndex = (i) => Math.max(0, Math.min(i, sections.length - 1));
+            var clampIndex = function(i) { return Math.max(0, Math.min(i, sections.length - 1)); };
 
-            const showSection = (i) => {
-                const idx = clampIndex(i);
+            var showSection = function(i) {
+                var idx = clampIndex(i);
                 rt.page3.index = idx;
 
-                sections.forEach((sec, sidx) => {
-                    const active = sidx === idx;
+                sections.forEach(function(sec, sidx) {
+                    var active = sidx === idx;
                     sec.classList.toggle('active', active);
                     sec.setAttribute('aria-hidden', active ? 'false' : 'true');
                 });
-                tabs.forEach((tab, tidx) => {
-                    const active = tidx === idx;
+                tabs.forEach(function(tab, tidx) {
+                    var active = tidx === idx;
                     tab.classList.toggle('active', active);
                     tab.setAttribute('aria-selected', active ? 'true' : 'false');
                 });
-                dots.forEach((dot, didx) => {
+                dots.forEach(function(dot, didx) {
                     dot.classList.toggle('active', didx === idx);
                 });
 
                 if (prevBtn) prevBtn.disabled = idx === 0;
                 if (nextBtn) nextBtn.disabled = idx === sections.length - 1;
 
-                // One-time animations
                 if (idx === 1 && !rt.page3.messageTyped) {
-                    const typeEl = document.getElementById('birthday-message-typewriter');
-                    const message = typeEl?.dataset?.message || '';
+                    var typeEl = document.getElementById('birthday-message-typewriter');
+                    var message = typeEl?.dataset?.message || '';
                     if (typeEl && message) {
                         rt.page3.messageTyped = true;
-                        BirthdayMixin.startTypewriter.call(this, typeEl, message, rt.page3);
+                        BirthdayMixin._startTypewriter(typeEl, message, rt.page3);
                     }
+                }
+
+                if (idx === 0 && !rt.page3.spotlightShown) {
+                    rt.page3.spotlightShown = true;
+                    var caption = container.querySelector('.media-caption');
+                    if (caption) {
+                        caption.classList.add('spotlight-flash');
+                        setTimeout(function() { caption.classList.remove('spotlight-flash'); }, 1200);
+                    }
+                    app.showFeedback('📸 A memory for your special day', 'info');
                 }
             };
 
-            BirthdayMixin._runOnce.call(this, 'page3Bound', () => {
-                tabs.forEach((tab) => {
-                    tab.addEventListener('click', () => showSection(Number(tab.dataset.section || 0)));
+            BirthdayMixin._runOnce(app, 'page3Bound', function() {
+                tabs.forEach(function(tab) {
+                    tab.addEventListener('click', function() { showSection(Number(tab.dataset.section || 0)); });
                 });
+                if (prevBtn) prevBtn.addEventListener('click', function() { showSection(rt.page3.index - 1); });
+                if (nextBtn) nextBtn.addEventListener('click', function() { showSection(rt.page3.index + 1); });
 
-                if (prevBtn) prevBtn.addEventListener('click', () => showSection(rt.page3.index - 1));
-                if (nextBtn) nextBtn.addEventListener('click', () => showSection(rt.page3.index + 1));
-
-                const timeline = document.getElementById('birthday-timeline');
-                const fallback = container.querySelector('.timeline-fallback');
+                var timeline = document.getElementById('birthday-timeline');
+                var fallback = container.querySelector('.timeline-fallback');
                 if (timeline) {
-                    const items = BirthdayMixin.buildTimelineItems.call(this);
+                    var items = BirthdayMixin._buildTimelineItems(app);
                     timeline.innerHTML = '';
                     if (items.length >= 2) {
-                        items.forEach((it) => timeline.appendChild(it));
+                        items.forEach(function(it) { timeline.appendChild(it); });
                         if (fallback) fallback.style.display = 'none';
                     } else {
                         if (fallback) fallback.style.display = 'block';
@@ -547,151 +397,446 @@
             showSection(rt.page3.index);
         },
 
-        buildTimelineItems() {
-            let memoriesData = [];
+        _buildTimelineItems(app) {
+            var memoriesData = [];
             try {
-                const memoriesStr = this.cardContainer?.dataset?.memories || '[]';
-                memoriesData = JSON.parse(memoriesStr);
-            } catch {
+                memoriesData = JSON.parse(app.cardContainer?.dataset?.memories || '[]');
+            } catch (e) {
                 memoriesData = [];
             }
-
             if (!Array.isArray(memoriesData)) return [];
 
             return memoriesData
                 .filter(Boolean)
                 .slice(0, 8)
-                .map((memory) => {
-                    const item = document.createElement('div');
+                .map(function(memory) {
+                    var item = document.createElement('div');
                     item.className = 'timeline-item';
-
-                    const year = document.createElement('div');
+                    var year = document.createElement('div');
                     year.className = 'timeline-year';
                     year.textContent = memory.year || 'Moment';
-
-                    const text = document.createElement('div');
+                    var text = document.createElement('div');
                     text.className = 'timeline-text';
-                    const title = memory.title || 'A special moment';
-                    const desc = memory.description || '';
-                    text.textContent = desc ? `${title} — ${desc}` : title;
-
+                    var title = memory.title || 'A special moment';
+                    var desc = memory.description || '';
+                    text.textContent = desc ? (title + ' — ' + desc) : title;
                     item.appendChild(year);
                     item.appendChild(text);
                     return item;
                 });
         },
 
-        startTypewriter(el, text, page3State) {
+        _startTypewriter(el, text, page3State) {
             el.textContent = '';
-            const chars = Array.from(String(text));
-
-            let i = 0;
-            const tick = () => {
+            var chars = Array.from(String(text));
+            var i = 0;
+            var tick = function() {
                 if (!el.isConnected) return;
                 el.textContent += chars[i] || '';
                 i++;
                 if (i < chars.length) {
-                    const t = window.setTimeout(tick, 18);
-                    page3State?.timers?.push(t);
+                    var t = window.setTimeout(tick, 18);
+                    if (page3State?.timers) page3State.timers.push(t);
                 }
             };
             tick();
         },
 
-        teardownBirthdayPage3() {
-            const rt = BirthdayMixin._getBirthdayRuntime.call(this);
-            const timers = rt.page3?.timers || [];
-            timers.forEach((t) => window.clearTimeout(t));
+        teardownBirthdayPage3(app) {
+            var rt = BirthdayMixin._getBirthdayRuntime(app);
+            var timers = (rt.page3 && rt.page3.timers) || [];
+            timers.forEach(function(t) { window.clearTimeout(t); });
             if (rt.page3) rt.page3.timers = [];
         },
 
-        /* ─── Page 5: interactive balloons (lightweight physics) ─── */
+        /* ═══════════════════════════════════════════════════
+           Page 4 — Make a Wish (multi-step candle + night sky)
+           ═══════════════════════════════════════════════════ */
 
-        setupInteractiveBalloons() {
-            if (this.eventType !== 'birthday') return;
+        setupBirthdayCake(app) {
+            if (!app.elements.birthdayCake || app.eventType !== 'birthday') return;
 
-            const container = document.querySelector('.birthday-balloons');
+            var rt = BirthdayMixin._getBirthdayRuntime(app);
+            var cake = app.elements.birthdayCake;
+
+            // If wish was already made, restore completed state immediately
+            if (app.savedData.birthday_page4_wish_made) {
+                BirthdayMixin._restorePage4CompletedState(app);
+                return;
+            }
+
+            // Initialize candle step tracking
+            rt.candleStep = rt.candleStep || 0;
+            var candles = Array.from(cake.querySelectorAll('.candle'));
+            var totalCandles = candles.length || 5;
+
+            BirthdayMixin._setupCandleBlowDetection(app);
+            BirthdayMixin._setupWishStarSystem(app);
+
+            var blowOneCandle = function() {
+                if (rt.candleStep >= totalCandles) return;
+
+                var candle = candles[rt.candleStep];
+                if (candle) {
+                    candle.classList.add('blown-out');
+                    BirthdayMixin._createSmokeOnCandle(cake, candle);
+                }
+                rt.candleStep++;
+
+                var instruction = document.querySelector('.cake-instruction');
+                if (instruction) {
+                    var remaining = totalCandles - rt.candleStep;
+                    if (remaining > 0) {
+                        instruction.textContent = remaining + ' candle' + (remaining > 1 ? 's' : '') + ' left… blow again!';
+                    }
+                }
+
+                app.audioManager?.generateTone?.(440 + rt.candleStep * 40, 0.08, 'triangle');
+
+                if (rt.candleStep >= totalCandles) {
+                    cake.classList.add('blown-out');
+                    BirthdayMixin._teardownCandleBlowDetection(app);
+
+                    var blowEffect = document.createElement('div');
+                    blowEffect.className = 'blow-effect';
+                    blowEffect.textContent = '💨';
+                    blowEffect.style.cssText =
+                        'position:absolute;top:20%;left:50%;transform:translateX(-50%);' +
+                        'font-size:2rem;animation:blowAway 1s ease-out forwards;pointer-events:none;';
+                    cake.appendChild(blowEffect);
+
+                    if (instruction) {
+                        instruction.textContent = 'Your wish has been made! 🌟 Tap a star…';
+                    }
+
+                    setTimeout(function() {
+                        app.showConfetti();
+                        app.audioManager?.playSuccessSound?.();
+                        BirthdayMixin._revealBirthdayWish(app);
+                        app.revealAudioOrQuote();
+                        BirthdayMixin._showNightSky(app);
+                        blowEffect.remove();
+
+                        // Thread of memories / milestone popup — triggered on page 4
+                        var hasThreadOfMemories = app.cardContainer.dataset.threadOfMemories === 'true';
+                        if (hasThreadOfMemories) {
+                            app.showThreadOfMemories();
+                        } else {
+                            app.showMilestonePopup();
+                        }
+
+                        app.saveData({ birthday_page4_wish_made: true });
+                    }, 1000);
+                }
+            };
+
+            BirthdayMixin._runOnce(app, 'page4Bound', function() {
+                cake.addEventListener('click', blowOneCandle);
+                cake.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        blowOneCandle();
+                    }
+                });
+            });
+        },
+
+        _restorePage4CompletedState(app) {
+            var cake = app.elements.birthdayCake;
+            if (cake) {
+                cake.classList.add('blown-out');
+                var candles = cake.querySelectorAll('.candle');
+                candles.forEach(function(c) { c.classList.add('blown-out'); });
+            }
+
+            var instruction = document.querySelector('.cake-instruction');
+            if (instruction) instruction.textContent = 'Your wish has been made! 🌟 Tap a star…';
+
+            var wishContainer = document.getElementById('birthday-wish-container');
+            if (wishContainer) {
+                wishContainer.classList.remove('hidden');
+                wishContainer.style.opacity = '1';
+            }
+            var wishResult = wishContainer?.querySelector('.wish-result');
+            if (wishResult) wishResult.style.opacity = '1';
+
+            BirthdayMixin._setupWishStarSystem(app);
+            BirthdayMixin._showNightSky(app);
+        },
+
+        _createSmokeOnCandle(cake, candle) {
+            var candleRect = candle.getBoundingClientRect();
+            var cakeRect = cake.getBoundingClientRect();
+            var leftPct = ((candleRect.left - cakeRect.left + candleRect.width / 2) / cakeRect.width) * 100;
+
+            for (var i = 0; i < 3; i++) {
+                var smoke = document.createElement('div');
+                smoke.className = 'candle-smoke';
+                smoke.style.left = (leftPct + (Math.random() - 0.5) * 4) + '%';
+                smoke.style.top = (12 + Math.random() * 8) + '%';
+                smoke.style.animationDelay = (i * 0.06) + 's';
+                cake.appendChild(smoke);
+                setTimeout(function(s) { s.remove(); }, 1400, smoke);
+            }
+        },
+
+        _setupCandleBlowDetection(app) {
+            var rt = BirthdayMixin._getBirthdayRuntime(app);
+            if (rt.mic?.active) return;
+            if (!navigator.mediaDevices?.getUserMedia) return;
+
+            rt.mic = {
+                active: true, stream: null, audioContext: null,
+                analyser: null, data: null, rafId: null,
+                baseline: 0, baselineSamples: 0, lastTriggerAt: 0
+            };
+
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(function(stream) {
+                    if (!rt.mic?.active) {
+                        stream.getTracks().forEach(function(t) { t.stop(); });
+                        return;
+                    }
+                    rt.mic.stream = stream;
+                    var AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (!AudioCtx) return;
+
+                    rt.mic.audioContext = new AudioCtx();
+                    rt.mic.audioContext.resume?.().catch(function() {});
+                    var source = rt.mic.audioContext.createMediaStreamSource(stream);
+                    rt.mic.analyser = rt.mic.audioContext.createAnalyser();
+                    rt.mic.analyser.fftSize = 1024;
+                    rt.mic.data = new Uint8Array(rt.mic.analyser.fftSize);
+                    source.connect(rt.mic.analyser);
+
+                    var detect = function() {
+                        if (!rt.mic?.active || !rt.mic.analyser || !rt.mic.data) return;
+                        rt.mic.analyser.getByteTimeDomainData(rt.mic.data);
+
+                        var sumSq = 0;
+                        for (var i = 0; i < rt.mic.data.length; i++) {
+                            var v = (rt.mic.data[i] - 128) / 128;
+                            sumSq += v * v;
+                        }
+                        var rms = Math.sqrt(sumSq / rt.mic.data.length);
+
+                        if (rt.mic.baselineSamples < 40) {
+                            rt.mic.baseline = (rt.mic.baseline * rt.mic.baselineSamples + rms) / (rt.mic.baselineSamples + 1);
+                            rt.mic.baselineSamples++;
+                        } else {
+                            var capped = Math.min(rms, rt.mic.baseline + 0.05);
+                            rt.mic.baseline = rt.mic.baseline * 0.985 + capped * 0.015;
+                        }
+
+                        var now = Date.now();
+                        var cooldownOk = now - rt.mic.lastTriggerAt > 800;
+                        var threshold = Math.max(0.06, rt.mic.baseline * 3.2 + 0.02);
+
+                        if (cooldownOk && rms > threshold && app.elements.birthdayCake && !app.elements.birthdayCake.classList.contains('blown-out')) {
+                            rt.mic.lastTriggerAt = now;
+                            app.elements.birthdayCake.click();
+                            if (app.elements.birthdayCake.classList.contains('blown-out')) return;
+                        }
+
+                        rt.mic.rafId = window.requestAnimationFrame(detect);
+                    };
+                    rt.mic.rafId = window.requestAnimationFrame(detect);
+                })
+                .catch(function() { /* No mic — click/Enter fallback */ });
+        },
+
+        _teardownCandleBlowDetection(app) {
+            var rt = BirthdayMixin._getBirthdayRuntime(app);
+            if (!rt.mic) return;
+            rt.mic.active = false;
+            if (rt.mic.rafId) window.cancelAnimationFrame(rt.mic.rafId);
+            if (rt.mic.stream) rt.mic.stream.getTracks().forEach(function(t) { t.stop(); });
+            if (rt.mic.audioContext) rt.mic.audioContext.close?.().catch(function() {});
+            rt.mic = null;
+        },
+
+        _setupWishStarSystem(app) {
+            BirthdayMixin._runOnce(app, 'wishStarsBound', function() {
+                var sky = document.getElementById('birthday-night-sky');
+                if (!sky) return;
+
+                var starContainer = sky.querySelector('.night-sky-stars');
+                var stars = Array.from(sky.querySelectorAll('.birthday-star'));
+                var toast = document.getElementById('birthday-wish-toast');
+                if (!starContainer || !stars.length) return;
+
+                var positionStars = function() {
+                    var rect = starContainer.getBoundingClientRect();
+                    var pad = 14;
+                    stars.forEach(function(star, idx) {
+                        star.style.left = (pad + Math.random() * Math.max(0, rect.width - pad * 2)) + 'px';
+                        star.style.top = (pad + Math.random() * Math.max(0, rect.height - pad * 2)) + 'px';
+                        star.style.opacity = '' + (0.65 + (idx % 3) * 0.1);
+                    });
+                };
+
+                var fireShootingStar = function(fromEl) {
+                    var starRect = fromEl.getBoundingClientRect();
+                    var contRect = starContainer.getBoundingClientRect();
+                    var shooting = document.createElement('div');
+                    shooting.className = 'shooting-star';
+                    shooting.style.left = (starRect.left - contRect.left) + 'px';
+                    shooting.style.top = (starRect.top - contRect.top) + 'px';
+                    starContainer.appendChild(shooting);
+                    setTimeout(function() { shooting.remove(); }, 900);
+
+                    if (toast) {
+                        toast.textContent = 'A wish has been sent to the stars ✨';
+                        toast.style.opacity = '1';
+                    }
+                    app.audioManager?.generateTone?.(659.25, 0.12, 'triangle');
+                };
+
+                window.addEventListener('resize', positionStars);
+                stars.forEach(function(star) {
+                    star.addEventListener('click', function() { fireShootingStar(star); });
+                });
+
+                var rt = BirthdayMixin._getBirthdayRuntime(app);
+                rt._positionWishStars = positionStars;
+            });
+        },
+
+        _showNightSky(app) {
+            var sky = document.getElementById('birthday-night-sky');
+            if (!sky) return;
+            sky.classList.remove('hidden');
+            var toast = document.getElementById('birthday-wish-toast');
+            if (toast) toast.textContent = '';
+            var rt = BirthdayMixin._getBirthdayRuntime(app);
+            if (typeof rt._positionWishStars === 'function') {
+                window.requestAnimationFrame(function() { rt._positionWishStars(); });
+            }
+        },
+
+        _hideNightSky() {
+            var sky = document.getElementById('birthday-night-sky');
+            if (sky) sky.classList.add('hidden');
+        },
+
+        _revealBirthdayWish() {
+            var wishContainer = document.getElementById('birthday-wish-container');
+            if (!wishContainer) return;
+
+            wishContainer.classList.remove('hidden');
+            wishContainer.style.animation = 'wishReveal 0.6s ease-out forwards';
+
+            var stars = wishContainer.querySelectorAll('.wish-star');
+            stars.forEach(function(star, i) {
+                setTimeout(function() {
+                    star.style.animation = 'wishStarSparkle 1s ease-in-out forwards';
+                    star.style.animationDelay = '0s';
+                }, 300 + (i * 200));
+            });
+
+            var wishResult = wishContainer.querySelector('.wish-result');
+            if (wishResult) {
+                setTimeout(function() {
+                    wishResult.style.opacity = '1';
+                    wishResult.style.animation = 'fadeInUp 0.5s ease-out forwards';
+                }, 1500);
+            }
+        },
+
+        /* ═══════════════════════════════════════════════════
+           Page 5 — Farewell + Share cue
+           ═══════════════════════════════════════════════════ */
+
+        setupBirthdayPage5(app) {
+            BirthdayMixin._animateBirthdayBadge();
+            BirthdayMixin._setupInteractiveBalloons(app);
+
+            if (!app.savedData.birthday_page5_seen) {
+                setTimeout(function() {
+                    app.showFeedback('🎈 Want to share this card? Tap Share below.', 'info');
+                }, 1200);
+                setTimeout(function() {
+                    app.showConfetti();
+                }, 800);
+                app.saveData({ birthday_page5_seen: true });
+            }
+        },
+
+        _animateBirthdayBadge() {
+            var badge = document.querySelector('.birthday-badge');
+            if (!badge) return;
+            badge.style.animation = 'badgePop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
+            var sparkle = badge.querySelector('.badge-sparkle');
+            if (sparkle) sparkle.style.animation = 'sparkleRotate 2s linear infinite';
+        },
+
+        _setupInteractiveBalloons(app) {
+            if (app.eventType !== 'birthday') return;
+
+            var container = document.querySelector('.birthday-balloons');
             if (!container) return;
-
-            const balloons = Array.from(container.querySelectorAll('.balloon'));
+            var balloons = Array.from(container.querySelectorAll('.balloon'));
             if (!balloons.length) return;
 
-            const rt = BirthdayMixin._getBirthdayRuntime.call(this);
+            var rt = BirthdayMixin._getBirthdayRuntime(app);
             if (rt.balloonsSystem?.active) return;
 
-            const rect = () => container.getBoundingClientRect();
+            var rect = function() { return container.getBoundingClientRect(); };
 
-            // First-time binding creates the state + listeners. Subsequent enters only restart the loop.
             if (!rt.balloonsSystem) {
                 rt.balloonsSystem = {
-                    active: false,
-                    rafId: null,
-                    container,
-                    rect,
-                    states: balloons.map((el) => ({
-                        el,
-                        x: 0,
-                        y: 0,
-                        vx: (Math.random() - 0.5) * 0.6,
-                        vy: -0.5 - Math.random() * 0.6,
-                        dragging: false,
-                        pointerId: null,
-                        downX: 0,
-                        downY: 0,
-                        moved: false,
-                        lastMoveAt: 0
-                    }))
+                    active: false, rafId: null, container: container, rect: rect,
+                    states: balloons.map(function(el) {
+                        return {
+                            el: el, x: 0, y: 0,
+                            vx: (Math.random() - 0.5) * 0.6,
+                            vy: -0.5 - Math.random() * 0.6,
+                            dragging: false, pointerId: null,
+                            downX: 0, downY: 0, moved: false, lastMoveAt: 0
+                        };
+                    })
                 };
             }
 
-            const sys = rt.balloonsSystem;
-            const states = sys.states;
+            var sys = rt.balloonsSystem;
+            var states = sys.states;
 
-            const init = () => {
-                const r = rect();
-                states.forEach((s, i) => {
+            var init = function() {
+                var r = rect();
+                states.forEach(function(s, i) {
                     if (!s.el.isConnected) return;
                     s.x = 40 + Math.random() * Math.max(0, r.width - 80);
                     s.y = r.height - (40 + i * 18);
-                    s.el.style.left = `${s.x}px`;
-                    s.el.style.top = `${s.y}px`;
+                    s.el.style.left = s.x + 'px';
+                    s.el.style.top = s.y + 'px';
                 });
             };
 
-            const popAt = (s) => {
-                if (!s.el.isConnected) return;
-                if (s.el.classList.contains('popped')) return;
-
+            var popAt = function(s) {
+                if (!s.el.isConnected || s.el.classList.contains('popped')) return;
                 s.el.classList.add('popped');
-                this.audioManager?.generateTone?.(420, 0.07, 'square');
+                app.audioManager?.generateTone?.(420, 0.07, 'square');
 
-                // Small local confetti burst
-                const colors = ['#f472b6', '#fbbf24', '#a78bfa', '#60a5fa'];
-                const pieces = 14;
-                for (let i = 0; i < pieces; i++) {
-                    const c = document.createElement('div');
+                var colors = ['#f472b6', '#fbbf24', '#a78bfa', '#60a5fa'];
+                for (var i = 0; i < 14; i++) {
+                    var c = document.createElement('div');
                     c.className = 'birthday-pop-confetti';
-                    c.style.left = `${s.x}px`;
-                    c.style.top = `${s.y}px`;
+                    c.style.left = s.x + 'px';
+                    c.style.top = s.y + 'px';
                     c.style.background = colors[i % colors.length];
-                    const dx = (Math.random() - 0.5) * 120;
-                    const dy = (Math.random() - 0.8) * 140;
-                    c.style.setProperty('--dx', `${dx}px`);
-                    c.style.setProperty('--dy', `${dy}px`);
+                    c.style.setProperty('--dx', ((Math.random() - 0.5) * 120) + 'px');
+                    c.style.setProperty('--dy', ((Math.random() - 0.8) * 140) + 'px');
                     container.appendChild(c);
-                    setTimeout(() => c.remove(), 700);
+                    setTimeout(function(el) { el.remove(); }, 700, c);
                 }
-
-                setTimeout(() => {
-                    s.el.remove();
-                }, 240);
+                setTimeout(function() { s.el.remove(); }, 240);
             };
 
-            BirthdayMixin._runOnce.call(this, 'balloonsBound', () => {
-                states.forEach((s) => {
+            BirthdayMixin._runOnce(app, 'balloonsBound', function() {
+                states.forEach(function(s) {
                     if (!s.el.isConnected) return;
 
-                    s.el.addEventListener('pointerdown', (e) => {
+                    s.el.addEventListener('pointerdown', function(e) {
                         s.dragging = true;
                         s.pointerId = e.pointerId;
                         s.downX = e.clientX;
@@ -701,31 +846,22 @@
                         s.el.setPointerCapture?.(e.pointerId);
                     });
 
-                    s.el.addEventListener('pointermove', (e) => {
+                    s.el.addEventListener('pointermove', function(e) {
                         if (!s.dragging || s.pointerId !== e.pointerId) return;
-                        const r = rect();
-                        const x = e.clientX - r.left;
-                        const y = e.clientY - r.top;
-                        s.x = Math.max(12, Math.min(r.width - 12, x));
-                        s.y = Math.max(12, Math.min(r.height - 12, y));
-                        s.el.style.left = `${s.x}px`;
-                        s.el.style.top = `${s.y}px`;
+                        var r = rect();
+                        s.x = Math.max(12, Math.min(r.width - 12, e.clientX - r.left));
+                        s.y = Math.max(12, Math.min(r.height - 12, e.clientY - r.top));
+                        s.el.style.left = s.x + 'px';
+                        s.el.style.top = s.y + 'px';
                         if (Math.hypot(e.clientX - s.downX, e.clientY - s.downY) > 6) s.moved = true;
                         s.lastMoveAt = Date.now();
                     });
 
-                    s.el.addEventListener('pointerup', (e) => {
+                    s.el.addEventListener('pointerup', function(e) {
                         if (s.pointerId !== e.pointerId) return;
                         s.dragging = false;
                         s.pointerId = null;
-
-                        // If barely moved: pop
-                        if (!s.moved) {
-                            popAt(s);
-                            return;
-                        }
-
-                        // Give a gentle release impulse
+                        if (!s.moved) { popAt(s); return; }
                         s.vx = (Math.random() - 0.5) * 0.9;
                         s.vy = -0.6 - Math.random() * 0.8;
                     });
@@ -734,29 +870,25 @@
 
             init();
 
-            let last = performance.now();
+            var last = performance.now();
             sys.active = true;
 
-            const tick = (now) => {
+            var tick = function(now) {
                 if (!sys.active) return;
-                const dt = Math.min(32, now - last);
+                var dt = Math.min(32, now - last);
                 last = now;
-                const r = rect();
+                var r = rect();
 
-                states.forEach((s) => {
-                    if (!s.el.isConnected) return;
-                    if (s.dragging || s.el.classList.contains('popped')) return;
+                states.forEach(function(s) {
+                    if (!s.el.isConnected || s.dragging || s.el.classList.contains('popped')) return;
 
-                    // Upward float + small drift
                     s.vy += (-0.0009) * dt;
                     s.vx += ((Math.random() - 0.5) * 0.0007) * dt;
                     s.vx *= 0.995;
                     s.vy *= 0.995;
-
                     s.x += s.vx * dt;
                     s.y += s.vy * dt;
 
-                    // Bounds (wrap to bottom when reaching top)
                     if (s.x < 10) { s.x = 10; s.vx = Math.abs(s.vx); }
                     if (s.x > r.width - 10) { s.x = r.width - 10; s.vx = -Math.abs(s.vx); }
                     if (s.y < 10) {
@@ -766,140 +898,64 @@
                     }
                     if (s.y > r.height - 10) { s.y = r.height - 10; s.vy = -Math.abs(s.vy); }
 
-                    s.el.style.left = `${s.x}px`;
-                    s.el.style.top = `${s.y}px`;
+                    s.el.style.left = s.x + 'px';
+                    s.el.style.top = s.y + 'px';
                 });
 
                 sys.rafId = window.requestAnimationFrame(tick);
             };
-
             sys.rafId = window.requestAnimationFrame(tick);
         },
 
-        teardownInteractiveBalloons() {
-            const rt = BirthdayMixin._getBirthdayRuntime.call(this);
+        _teardownInteractiveBalloons(app) {
+            var rt = BirthdayMixin._getBirthdayRuntime(app);
             if (!rt.balloonsSystem) return;
             rt.balloonsSystem.active = false;
             if (rt.balloonsSystem.rafId) window.cancelAnimationFrame(rt.balloonsSystem.rafId);
             rt.balloonsSystem.rafId = null;
-        },
-
-        revealBirthdayWish() {
-            const wishContainer = document.getElementById('birthday-wish-container');
-            if (!wishContainer) return;
-
-            wishContainer.classList.remove('hidden');
-            wishContainer.style.animation = 'wishReveal 0.6s ease-out forwards';
-
-            // Animate stars sequentially
-            const stars = wishContainer.querySelectorAll('.wish-star');
-            stars.forEach((star, i) => {
-                setTimeout(() => {
-                    star.style.animation = 'wishStarSparkle 1s ease-in-out forwards';
-                    star.style.animationDelay = '0s';
-                }, 300 + (i * 200));
-            });
-
-            // Show wish result after stars finish
-            const wishResult = wishContainer.querySelector('.wish-result');
-            if (wishResult) {
-                setTimeout(() => {
-                    wishResult.style.opacity = '1';
-                    wishResult.style.animation = 'fadeInUp 0.5s ease-out forwards';
-                }, 1500);
-            }
-        },
-
-        /* ─── Page 5: Farewell — Balloons + Badge ─── */
-
-        setupBirthdayPage5() {
-            BirthdayMixin.animateBirthdayBalloons.call(this);
-            BirthdayMixin.animateBirthdayBadge.call(this);
-        },
-
-        animateBirthdayBalloons() {
-            const balloons = document.querySelectorAll('.birthday-balloons .balloon');
-            if (!balloons.length) return;
-
-            balloons.forEach((balloon, i) => {
-                balloon.style.animation = `balloonFloat 3s ease-in-out ${i * 0.4}s infinite alternate`;
-            });
-        },
-
-        animateBirthdayBadge() {
-            const badge = document.querySelector('.birthday-badge');
-            if (!badge) return;
-
-            badge.style.animation = 'badgePop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
-
-            const sparkle = badge.querySelector('.badge-sparkle');
-            if (sparkle) {
-                sparkle.style.animation = 'sparkleRotate 2s linear infinite';
-            }
-        },
-
-        /* ─── Final Animation ─── */
-
-        createBirthdayAnimation() {
-            const elements = [];
-
-            for (let i = 0; i < 8; i++) {
-                const balloon = document.createElement('div');
-                balloon.innerHTML = '🎈';
-                balloon.style.cssText = `
-                    position: absolute;
-                    left: ${Math.random() * 80 + 10}%;
-                    font-size: ${Math.random() * 20 + 20}px;
-                    animation: float-up ${Math.random() * 3 + 4}s ease-out ${Math.random() * 2}s infinite;
-                    pointer-events: none;
-                `;
-                elements.push(balloon);
-            }
-
-            for (let i = 0; i < 4; i++) {
-                const gift = document.createElement('div');
-                gift.innerHTML = '🎁';
-                gift.style.cssText = `
-                    position: absolute;
-                    left: ${Math.random() * 80 + 10}%;
-                    font-size: ${Math.random() * 15 + 25}px;
-                    animation: bounce ${Math.random() * 2 + 2}s ease-in-out ${Math.random() * 2}s infinite;
-                    pointer-events: none;
-                `;
-                elements.push(gift);
-            }
-
-            return elements;
         }
     };
 
-    // Export EventModule interface — engine calls these hooks directly.
-    // No prototype mutation.
+    /* ═══════════════════════════════════════════════════
+       EventModule API Registration
+       ═══════════════════════════════════════════════════ */
+
     window.EventModules = window.EventModules || {};
     window.EventModules['birthday'] = {
+
         initialize(app) {
             app._birthday = app._birthday || {};
-            BirthdayMixin.initBirthdayLoadingScreen.call(app);
+            BirthdayMixin.initBirthdayLoadingScreen(app);
         },
+
+        onUnlock(app) {
+            BirthdayMixin.onBirthdayUnlock(app);
+        },
+
         onPageEnter(page, app) {
-            if (page === 2) BirthdayMixin.setupBirthdayPage2.call(app);
-            else if (page === 3) BirthdayMixin.setupBirthdayPage3.call(app);
-            else if (page === 4) BirthdayMixin.setupBirthdayCake.call(app);
-            else if (page === 5) {
-                BirthdayMixin.setupInteractiveBalloons.call(app);
-                BirthdayMixin.animateBirthdayBadge.call(app);
-            }
+            if (page === 2) BirthdayMixin.setupBirthdayPage2(app);
+            else if (page === 3) BirthdayMixin.setupBirthdayPage3(app);
+            else if (page === 4) BirthdayMixin.setupBirthdayCake(app);
+            else if (page === 5) BirthdayMixin.setupBirthdayPage5(app);
         },
+
         onPageLeave(page, app) {
-            if (page === 3) BirthdayMixin.teardownBirthdayPage3.call(app);
+            if (page === 3) BirthdayMixin.teardownBirthdayPage3(app);
             if (page === 4) {
-                BirthdayMixin.teardownCandleBlowDetection.call(app);
-                BirthdayMixin.hideNightSky.call(app);
+                BirthdayMixin._teardownCandleBlowDetection(app);
+                BirthdayMixin._hideNightSky();
             }
-            if (page === 5) BirthdayMixin.teardownInteractiveBalloons.call(app);
-        },
-        onUnlock(app) {}
+            if (page === 5) BirthdayMixin._teardownInteractiveBalloons(app);
+        }
     };
 
     console.log('Birthday module loaded');
+
+    // Safety net: if the app fails to call EventModule.initialize for any reason,
+    // start the loader ceremony directly at DOMContentLoaded.
+    document.addEventListener('DOMContentLoaded', function () {
+        if (!document.getElementById('bday-loader')) return;
+        if (window.__bdayLoaderStarted) return;
+        BirthdayMixin.initBirthdayLoadingScreen(window.greetingCard || null);
+    });
 })();
