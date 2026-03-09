@@ -44,17 +44,17 @@
     --bd-grad-violet: linear-gradient(135deg, #c084fc 0%, #7c4dab 60%, #4c1d7a 100%);
     --bd-grad-night:  linear-gradient(180deg, #0d0918 0%, #1e1030 40%, #2d1850 70%, #3b2060 100%);
 
-    /* Glow helpers */
-    --bd-glow-gold:   0 0 32px rgba(245, 200, 66, 0.45);
-    --bd-glow-rose:   0 0 32px rgba(224, 92, 120, 0.38);
-    --bd-glow-violet: 0 0 32px rgba(124, 77, 171, 0.4);
-    --bd-glow-candle: 0 0 60px rgba(232, 133, 10, 0.25), 0 0 120px rgba(232, 133, 10, 0.12);
+    /* Glow helpers — kept intentionally warm and soft, not neon */
+    --bd-glow-gold:   0 0 28px rgba(245, 200, 66, 0.32);
+    --bd-glow-rose:   0 0 26px rgba(224, 92, 120, 0.26);
+    --bd-glow-violet: 0 0 28px rgba(124, 77, 171, 0.28);
+    --bd-glow-candle: 0 0 48px rgba(232, 133, 10, 0.20), 0 0 100px rgba(232, 133, 10, 0.10);
 
-    /* Shadows */
-    --bd-shadow-sm:   0 2px 8px rgba(0,0,0,0.08);
-    --bd-shadow-md:   0 6px 24px rgba(0,0,0,0.12);
-    --bd-shadow-lg:   0 16px 48px rgba(0,0,0,0.18);
-    --bd-shadow-xl:   0 32px 80px rgba(0,0,0,0.25);
+    /* Shadows — soft, layered, warm-tinted */
+    --bd-shadow-sm:   0 2px 8px rgba(0,0,0,0.07);
+    --bd-shadow-md:   0 6px 20px rgba(0,0,0,0.10);
+    --bd-shadow-lg:   0 14px 42px rgba(0,0,0,0.14);
+    --bd-shadow-xl:   0 28px 72px rgba(0,0,0,0.20);
 
     /* Radii */
     --bd-r-sm:  8px;
@@ -63,11 +63,12 @@
     --bd-r-xl:  36px;
     --bd-r-pill: 999px;
 
-    /* Transitions */
-    --bd-t-fast:   0.18s cubic-bezier(0.25, 0.8, 0.25, 1);
-    --bd-t-mid:    0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
-    --bd-t-slow:   0.6s  cubic-bezier(0.22, 1, 0.36, 1);
-    --bd-t-spring: 0.5s  cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* Transitions — fast is tighter for snappy micro-interactions */
+    --bd-t-fast:   0.15s cubic-bezier(0.25, 0.8, 0.25, 1);
+    --bd-t-mid:    0.32s cubic-bezier(0.25, 0.8, 0.25, 1);
+    --bd-t-slow:   0.58s cubic-bezier(0.22, 1, 0.36, 1);
+    --bd-t-spring: 0.48s cubic-bezier(0.34, 1.56, 0.64, 1);
+    --bd-t-enter:  0.52s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 [data-theme="dark"] .card-container[data-theme="birthday"] {
@@ -113,6 +114,7 @@
     opacity: 0;
     pointer-events: none;
     transform: scale(1.04);
+    filter: blur(1.5px);
 }
 
 /* Warm floor panel on the bottom 30% */
@@ -248,6 +250,7 @@
     opacity: 0;
     transition: transform 0.9s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.55s ease;
     filter: blur(1.5px);
+    will-change: transform, opacity, filter;
 }
 
 .bday-loader__diya.ignite .bday-loader__flame-outer {
@@ -526,7 +529,8 @@
 .card-container[data-theme="birthday"] .action-button:hover,
 .card-container[data-theme="birthday"] .action-button:focus-visible {
     transform: translateY(-2px);
-    box-shadow: 0 8px 28px rgba(232, 133, 10, 0.50), 0 2px 8px rgba(0,0,0,0.12);
+    box-shadow: 0 8px 26px rgba(232, 133, 10, 0.44), 0 2px 6px rgba(0,0,0,0.10);
+    filter: brightness(1.05);
 }
 
 .card-container[data-theme="birthday"] .action-button.secondary {
@@ -631,9 +635,9 @@
 [data-theme="dark"] .tap-to-begin-prompt { color: #f5c842; }
 
 @keyframes bdayPromptPulse {
-    0%, 100% { opacity: 0.50; transform: scale(1)    translateY(0);    filter: brightness(1); }
-    30%       { opacity: 0.78; transform: scale(1.02) translateY(-1px); filter: brightness(1.1); }
-    62%       { opacity: 1;    transform: scale(1.05) translateY(-3px); filter: brightness(1.24); }
+    0%, 100% { opacity: 0.62; transform: scale(1)    translateY(0);    filter: brightness(1); }
+    30%       { opacity: 0.82; transform: scale(1.02) translateY(-1px); filter: brightness(1.08); }
+    62%       { opacity: 1;    transform: scale(1.04) translateY(-2px); filter: brightness(1.20); }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -661,7 +665,13 @@
 }
 
 .birthday-gift:hover {
-    filter: drop-shadow(0 18px 44px rgba(232, 133, 10, 0.35));
+    filter: drop-shadow(0 18px 40px rgba(232, 133, 10, 0.30));
+}
+
+.birthday-gift:active {
+    filter: drop-shadow(0 8px 20px rgba(232, 133, 10, 0.20));
+    transform: scale(0.97);
+    transition-duration: 0.08s;
 }
 
 .birthday-gift:focus-visible {
@@ -892,7 +902,8 @@
 
 #birthday-gift-continue:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 28px rgba(232, 133, 10, 0.52);
+    box-shadow: 0 8px 26px rgba(232, 133, 10, 0.46);
+    filter: brightness(1.05);
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -961,9 +972,9 @@
     position: absolute;
     inset: 0;
     opacity: 0;
-    transform: translateY(18px);
+    transform: translateY(12px);
     pointer-events: none;
-    transition: opacity 0.48s cubic-bezier(0.22, 1, 0.36, 1), transform 0.48s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: opacity 0.44s cubic-bezier(0.22, 1, 0.36, 1), transform 0.44s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .birthday-page3 .page3-section.active {
@@ -1045,7 +1056,7 @@
 .birthday-page3 .page3-section.active .birthday-message-card,
 .birthday-page3 .page3-section.active .birthday-timeline-card,
 .birthday-page3 .page3-section.active .birthday-audio-card {
-    animation: bdayCardReveal 0.58s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
+    animation: bdayCardReveal 0.52s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
 }
 
 /* Timeline item stagger on section enter */
@@ -1059,7 +1070,7 @@
 .birthday-page3 .page3-section.active #birthday-timeline .timeline-item:nth-child(6) { animation-delay: 0.44s; }
 
 @keyframes bdayCardReveal {
-    from { transform: translateY(22px); opacity: 0; }
+    from { transform: translateY(16px); opacity: 0; }
     to   { transform: translateY(0);    opacity: 1; }
 }
 
@@ -1379,6 +1390,7 @@
     transition: opacity 0.32s ease, transform 0.32s ease;
     animation: bdayCandleFlicker 1.6s ease-in-out infinite alternate;
     filter: blur(0.3px);
+    will-change: transform, opacity;
 }
 
 .birthday-cake .candle-flame::after {
@@ -1470,13 +1482,13 @@
     line-height: 1.5;
     min-height: 1.6em;
     transition: opacity 0.25s ease;
-    animation: bdayCakeInstPulse 2.4s ease-in-out infinite;
+    animation: bdayCakeInstPulse 2.8s ease-in-out infinite;
 }
 
 [data-theme="dark"] .cake-instruction { color: var(--bd-text-dim); }
 
 @keyframes bdayCakeInstPulse {
-    0%, 100% { opacity: 0.6; }
+    0%, 100% { opacity: 0.65; }
     50%       { opacity: 1; }
 }
 
@@ -1579,10 +1591,11 @@
     inset: -12px;
     border-radius: var(--bd-r-xl, 36px);
     background:
-        radial-gradient(ellipse at 22% 18%, rgba(255,255,255,0.10), transparent 40%),
-        radial-gradient(ellipse at 75% 72%, rgba(124,77,171,0.15), transparent 55%),
+        radial-gradient(ellipse at 22% 18%, rgba(255,255,255,0.08), transparent 40%),
+        radial-gradient(ellipse at 75% 72%, rgba(124,77,171,0.12), transparent 55%),
         linear-gradient(170deg, #060412 0%, #0d0820 30%, #130a2a 60%, #1a0d38 100%);
-    border: 1px solid rgba(255,255,255,0.10);
+    border: 1px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(1px);
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -1628,7 +1641,7 @@
     font-size: 22px;
     line-height: 1;
     cursor: pointer;
-    text-shadow: 0 0 14px rgba(255, 240, 140, 0.30);
+    text-shadow: 0 0 12px rgba(255, 240, 140, 0.25);
     transform: translate(-50%, -50%);
     transition: transform 0.16s ease, text-shadow 0.16s ease;
     padding: 6px;
@@ -1637,6 +1650,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    will-change: transform, opacity;
     /* Stars fade in then gently twinkle */
     opacity: 0;
     animation: bdayStarAppear 0.5s ease-out forwards, bdayStarTwinkle 2.8s ease-in-out 1.6s infinite alternate;
@@ -1661,11 +1675,6 @@
 @keyframes bdayStarTwinkle {
     from { opacity: 0.70; text-shadow: 0 0 10px rgba(255,240,140,0.18); }
     to   { opacity: 1;    text-shadow: 0 0 24px rgba(255,240,140,0.62); }
-}
-
-.birthday-star:hover {
-    transform: translate(-50%, -50%) scale(1.28);
-    text-shadow: 0 0 28px rgba(255,240,140,0.80), 0 0 50px rgba(255,200,66,0.40);
 }
 
 /* Shooting star */
@@ -1710,8 +1719,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.75rem;
-    padding: 1.5rem 1rem;
+    gap: 1.5rem;
+    padding: 1.25rem 1rem;
     width: 100%;
     position: relative;
 }
@@ -1729,11 +1738,11 @@
     box-shadow: var(--bd-shadow-lg, 0 16px 48px rgba(0,0,0,0.12));
     backdrop-filter: blur(8px);
     /* Fade in with upward drift after a short pause */
-    animation: bdayFarewellReveal 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.45s both;
+    animation: bdayFarewellReveal 0.85s cubic-bezier(0.22, 1, 0.36, 1) 0.28s both;
 }
 
 @keyframes bdayFarewellReveal {
-    from { transform: translateY(28px); opacity: 0; }
+    from { transform: translateY(22px); opacity: 0; }
     to   { transform: translateY(0);    opacity: 1; }
 }
 
@@ -1783,19 +1792,19 @@
     width: min(520px, 92%);
     min-height: 280px;
     border-radius: var(--bd-r-xl, 36px);
-    border: 1.5px dashed rgba(224, 92, 120, 0.25);
+    border: 1.5px solid rgba(224, 92, 120, 0.18);
     background:
-        radial-gradient(circle at 50% 100%, rgba(245,200,66,0.06) 0%, transparent 60%),
-        rgba(255, 248, 235, 0.30);
+        radial-gradient(circle at 50% 100%, rgba(245,200,66,0.05) 0%, transparent 60%),
+        rgba(255, 248, 235, 0.28);
     overflow: hidden;
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(3px);
 }
 
 [data-theme="dark"] .birthday-balloons {
     background:
-        radial-gradient(circle at 50% 100%, rgba(245,200,66,0.06) 0%, transparent 60%),
-        rgba(20, 10, 35, 0.35);
-    border-color: rgba(245, 200, 66, 0.16);
+        radial-gradient(circle at 50% 100%, rgba(245,200,66,0.05) 0%, transparent 60%),
+        rgba(20, 10, 35, 0.32);
+    border-color: rgba(245, 200, 66, 0.14);
 }
 
 /* Balloon buttons — absolutely positioned by JS */
@@ -1810,6 +1819,7 @@
     user-select: none;
     touch-action: none;
     transition: filter 0.15s ease;
+    will-change: transform;
 }
 
 .birthday-balloons .balloon:active { cursor: grabbing; }
@@ -1881,15 +1891,46 @@
 
     .birthday-gift { width: 170px; height: 170px; }
 
+    .gift-ceremony-container { gap: 1.5rem; padding: 1.25rem 0.75rem; }
+
     .birthday-cake { width: 175px; height: 190px; }
     .birthday-cake .cake-base   { width: 170px; height: 80px; }
     .birthday-cake .cake-layers { width: 130px; height: 58px; }
     .birthday-cake .candles-container { gap: 10px; }
+    .cake-container { padding: 0.5rem; }
 
-    .birthday-farewell .farewell-message { padding: 1.25rem; }
+    .birthday-farewell {
+        gap: 1.25rem;
+        padding: 1rem 0.75rem;
+    }
+    .birthday-farewell .farewell-message {
+        padding: 1.25rem;
+        font-size: 0.92rem;
+    }
     .night-sky-stars { height: 170px; }
     .birthday-balloons { min-height: 220px; }
-    .birthday-page3-tabs .page3-tab { padding: 0.45rem 0.9rem; font-size: 0.82rem; }
+
+    /* Keep tab labels legible on narrow screens */
+    .birthday-page3-tabs .page3-tab {
+        padding: 0.45rem 0.85rem;
+        font-size: 0.82rem;
+        min-height: 40px;
+    }
+
+    /* Ensure action buttons are never too small to tap */
+    .card-container[data-theme="birthday"] .action-button,
+    #birthday-gift-continue {
+        min-height: 50px;
+        padding: 0.75rem 1.8rem;
+        font-size: 0.95rem;
+    }
+
+    /* Wish stars — extra tap room on mobile */
+    .wish-star {
+        font-size: 1.6rem;
+        min-width: 48px;
+        min-height: 48px;
+    }
 }
 
 @media (min-width: 768px) {
@@ -1909,19 +1950,74 @@
    12. UX micro-interactions
    ══════════════════════════════════════════════════════════ */
 
-/* Immediate press feedback on all interactive birthday elements */
+/* ── Button press feedback (scale + brightness dip) ── */
 .card-container[data-theme="birthday"] .action-button:active,
-#birthday-gift-continue:active,
+#birthday-gift-continue:active {
+    transform: scale(0.95) translateY(1px);
+    filter: brightness(0.93);
+    transition-duration: 0.07s;
+}
+
+/* ── Tab / nav press ── */
 .birthday-page3-tabs .page3-tab:active,
 #page3-prev-section:active,
 #page3-next-section:active {
-    transform: scale(0.96) translateY(1px);
-    transition-duration: 0.06s;
+    transform: scale(0.95) translateY(1px);
+    transition-duration: 0.07s;
 }
 
+/* ── Cake: subtle press on interaction ── */
+.birthday-cake:active {
+    transform: scale(0.97);
+    filter: drop-shadow(0 8px 18px rgba(224, 92, 120, 0.20));
+    transition-duration: 0.08s;
+}
+
+/* ── Audio control press ── */
+.birthday-audio-card .audio-control:active {
+    transform: scale(0.96);
+    background: rgba(245, 200, 66, 0.22);
+    transition-duration: 0.08s;
+}
+
+/* ── Night sky star hover & press ── */
 .birthday-star:hover {
-    transform: translate(-50%, -50%) scale(1.30);
-    text-shadow: 0 0 30px rgba(255,240,140,0.85), 0 0 56px rgba(255,200,66,0.42);
+    transform: translate(-50%, -50%) scale(1.28);
+    text-shadow: 0 0 26px rgba(255,240,140,0.75), 0 0 48px rgba(255,200,66,0.35);
+    transition: transform 0.14s ease, text-shadow 0.14s ease;
+}
+
+.birthday-star:active {
+    transform: translate(-50%, -50%) scale(0.92);
+    transition-duration: 0.07s;
+}
+
+/* ── Wish star rating press ── */
+.wish-star:active {
+    transform: scale(0.88);
+    transition-duration: 0.08s;
+}
+
+/* ── Tab active state hover warmth ── */
+.birthday-page3-tabs .page3-tab:hover {
+    transform: translateY(-1px);
+    border-color: rgba(232, 133, 10, 0.40);
+    background: rgba(255, 248, 235, 0.88);
+}
+
+[data-theme="dark"] .birthday-page3-tabs .page3-tab:hover {
+    background: rgba(40, 22, 60, 0.80);
+    border-color: rgba(245, 200, 66, 0.30);
+}
+
+/* ── Keyboard focus rings (warm, not default blue) ── */
+.birthday-page3-tabs .page3-tab:focus-visible,
+#page3-prev-section:focus-visible,
+#page3-next-section:focus-visible,
+.birthday-audio-card .audio-control:focus-visible,
+.wish-star:focus-visible {
+    outline: 2px solid rgba(232, 133, 10, 0.70);
+    outline-offset: 3px;
 }
 
 /* ══════════════════════════════════════════════════════════
