@@ -34,8 +34,9 @@
             const rt = BirthdayMixin._getBirthdayRuntime(app);
             rt._once = rt._once || {};
             if (rt._once[key]) return;
-            rt._once[key] = true;
-            fn();
+            // Allow deferred binding: if fn returns false, keep key unbound so a later page enter can retry.
+            const bound = fn();
+            if (bound !== false) rt._once[key] = true;
         },
 
         /* ═══════════════════════════════════════════════════
@@ -384,6 +385,7 @@ setupBirthdayPage1(app) {
                 window.clearTimeout(rt.page2.finalizeTimer);
                 rt.page2.finalizeTimer = null;
             }
+            rt.page2.stepTimers = rt.page2.stepTimers || [];
 
             var savedStepRaw = Number.parseInt(String(app.savedData.birthday_unwrap_step || 0), 10);
             var step = Number.isNaN(savedStepRaw) ? 0 : Math.max(0, Math.min(3, savedStepRaw));
@@ -413,6 +415,7 @@ setupBirthdayPage1(app) {
             var applyState = function(s) {
                 for (var i = 0; i < 3; i++) {
                     if (layers[i]) {
+                        layers[i].classList.remove('removing');
                         layers[i].classList.toggle('removed', i < s);
                     }
                 }
@@ -441,13 +444,23 @@ setupBirthdayPage1(app) {
 
             var advance = function() {
                 if (step >= 3) return;
+                if (rt.page2.isAdvancing) return;
+                if (app.currentPage !== 2) return;
+
+                rt.page2.isAdvancing = true;
+                var unlockT = window.setTimeout(function() {
+                    rt.page2.isAdvancing = false;
+                }, 420);
+                rt.page2.stepTimers.push(unlockT);
 
                 if (layers[step]) {
                     layers[step].classList.add('removing');
-                    setTimeout(function() { layers[step - 1] && layers[step - 1].classList.add('removed'); }, 350);
+                    var prevTimer = window.setTimeout(function() { layers[step - 1] && layers[step - 1].classList.add('removed'); }, 350);
+                    rt.page2.stepTimers.push(prevTimer);
                     // The current layer being removed
                     var currentLayer = layers[step];
-                    setTimeout(function() { currentLayer.classList.add('removed'); }, 350);
+                    var currTimer = window.setTimeout(function() { currentLayer.classList.add('removed'); }, 350);
+                    rt.page2.stepTimers.push(currTimer);
                 }
 
                 step++;
@@ -543,7 +556,8 @@ setupBirthdayPage1(app) {
                     var caption = container.querySelector('.media-caption');
                     if (caption) {
                         caption.classList.add('spotlight-flash');
-                        setTimeout(function() { caption.classList.remove('spotlight-flash'); }, 1200);
+                        var spotlightTimer = window.setTimeout(function() { caption.classList.remove('spotlight-flash'); }, 1200);
+                        if (rt.page3?.timers) rt.page3.timers.push(spotlightTimer);
                     }
                     app.showFeedback('📸 A memory for your special day', 'info');
                 }
@@ -656,10 +670,13 @@ setupBirthdayPage1(app) {
             }
 
             // Initialize candle step tracking
-            rt.candleStep = rt.candleStep || 0;
+            var persistedCandleRaw = Number.parseInt(String(app.savedData.birthday_candle_step || 0), 10);
+            var persistedCandle = Number.isNaN(persistedCandleRaw) ? 0 : persistedCandleRaw;
             var candles = Array.from(cake.querySelectorAll('.candle'));
             var totalCandles = candles.length || 5;
+            rt.candleStep = Math.max(0, Math.min(totalCandles, rt.candleStep || persistedCandle || 0));
             rt.page4WishTriggered = Boolean(rt.page4WishTriggered);
+            rt.page4Timers = rt.page4Timers || [];
 
             // Rehydrate partial candle progress when revisiting page 4.
             candles.forEach(function(candle, idx) {
@@ -680,6 +697,7 @@ setupBirthdayPage1(app) {
                     BirthdayMixin._createSmokeOnCandle(cake, candle);
                 }
                 rt.candleStep++;
+                app.saveData({ birthday_candle_step: rt.candleStep });
 
                 var instruction = document.querySelector('.cake-instruction');
                 if (instruction) {
@@ -728,6 +746,7 @@ setupBirthdayPage1(app) {
                         }
 
                         app.saveData({ birthday_page4_wish_made: true });
+                        app.saveData({ birthday_candle_step: totalCandles });
                         rt.page4FinalizeTimer = null;
                     }, 1000);
                 }
@@ -754,6 +773,7 @@ setupBirthdayPage1(app) {
 
             var instruction = document.querySelector('.cake-instruction');
             if (instruction) instruction.textContent = 'Your wish has been made! 🌟 Tap a star…';
+            app.saveData({ birthday_candle_step: 5 });
 
             var wishContainer = document.getElementById('birthday-wish-container');
             if (wishContainer) {
@@ -786,7 +806,10 @@ setupBirthdayPage1(app) {
         _setupCandleBlowDetection(app) {
             var rt = BirthdayMixin._getBirthdayRuntime(app);
             if (rt.mic?.active) return;
-            if (!navigator.mediaDevices?.getUserMedia) return;
+            if (!navigator.mediaDevices?.getUserMedia) {
+                rt.page4MicUnavailable = true;
+                return;
+            }
 
             rt.mic = {
                 active: true, stream: null, audioContext: null,
@@ -802,15 +825,28 @@ setupBirthdayPage1(app) {
                     }
                     rt.mic.stream = stream;
                     var AudioCtx = window.AudioContext || window.webkitAudioContext;
-                    if (!AudioCtx) return;
+                    if (!AudioCtx) {
+                        stream.getTracks().forEach(function(t) { t.stop(); });
+                        rt.mic = null;
+                        rt.page4MicUnavailable = true;
+                        return;
+                    }
 
-                    rt.mic.audioContext = new AudioCtx();
-                    rt.mic.audioContext.resume?.().catch(function() {});
-                    var source = rt.mic.audioContext.createMediaStreamSource(stream);
-                    rt.mic.analyser = rt.mic.audioContext.createAnalyser();
-                    rt.mic.analyser.fftSize = 1024;
-                    rt.mic.data = new Uint8Array(rt.mic.analyser.fftSize);
-                    source.connect(rt.mic.analyser);
+                    try {
+                        rt.mic.audioContext = new AudioCtx();
+                        rt.mic.audioContext.resume?.().catch(function() {});
+                        var source = rt.mic.audioContext.createMediaStreamSource(stream);
+                        rt.mic.analyser = rt.mic.audioContext.createAnalyser();
+                        rt.mic.analyser.fftSize = 1024;
+                        rt.mic.data = new Uint8Array(rt.mic.analyser.fftSize);
+                        source.connect(rt.mic.analyser);
+                    } catch (e) {
+                        stream.getTracks().forEach(function(t) { t.stop(); });
+                        rt.mic.audioContext?.close?.().catch(function() {});
+                        rt.mic = null;
+                        rt.page4MicUnavailable = true;
+                        return;
+                    }
 
                     var detect = function() {
                         if (!rt.mic?.active || !rt.mic.analyser || !rt.mic.data) return;
@@ -845,7 +881,11 @@ setupBirthdayPage1(app) {
                     };
                     rt.mic.rafId = window.requestAnimationFrame(detect);
                 })
-                .catch(function() { /* No mic — click/Enter fallback */ });
+                .catch(function() {
+                    // No mic permission/device — click/Enter fallback stays active.
+                    rt.page4MicUnavailable = true;
+                    rt.mic = null;
+                });
         },
 
         _teardownCandleBlowDetection(app) {
@@ -862,6 +902,11 @@ setupBirthdayPage1(app) {
             var rt = BirthdayMixin._getBirthdayRuntime(app);
             BirthdayMixin._teardownCandleBlowDetection(app);
             BirthdayMixin._hideNightSky();
+
+            if (Array.isArray(rt.page4Timers) && rt.page4Timers.length) {
+                rt.page4Timers.forEach(function(t) { window.clearTimeout(t); });
+                rt.page4Timers = [];
+            }
 
             if (rt._wishStarResizeHandler) {
                 window.removeEventListener('resize', rt._wishStarResizeHandler);
@@ -899,17 +944,22 @@ setupBirthdayPage1(app) {
                 window.clearTimeout(rt.page2.finalizeTimer);
                 rt.page2.finalizeTimer = null;
             }
+            if (Array.isArray(rt.page2.stepTimers) && rt.page2.stepTimers.length) {
+                rt.page2.stepTimers.forEach(function(t) { window.clearTimeout(t); });
+                rt.page2.stepTimers = [];
+            }
+            rt.page2.isAdvancing = false;
         },
 
         _setupWishStarSystem(app) {
             BirthdayMixin._runOnce(app, 'wishStarsBound', function() {
                 var sky = document.getElementById('birthday-night-sky');
-                if (!sky) return;
+                if (!sky) return false;
 
                 var starContainer = sky.querySelector('.night-sky-stars');
                 var stars = Array.from(sky.querySelectorAll('.birthday-star'));
                 var toast = document.getElementById('birthday-wish-toast');
-                if (!starContainer || !stars.length) return;
+                if (!starContainer || !stars.length) return false;
 
                 var positionStars = function() {
                     var rect = starContainer.getBoundingClientRect();
@@ -950,6 +1000,8 @@ setupBirthdayPage1(app) {
                 rt._positionWishStars = positionStars;
                 rt._wishStarResizeHandler = positionStars;
                 rt._wishStarClickBindings = clickBindings;
+
+                return true;
             });
         },
 
@@ -970,7 +1022,10 @@ setupBirthdayPage1(app) {
             if (sky) sky.classList.add('hidden');
         },
 
-        _revealBirthdayWish() {
+        _revealBirthdayWish(app) {
+            var rt = BirthdayMixin._getBirthdayRuntime(app);
+            rt.page4Timers = rt.page4Timers || [];
+
             var wishContainer = document.getElementById('birthday-wish-container');
             if (!wishContainer) return;
 
@@ -979,18 +1034,20 @@ setupBirthdayPage1(app) {
 
             var stars = wishContainer.querySelectorAll('.wish-star');
             stars.forEach(function(star, i) {
-                setTimeout(function() {
+                var starTimer = window.setTimeout(function() {
                     star.style.animation = 'wishStarSparkle 1s ease-in-out forwards';
                     star.style.animationDelay = '0s';
                 }, 300 + (i * 200));
+                rt.page4Timers.push(starTimer);
             });
 
             var wishResult = wishContainer.querySelector('.wish-result');
             if (wishResult) {
-                setTimeout(function() {
+                var resultTimer = window.setTimeout(function() {
                     wishResult.style.opacity = '1';
                     wishResult.style.animation = 'fadeInUp 0.5s ease-out forwards';
                 }, 1500);
+                rt.page4Timers.push(resultTimer);
             }
         },
 
@@ -999,16 +1056,24 @@ setupBirthdayPage1(app) {
            ═══════════════════════════════════════════════════ */
 
         setupBirthdayPage5(app) {
+            var rt = BirthdayMixin._getBirthdayRuntime(app);
+            rt.page5Timers = rt.page5Timers || [];
+            if (rt.page5Timers.length) {
+                rt.page5Timers.forEach(function(t) { window.clearTimeout(t); });
+                rt.page5Timers = [];
+            }
+
             BirthdayMixin._animateBirthdayBadge();
             BirthdayMixin._setupInteractiveBalloons(app);
 
             if (!app.savedData.birthday_page5_seen) {
-                setTimeout(function() {
+                var feedbackTimer = window.setTimeout(function() {
                     app.showFeedback('🎈 Want to share this card? Tap Share below.', 'info');
                 }, 1200);
-                setTimeout(function() {
+                var confettiTimer = window.setTimeout(function() {
                     app.showConfetti();
                 }, 800);
+                rt.page5Timers.push(feedbackTimer, confettiTimer);
                 app.saveData({ birthday_page5_seen: true });
             }
         },
@@ -1164,6 +1229,11 @@ setupBirthdayPage1(app) {
             rt.balloonsSystem.active = false;
             if (rt.balloonsSystem.rafId) window.cancelAnimationFrame(rt.balloonsSystem.rafId);
             rt.balloonsSystem.rafId = null;
+
+            if (Array.isArray(rt.page5Timers) && rt.page5Timers.length) {
+                rt.page5Timers.forEach(function(t) { window.clearTimeout(t); });
+                rt.page5Timers = [];
+            }
         }
     };
 
