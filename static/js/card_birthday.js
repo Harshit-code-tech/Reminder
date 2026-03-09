@@ -206,9 +206,10 @@
 
 
 onBirthdayUnlock(app) {
-            if (app.savedData.birthday_unlock_toast_shown) return;
-            app.showFeedback('🎉 Welcome to your birthday celebration!', 'success');
-            app.saveData({ birthday_unlock_toast_shown: true });
+            if (!app.savedData.birthday_unlock_toast_shown) {
+                app.showFeedback('🎉 Welcome to your birthday celebration!', 'success');
+                app.saveData({ birthday_unlock_toast_shown: true });
+            }
             app.audioManager?.startBackgroundMusic?.();
             
             // Re-trigger page 1 check to show tap-to-begin if they just unlocked
