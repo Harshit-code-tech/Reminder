@@ -581,6 +581,27 @@ class GreetingCardApp {
         // Extract card data
         this.eventType = this.cardContainer.dataset.theme || 'birthday';
 
+        // Hydrate birthday ceremony state from server-rendered dataset.
+        // Local state still takes precedence when present.
+        if (this.eventType === 'birthday') {
+            const ds = this.cardContainer.dataset;
+            const backendState = {
+                birthday_page2_completed: ds.birthdayPage2Completed === 'true',
+                birthday_page4_wish_made: ds.birthdayPage4WishMade === 'true',
+                birthday_page5_seen: ds.birthdayPage5Seen === 'true'
+            };
+
+            this.savedData = {
+                ...backendState,
+                ...this.savedData,
+                birthday_page2_completed: Boolean(this.savedData.birthday_page2_completed || backendState.birthday_page2_completed),
+                birthday_page4_wish_made: Boolean(this.savedData.birthday_page4_wish_made || backendState.birthday_page4_wish_made),
+                birthday_page5_seen: Boolean(this.savedData.birthday_page5_seen || backendState.birthday_page5_seen)
+            };
+
+            localStorage.setItem(this.storageKey, JSON.stringify(this.savedData));
+        }
+
         // Load saved state
         if (this.savedData.unlocked || document.querySelector('.card-page.active')?.id !== 'page-1') {
             this.unlocked = true;
@@ -593,8 +614,8 @@ class GreetingCardApp {
             this.elements.passwordHint.classList.remove('hidden');
         }
 
-        // Initialize quotes
-        this.initializeQuotes();
+        // Initialize page 1 explicitly
+        this.initializePage(1);
     }
 
     closeAllRakhiPopups() {
@@ -645,10 +666,41 @@ class GreetingCardApp {
         }
     }
 
+    async saveBackendData(data = {}) {
+        const eventId = this.cardContainer ? this.cardContainer.dataset.eventId : null;
+        if (!eventId) return;
+        try {
+            const response = await fetch(`/api/event/${eventId}/update-state/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCookie('csrftoken')
+                },
+                body: JSON.stringify(data)
+            });
+            if (!response.ok) console.error("Failed to sync backend state");
+        } catch (e) {
+            console.error("Error syncing backend state:", e);
+        }
+    }
+
     saveData(data = {}) {
         try {
             this.savedData = { ...this.savedData, ...data, lastVisited: Date.now() };
             localStorage.setItem(this.storageKey, JSON.stringify(this.savedData));
+            
+            // Sync birthday ceremony progression keys to backend.
+            const backendKeys = [
+                'birthday_page1_seen',
+                'birthday_unwrap_step',
+                'birthday_page2_completed',
+                'birthday_page4_wish_made',
+                'birthday_page5_seen'
+            ];
+            if (Object.keys(data).some(key => backendKeys.includes(key))) {
+                this.saveBackendData(data);
+            }
+            
             return true;
         } catch (e) {
             console.error('Error saving card data:', e);

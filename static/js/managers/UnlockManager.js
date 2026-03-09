@@ -49,7 +49,9 @@ class UnlockManager {
                 this.app.showConfetti();
                 this.app.showFeedback('Card unlocked successfully! 🎉', 'success');
 
-                setTimeout(() => this.app.goToPage(2), 1000);
+                if (this.app.eventType !== 'birthday') {
+                    setTimeout(() => this.app.goToPage(2), 1000);
+                }
             } else {
                 this.app.incorrectAttempts++;
                 localStorage.setItem('incorrectAttempts', this.app.incorrectAttempts);

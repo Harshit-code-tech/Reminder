@@ -82,6 +82,20 @@ class Event(models.Model):
         help_text="Special notes about the rakhi ceremony"
     )
 
+    # Birthday ceremony tracking
+    birthday_page2_completed = models.BooleanField(
+        default=False,
+        help_text="Has the user opened the gift/completed the 3-step unwrap ritual?"
+    )
+    birthday_page4_wish_made = models.BooleanField(
+        default=False,
+        help_text="Has the user completed the candle blowing and made a wish?"
+    )
+    birthday_page5_seen = models.BooleanField(
+        default=False,
+        help_text="Has the user reached the finale page?"
+    )
+
     class Meta:
         indexes = [
             models.Index(fields=['user', 'date']),

@@ -42,6 +42,7 @@ urlpatterns = [
     # API endpoints
     path('api/event/<int:event_id>/highlights/', views.get_event_highlights, name='get_event_highlights'),
     path('api/event/<int:event_id>/raksha-bandhan-data/', views.get_raksha_bandhan_data, name='get_raksha_bandhan_data'),
+    path('api/event/<int:event_id>/update-state/', views.update_event_state, name='update_event_state'),
 
     # Cron / automated tasks
     path('send-daily-reminders/', views.trigger_send_reminders, name='send_daily_reminders'),

@@ -69,6 +69,7 @@
             var bloom = document.getElementById('bday-loader-bloom');
             var room  = document.getElementById('bday-loader-room');
             var text  = document.getElementById('bday-loader-text');
+            var spark = document.getElementById('bday-loader-spark');
 
             if (!diya) {
                 loader.remove();
@@ -80,18 +81,19 @@
                 hasDiya: !!diya,
                 hasBloom: !!bloom,
                 hasRoom: !!room,
-                hasText: !!text
+                hasText: !!text,
+                hasSpark: !!spark
             });
 
             // Timeline (all ms values from page-load):
             // 0ms       — text appears
-            // 200ms     — spark appears
-            // 700ms     — bowl grows in
-            // 1200ms    — flame ignites + local glow
-            // 1800ms    — bloom light starts expanding, room wallpaper fades in
-            // 3200ms    — text changes to "bright" color
-            // 3800ms    — loader fades out
-            // 4600ms    — loader removed from DOM, card revealed
+            // 800ms     — bowl grows in
+            // 2000ms    — spark strikes (sparkle of life)
+            // 3300ms    — flame ignites + local glow
+            // 3800ms    — bloom light starts expanding, room wallpaper fades in
+            // 5500ms    — text changes to "bright" color
+            // 6500ms    — loader fades out
+            // 7500ms    — loader removed from DOM, card revealed
 
             // Step 0: Show text
             setTimeout(function() {
@@ -99,24 +101,23 @@
                 log('step: text visible');
             }, 0);
 
-            // Step 1: Spark
-            setTimeout(function() {
-                diya.classList.add('spark');
-                log('step: spark');
-            }, 200);
-
-            // Step 2: Bowl grows
+            // Step 1: Bowl grows
             setTimeout(function() {
                 diya.classList.add('grown');
                 log('step: grown');
-            }, 700);
+            }, 800);
+
+            // Step 2: Spark strike
+            setTimeout(function() {
+                if (spark) spark.classList.add('spark-strike');
+                log('step: spark strike');
+            }, 2000);
 
             // Step 3: Ignite (flame + glow)
             setTimeout(function() {
-                diya.classList.remove('spark'); // spark dot hides, flame takes over
                 diya.classList.add('ignite');
                 log('step: ignite');
-            }, 1200);
+            }, 3300);
 
             // Step 4: Light bloom expands + room reveals
             setTimeout(function() {
@@ -124,20 +125,20 @@
                 if (room) room.classList.add('visible');
                 if (text) text.classList.add('bright');
                 log('step: bloom+room');
-            }, 1800);
+            }, 3800);
 
             // Step 5: Fade out loader
             setTimeout(function() {
                 loader.classList.add('done');
                 log('step: done (fade out)');
-            }, 3800);
+            }, 6500);
 
             // Step 6: Remove loader, reveal card
             setTimeout(function() {
                 loader.remove();
                 BirthdayMixin._revealCardUI();
                 log('step: removed, revealed card');
-            }, 4600);
+            }, 7500);
 
             // Watchdog: if for any reason the timeline doesn't apply classes,
             // force a visible state so users never see "only dark".
@@ -147,7 +148,7 @@
                     log('watchdog: forcing grown');
                     diya.classList.add('grown');
                 }
-            }, 900);
+            }, 1200);
 
             setTimeout(function () {
                 if (!diya.isConnected) return;
@@ -155,7 +156,7 @@
                     log('watchdog: forcing ignite');
                     diya.classList.add('ignite');
                 }
-            }, 1500);
+            }, 3800);
 
             setTimeout(function () {
                 if (bloom && bloom.isConnected && !bloom.classList.contains('lit')) {
@@ -170,7 +171,7 @@
                     text.classList.add('visible');
                     text.classList.add('bright');
                 }
-            }, 2200);
+            }, 4500);
         },
 
         /** Remove the hiding class from card container + show nav/toggle */
@@ -203,13 +204,128 @@
            Page 1 — onUnlock: Birthday welcome toast
            ═══════════════════════════════════════════════════ */
 
-        onBirthdayUnlock(app) {
+
+onBirthdayUnlock(app) {
             if (app.savedData.birthday_unlock_toast_shown) return;
             app.showFeedback('🎉 Welcome to your birthday celebration!', 'success');
             app.saveData({ birthday_unlock_toast_shown: true });
             app.audioManager?.startBackgroundMusic?.();
+            
+            // Re-trigger page 1 check to show tap-to-begin if they just unlocked
+            if (app.currentPage === 1) {
+                // If they just unlocked via password, we might want to hide the password container
+                const pwdForm = document.querySelector('.password-container');
+                if (pwdForm) pwdForm.style.transition = 'opacity 0.5s';
+                if (pwdForm) pwdForm.style.opacity = '0';
+                
+                const puzzle = document.querySelector('.puzzle-container');
+                if (puzzle) puzzle.style.transition = 'opacity 0.5s';
+                if (puzzle) puzzle.style.opacity = '0';
+
+                this.setupBirthdayPage1(app);
+            }
         },
 
+setupBirthdayPage1(app) {
+            const page1 = document.getElementById('page-1');
+            if (!page1) return;
+
+            if (!app.savedData.birthday_page1_seen) {
+                app.saveData({ birthday_page1_seen: true });
+            }
+            
+            const rt = BirthdayMixin._getBirthdayRuntime(app);
+            
+            // Hide puzzle if unlocked (like if returning to session or no password needed)
+            if (app.unlocked) {
+                const puzzle = document.querySelector('.puzzle-container');
+                if (puzzle) puzzle.style.display = 'none';
+            }
+            
+            // Add background decorations (balloons, sparkles) ONLY once
+            if (!rt.page1Decorated) {
+                rt.page1Decorated = true;
+                
+                const decorContainer = document.createElement('div');
+                decorContainer.className = 'bday-page1-decorations';
+                decorContainer.style.position = 'absolute';
+                decorContainer.style.inset = '0';
+                decorContainer.style.pointerEvents = 'none';
+                decorContainer.style.overflow = 'hidden';
+                decorContainer.style.zIndex = '0';
+                
+                for(let i=0; i<6; i++) {
+                    const b = document.createElement('div');
+                    b.innerHTML = '🎈';
+                    b.style.position = 'absolute';
+                    b.style.left = (Math.random() * 80 + 10) + '%';
+                    b.style.top = '100%';
+                    b.style.fontSize = (Math.random() * 30 + 30) + 'px';
+                    b.style.opacity = '0.6';
+                    b.style.animation = `bday-float-up ${Math.random()*5+5}s infinite linear`;
+                    b.style.animationDelay = `${Math.random()*3}s`;
+                    decorContainer.appendChild(b);
+                }
+                
+                page1.appendChild(decorContainer);
+                
+                if (!document.getElementById('bday-page1-styles')) {
+                    const style = document.createElement('style');
+                    style.id = 'bday-page1-styles';
+                    style.textContent = `
+                        @keyframes bday-float-up {
+                            0% { transform: translateY(0) rotate(-10deg); opacity: 0; }
+                            10% { opacity: 0.6; }
+                            80% { opacity: 0.6; }
+                            100% { transform: translateY(-80vh) rotate(10deg); opacity: 0; }
+                        }
+                        .tap-to-begin-prompt {
+                            margin-top: 2rem;
+                            animation: pulse-opacity 2s infinite;
+                            cursor: pointer;
+                            position: relative;
+                            z-index: 10;
+                            display: none;
+                        }
+                        @keyframes pulse-opacity {
+                            0%, 100% { opacity: 0.4; }
+                            50% { opacity: 1; }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+            }
+
+            // Create or show the Tap to Begin prompt
+            let prompt = page1.querySelector('.tap-to-begin-prompt');
+            if (!prompt) {
+                prompt = document.createElement('div');
+                prompt.className = 'tap-to-begin-prompt text-center font-semibold';
+                prompt.style.color = 'var(--text-color, #ffffff)';
+                prompt.style.fontSize = '1.2rem';
+                prompt.innerHTML = 'Tap anywhere to begin ✨';
+                
+                const contentInner = page1.querySelector('.page-content');
+                if (contentInner) contentInner.appendChild(prompt);
+            }
+            
+            // Only show tap-to-begin if unlocked
+            if (app.unlocked) {
+                prompt.style.display = 'block';
+            }
+            
+            // Bind tap transition
+            if (!rt.page1TapBound) {
+                rt.page1TapBound = true;
+                page1.addEventListener('click', (e) => {
+                    if (!app.unlocked) return;
+                    if (e.target.closest('form, button, input, .reveal-button')) return;
+                    
+                    app.saveData({ birthday_page1_seen: true });
+                    app.goToPage(2);
+                });
+            }
+        },
         /* ═══════════════════════════════════════════════════
            Page 2 — Open the Gift (3-step unwrap ritual)
            ═══════════════════════════════════════════════════ */
@@ -933,7 +1049,8 @@
         },
 
         onPageEnter(page, app) {
-            if (page === 2) BirthdayMixin.setupBirthdayPage2(app);
+            if (page === 1) BirthdayMixin.setupBirthdayPage1(app);
+            else if (page === 2) BirthdayMixin.setupBirthdayPage2(app);
             else if (page === 3) BirthdayMixin.setupBirthdayPage3(app);
             else if (page === 4) BirthdayMixin.setupBirthdayCake(app);
             else if (page === 5) BirthdayMixin.setupBirthdayPage5(app);

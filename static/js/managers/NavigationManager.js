@@ -94,6 +94,7 @@ class NavigationManager {
         switch (pageNum) {
             case 1:
                 this.initializeQuotes();
+                if (eventModule?.onPageEnter) eventModule.onPageEnter(1, this.app);
                 break;
             case 2:
                 if (eventModule?.onPageEnter) eventModule.onPageEnter(2, this.app);
