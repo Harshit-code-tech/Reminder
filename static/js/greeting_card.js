@@ -610,10 +610,21 @@ class GreetingCardApp {
             localStorage.setItem(this.storageKey, JSON.stringify(this.savedData));
         }
 
-        // Load saved state
-        if (this.savedData.unlocked || document.querySelector('.card-page.active')?.id !== 'page-1') {
+        // Load saved state — only auto-navigate if user was previously authenticated.
+        // IMPORTANT: Do NOT use the active-page DOM heuristic here. For password-protected
+        // events the server omits the 'active' class from page-1, which caused a false-positive
+        // that bypassed the password lock on first visit after session/cache clear.
+        if (this.savedData.unlocked) {
             this.unlocked = true;
             this.goToPage(this.savedData.lastPage || 2);
+        } else {
+            // Ensure page-1 is visible; for password-protected events the template
+            // may not include the CSS 'active' class, so we force it here.
+            const p1 = document.getElementById('page-1');
+            if (p1 && !p1.classList.contains('active')) {
+                p1.classList.add('active');
+                p1.style.display = 'flex';
+            }
         }
 
         // Check for password attempts
@@ -678,7 +689,7 @@ class GreetingCardApp {
         const eventId = this.cardContainer ? this.cardContainer.dataset.eventId : null;
         if (!eventId) return;
         try {
-            const response = await fetch(`/api/event/${eventId}/update-state/`, {
+            const response = await fetch(`/reminders/api/event/${eventId}/update-state/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -813,6 +824,12 @@ function glowrangoli(){
 function initPage1Decor() {
     const page1 = document.querySelector('#page-1 .page-content');
     if (!page1) return;
+
+    const cardContainer = document.querySelector('.card-container');
+    const eventType = cardContainer ? (cardContainer.dataset.theme || 'birthday') : 'birthday';
+    if (eventType === 'birthday') {
+        return;
+    }
 
 
 

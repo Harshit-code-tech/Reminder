@@ -223,7 +223,7 @@
 /* Flame wrapper */
 .bday-loader__flame-wrap {
     position: absolute;
-    top: 6%;
+    top: 14%;
     left: 50%;
     transform: translateX(-50%);
     width: 54px;
@@ -784,6 +784,10 @@
 .gift-lid-layer.removing {
     animation: bdayLidLift 0.40s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
+.gift-lid-layer.opened {
+    transform: translateY(-58px) rotate(-14deg) scale(0.92);
+    transform-origin: 16% 100%;
+}
 .gift-lid-layer.removed {
     transform: translateY(-68px) rotate(-28deg) scale(0.65);
     opacity: 0;
@@ -844,14 +848,14 @@
         0 0 0 4px rgba(245, 200, 66, 0.12) inset,
         0 8px 32px rgba(232, 133, 10, 0.18);
     opacity: 0;
-    transform: scale(0.82);
+    transform: translateY(28px) scale(0.72);
     transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
     z-index: 2;
 }
 
 .gift-reveal-content.visible {
     opacity: 1;
-    transform: scale(1);
+    transform: translateY(-8px) scale(1);
     animation: bdayRevealPop 0.72s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
@@ -965,7 +969,8 @@
 
 .birthday-page3-stage {
     position: relative;
-    min-height: 300px;
+    min-height: clamp(320px, 55vh, 520px);
+    overflow: visible;
 }
 
 .birthday-page3 .page3-section {
@@ -1276,8 +1281,8 @@
 
 .birthday-cake {
     position: relative;
-    width: clamp(180px, 44vw, 210px);
-    height: clamp(190px, 46vw, 220px);
+    width: clamp(210px, 48vw, 250px);
+    height: clamp(210px, 50vw, 260px);
     cursor: pointer;
     transition: transform var(--bd-t-fast, 0.18s), filter var(--bd-t-fast, 0.18s);
     filter: drop-shadow(0 12px 28px rgba(224, 92, 120, 0.25));
@@ -1301,10 +1306,10 @@
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 190px;
-    height: 90px;
-    background: linear-gradient(175deg, #f9b4c2 0%, #e85a7a 45%, #b8345a 100%);
-    border-radius: 12px 12px 22px 22px;
+    width: 214px;
+    height: 96px;
+    background: linear-gradient(170deg, #ff8cb8 0%, #ff3f8e 46%, #c81e73 100%);
+    border-radius: 24px 24px 28px 28px;
     box-shadow: 0 6px 20px rgba(184, 52, 90, 0.35),
                 inset 0 2px 6px rgba(255,255,255,0.2);
 }
@@ -1312,9 +1317,9 @@
 .birthday-cake .cake-base::before {
     content: '';
     position: absolute;
-    top: -14px; left: -6px; right: -6px;
-    height: 20px;
-    background: linear-gradient(180deg, #fde8f0 0%, #f9b4c2 100%);
+    top: -12px; left: -4px; right: -4px;
+    height: 18px;
+    background: linear-gradient(180deg, #ffe6f3 0%, #ff9fcb 100%);
     border-radius: 50%;
     box-shadow: 0 2px 6px rgba(249, 180, 194, 0.4);
 }
@@ -1322,13 +1327,13 @@
 /* Middle tier */
 .birthday-cake .cake-layers {
     position: absolute;
-    bottom: 80px;
+    bottom: 86px;
     left: 50%;
     transform: translateX(-50%);
-    width: 148px;
-    height: 66px;
-    background: linear-gradient(175deg, #c4b5fd 0%, #8b5cf6 45%, #5b21b6 100%);
-    border-radius: 10px 10px 16px 16px;
+    width: 162px;
+    height: 74px;
+    background: linear-gradient(170deg, #c4dbff 0%, #6da3ff 44%, #3d68d6 100%);
+    border-radius: 20px 20px 24px 24px;
     box-shadow: 0 5px 16px rgba(91, 33, 182, 0.35),
                 inset 0 2px 5px rgba(255,255,255,0.18);
 }
@@ -1336,9 +1341,9 @@
 .birthday-cake .cake-layers::before {
     content: '';
     position: absolute;
-    top: -12px; left: -5px; right: -5px;
+    top: -11px; left: -4px; right: -4px;
     height: 18px;
-    background: linear-gradient(180deg, #ede9fe 0%, #c4b5fd 100%);
+    background: linear-gradient(180deg, #eff5ff 0%, #c4dcff 100%);
     border-radius: 50%;
     box-shadow: 0 2px 6px rgba(196, 181, 253, 0.4);
 }
@@ -1346,11 +1351,11 @@
 /* Candle bar */
 .birthday-cake .candles-container {
     position: absolute;
-    top: 14px;
+    top: 12px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 14px;
+    gap: 10px;
     align-items: flex-end;
 }
 
@@ -1366,8 +1371,8 @@
 .birthday-cake .candle::before {
     content: '';
     display: block;
-    width: 10px;
-    height: 34px;
+    width: 9px;
+    height: 30px;
     background: repeating-linear-gradient(
         to bottom,
         #ffd86e 0px, #ffd86e 5px,
@@ -1380,7 +1385,7 @@
 /* Candle flame */
 .birthday-cake .candle-flame {
     position: absolute;
-    top: -18px;
+    top: -15px;
     left: 50%;
     transform: translateX(-50%);
     width: 12px;
@@ -1630,6 +1635,7 @@
     position: relative;
     width: min(500px, 90%);
     height: 200px;
+    overflow: hidden;
 }
 
 /* Individual wish stars */
@@ -1677,27 +1683,43 @@
     to   { opacity: 1;    text-shadow: 0 0 24px rgba(255,240,140,0.62); }
 }
 
-/* Shooting star */
-.shooting-star {
+/* Shooting star trail (JS-created on wish-star click) */
+.shooting-star-trail {
     position: absolute;
-    width: 130px;
+    width: 110px;
     height: 2px;
     background: linear-gradient(90deg,
         rgba(255,255,255,0) 0%,
-        rgba(255,248,200,0.96) 55%,
-        rgba(255,255,255,0) 100%
+        rgba(255,248,180,0.72) 50%,
+        rgba(255,255,255,0.95) 100%
     );
-    filter: drop-shadow(0 0 10px rgba(255,248,200,0.55));
-    transform-origin: left center;
-    animation: bdayShootingStar 0.9s ease-out forwards;
-    pointer-events: none;
     border-radius: 2px;
+    filter: drop-shadow(0 0 6px rgba(255,248,200,0.7));
+    transform-origin: right center;
+    pointer-events: none;
+    animation: bdayShootDown 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-@keyframes bdayShootingStar {
-    0%   { opacity: 0; transform: translate(0,0) rotate(-18deg) scaleX(0.15); }
-    18%  { opacity: 1; }
-    100% { opacity: 0; transform: translate(270px, 125px) rotate(-18deg) scaleX(1); }
+@keyframes bdayShootDown {
+    0%   { opacity: 1; transform: translate(0, 0) rotate(0deg) scaleX(0.2); }
+    35%  { opacity: 0.95; transform: translate(calc(var(--dx) * 0.4), calc(var(--dy) * 0.4)) rotate(0deg) scaleX(1); }
+    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(0deg) scaleX(0.6); }
+}
+
+/* Sparkle burst particles on wish-star click */
+.wish-star-spark {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    background: #ffe680;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: wishSparkBurst 0.5s ease-out forwards;
+}
+
+@keyframes wishSparkBurst {
+    0%   { opacity: 1; transform: translate(-50%, -50%) translate(0, 0) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -50%) translate(var(--px), var(--py)) scale(0.3); }
 }
 
 /* Night sky toast */
@@ -1715,6 +1737,26 @@
    9. Page 5 — Celebration Finale
    ══════════════════════════════════════════════════════════ */
 
+/* Night sky canvas on page 5 */
+.bday-p5-sky {
+    position: relative;
+    width: min(520px, 92%);
+    height: 160px;
+    border-radius: var(--bd-r-xl, 36px);
+    background: radial-gradient(ellipse at 50% 0%,
+        #2a0a4a 0%,
+        #12062a 55%,
+        #08031a 100%);
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.32);
+}
+
+.bday-p5-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
 .birthday-farewell {
     display: flex;
     flex-direction: column;
@@ -1723,6 +1765,42 @@
     padding: 1.25rem 1rem;
     width: 100%;
     position: relative;
+}
+
+.birthday-finale-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.55rem;
+    max-width: 520px;
+}
+
+.finale-chip {
+    padding: 0.45rem 0.82rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #5a2a10;
+    background: linear-gradient(135deg, rgba(255, 231, 143, 0.92), rgba(255, 176, 86, 0.9));
+    border: 1px solid rgba(232, 133, 10, 0.35);
+    box-shadow: 0 3px 10px rgba(232, 133, 10, 0.18);
+    animation: bdayChipFloat 2.2s ease-in-out infinite alternate;
+}
+
+.finale-chip:nth-child(2) { animation-delay: 0.12s; }
+.finale-chip:nth-child(3) { animation-delay: 0.22s; }
+.finale-chip:nth-child(4) { animation-delay: 0.32s; }
+
+@keyframes bdayChipFloat {
+    from { transform: translateY(0); }
+    to { transform: translateY(-2px); }
+}
+
+[data-theme="dark"] .finale-chip {
+    color: #fdf1d8;
+    background: linear-gradient(135deg, rgba(124, 77, 171, 0.62), rgba(232, 133, 10, 0.52));
+    border-color: rgba(245, 200, 66, 0.35);
 }
 
 .birthday-farewell .farewell-message {
@@ -1796,7 +1874,7 @@
     background:
         radial-gradient(circle at 50% 100%, rgba(245,200,66,0.05) 0%, transparent 60%),
         rgba(255, 248, 235, 0.28);
-    overflow: hidden;
+    overflow: visible;
     backdrop-filter: blur(3px);
 }
 
@@ -1893,9 +1971,9 @@
 
     .gift-ceremony-container { gap: 1.5rem; padding: 1.25rem 0.75rem; }
 
-    .birthday-cake { width: 175px; height: 190px; }
-    .birthday-cake .cake-base   { width: 170px; height: 80px; }
-    .birthday-cake .cake-layers { width: 130px; height: 58px; }
+    .birthday-cake { width: 190px; height: 205px; }
+    .birthday-cake .cake-base   { width: 182px; height: 82px; }
+    .birthday-cake .cake-layers { width: 136px; height: 60px; }
     .birthday-cake .candles-container { gap: 10px; }
     .cake-container { padding: 0.5rem; }
 
@@ -1935,15 +2013,15 @@
 
 @media (min-width: 768px) {
     .birthday-gift   { width: 230px; height: 230px; }
-    .birthday-cake   { width: 225px; height: 240px; }
-    .birthday-cake .cake-base   { width: 215px; height: 100px; }
-    .birthday-cake .cake-layers { width: 168px; height: 76px; }
+    .birthday-cake   { width: 242px; height: 252px; }
+    .birthday-cake .cake-base   { width: 220px; height: 100px; }
+    .birthday-cake .cake-layers { width: 170px; height: 74px; }
     .gift-ceremony-container { gap: 2.5rem; }
 }
 
 @media (min-width: 1024px) {
     .birthday-gift { width: 240px; height: 240px; }
-    .birthday-cake { width: 240px; height: 260px; }
+    .birthday-cake { width: 252px; height: 266px; }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -2121,4 +2199,259 @@
     @keyframes bdayPopConfetti {
         to { opacity: 0; }
     }
+}
+
+/* ══════════════════════════════════════════════════════════
+   14. Light theme — warm ambient page background
+   ══════════════════════════════════════════════════════════ */
+html:has(.card-container[data-theme="birthday"]) body {
+    background:
+        radial-gradient(ellipse at 20% 10%, rgba(255,200,150,0.35) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 90%, rgba(255,160,200,0.28) 0%, transparent 55%),
+        radial-gradient(ellipse at 55% 55%, rgba(200,180,255,0.18) 0%, transparent 60%),
+        linear-gradient(155deg, #fff0e8 0%, #fce8f5 50%, #ece8ff 100%);
+}
+html[data-theme="dark"]:has(.card-container[data-theme="birthday"]) body {
+    background: linear-gradient(155deg, #0e0718 0%, #1a0f2e 45%, #220b30 100%);
+}
+
+/* Light theme: card container itself gets soft depth */
+html:not([data-theme="dark"]) .card-container[data-theme="birthday"] {
+    background: rgba(255,255,255,0.82);
+    box-shadow: 0 24px 80px rgba(200,130,200,0.18), 0 4px 24px rgba(0,0,0,0.08);
+}
+
+/* ══════════════════════════════════════════════════════════
+   15. Tree progression — stage-based visual growth
+   ══════════════════════════════════════════════════════════ */
+.tree-animation .tree-leaves,
+.tree-animation .tree-flowers {
+    transition: opacity 0.9s ease, filter 0.9s ease;
+}
+
+/* Birthday: disable the greeting_card.css growLeaves/growFlowers auto-animate.
+   animation-fill-mode:both freezes the animation at 100% opacity, which overrides
+   the data-stage opacity rules below. Removing the animation lets data-stage win. */
+.card-container[data-theme="birthday"] .tree-animation .tree-leaves,
+.card-container[data-theme="birthday"] .tree-animation .tree-leaves::before,
+.card-container[data-theme="birthday"] .tree-animation .tree-leaves::after {
+    animation: none !important;
+    opacity: 0;
+}
+.card-container[data-theme="birthday"] .tree-animation .tree-flowers,
+.card-container[data-theme="birthday"] .tree-animation .tree-flowers::before,
+.card-container[data-theme="birthday"] .tree-animation .tree-flowers::after {
+    animation: none !important;
+    opacity: 0;
+}
+
+/* Stage 2: pages 2 — leaves begin to fill in */
+.tree-animation[data-stage="2"] .tree-leaves {
+    opacity: 0.65;
+}
+/* Stage 3: page 3 — fuller, brighter leaves */
+.tree-animation[data-stage="3"] .tree-leaves {
+    opacity: 0.82;
+    filter: brightness(1.1);
+}
+/* Stage 4: page 4 — full leaves, first flowers */
+.tree-animation[data-stage="4"] .tree-leaves {
+    opacity: 1;
+    filter: brightness(1.12);
+}
+.tree-animation[data-stage="4"] .tree-flowers {
+    opacity: 0.55;
+}
+/* Stage 5: page 5 — maximum bloom */
+.tree-animation[data-stage="5"] .tree-leaves {
+    opacity: 1;
+    filter: brightness(1.18) saturate(1.25);
+}
+.tree-animation[data-stage="5"] .tree-flowers {
+    opacity: 1;
+    filter: brightness(1.12);
+}
+
+/* ══════════════════════════════════════════════════════════
+   16. Page 1 — Birthday Welcome Screen
+   ══════════════════════════════════════════════════════════ */
+
+/* Full-bleed backgrounds layer */
+.bday-p1-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.bday-p1-balloons,
+.bday-p1-sparkles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+/* Individual floating balloon */
+.bday-p1-balloon {
+    position: absolute;
+    bottom: -10%;
+    line-height: 1;
+    animation: bdayP1Float linear infinite;
+    will-change: transform;
+}
+
+@keyframes bdayP1Float {
+    0%   { transform: translateY(0) rotate(-8deg);   opacity: 0; }
+    8%   { opacity: 1; }
+    80%  { opacity: 0.7; }
+    100% { transform: translateY(-110vh) rotate(10deg); opacity: 0; }
+}
+
+/* Individual sparkle */
+.bday-p1-sparkle {
+    position: absolute;
+    animation: bdayP1Twinkle ease-in-out infinite alternate;
+    will-change: opacity, transform;
+}
+
+@keyframes bdayP1Twinkle {
+    from { opacity: 0; transform: scale(0.5) rotate(0deg); }
+    to   { opacity: 0.85; transform: scale(1.2) rotate(30deg); }
+}
+
+/* Content positioned above the bg layer */
+.bday-p1-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.6rem;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    width: 100%;
+}
+
+.bday-p1-greeting {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.bday-p1-line1 {
+    font-size: clamp(0.95rem, 2.8vw, 1.15rem);
+    color: var(--bd-text-light, rgba(255,248,220,0.85));
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    opacity: 0;
+    animation: bdayP1FadeUp 0.7s ease-out 0.3s forwards;
+}
+
+.bday-p1-name {
+    font-size: clamp(1.5rem, 5vw, 2.4rem);
+    font-weight: 800;
+    background: var(--bd-grad-text, linear-gradient(135deg, #ffd86e, #ff8ac7, #c77dff));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2;
+    opacity: 0;
+    animation: bdayP1FadeUp 0.7s ease-out 0.6s forwards;
+}
+
+/* Light theme: name uses warm colour instead of gradient */
+html:not([data-theme="dark"]) .bday-p1-name {
+    background: linear-gradient(135deg, #d46b00, #c0008a, #6200d4);
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+
+.bday-p1-line2 {
+    font-size: clamp(0.9rem, 2.5vw, 1.05rem);
+    color: var(--bd-text-light, rgba(255,248,220,0.75));
+    font-weight: 500;
+    opacity: 0;
+    animation: bdayP1FadeUp 0.7s ease-out 0.9s forwards;
+}
+
+/* Glowing gift hint */
+.bday-p1-gift-hint {
+    opacity: 0;
+    animation: bdayP1FadeUp 0.7s ease-out 1.1s forwards;
+}
+
+.bday-p1-gift-icon {
+    font-size: clamp(3rem, 10vw, 4.5rem);
+    filter: drop-shadow(0 0 18px rgba(245, 200, 66, 0.55));
+    animation: bdayGiftPulse 2.4s ease-in-out 1.8s infinite;
+    display: inline-block;
+    will-change: transform, filter;
+}
+
+@keyframes bdayGiftPulse {
+    0%, 100% { transform: scale(1) rotate(-3deg);   filter: drop-shadow(0 0 14px rgba(245,200,66,0.45)); }
+    50%       { transform: scale(1.12) rotate(4deg); filter: drop-shadow(0 0 28px rgba(245,200,66,0.75)); }
+}
+
+/* Tap prompt */
+.bday-p1-tap-prompt {
+    font-size: clamp(0.88rem, 2.4vw, 1rem);
+    font-weight: 600;
+    color: var(--bd-text-light, rgba(255,248,200,0.80));
+    letter-spacing: 0.04em;
+    opacity: 0;
+    animation: bdayP1FadeUp 0.7s ease-out 1.4s forwards,
+               bdayP1Pulse 2.2s ease-in-out 2.2s infinite;
+}
+
+/* Light theme overrides for page 1 text */
+html:not([data-theme="dark"]) .bday-p1-line1,
+html:not([data-theme="dark"]) .bday-p1-line2,
+html:not([data-theme="dark"]) .bday-p1-tap-prompt {
+    color: rgba(100, 40, 0, 0.82);
+}
+
+.bday-p1-marigold-ring {
+    position: absolute;
+    inset: 8% 6%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.bday-p1-marigold {
+    --ring-rx: 46%;
+    --ring-ry: 42%;
+    position: absolute;
+    left: calc(50% + (var(--mx) * var(--ring-rx)));
+    top: calc(50% + (var(--my) * var(--ring-ry)));
+    transform: translate(-50%, -50%);
+    font-size: clamp(1rem, 2.8vw, 1.35rem);
+    opacity: 0.84;
+    animation: bdayMarigoldFloat 2.8s ease-in-out infinite alternate;
+}
+
+@keyframes bdayMarigoldFloat {
+    0% { transform: translate(-50%, -50%) translateY(0) scale(1); }
+    100% { transform: translate(-50%, -50%) translateY(-4px) scale(1.04); }
+}
+
+@keyframes bdayP1FadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bdayP1Pulse {
+    0%, 100% { opacity: 0.65; }
+    50%       { opacity: 1; }
+}
+
+/* Page 1 should fill the page and be clickable */
+#page-1[data-theme-page="birthday"] {
+    cursor: pointer;
+}
+.card-container[data-theme="birthday"] #page-1 {
+    cursor: pointer;
+    position: relative;
 }

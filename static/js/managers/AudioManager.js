@@ -36,6 +36,8 @@ class AudioManager {
                 audioFiles.background = '/static/audio/background-rakhi.mp3';
                 audioFiles.bell = '/static/audio/bell-sacred.mp3';
                 audioFiles.blessing = '/static/audio/blessing-sound.mp3';
+            } else if (this.eventType === 'birthday') {
+                audioFiles.background = '/static/audio/celebration.mp3';
             } else {
                 // Generic ambient background for other events
                 audioFiles.background = '/static/audio/Whispering Wind.mp3';

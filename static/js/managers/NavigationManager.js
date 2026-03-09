@@ -101,7 +101,9 @@ class NavigationManager {
                 break;
             case 3:
                 this.app.setupMediaDisplays();
-                if (this.elements.calmingSound) {
+                // Birthday handles its own audio via the in-page control; skip auto-play
+                // to avoid audio starting while the user is looking at a different tab.
+                if (this.eventType !== 'birthday' && this.elements.calmingSound) {
                     this.elements.calmingSound.volume = 0.5;
                     this.elements.calmingSound.play().catch(e =>
                         console.log('Audio autoplay prevented:', e)

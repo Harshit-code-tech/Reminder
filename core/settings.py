@@ -243,20 +243,35 @@ X_FRAME_OPTIONS = 'DENY'
 RATELIMIT_CACHE = 'default'
 RATELIMIT_BACKEND = 'ratelimit.backends.cache.RateLimitCacheBackend'
 RATELIMIT_USE_CACHE = 'default'
+RATELIMIT_FAIL_OPEN = True
 HANDLER429 = 'users.views.too_many_requests'
 
 # ---------------------------------------------------------------------------
 # Cache (Upstash Redis)
 # ---------------------------------------------------------------------------
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': config('UPSTASH_REDIS_URL'),
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        },
+UPSTASH_REDIS_URL = config('UPSTASH_REDIS_URL', default='').strip()
+USE_LOCAL_CACHE = config('USE_LOCAL_CACHE', cast=bool, default=False)
+
+if DEBUG or USE_LOCAL_CACHE or not UPSTASH_REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'reminder-local-cache',
+            'TIMEOUT': 300,
+        }
     }
-}
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': UPSTASH_REDIS_URL,
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                # Ignore Redis network errors instead of crashing request flow.
+                'IGNORE_EXCEPTIONS': True,
+            },
+        }
+    }
 
 # ---------------------------------------------------------------------------
 # Logging

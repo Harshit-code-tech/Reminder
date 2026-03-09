@@ -86,8 +86,10 @@ class MediaManager {
 
             img.onerror = () => {
                 console.error(`Failed to load image: ${url}`);
-                // Fallback to default Rakhi image
-                if (this.eventType === 'raksha_bandhan') {
+                const currentSrc = decodeURIComponent(img.src || '');
+                const fallbackSrc = decodeURIComponent(fallbackUrl || '');
+                // Use card-level fallback image for every event type.
+                if (fallbackSrc && currentSrc !== fallbackSrc) {
                     img.src = fallbackUrl;
                 }
             };

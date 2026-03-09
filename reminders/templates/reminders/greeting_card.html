@@ -204,12 +204,14 @@
     </div>
     {% else %}
 
-    <!-- Original CSS Tree Growth Animation for other themes -->
+    {% if event.event_type != 'birthday' %}
+    <!-- CSS Tree Growth Animation (not used for birthday) -->
     <div class="tree-animation">
       <div class="tree-trunk"></div>
       <div class="tree-leaves"></div>
       <div class="tree-flowers"></div>
     </div>
+    {% endif %}
 
     <!-- CSS Diya Decorations (only when cultural_theme is enabled) -->
     {% if event.cultural_theme %}
@@ -237,16 +239,19 @@
     <!-- Card Pages -->
     <div class="card-pages">
       <!-- Page 1: Welcome / Password -->
-      <div class="card-page {% if not requires_card_password %}active{% endif %}" id="page-1" role="tabpanel" aria-labelledby="nav-1">
+      <div class="card-page active" id="page-1" role="tabpanel" aria-labelledby="nav-1">
         <div class="page-content">
+
+          {% if event.event_type == 'birthday' %}
+          <!-- Birthday Page 1: Immersive welcome — JS will populate decorations -->
+          {% include "reminders/card_includes/page1_birthday.html" %}
+
+          {% else %}
           <h2 class="welcome-title" data-event-type="{{ event.event_type }}">
             {% if event.event_type == 'raksha_bandhan' %}
             🌸 A Sacred Bond Awaits 🌸<br>
             💝 Surprise for <span class="recipient-name">{{ event.name }}</span>!<br>
             ✨ Raksha Bandhan Ki Shubhkamnayein ✨
-            {% elif event.event_type == 'birthday' %}
-            ✨ A Special Surprise Awaits ✨<br>
-            🎉 Surprise for <span class="recipient-name">{{ event.name }}</span>!
             {% elif event.event_type == 'anniversary' %}
             💞 A Love Note for <span class="recipient-name">{{ event.name }}</span>
             {% else %}
@@ -293,8 +298,6 @@
               Hint:
               {% if event.event_type == 'raksha_bandhan' %}
               The <strong>symbol</strong> of our bond (e.g., rakhi, thread, or bond).
-              {% elif event.event_type == 'birthday' %}
-              <strong>The name</strong> that brings smiles every year.
               {% elif event.event_type == 'anniversary' %}
               When did <strong>we</strong> begin this journey?
               {% else %}
@@ -309,6 +312,7 @@
             <!-- Password fetched via AJAX when user clicks reveal -->
           </div>
           {% endif %}
+          {% endif %}{# end non-birthday #}
         </div>
       </div>
 

@@ -1,31 +1,46 @@
-{% comment %}Page 5: Birthday Farewell{% endcomment %}
+{% comment %}Page 5: Birthday Farewell — expanded sky, shooting stars, badge, personal message, balloons{% endcomment %}
 <h2 class="page-title">
-  Happy Birthday, <span class="recipient-name">{{ event.name }}</span>! 🎂
+  Happy Birthday, <span class="recipient-name">{{ event.name }}</span>!
 </h2>
 
 <div class="birthday-farewell">
-  <!-- Age Badge (optional) -->
+  <!-- Age Badge -->
   <div class="birthday-badge">
-    <div class="badge-sparkle">✨</div>
+    <div class="badge-sparkle">🎂</div>
     <div class="badge-text">Another Year of Amazing You!</div>
   </div>
 
-  <div class="farewell-message">
-    {% if event.message %}
-    {{ event.message|linebreaksbr }}
-    {% else %}
-    May this year bring you countless moments of happiness, success, and beautiful memories.
-    You deserve all the wonderful things life has to offer.
-    Here's to you — today, tomorrow, and always! 🎉
-    {% endif %}
+  <div class="birthday-finale-chips" aria-label="Birthday highlights">
+    <span class="finale-chip">Gratitude</span>
+    <span class="finale-chip">Growth</span>
+    <span class="finale-chip">Joy</span>
+    <span class="finale-chip">New Memories</span>
   </div>
 
-  <!-- Birthday Balloons Animation -->
+  <!-- Personal message -->
+  {% if event.message %}
+  <div class="farewell-message">{{ event.message|linebreaksbr }}</div>
+  {% else %}
+  <div class="farewell-message">
+    May this year bring you countless moments of happiness, success, and beautiful memories.
+    You deserve all the wonderful things life has to offer.
+    Here's to you — today, tomorrow, and always!
+  </div>
+  {% endif %}
+
+  <!-- Expanded night sky with shooting stars (JS-driven) -->
+  <div class="bday-p5-sky" id="bday-p5-sky" aria-hidden="true">
+    <canvas class="bday-p5-canvas" id="bday-p5-canvas"></canvas>
+  </div>
+
+  <!-- Interactive floating balloons -->
   <div class="birthday-balloons">
-    <button class="balloon" type="button" style="--color: #FF6B6B; --delay: 0s" aria-label="Balloon">🎈</button>
-    <button class="balloon" type="button" style="--color: #4ECDC4; --delay: 0.5s" aria-label="Balloon">🎈</button>
-    <button class="balloon" type="button" style="--color: #45B7D1; --delay: 1s" aria-label="Balloon">🎈</button>
-    <button class="balloon" type="button" style="--color: #96CEB4; --delay: 1.5s" aria-label="Balloon">🎈</button>
-    <button class="balloon" type="button" style="--color: #FFEAA7; --delay: 2s" aria-label="Balloon">🎈</button>
+    <button class="balloon" type="button" style="--color:#FF6B6B;--delay:0s" aria-label="Balloon">🎈</button>
+    <button class="balloon" type="button" style="--color:#FFD93D;--delay:0.4s" aria-label="Balloon">🎈</button>
+    <button class="balloon" type="button" style="--color:#6BCB77;--delay:0.8s" aria-label="Balloon">🎈</button>
+    <button class="balloon" type="button" style="--color:#4D96FF;--delay:1.2s" aria-label="Balloon">🎈</button>
+    <button class="balloon" type="button" style="--color:#FF6FC8;--delay:1.6s" aria-label="Balloon">🎈</button>
+    <button class="balloon" type="button" style="--color:#C77DFF;--delay:2.0s" aria-label="Balloon">🎈</button>
   </div>
 </div>
+

@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic.base import RedirectView
 
 from . import views
 from reminders import views as reminder_views
@@ -9,6 +10,7 @@ urlpatterns = [
     path('reminders/', include('reminders.urls')),
     path('users/', include('users.urls')),
     path('', views.home, name='home'),
+    path('favicon.ico', RedirectView.as_view(url='/static/images/favicon.ico', permanent=False)),
     path('health/', views.health_check, name='health_check'),
     path('admin-tools/', views.admin_tools, name='admin_tools'),
 
