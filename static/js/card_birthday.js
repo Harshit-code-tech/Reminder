@@ -217,10 +217,14 @@ onBirthdayUnlock(app) {
                 const pwdForm = document.querySelector('.password-container');
                 if (pwdForm) pwdForm.style.transition = 'opacity 0.5s';
                 if (pwdForm) pwdForm.style.opacity = '0';
+                if (pwdForm) pwdForm.style.pointerEvents = 'none';
+                if (pwdForm) pwdForm.setAttribute('aria-hidden', 'true');
                 
                 const puzzle = document.querySelector('.puzzle-container');
                 if (puzzle) puzzle.style.transition = 'opacity 0.5s';
                 if (puzzle) puzzle.style.opacity = '0';
+                if (puzzle) puzzle.style.pointerEvents = 'none';
+                if (puzzle) puzzle.setAttribute('aria-hidden', 'true');
 
                 this.setupBirthdayPage1(app);
             }
@@ -312,17 +316,56 @@ setupBirthdayPage1(app) {
             // Only show tap-to-begin if unlocked
             if (app.unlocked) {
                 prompt.style.display = 'block';
+                page1.setAttribute('tabindex', '-1');
             }
+
+            // Screen-reader announcement for the ceremony start prompt.
+            var announceEl = page1.querySelector('.birthday-start-aria-live');
+            if (!announceEl) {
+                announceEl = document.createElement('span');
+                announceEl.className = 'birthday-start-aria-live';
+                announceEl.setAttribute('aria-live', 'polite');
+                announceEl.style.position = 'absolute';
+                announceEl.style.width = '1px';
+                announceEl.style.height = '1px';
+                announceEl.style.overflow = 'hidden';
+                announceEl.style.clip = 'rect(0,0,0,0)';
+                page1.appendChild(announceEl);
+            }
+            if (app.unlocked && !rt.page1StartAnnounced) {
+                rt.page1StartAnnounced = true;
+                announceEl.textContent = 'Birthday celebration starts. Press Enter or tap to begin.';
+            }
+
+            var startCeremony = function(e) {
+                if (!app.unlocked) return;
+                if (e && e.target && e.target.closest && e.target.closest('form, button, input, .reveal-button')) return;
+
+                app.saveData({ birthday_page1_seen: true });
+                app.goToPage(2);
+            };
             
             // Bind tap transition
             if (!rt.page1TapBound) {
                 rt.page1TapBound = true;
-                page1.addEventListener('click', (e) => {
-                    if (!app.unlocked) return;
-                    if (e.target.closest('form, button, input, .reveal-button')) return;
-                    
-                    app.saveData({ birthday_page1_seen: true });
-                    app.goToPage(2);
+                page1.addEventListener('click', startCeremony);
+            }
+
+            // Keyboard fallback (Enter/Space) for page 1 start.
+            if (!rt.page1KeyboardBound) {
+                rt.page1KeyboardBound = true;
+                page1.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        startCeremony(e);
+                    }
+                });
+            }
+
+            if (app.unlocked && !rt.page1FocusedAfterUnlock) {
+                rt.page1FocusedAfterUnlock = true;
+                window.requestAnimationFrame(function() {
+                    try { page1.focus(); } catch (e) {}
                 });
             }
         },
@@ -336,8 +379,14 @@ setupBirthdayPage1(app) {
 
             const rt = BirthdayMixin._getBirthdayRuntime(app);
             rt.page2 = rt.page2 || {};
+            if (rt.page2.finalizeTimer) {
+                window.clearTimeout(rt.page2.finalizeTimer);
+                rt.page2.finalizeTimer = null;
+            }
 
-            var step = app.savedData.birthday_unwrap_step || 0;
+            var savedStepRaw = Number.parseInt(String(app.savedData.birthday_unwrap_step || 0), 10);
+            var step = Number.isNaN(savedStepRaw) ? 0 : Math.max(0, Math.min(3, savedStepRaw));
+            if (app.savedData.birthday_page2_completed) step = 3;
 
             const layers = [
                 gift.querySelector('.gift-wrapping'),
@@ -372,12 +421,21 @@ setupBirthdayPage1(app) {
                     if (stepHint) stepHint.textContent = '🎁 Surprise ready!';
                     gift.removeAttribute('tabindex');
                     gift.removeAttribute('role');
+                    gift.classList.add('glow');
                 } else {
+                    gift.classList.remove('glow');
+                    if (revealContent) revealContent.classList.remove('visible');
+                    if (continueBtn) continueBtn.classList.add('hidden');
+                    gift.setAttribute('tabindex', '0');
+                    gift.setAttribute('role', 'button');
                     if (stepHint) stepHint.textContent = stepLabels[s];
                 }
             };
 
             applyState(step);
+            if (app.savedData.birthday_page2_completed) {
+                app.saveData({ birthday_unwrap_step: 3 });
+            }
             if (step >= 3) return;
 
             var advance = function() {
@@ -399,7 +457,8 @@ setupBirthdayPage1(app) {
                 if (step < 3) {
                     if (stepHint) stepHint.textContent = stepLabels[step];
                 } else {
-                    setTimeout(function() {
+                    rt.page2.finalizeTimer = window.setTimeout(function() {
+                        rt.page2.finalizeTimer = null;
                         gift.classList.add('glow');
                         app.showConfetti();
                         if (revealContent) revealContent.classList.add('visible');
@@ -496,6 +555,20 @@ setupBirthdayPage1(app) {
                 if (prevBtn) prevBtn.addEventListener('click', function() { showSection(rt.page3.index - 1); });
                 if (nextBtn) nextBtn.addEventListener('click', function() { showSection(rt.page3.index + 1); });
 
+                var calmingSound = document.getElementById('calming-sound');
+                var audioControl = container.querySelector('.audio-control');
+                if (calmingSound && audioControl) {
+                    audioControl.addEventListener('click', function() {
+                        // Check post-toggle state on next frame.
+                        window.setTimeout(function() {
+                            if (calmingSound.paused && !rt.page3AudioPauseHintShown) {
+                                rt.page3AudioPauseHintShown = true;
+                                app.showFeedback('Tip: play the wind sound for vibes.', 'info');
+                            }
+                        }, 0);
+                    });
+                }
+
                 var timeline = document.getElementById('birthday-timeline');
                 var fallback = container.querySelector('.timeline-fallback');
                 if (timeline) {
@@ -585,11 +658,19 @@ setupBirthdayPage1(app) {
             rt.candleStep = rt.candleStep || 0;
             var candles = Array.from(cake.querySelectorAll('.candle'));
             var totalCandles = candles.length || 5;
+            rt.page4WishTriggered = Boolean(rt.page4WishTriggered);
+
+            // Rehydrate partial candle progress when revisiting page 4.
+            candles.forEach(function(candle, idx) {
+                candle.classList.toggle('blown-out', idx < rt.candleStep);
+            });
+            cake.classList.toggle('blown-out', rt.candleStep >= totalCandles);
 
             BirthdayMixin._setupCandleBlowDetection(app);
             BirthdayMixin._setupWishStarSystem(app);
 
             var blowOneCandle = function() {
+                if (rt.page4WishTriggered) return;
                 if (rt.candleStep >= totalCandles) return;
 
                 var candle = candles[rt.candleStep];
@@ -610,6 +691,7 @@ setupBirthdayPage1(app) {
                 app.audioManager?.generateTone?.(440 + rt.candleStep * 40, 0.08, 'triangle');
 
                 if (rt.candleStep >= totalCandles) {
+                    rt.page4WishTriggered = true;
                     cake.classList.add('blown-out');
                     BirthdayMixin._teardownCandleBlowDetection(app);
 
@@ -625,7 +707,10 @@ setupBirthdayPage1(app) {
                         instruction.textContent = 'Your wish has been made! 🌟 Tap a star…';
                     }
 
-                    setTimeout(function() {
+                    if (rt.page4FinalizeTimer) {
+                        window.clearTimeout(rt.page4FinalizeTimer);
+                    }
+                    rt.page4FinalizeTimer = window.setTimeout(function() {
                         app.showConfetti();
                         app.audioManager?.playSuccessSound?.();
                         BirthdayMixin._revealBirthdayWish(app);
@@ -642,6 +727,7 @@ setupBirthdayPage1(app) {
                         }
 
                         app.saveData({ birthday_page4_wish_made: true });
+                        rt.page4FinalizeTimer = null;
                     }, 1000);
                 }
             };
@@ -771,6 +857,49 @@ setupBirthdayPage1(app) {
             rt.mic = null;
         },
 
+        _teardownBirthdayPage4(app) {
+            var rt = BirthdayMixin._getBirthdayRuntime(app);
+            BirthdayMixin._teardownCandleBlowDetection(app);
+            BirthdayMixin._hideNightSky();
+
+            if (rt._wishStarResizeHandler) {
+                window.removeEventListener('resize', rt._wishStarResizeHandler);
+                rt._wishStarResizeHandler = null;
+                rt._positionWishStars = null;
+                rt._once = rt._once || {};
+                rt._once.wishStarsBound = false;
+            }
+
+            if (Array.isArray(rt._wishStarClickBindings)) {
+                rt._wishStarClickBindings.forEach(function(binding) {
+                    if (binding?.star && binding?.handler) {
+                        binding.star.removeEventListener('click', binding.handler);
+                    }
+                });
+                rt._wishStarClickBindings = [];
+            }
+
+            if (rt.page4FinalizeTimer) {
+                window.clearTimeout(rt.page4FinalizeTimer);
+                rt.page4FinalizeTimer = null;
+
+                // If user navigates away mid-finalize and it is not persisted yet,
+                // allow them to complete the wish flow on revisit.
+                if (!app.savedData.birthday_page4_wish_made) {
+                    rt.page4WishTriggered = false;
+                }
+            }
+        },
+
+        _teardownBirthdayPage2(app) {
+            var rt = BirthdayMixin._getBirthdayRuntime(app);
+            rt.page2 = rt.page2 || {};
+            if (rt.page2.finalizeTimer) {
+                window.clearTimeout(rt.page2.finalizeTimer);
+                rt.page2.finalizeTimer = null;
+            }
+        },
+
         _setupWishStarSystem(app) {
             BirthdayMixin._runOnce(app, 'wishStarsBound', function() {
                 var sky = document.getElementById('birthday-night-sky');
@@ -809,12 +938,17 @@ setupBirthdayPage1(app) {
                 };
 
                 window.addEventListener('resize', positionStars);
+                var clickBindings = [];
                 stars.forEach(function(star) {
-                    star.addEventListener('click', function() { fireShootingStar(star); });
+                    var handler = function() { fireShootingStar(star); };
+                    star.addEventListener('click', handler);
+                    clickBindings.push({ star: star, handler: handler });
                 });
 
                 var rt = BirthdayMixin._getBirthdayRuntime(app);
                 rt._positionWishStars = positionStars;
+                rt._wishStarResizeHandler = positionStars;
+                rt._wishStarClickBindings = clickBindings;
             });
         },
 
@@ -1057,11 +1191,9 @@ setupBirthdayPage1(app) {
         },
 
         onPageLeave(page, app) {
+            if (page === 2) BirthdayMixin._teardownBirthdayPage2(app);
             if (page === 3) BirthdayMixin.teardownBirthdayPage3(app);
-            if (page === 4) {
-                BirthdayMixin._teardownCandleBlowDetection(app);
-                BirthdayMixin._hideNightSky();
-            }
+            if (page === 4) BirthdayMixin._teardownBirthdayPage4(app);
             if (page === 5) BirthdayMixin._teardownInteractiveBalloons(app);
         }
     };

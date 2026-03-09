@@ -83,6 +83,14 @@ class Event(models.Model):
     )
 
     # Birthday ceremony tracking
+    birthday_page1_seen = models.BooleanField(
+        default=False,
+        help_text="Has the user entered the birthday intro on page 1?"
+    )
+    birthday_unwrap_step = models.PositiveSmallIntegerField(
+        default=0,
+        help_text="Current unwrap progression step for page 2 (0-3)."
+    )
     birthday_page2_completed = models.BooleanField(
         default=False,
         help_text="Has the user opened the gift/completed the 3-step unwrap ritual?"

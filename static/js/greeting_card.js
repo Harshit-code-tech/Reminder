@@ -585,15 +585,23 @@ class GreetingCardApp {
         // Local state still takes precedence when present.
         if (this.eventType === 'birthday') {
             const ds = this.cardContainer.dataset;
+            const unwrapStepRaw = Number.parseInt(ds.birthdayUnwrapStep || '0', 10);
+            const backendUnwrapStep = Number.isNaN(unwrapStepRaw) ? 0 : Math.max(0, Math.min(3, unwrapStepRaw));
             const backendState = {
+                birthday_page1_seen: ds.birthdayPage1Seen === 'true',
+                birthday_unwrap_step: backendUnwrapStep,
                 birthday_page2_completed: ds.birthdayPage2Completed === 'true',
                 birthday_page4_wish_made: ds.birthdayPage4WishMade === 'true',
                 birthday_page5_seen: ds.birthdayPage5Seen === 'true'
             };
+            const localUnwrapStepRaw = Number.parseInt(String(this.savedData.birthday_unwrap_step ?? ''), 10);
+            const localUnwrapStep = Number.isNaN(localUnwrapStepRaw) ? backendState.birthday_unwrap_step : localUnwrapStepRaw;
 
             this.savedData = {
                 ...backendState,
                 ...this.savedData,
+                birthday_page1_seen: Boolean(this.savedData.birthday_page1_seen || backendState.birthday_page1_seen),
+                birthday_unwrap_step: Math.max(0, Math.min(3, localUnwrapStep)),
                 birthday_page2_completed: Boolean(this.savedData.birthday_page2_completed || backendState.birthday_page2_completed),
                 birthday_page4_wish_made: Boolean(this.savedData.birthday_page4_wish_made || backendState.birthday_page4_wish_made),
                 birthday_page5_seen: Boolean(this.savedData.birthday_page5_seen || backendState.birthday_page5_seen)

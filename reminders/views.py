@@ -131,6 +131,8 @@ def _build_card_context(event, *, is_owner, token=None, session_key_unlocked=Fal
         'sacred_promises_list': event.get_promises_list() if is_raksha else [],
         'rakhi_ceremony_notes': event.rakhi_ceremony_notes if is_raksha else '',
         # Birthday specific tracking
+        'birthday_page1_seen': event.birthday_page1_seen,
+        'birthday_unwrap_step': event.birthday_unwrap_step,
         'birthday_page2_completed': event.birthday_page2_completed,
         'birthday_page4_wish_made': event.birthday_page4_wish_made,
         'birthday_page5_seen': event.birthday_page5_seen,
@@ -1124,14 +1126,19 @@ def update_event_state(request, event_id):
     try:
         event = Event.objects.get(pk=event_id)
         data = json.loads(request.body)
-        
+
+        if 'birthday_page1_seen' in data:
+            event.birthday_page1_seen = bool(data['birthday_page1_seen'])
+        if 'birthday_unwrap_step' in data:
+            step = int(data['birthday_unwrap_step'])
+            event.birthday_unwrap_step = max(0, min(3, step))
         if 'birthday_page2_completed' in data:
             event.birthday_page2_completed = bool(data['birthday_page2_completed'])
         if 'birthday_page4_wish_made' in data:
             event.birthday_page4_wish_made = bool(data['birthday_page4_wish_made'])
         if 'birthday_page5_seen' in data:
             event.birthday_page5_seen = bool(data['birthday_page5_seen'])
-            
+
         event.save()
         return JsonResponse({'status': 'success'})
     except Event.DoesNotExist:
