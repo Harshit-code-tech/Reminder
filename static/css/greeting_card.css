@@ -1904,45 +1904,80 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(10, 10, 20, 0.62);
   display: none;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(8px);
+  padding: 16px;
 }
 
 .share-modal-content {
-  background: var(--bg-secondary);
-  border-radius: 20px;
-  padding: 32px;
-  max-width: 500px;
-  width: 90%;
+  background: linear-gradient(160deg, rgba(35, 18, 64, 0.96), rgba(58, 18, 92, 0.94));
+  border-radius: 18px;
+  padding: 24px;
+  max-width: 560px;
+  width: min(560px, 100%);
   box-shadow: var(--shadow-heavy);
-  border: 2px solid var(--border-color);
+  border: 1px solid rgba(168, 85, 247, 0.35);
 }
 
 .share-modal h3 {
-  color: var(--text-primary);
-  margin-bottom: 16px;
+  color: #f3e8ff;
+  margin-bottom: 10px;
   text-align: center;
-  font-size: 1.5rem;
+  font-size: 1.7rem;
+  font-weight: 700;
 }
 
 .warning-text {
   color: #f59e0b;
   text-align: center;
-  margin-bottom: 20px;
-  font-weight: 500;
+  margin-bottom: 16px;
+  font-weight: 600;
+  font-size: 0.95rem;
 }
 
-.button-group {
+.share-modal #share-form {
+  margin: 0;
+}
+
+.share-modal .input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+}
+
+.share-modal #share-password {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(196, 181, 253, 0.35);
+  background: rgba(17, 24, 39, 0.35);
+  color: #f8fafc;
+  outline: none;
+  font-size: 0.95rem;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.share-modal #share-password::placeholder {
+  color: rgba(226, 232, 240, 0.75);
+}
+
+.share-modal #share-password:focus {
+  border-color: #a78bfa;
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.22);
+}
+
+.share-modal .button-group {
   display: flex;
   gap: 12px;
 }
 
 .share-modal button {
-  padding: 12px 20px;
+  padding: 12px 16px;
   border: none;
   border-radius: 12px;
   font-weight: 600;
@@ -1959,27 +1994,56 @@ body {
   flex: 1;
 }
 
+#generate-share-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.3);
+}
+
 #close-share-modal {
-  background: #6b7280;
+  background: rgba(148, 163, 184, 0.22);
   color: white;
 }
 
+#close-share-modal:hover {
+  background: rgba(148, 163, 184, 0.35);
+}
+
+.share-url-container {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(196, 181, 253, 0.25);
+}
+
+#share-url {
+  margin: 0;
+  padding: 10px 12px;
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid rgba(196, 181, 253, 0.25);
+  border-radius: 10px;
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  word-break: break-all;
+}
+
 .social-links {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
 }
 
 .social-links a {
-  padding: 12px 16px;
+  padding: 11px 12px;
   border-radius: 12px;
   text-decoration: none;
   color: white;
   font-weight: 600;
+  font-size: 0.92rem;
   transition: all var(--transition-fast);
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   box-shadow: var(--shadow-light);
 }
@@ -2654,18 +2718,18 @@ body {
     border-radius: 16px;
   }
 
-  .button-group {
+  .share-modal .button-group {
     flex-direction: column;
     gap: 10px;
   }
 
-  .social-links {
+  .share-modal .social-links {
     flex-direction: row;
     flex-wrap: wrap;
     gap: 10px;
   }
 
-  .social-links a {
+  .share-modal .social-links a {
     flex: 1;
     min-width: 100px;
     font-size: 0.9rem;
@@ -4071,17 +4135,17 @@ html {
     overflow-y: auto;
   }
 
-  .button-group {
+  .share-modal .button-group {
     flex-direction: column;
     gap: 8px;
   }
 
-  .social-links {
+  .share-modal .social-links {
     flex-direction: column;
     gap: 8px;
   }
 
-  .social-links a {
+  .share-modal .social-links a {
     width: 100%;
     font-size: 0.85rem;
     padding: 10px;
