@@ -3119,13 +3119,15 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
    ══════════════════════════════════════════════════════════ */
 html:has(.card-container[data-theme="birthday"]) body {
     background:
-        radial-gradient(ellipse at 20% 10%, rgba(255,200,150,0.35) 0%, transparent 55%),
-        radial-gradient(ellipse at 80% 90%, rgba(255,160,200,0.28) 0%, transparent 55%),
-        radial-gradient(ellipse at 55% 55%, rgba(200,180,255,0.18) 0%, transparent 60%),
+        linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)),
+        url('/static/images/birthday/bg_dreamy_starry_gradient.png') center center / cover no-repeat fixed,
         linear-gradient(155deg, #fff0e8 0%, #fce8f5 50%, #ece8ff 100%);
 }
 html[data-theme="dark"]:has(.card-container[data-theme="birthday"]) body {
-    background: linear-gradient(155deg, #0e0718 0%, #1a0f2e 45%, #220b30 100%);
+    background:
+        linear-gradient(rgba(0, 0, 0, 0.36), rgba(0, 0, 0, 0.36)),
+        url('/static/images/birthday/bg_dreamy_starry_gradient.png') center center / cover no-repeat fixed,
+        linear-gradient(155deg, #0e0718 0%, #1a0f2e 45%, #220b30 100%);
 }
 
 /* Light theme: card container itself gets soft depth */

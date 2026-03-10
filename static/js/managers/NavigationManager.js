@@ -34,7 +34,7 @@ class NavigationManager {
             return;
         }
 
-        if (Math.abs(pageNum - this.currentPage) >= 1 && this.currentPage !== 0) {
+        if (this.eventType !== 'birthday' && Math.abs(pageNum - this.currentPage) >= 1 && this.currentPage !== 0) {
             this.audioManager.playPageTransition();
         }
 

@@ -286,7 +286,9 @@ class EffectManager {
     playFinalAnimation() {
         const finalAnimation = document.querySelector('.final-animation');
         if (!finalAnimation) return;
-        this.audioManager.playCelebrationSound();
+        if (this.eventType !== 'birthday') {
+            this.audioManager.playCelebrationSound();
+        }
         finalAnimation.innerHTML = '';
 
         let animationElements = [];

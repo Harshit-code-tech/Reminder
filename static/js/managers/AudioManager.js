@@ -6,9 +6,10 @@
 class AudioManager {
     constructor(eventType) {
         this.eventType = eventType || 'birthday';
-        this.backgroundVolume = 0.3;
-        this.effectVolume = 0.6;
+        this.backgroundVolume = this.eventType === 'birthday' ? 0.24 : 0.3;
+        this.effectVolume = this.eventType === 'birthday' ? 0.45 : 0.6;
         this.isBackgroundPlaying = false;
+        this.syntheticBirthdayBgmTimer = null;
 
         this.tracks = {
             background: null,
@@ -16,7 +17,8 @@ class AudioManager {
             success: null,
             pageTransition: null,
             blessing: null,
-            celebration: null
+            celebration: null,
+            birthdaySfx: {}
         };
         this.isEnabled = true;
         this.loadAudioTracks();
@@ -37,7 +39,7 @@ class AudioManager {
                 audioFiles.bell = '/static/audio/bell-sacred.mp3';
                 audioFiles.blessing = '/static/audio/blessing-sound.mp3';
             } else if (this.eventType === 'birthday') {
-                audioFiles.background = '/static/audio/celebration.mp3';
+                audioFiles.background = '/static/audio/birthday/bgm_birthday_magic_loop.mp3';
             } else {
                 // Generic ambient background for other events
                 audioFiles.background = '/static/audio/Whispering Wind.mp3';
@@ -79,10 +81,53 @@ class AudioManager {
                 }
             });
 
+            if (this.eventType === 'birthday') {
+                this.loadBirthdaySfxTracks();
+            }
+
         } catch (error) {
             console.warn('AudioManager initialization failed:', error);
             this.isEnabled = false;
         }
+    }
+
+    loadBirthdaySfxTracks() {
+        const birthdaySfxVolumeMap = {
+            gift_reveal_sparkle: 0.52,
+            unwrap_tap: 0.34,
+            reveal_chime: 0.50,
+            candle_blow: 0.33,
+            wish_complete: 0.48,
+            star_click: 0.32,
+            message_open: 0.36
+        };
+
+        const sfxMap = {
+            gift_reveal_sparkle: '/static/audio/birthday/sfx_gift_reveal_sparkle.mp3',
+            unwrap_tap: '/static/audio/birthday/sfx_unwrap_tap.mp3',
+            reveal_chime: '/static/audio/birthday/sfx_reveal_chime.mp3',
+            candle_blow: '/static/audio/birthday/sfx_candle_blow.mp3',
+            wish_complete: '/static/audio/birthday/sfx_wish_complete.mp3',
+            star_click: '/static/audio/birthday/sfx_star_click.mp3',
+            message_open: '/static/audio/birthday/sfx_message_open.mp3'
+        };
+
+        Object.keys(sfxMap).forEach(name => {
+            try {
+                const audio = new Audio(sfxMap[name]);
+                audio.preload = 'auto';
+                audio.addEventListener('error', () => {
+                    this.tracks.birthdaySfx[name] = null;
+                });
+                audio.addEventListener('canplaythrough', () => {
+                    const v = birthdaySfxVolumeMap[name] || this.effectVolume || 0.45;
+                    audio.volume = Math.max(0, Math.min(1, v));
+                });
+                this.tracks.birthdaySfx[name] = audio;
+            } catch (_err) {
+                this.tracks.birthdaySfx[name] = null;
+            }
+        });
     }
 
 
@@ -147,6 +192,46 @@ class AudioManager {
     }
 
     // Specific audio methods with fallbacks
+    playBirthdaySfx(name) {
+        if (this.eventType !== 'birthday') return;
+
+        const duckMsMap = {
+            gift_reveal_sparkle: 580,
+            unwrap_tap: 260,
+            reveal_chime: 720,
+            candle_blow: 280,
+            wish_complete: 780,
+            star_click: 320,
+            message_open: 520
+        };
+
+        const track = this.tracks.birthdaySfx ? this.tracks.birthdaySfx[name] : null;
+        if (track && track.readyState >= 2) {
+            this.duckBackgroundAudio(true);
+            track.currentTime = 0;
+            track.play().catch(() => {});
+            setTimeout(() => this.duckBackgroundAudio(false), duckMsMap[name] || 500);
+            return;
+        }
+
+        // WebAudio fallback for missing files to keep ceremony non-blocking.
+        if (name === 'gift_reveal_sparkle') {
+            [980, 1240, 1568].forEach((f, i) => setTimeout(() => this.generateTone(f, 0.08, 'triangle'), i * 55));
+        } else if (name === 'unwrap_tap') {
+            this.generateTone(720, 0.07, 'triangle');
+        } else if (name === 'reveal_chime') {
+            [523.25, 659.25, 783.99].forEach((f, i) => setTimeout(() => this.generateTone(f, 0.16, 'triangle'), i * 95));
+        } else if (name === 'candle_blow') {
+            this.generateTone(220, 0.06, 'sine');
+        } else if (name === 'wish_complete') {
+            [659.25, 783.99, 1046.5].forEach((f, i) => setTimeout(() => this.generateTone(f, 0.18, 'triangle'), i * 105));
+        } else if (name === 'star_click') {
+            this.generateTone(1046.5, 0.1, 'triangle');
+        } else if (name === 'message_open') {
+            this.generateTone(523.25, 0.2, 'sine');
+        }
+    }
+
     playBellSound() {
         if (this.tracks.bell && this.tracks.bell.readyState >= 2) {
             this.duckBackgroundAudio(true);
@@ -182,6 +267,7 @@ class AudioManager {
 
     playPageTransition() {
         // For: Page navigation - keep minimal
+        if (this.eventType === 'birthday') return;
         if (this.tracks.pageTransition && this.tracks.pageTransition.readyState >= 2) {
             this.tracks.pageTransition.currentTime = 0;
             this.tracks.pageTransition.play().catch(e => console.log('Page Turn Audio blocked:', e));
@@ -211,6 +297,9 @@ class AudioManager {
     // FIXED: Celebration sound should only play on page 5 or ceremony completion
     playCelebrationSound() {
         console.log('Playing celebration sound');
+        if (this.eventType === 'birthday') {
+            return;
+        }
         if (this.tracks.celebration && this.tracks.celebration.readyState >= 2) {
             this.duckBackgroundAudio(true);
             this.tracks.celebration.currentTime = 0;
@@ -229,6 +318,10 @@ class AudioManager {
         }
     }
     startBackgroundMusic() {
+        if (this.eventType === 'birthday') {
+            this.stopSyntheticBirthdayBackground();
+        }
+
         if (this.tracks.background && this.tracks.background.readyState >= 2) {
             // FIXED: Validate volume before setting
             const volume = (typeof this.backgroundVolume === 'number' && isFinite(this.backgroundVolume))
@@ -244,7 +337,12 @@ class AudioManager {
                     console.log('Background music blocked:', e);
                     // Try to start on first user interaction
                     this.setupUserInteractionAudio();
+                    if (this.eventType === 'birthday') {
+                        this.startSyntheticBirthdayBackground();
+                    }
                 });
+        } else if (this.eventType === 'birthday') {
+            this.startSyntheticBirthdayBackground();
         }
     }
 
@@ -255,6 +353,38 @@ class AudioManager {
             this.tracks.background.currentTime = 0;
             this.isBackgroundPlaying = false;
         }
+        this.stopSyntheticBirthdayBackground();
+    }
+
+    startSyntheticBirthdayBackground() {
+        if (this.eventType !== 'birthday') return;
+        if (this.syntheticBirthdayBgmTimer) return;
+
+        // Quiet generative fallback loop that approximates soft magical ambience.
+        const pattern = [
+            { f: 261.63, d: 0.16, t: 'sine' },
+            { f: 329.63, d: 0.14, t: 'triangle' },
+            { f: 392.00, d: 0.18, t: 'sine' },
+            { f: 523.25, d: 0.12, t: 'triangle' }
+        ];
+
+        let idx = 0;
+        this.isBackgroundPlaying = true;
+        this.syntheticBirthdayBgmTimer = window.setInterval(() => {
+            const note = pattern[idx % pattern.length];
+            this.generateTone(note.f, note.d, note.t);
+            // Gentle sparkle accent every 4 beats.
+            if (idx % 4 === 3) {
+                this.generateTone(783.99, 0.06, 'triangle');
+            }
+            idx++;
+        }, 1900);
+    }
+
+    stopSyntheticBirthdayBackground() {
+        if (!this.syntheticBirthdayBgmTimer) return;
+        window.clearInterval(this.syntheticBirthdayBgmTimer);
+        this.syntheticBirthdayBgmTimer = null;
     }
 
     // Setup background music to start on user interaction

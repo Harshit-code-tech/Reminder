@@ -211,8 +211,6 @@ onBirthdayUnlock(app) {
                 app.showFeedback('🎉 Welcome to your birthday celebration!', 'success');
                 app.saveData({ birthday_unlock_toast_shown: true });
             }
-            app.audioManager?.startBackgroundMusic?.();
-            
             // Re-trigger page 1 check to show tap-to-begin if they just unlocked
             if (app.currentPage === 1) {
                 // If they just unlocked via password, we might want to hide the password container
@@ -308,6 +306,9 @@ setupBirthdayPage1(app) {
                 if (e && e.target && e.target.closest && e.target.closest('button')) return;
                 if (rt.page1Transitioning) return;
                 rt.page1Transitioning = true;
+
+                app.audioManager?.startBackgroundMusic?.();
+                app.audioManager?.playBirthdaySfx?.('gift_reveal_sparkle');
 
                 // Sparkle burst originating near the gift icon
                 var giftEl = page1.querySelector('.bday-p1-gift-icon');
@@ -455,6 +456,7 @@ setupBirthdayPage1(app) {
                 rt.page2.stepTimers.push(unlockT);
 
                 if (step === 0 && ribbonLayer) {
+                    app.audioManager?.playBirthdaySfx?.('unwrap_tap');
                     ribbonLayer.classList.add('removing');
                     var ribbonTimer = window.setTimeout(function() {
                         ribbonLayer.classList.add('removed');
@@ -463,6 +465,7 @@ setupBirthdayPage1(app) {
                 }
 
                 if (step === 1 && lidLayer) {
+                    app.audioManager?.playBirthdaySfx?.('unwrap_tap');
                     lidLayer.classList.add('removing');
                     var lidTimer = window.setTimeout(function() {
                         lidLayer.classList.remove('removing');
@@ -492,7 +495,7 @@ setupBirthdayPage1(app) {
                         gift.removeAttribute('tabindex');
                         gift.removeAttribute('role');
                         rt.page2.lastStep = 3;
-                        app.audioManager?.generateTone?.(523.25, 0.15, 'triangle');
+                        app.audioManager?.playBirthdaySfx?.('reveal_chime');
                     }, 400);
                 }
             };
@@ -731,6 +734,25 @@ setupBirthdayPage1(app) {
                             }
                         }
                     });
+                } else if (audioControl && app.audioManager?.tracks?.background) {
+                    var bgm = app.audioManager.tracks.background;
+                    var syncBgmBtn = function() {
+                        var icon = audioControl.querySelector('i');
+                        var playing = !bgm.paused && !bgm.ended;
+                        if (icon) icon.className = playing ? 'fas fa-pause' : 'fas fa-play';
+                        audioControl.setAttribute('aria-label', playing ? 'Pause background music' : 'Play background music');
+                    };
+
+                    syncBgmBtn();
+                    audioControl.addEventListener('click', function() {
+                        if (bgm.paused) {
+                            app.audioManager.startBackgroundMusic();
+                        } else {
+                            bgm.pause();
+                            app.audioManager.isBackgroundPlaying = false;
+                        }
+                        window.setTimeout(syncBgmBtn, 50);
+                    });
                 }
 
                 // Timeline is now built lazily in showSection above when hasTimeline is true
@@ -865,7 +887,7 @@ setupBirthdayPage1(app) {
                     }
                 }
 
-                app.audioManager?.generateTone?.(440 + rt.candleStep * 40, 0.08, 'triangle');
+                app.audioManager?.playBirthdaySfx?.('candle_blow');
 
                 if (rt.candleStep >= totalCandles) {
                     rt.page4WishTriggered = true;
@@ -904,7 +926,7 @@ setupBirthdayPage1(app) {
                     }
                     rt.page4FinalizeTimer = window.setTimeout(function() {
                         BirthdayMixin._showBirthdayCelebration(app);
-                        app.audioManager?.playSuccessSound?.();
+                        app.audioManager?.playBirthdaySfx?.('wish_complete');
                         app.revealAudioOrQuote();
                         BirthdayMixin._showNightSky(app);
                         rt.page4FinalizeTimer = null;
@@ -1236,7 +1258,7 @@ setupBirthdayPage1(app) {
                             toast.style.opacity = '1';
                         });
                     }
-                    app.audioManager?.generateTone?.(659.25, 0.12, 'triangle');
+                    app.audioManager?.playBirthdaySfx?.('star_click');
                 };
 
                 window.addEventListener('resize', positionStars);
@@ -1494,8 +1516,6 @@ setupBirthdayPage1(app) {
                 el.style.transform = '';
                 el.classList.add('popped');
 
-                app.audioManager?.generateTone?.(420, 0.07, 'square');
-
                 var colors = ['#f472b6', '#fbbf24', '#a78bfa', '#60a5fa'];
                 for (var i = 0; i < 14; i++) {
                     var c = document.createElement('div');
@@ -1530,6 +1550,7 @@ setupBirthdayPage1(app) {
                 btn.setAttribute('aria-expanded', 'true');
                 reveal.classList.remove('hidden');
                 reveal.classList.add('showing');
+                appRef.audioManager?.playBirthdaySfx?.('message_open');
                 BirthdayMixin._launchPage5Floaters(appRef, 7, 0.12);
             });
         },
@@ -1627,6 +1648,12 @@ setupBirthdayPage1(app) {
             // Birthday cards no longer use a card-level password — unlock immediately
             app.unlocked = true;
             app.saveData({ unlocked: true });
+            if (!app._birthday.beforeUnloadBound) {
+                app._birthday.beforeUnloadBound = true;
+                window.addEventListener('beforeunload', function() {
+                    app.audioManager?.stopBackgroundMusic?.();
+                });
+            }
             BirthdayMixin.initBirthdayLoadingScreen(app);
         },
 
