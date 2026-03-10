@@ -18,14 +18,13 @@
   {% elif event.event_type != 'raksha_bandhan' %}
   <link rel="stylesheet" href="{% static 'css/card_other.css' %}">
   {% endif %}
-  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
-<body class="min-h-screen flex items-center justify-center p-4 font-sans{% if event.event_type != 'birthday' %} overflow-hidden{% endif %}">
+<body{% if event.event_type != 'birthday' %} class="overflow-hidden"{% endif %}>
   <!-- Raksha Bandhan Loading Screen -->
   {% if event.event_type == 'raksha_bandhan' %}
   <div class="rakhi-loading" id="rakhi-loading">

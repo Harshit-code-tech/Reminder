@@ -68,7 +68,10 @@ class NavigationManager {
             const isActive = index + 1 === this.currentPage;
             page.classList.toggle('active', isActive);
             page.style.display = isActive ? 'flex' : 'none';
-            page.setAttribute('aria-hidden', !isActive);
+            // Use inert (not just aria-hidden) so hidden pages lose focus entirely,
+            // preventing the "aria-hidden on focused element" browser warning.
+            page.toggleAttribute('inert', !isActive);
+            page.setAttribute('aria-hidden', String(!isActive));
         });
 
         // Update navigation state

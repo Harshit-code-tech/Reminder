@@ -377,7 +377,13 @@ body {
   transition: all var(--transition-theme);
   min-height: 100vh;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
 }
+
+.overflow-hidden { overflow: hidden; }
 
 /* ===== UTILITY CLASSES ===== */
 .hidden { display: none !important; }
