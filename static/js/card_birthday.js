@@ -1340,6 +1340,12 @@ setupBirthdayPage1(app) {
                 rt.page5Timers = [];
             }
 
+            // Reset entrance states so animations replay on each page entry
+            var _chipsEl = document.querySelector('.birthday-finale-chips');
+            var _btnEl   = document.getElementById('bday-p5-msg-btn');
+            if (_chipsEl) _chipsEl.classList.remove('revealed');
+            if (_btnEl && !_btnEl.classList.contains('dismissed')) _btnEl.classList.remove('revealed');
+
             // Immediate: badge pop
             BirthdayMixin._animateBirthdayBadge();
 
@@ -1360,13 +1366,13 @@ setupBirthdayPage1(app) {
             BirthdayMixin._setupInteractiveBalloons(app);
             BirthdayMixin._setupMsgReveal(app);
 
-            if (!app.savedData.birthday_page5_seen) {
+            if (!rt.p5CelebFired) {
+                rt.p5CelebFired = true;
                 var confettiTimer = window.setTimeout(function() { app.showConfetti(); }, 750);
                 var feedbackTimer = window.setTimeout(function() {
                     app.showFeedback('🎈 Want to share this card? Tap Share below.', 'info');
                 }, 1900);
                 rt.page5Timers.push(confettiTimer, feedbackTimer);
-                app.saveData({ birthday_page5_seen: true });
             }
         },
 
@@ -1408,10 +1414,12 @@ setupBirthdayPage1(app) {
 
             rt.balloonsSystem = { active: true, rafId: null };
 
-            // Assign random horizontal starting positions; CSS animation floats them upward.
-            balloons.forEach(function(el) {
+            // Assign random horizontal positions and sway durations; CSS animation floats up + sways.
+            var swayDurs = ['3.2s', '4.1s', '3.7s', '4.8s', '3.5s', '4.4s'];
+            balloons.forEach(function(el, i) {
                 if (el.classList.contains('floating')) return;
                 el.style.left = (8 + Math.random() * 78) + '%';
+                el.style.setProperty('--sway-dur', swayDurs[i % swayDurs.length]);
                 el.classList.add('floating');
             });
 
@@ -1481,6 +1489,7 @@ setupBirthdayPage1(app) {
             rt.balloonsSystem.active = false;
             if (rt.balloonsSystem.rafId) window.cancelAnimationFrame(rt.balloonsSystem.rafId);
             rt.balloonsSystem.rafId = null;
+            if (rt._once) rt._once.balloonsBound = false;
 
             if (Array.isArray(rt.page5Timers) && rt.page5Timers.length) {
                 rt.page5Timers.forEach(function(t) { window.clearTimeout(t); });
