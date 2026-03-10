@@ -235,10 +235,9 @@ setupBirthdayPage1(app) {
             app.unlocked = true;
             app.saveData({ unlocked: true, birthday_page1_seen: true });
 
+            var rt = BirthdayMixin._getBirthdayRuntime(app);
             var page1 = document.getElementById('page-1');
-            rt._once = rt._once || {};
-            rt._once.page4Bound = false;
-            rt.page4AutoAdvanceTimer = null;
+            if (!page1) return;
 
             // Spawn 4 slow ambient balloons — calm, not festive
             if (!rt.page1BalloonsSpawned) {
@@ -978,13 +977,13 @@ setupBirthdayPage1(app) {
                 allowBtn.addEventListener('click', function() {
                     if (hint) { hint.classList.add('dismissed'); window.setTimeout(function() { hint.style.display = 'none'; }, 380); }
                     BirthdayMixin._setupCandleBlowDetection(app);
-                }, { once: true });
+                });
             }
             if (skipBtn && !skipBtn.dataset.bound) {
                 skipBtn.dataset.bound = '1';
                 skipBtn.addEventListener('click', function() {
                     if (hint) { hint.classList.add('dismissed'); window.setTimeout(function() { hint.style.display = 'none'; }, 380); }
-                }, { once: true });
+                });
             }
         },
 
@@ -1394,49 +1393,6 @@ setupBirthdayPage1(app) {
         _hideNightSky() {
             var sky = document.getElementById('birthday-night-sky');
             if (sky) sky.classList.add('hidden');
-        },
-
-        _revealBirthdayWish(app) {
-            var rt = BirthdayMixin._getBirthdayRuntime(app);
-            rt.page4Timers = rt.page4Timers || [];
-
-            var wishContainer = document.getElementById('birthday-wish-container');
-            if (!wishContainer) return;
-
-            wishContainer.classList.remove('hidden');
-            wishContainer.style.animation = 'wishReveal 0.6s ease-out forwards';
-
-            var stars = wishContainer.querySelectorAll('.wish-star');
-            var wishMessages = [
-                'Your wish is pure gold! ⭐',
-                'The universe heard you! 🌟',
-                'May it come true! ✨',
-                'Stars are listening! 💫',
-                'A wish worth granting! ⭐'
-            ];
-            stars.forEach(function(star, i) {
-                var starTimer = window.setTimeout(function() {
-                    star.style.animation = 'wishStarSparkle 1s ease-in-out forwards';
-                    star.style.animationDelay = '0s';
-                }, 300 + (i * 200));
-                rt.page4Timers.push(starTimer);
-                star.style.cursor = 'pointer';
-                star.addEventListener('click', function() {
-                    app.showFeedback(wishMessages[i % wishMessages.length], 'success');
-                    star.style.animation = 'none';
-                    void star.offsetWidth;
-                    star.style.animation = 'wishStarSparkle 0.6s ease-in-out forwards';
-                });
-            });
-
-            var wishResult = wishContainer.querySelector('.wish-result');
-            if (wishResult) {
-                var resultTimer = window.setTimeout(function() {
-                    wishResult.style.opacity = '1';
-                    wishResult.style.animation = 'fadeInUp 0.5s ease-out forwards';
-                }, 1500);
-                rt.page4Timers.push(resultTimer);
-            }
         },
 
         /* ═══════════════════════════════════════════════════

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 {% load static %}
-<html lang="en">
+<html lang="en"{% if event.event_type == 'birthday' %} data-theme="dark"{% endif %}>
 
 <head>
   <meta charset="UTF-8">
@@ -25,7 +25,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
-<body class="min-h-screen flex items-center justify-center p-4 font-sans overflow-hidden">
+<body class="min-h-screen flex items-center justify-center p-4 font-sans{% if event.event_type != 'birthday' %} overflow-hidden{% endif %}">
   <!-- Raksha Bandhan Loading Screen -->
   {% if event.event_type == 'raksha_bandhan' %}
   <div class="rakhi-loading" id="rakhi-loading">

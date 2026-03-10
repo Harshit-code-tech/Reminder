@@ -28,6 +28,12 @@ class NavigationManager {
 
         const previousPage = this.currentPage;
 
+        // Enforce birthday ceremony flow: only current/next page navigation.
+        if (this.eventType === 'birthday' && previousPage && pageNum > previousPage + 1) {
+            this.app.showFeedback?.('Follow the birthday ceremony step by step.', 'info');
+            return;
+        }
+
         // Check if page is unlocked
         if (pageNum > 1 && !this.unlocked) {
             this.app.shakePasswordInput('Please unlock the card first');
@@ -80,7 +86,9 @@ class NavigationManager {
         this.elements.navItems.forEach((item, index) => {
             const pageNum = index + 1;
             const isActive = pageNum === this.currentPage;
-            const isAccessible = pageNum <= this.currentPage + 1 || this.unlocked;
+            const isAccessible = this.eventType === 'birthday'
+                ? pageNum <= this.currentPage + 1
+                : (pageNum <= this.currentPage + 1 || this.unlocked);
 
             item.classList.toggle('active', isActive);
             item.style.opacity = isAccessible ? '1' : '0.5';

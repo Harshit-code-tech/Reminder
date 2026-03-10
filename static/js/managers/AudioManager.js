@@ -236,7 +236,7 @@ class AudioManager {
         if (this.tracks.bell && this.tracks.bell.readyState >= 2) {
             this.duckBackgroundAudio(true);
             this.tracks.bell.currentTime = 0;
-            this.tracks.bell.play().catch(e => console.log('Audio blocked:', e));
+            this.tracks.bell.play().catch(e => console.debug('Audio blocked:', e));
 
             // Restore background volume after bell finishes
             setTimeout(() => {
@@ -251,7 +251,7 @@ class AudioManager {
         if (this.tracks.success && this.tracks.success.readyState >= 2) {
             this.duckBackgroundAudio(true);
             this.tracks.success.currentTime = 0;
-            this.tracks.success.play().catch(e => console.log('Audio blocked:', e));
+            this.tracks.success.play().catch(e => console.debug('Audio blocked:', e));
 
             // Restore background volume after success sound
             setTimeout(() => {
@@ -270,7 +270,7 @@ class AudioManager {
         if (this.eventType === 'birthday') return;
         if (this.tracks.pageTransition && this.tracks.pageTransition.readyState >= 2) {
             this.tracks.pageTransition.currentTime = 0;
-            this.tracks.pageTransition.play().catch(e => console.log('Page Turn Audio blocked:', e));
+            this.tracks.pageTransition.play().catch(e => console.debug('Page Turn Audio blocked:', e));
         }
         else{
             this.generateTone(220, 0.3, 'sine');
@@ -278,11 +278,10 @@ class AudioManager {
     }
 
     playBlessingSound() {
-        console.log('Playing blessing sound');
         if (this.tracks.blessing && this.tracks.blessing.readyState >= 2) {
             this.duckBackgroundAudio(true);
             this.tracks.blessing.currentTime = 0;
-            this.tracks.blessing.play().catch(e => console.log('Blessing audio blocked:', e));
+            this.tracks.blessing.play().catch(e => console.debug('Blessing audio blocked:', e));
 
             // Restore background volume after blessing
             setTimeout(() => {
@@ -296,14 +295,13 @@ class AudioManager {
 
     // FIXED: Celebration sound should only play on page 5 or ceremony completion
     playCelebrationSound() {
-        console.log('Playing celebration sound');
         if (this.eventType === 'birthday') {
             return;
         }
         if (this.tracks.celebration && this.tracks.celebration.readyState >= 2) {
             this.duckBackgroundAudio(true);
             this.tracks.celebration.currentTime = 0;
-            this.tracks.celebration.play().catch(e => console.log('Celebration audio blocked:', e));
+            this.tracks.celebration.play().catch(e => console.debug('Celebration audio blocked:', e));
 
             // Restore background volume after celebration
             setTimeout(() => {
@@ -331,10 +329,9 @@ class AudioManager {
             this.tracks.background.play()
                 .then(() => {
                     this.isBackgroundPlaying = true;
-                    console.log('Background music started');
                 })
                 .catch(e => {
-                    console.log('Background music blocked:', e);
+                    console.debug('Background music blocked:', e);
                     // Try to start on first user interaction
                     this.setupUserInteractionAudio();
                     if (this.eventType === 'birthday') {
@@ -401,8 +398,7 @@ class AudioManager {
         document.addEventListener('keydown', startAudioOnInteraction, { once: true });
     }
     initBackgroundMusic() {
-
-        console.log('Background music system initialized (files not found, using fallbacks)');
+        // No-op: retained for compatibility with earlier initialization calls.
     }
 }
 
