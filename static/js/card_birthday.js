@@ -1440,13 +1440,13 @@ setupBirthdayPage1(app) {
             BirthdayMixin._setupMsgReveal(app);
 
             // One-time share nudge
-            if (!rt.p5CelebFired) {
-                rt.p5CelebFired = true;
-                // var feedbackTimer = window.setTimeout(function() {
-                //     app.showFeedback('🎈 Want to share this card? Tap Share below.', 'info');
-                // }, 2400);
-                rt.page5Timers.push(feedbackTimer);
-            }
+            // if (!rt.p5CelebFired) {
+            //     rt.p5CelebFired = true;
+            //     // var feedbackTimer = window.setTimeout(function() {
+            //     //     app.showFeedback('🎈 Want to share this card? Tap Share below.', 'info');
+            //     // }, 2400);
+            //     // rt.page5Timers.push(feedbackTimer);
+            // }
         },
 
         _startPage5Sky(app) {
