@@ -1171,7 +1171,34 @@ setupBirthdayPage1(app) {
                 var starContainer = sky.querySelector('.night-sky-stars');
                 var stars = Array.from(sky.querySelectorAll('.birthday-star'));
                 var toast = document.getElementById('birthday-wish-toast');
+                var counter = document.getElementById('bday-p4-star-counter');
                 if (!starContainer || !stars.length) return false;
+
+                // Reset star DOM state for a clean replay
+                stars.forEach(function(star) {
+                    star.dataset.used = 'false';
+                    star.style.visibility = '';
+                    star.style.pointerEvents = '';
+                    star.style.opacity = '';
+                    star.style.transform = '';
+                    star.style.filter = '';
+                    star.style.transition = '';
+                });
+                if (counter) counter.classList.remove('done');
+
+                var totalStars = stars.length;
+                var starsLeft = totalStars;
+
+                function updateCounter() {
+                    if (!counter) return;
+                    if (starsLeft > 0) {
+                        counter.textContent = starsLeft + ' ✦ remaining';
+                        counter.classList.remove('done');
+                    } else {
+                        counter.textContent = '';
+                    }
+                }
+                updateCounter();
 
                 var positionStars = function() {
                     var rect = starContainer.getBoundingClientRect();
@@ -1248,17 +1275,35 @@ setupBirthdayPage1(app) {
                         setTimeout(function(el) { el.remove(); }, 500, p);
                     }
 
+                    // Decrement counter
+                    starsLeft = Math.max(0, starsLeft - 1);
+                    updateCounter();
+
                     if (toast) {
                         toast.style.opacity = '0';
-                        toast.textContent = _wishMessages[_wishMsgIdx % _wishMessages.length];
+                        var isLast = starsLeft === 0;
+                        toast.textContent = isLast
+                            ? 'Your wishes are on their way ✨'
+                            : _wishMessages[_wishMsgIdx % _wishMessages.length];
                         _wishMsgIdx++;
                         // Fade in message
                         window.requestAnimationFrame(function() {
-                            toast.style.transition = 'opacity 0.3s ease';
+                            toast.style.transition = 'opacity 0.35s ease';
                             toast.style.opacity = '1';
                         });
                     }
                     app.audioManager?.playBirthdaySfx?.('star_click');
+
+                    // All stars used — show completion, then advance to page 5
+                    if (starsLeft === 0) {
+                        if (counter) {
+                            counter.textContent = 'All wishes sent ✨';
+                            counter.classList.add('done');
+                        }
+                        window.setTimeout(function() {
+                            app.goToPage(5);
+                        }, 1500);
+                    }
                 };
 
                 window.addEventListener('resize', positionStars);
