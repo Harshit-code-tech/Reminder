@@ -1,46 +1,49 @@
-{% comment %}Page 5: Birthday Farewell — expanded sky, shooting stars, badge, personal message, balloons{% endcomment %}
+{% comment %}Page 5: Birthday Finale — full-bleed starfield sky, floating balloons, badge, message reveal{% endcomment %}
 <h2 class="page-title">
-  Happy Birthday, <span class="recipient-name">{{ event.name }}</span>!
+  Happy Birthday, <span class="recipient-name bday-p5-name">{{ event.name }}</span>!
 </h2>
 
 <div class="birthday-farewell">
-  <!-- Age Badge -->
-  <div class="birthday-badge">
-    <div class="badge-sparkle">🎂</div>
-    <div class="badge-text">Another Year of Amazing You!</div>
+  <!-- Full-bleed night sky background -->
+  <div class="bday-p5-bg" aria-hidden="true"></div>
+
+  <!-- Balloons float over the sky, behind the foreground content -->
+  <div class="birthday-balloons" id="bday-p5-balloons" aria-hidden="true">
+    <button class="balloon" type="button" style="--color:#FF6B6B;--dur:14s;--dx:-18px;--delay:0s" aria-label="Tap to pop balloon">🎈</button>
+    <button class="balloon" type="button" style="--color:#FFD93D;--dur:17s;--dx:24px;--delay:0.6s" aria-label="Tap to pop balloon">🎈</button>
+    <button class="balloon" type="button" style="--color:#6BCB77;--dur:13s;--dx:-8px;--delay:1.2s" aria-label="Tap to pop balloon">🎈</button>
+    <button class="balloon" type="button" style="--color:#4D96FF;--dur:16s;--dx:15px;--delay:0.3s" aria-label="Tap to pop balloon">🎈</button>
+    <button class="balloon" type="button" style="--color:#FF6FC8;--dur:15s;--dx:-22px;--delay:0.9s" aria-label="Tap to pop balloon">🎈</button>
+    <button class="balloon" type="button" style="--color:#C77DFF;--dur:18s;--dx:10px;--delay:1.5s" aria-label="Tap to pop balloon">🎈</button>
   </div>
 
-  <div class="birthday-finale-chips" aria-label="Birthday highlights">
-    <span class="finale-chip">Gratitude</span>
-    <span class="finale-chip">Growth</span>
-    <span class="finale-chip">Joy</span>
-    <span class="finale-chip">New Memories</span>
-  </div>
+  <!-- Foreground content: badge, chips, message reveal -->
+  <div class="bday-p5-content">
+    <div class="birthday-badge">
+      <div class="badge-sparkle">🎂</div>
+      <div class="badge-text">Another Year of Amazing You!</div>
+    </div>
 
-  <!-- Personal message -->
-  {% if event.message %}
-  <div class="farewell-message">{{ event.message|linebreaksbr }}</div>
-  {% else %}
-  <div class="farewell-message">
-    May this year bring you countless moments of happiness, success, and beautiful memories.
-    You deserve all the wonderful things life has to offer.
-    Here's to you — today, tomorrow, and always!
-  </div>
-  {% endif %}
+    <div class="birthday-finale-chips" aria-label="Birthday highlights">
+      <span class="finale-chip">Gratitude</span>
+      <span class="finale-chip">Growth</span>
+      <span class="finale-chip">Joy</span>
+      <span class="finale-chip">New Memories</span>
+    </div>
 
-  <!-- Expanded night sky with shooting stars (JS-driven) -->
-  <div class="bday-p5-sky" id="bday-p5-sky" aria-hidden="true">
-    <canvas class="bday-p5-canvas" id="bday-p5-canvas"></canvas>
-  </div>
+    <!-- Message reveal button + hidden message -->
+    <button class="bday-p5-msg-btn" id="bday-p5-msg-btn" type="button" aria-expanded="false">
+      💌 Read a special message
+    </button>
 
-  <!-- Interactive floating balloons -->
-  <div class="birthday-balloons">
-    <button class="balloon" type="button" style="--color:#FF6B6B;--delay:0s" aria-label="Balloon">🎈</button>
-    <button class="balloon" type="button" style="--color:#FFD93D;--delay:0.4s" aria-label="Balloon">🎈</button>
-    <button class="balloon" type="button" style="--color:#6BCB77;--delay:0.8s" aria-label="Balloon">🎈</button>
-    <button class="balloon" type="button" style="--color:#4D96FF;--delay:1.2s" aria-label="Balloon">🎈</button>
-    <button class="balloon" type="button" style="--color:#FF6FC8;--delay:1.6s" aria-label="Balloon">🎈</button>
-    <button class="balloon" type="button" style="--color:#C77DFF;--delay:2.0s" aria-label="Balloon">🎈</button>
+    {% if event.message %}
+    <div class="farewell-message bday-p5-msg-reveal hidden" id="bday-p5-msg-reveal">{{ event.message|linebreaksbr }}</div>
+    {% else %}
+    <div class="farewell-message bday-p5-msg-reveal hidden" id="bday-p5-msg-reveal">
+      May this year bring you countless moments of joy, growth, and beautiful new memories.
+      Here's to another year of amazing you! 🌟
+    </div>
+    {% endif %}
   </div>
 </div>
 

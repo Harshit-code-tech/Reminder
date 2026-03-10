@@ -1328,121 +1328,38 @@ setupBirthdayPage1(app) {
                 rt.page5Timers = [];
             }
 
+            // Immediate: badge pop
             BirthdayMixin._animateBirthdayBadge();
+
+            // 300ms: chips fade in
+            var t1 = window.setTimeout(function() {
+                var chips = document.querySelector('.birthday-finale-chips');
+                if (chips) chips.classList.add('revealed');
+            }, 300);
+
+            // 650ms: message button appears (skip if user already dismissed it)
+            var t2 = window.setTimeout(function() {
+                var btn = document.getElementById('bday-p5-msg-btn');
+                if (btn && !btn.classList.contains('dismissed')) btn.classList.add('revealed');
+            }, 650);
+
+            rt.page5Timers.push(t1, t2);
+
             BirthdayMixin._setupInteractiveBalloons(app);
-            BirthdayMixin._startPage5Sky(app);
+            BirthdayMixin._setupMsgReveal(app);
 
             if (!app.savedData.birthday_page5_seen) {
-                var confettiTimer = window.setTimeout(function() { app.showConfetti(); }, 600);
+                var confettiTimer = window.setTimeout(function() { app.showConfetti(); }, 750);
                 var feedbackTimer = window.setTimeout(function() {
                     app.showFeedback('🎈 Want to share this card? Tap Share below.', 'info');
-                }, 1800);
+                }, 1900);
                 rt.page5Timers.push(confettiTimer, feedbackTimer);
                 app.saveData({ birthday_page5_seen: true });
             }
         },
 
         _startPage5Sky(app) {
-            var canvas = document.getElementById('bday-p5-canvas');
-            if (!canvas) return;
-            var rt = BirthdayMixin._getBirthdayRuntime(app);
-            if (rt._page5SkyActive) return;
-            rt._page5SkyActive = true;
-
-            var ctx = canvas.getContext('2d');
-            var sky = canvas.parentElement;
-
-            var resize = function() {
-                canvas.width = sky.offsetWidth || 340;
-                canvas.height = sky.offsetHeight || 160;
-            };
-            resize();
-            window.addEventListener('resize', resize);
-            rt._page5SkyResize = resize;
-
-            // Static background stars
-            var bgStars = [];
-            for (var i = 0; i < 55; i++) {
-                bgStars.push({
-                    x: Math.random(),
-                    y: Math.random(),
-                    r: 0.6 + Math.random() * 1.2,
-                    a: 0.4 + Math.random() * 0.6,
-                    twinklePhase: Math.random() * Math.PI * 2,
-                    twinkleSpeed: 0.01 + Math.random() * 0.02
-                });
-            }
-
-            // Shooting stars pool
-            var shooters = [];
-            var spawnShooter = function() {
-                shooters.push({
-                    x: 0.05 + Math.random() * 0.7,
-                    y: Math.random() * 0.5,
-                    vx: 0.004 + Math.random() * 0.003,
-                    vy: 0.002 + Math.random() * 0.002,
-                    len: 0.08 + Math.random() * 0.10,
-                    life: 1.0,
-                    decay: 0.018 + Math.random() * 0.012
-                });
-            };
-
-            // Spawn first one immediately, then random interval
-            spawnShooter();
-            var scheduleShooter = function() {
-                if (!rt._page5SkyActive) return;
-                spawnShooter();
-                rt._page5SkyShooterTimeout = window.setTimeout(scheduleShooter, 1600 + Math.random() * 2200);
-            };
-            rt._page5SkyShooterTimeout = window.setTimeout(scheduleShooter, 900);
-
-            var frame = function() {
-                if (!rt._page5SkyActive) return;
-                var W = canvas.width;
-                var H = canvas.height;
-                ctx.clearRect(0, 0, W, H);
-
-                // Draw stars with twinkle
-                bgStars.forEach(function(s) {
-                    s.twinklePhase += s.twinkleSpeed;
-                    var alpha = s.a * (0.7 + 0.3 * Math.sin(s.twinklePhase));
-                    ctx.beginPath();
-                    ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(255,255,220,' + alpha + ')';
-                    ctx.fill();
-                });
-
-                // Draw shooting stars
-                shooters = shooters.filter(function(s) { return s.life > 0; });
-                shooters.forEach(function(s) {
-                    s.life -= s.decay;
-                    if (s.life <= 0) return;
-                    var tailX = (s.x - s.vx * s.len * W / H) * W;
-                    var tailY = (s.y - s.vy * s.len * W / H) * H;
-                    var headX = s.x * W;
-                    var headY = s.y * H;
-                    var grad = ctx.createLinearGradient(tailX, tailY, headX, headY);
-                    grad.addColorStop(0, 'rgba(255,255,255,0)');
-                    grad.addColorStop(0.4, 'rgba(255,240,180,' + (s.life * 0.6) + ')');
-                    grad.addColorStop(1, 'rgba(255,255,255,' + s.life + ')');
-                    ctx.beginPath();
-                    ctx.moveTo(tailX, tailY);
-                    ctx.lineTo(headX, headY);
-                    ctx.strokeStyle = grad;
-                    ctx.lineWidth = 1.5;
-                    ctx.stroke();
-                    // Glow at head
-                    ctx.beginPath();
-                    ctx.arc(headX, headY, 2, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(255,255,220,' + s.life + ')';
-                    ctx.fill();
-                    s.x += s.vx;
-                    s.y += s.vy;
-                });
-
-                rt._page5SkyRaf = window.requestAnimationFrame(frame);
-            };
-            rt._page5SkyRaf = window.requestAnimationFrame(frame);
+            // Sky is now a CSS full-bleed background (.bday-p5-bg) — no canvas animation needed.
         },
 
         _stopPage5Sky(app) {
@@ -1459,9 +1376,11 @@ setupBirthdayPage1(app) {
         _animateBirthdayBadge() {
             var badge = document.querySelector('.birthday-badge');
             if (!badge) return;
+            badge.classList.remove('glowing');
             badge.style.animation = 'badgePop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
             var sparkle = badge.querySelector('.badge-sparkle');
             if (sparkle) sparkle.style.animation = 'wishStarSparkle 0.5s ease-out 1';
+            window.setTimeout(function() { badge.classList.add('glowing'); }, 700);
         },
 
         _setupInteractiveBalloons(app) {
@@ -1475,130 +1394,67 @@ setupBirthdayPage1(app) {
             var rt = BirthdayMixin._getBirthdayRuntime(app);
             if (rt.balloonsSystem?.active) return;
 
-            var rect = function() { return container.getBoundingClientRect(); };
+            rt.balloonsSystem = { active: true, rafId: null };
 
-            if (!rt.balloonsSystem) {
-                rt.balloonsSystem = {
-                    active: false, rafId: null, container: container, rect: rect,
-                    states: balloons.map(function(el) {
-                        return {
-                            el: el, x: 0, y: 0,
-                            vx: (Math.random() - 0.5) * 0.25,
-                            vy: -0.18 - Math.random() * 0.22,
-                            dragging: false, pointerId: null,
-                            downX: 0, downY: 0, moved: false, lastMoveAt: 0
-                        };
-                    })
-                };
-            }
+            // Assign random horizontal starting positions; CSS animation floats them upward.
+            balloons.forEach(function(el) {
+                if (el.classList.contains('floating')) return;
+                el.style.left = (8 + Math.random() * 78) + '%';
+                el.classList.add('floating');
+            });
 
-            var sys = rt.balloonsSystem;
-            var states = sys.states;
+            var popBalloon = function(el) {
+                if (!el.isConnected || el.classList.contains('popped')) return;
 
-            var init = function() {
-                var r = rect();
-                states.forEach(function(s, i) {
-                    if (!s.el.isConnected) return;
-                    s.x = 40 + Math.random() * Math.max(0, r.width - 80);
-                    s.y = r.height - (40 + i * 18);
-                    s.el.style.left = s.x + 'px';
-                    s.el.style.top = s.y + 'px';
-                });
-            };
+                // Freeze the balloon at its current visual position before stopping animation
+                var elRect = el.getBoundingClientRect();
+                var cRect = container.getBoundingClientRect();
+                var cx = elRect.left - cRect.left + elRect.width / 2;
+                var cy = elRect.top  - cRect.top  + elRect.height / 2;
 
-            var popAt = function(s) {
-                if (!s.el.isConnected || s.el.classList.contains('popped')) return;
-                s.el.classList.add('popped');
+                el.classList.remove('floating');
+                el.style.left   = cx + 'px';
+                el.style.top    = cy + 'px';
+                el.style.bottom = 'auto';
+                el.style.transform = '';
+                el.classList.add('popped');
+
                 app.audioManager?.generateTone?.(420, 0.07, 'square');
 
                 var colors = ['#f472b6', '#fbbf24', '#a78bfa', '#60a5fa'];
                 for (var i = 0; i < 14; i++) {
                     var c = document.createElement('div');
                     c.className = 'birthday-pop-confetti';
-                    c.style.left = s.x + 'px';
-                    c.style.top = s.y + 'px';
+                    c.style.left = cx + 'px';
+                    c.style.top  = cy + 'px';
                     c.style.background = colors[i % colors.length];
                     c.style.setProperty('--dx', ((Math.random() - 0.5) * 120) + 'px');
                     c.style.setProperty('--dy', ((Math.random() - 0.8) * 140) + 'px');
                     container.appendChild(c);
                     setTimeout(function(el) { el.remove(); }, 700, c);
                 }
-                setTimeout(function() { s.el.remove(); }, 240);
+                setTimeout(function() { el.remove(); }, 240);
             };
 
             BirthdayMixin._runOnce(app, 'balloonsBound', function() {
-                states.forEach(function(s) {
-                    if (!s.el.isConnected) return;
-
-                    s.el.addEventListener('pointerdown', function(e) {
-                        s.dragging = true;
-                        s.pointerId = e.pointerId;
-                        s.downX = e.clientX;
-                        s.downY = e.clientY;
-                        s.moved = false;
-                        s.lastMoveAt = Date.now();
-                        s.el.setPointerCapture?.(e.pointerId);
-                    });
-
-                    s.el.addEventListener('pointermove', function(e) {
-                        if (!s.dragging || s.pointerId !== e.pointerId) return;
-                        var r = rect();
-                        s.x = Math.max(12, Math.min(r.width - 12, e.clientX - r.left));
-                        s.y = Math.max(12, Math.min(r.height - 12, e.clientY - r.top));
-                        s.el.style.left = s.x + 'px';
-                        s.el.style.top = s.y + 'px';
-                        if (Math.hypot(e.clientX - s.downX, e.clientY - s.downY) > 6) s.moved = true;
-                        s.lastMoveAt = Date.now();
-                    });
-
-                    s.el.addEventListener('pointerup', function(e) {
-                        if (s.pointerId !== e.pointerId) return;
-                        s.dragging = false;
-                        s.pointerId = null;
-                        if (!s.moved) { popAt(s); return; }
-                        s.vx = (Math.random() - 0.5) * 0.35;
-                        s.vy = -0.25 - Math.random() * 0.3;
-                    });
+                balloons.forEach(function(el) {
+                    el.addEventListener('click', function() { popBalloon(el); });
                 });
             });
+        },
 
-            init();
-
-            var last = performance.now();
-            sys.active = true;
-
-            var tick = function(now) {
-                if (!sys.active) return;
-                var dt = Math.min(32, now - last);
-                last = now;
-                var r = rect();
-
-                states.forEach(function(s) {
-                    if (!s.el.isConnected || s.dragging || s.el.classList.contains('popped')) return;
-
-                    s.vy += (-0.0004) * dt;
-                    s.vx += ((Math.random() - 0.5) * 0.0007) * dt;
-                    s.vx *= 0.995;
-                    s.vy *= 0.995;
-                    s.x += s.vx * dt;
-                    s.y += s.vy * dt;
-
-                    if (s.x < 10) { s.x = 10; s.vx = Math.abs(s.vx); }
-                    if (s.x > r.width - 10) { s.x = r.width - 10; s.vx = -Math.abs(s.vx); }
-                    if (s.y < 10) {
-                        s.y = r.height - 10;
-                        s.vy = -0.15 - Math.random() * 0.2;
-                        s.x = 20 + Math.random() * Math.max(0, r.width - 40);
-                    }
-                    if (s.y > r.height - 10) { s.y = r.height - 10; s.vy = -Math.abs(s.vy); }
-
-                    s.el.style.left = s.x + 'px';
-                    s.el.style.top = s.y + 'px';
-                });
-
-                sys.rafId = window.requestAnimationFrame(tick);
-            };
-            sys.rafId = window.requestAnimationFrame(tick);
+        _setupMsgReveal(app) {
+            var btn    = document.getElementById('bday-p5-msg-btn');
+            var reveal = document.getElementById('bday-p5-msg-reveal');
+            if (!btn || !reveal) return;
+            if (btn.dataset.bound) return;
+            btn.dataset.bound = '1';
+            btn.addEventListener('click', function() {
+                btn.classList.add('dismissed');
+                btn.setAttribute('aria-expanded', 'true');
+                reveal.classList.remove('hidden');
+                reveal.classList.add('showing');
+            });
         },
 
         _updateBirthdayTree(page) {
