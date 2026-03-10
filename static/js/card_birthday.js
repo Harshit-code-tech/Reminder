@@ -507,22 +507,63 @@ setupBirthdayPage1(app) {
                 });
             });
 
-            // Inject ambient sparkle particles that float upward near the gift
+            // Inject sparkles with angle-based diagonal paths + bg birthday emojis
             if (!rt.page2.sparklesSpawned) {
                 rt.page2.sparklesSpawned = true;
                 var sparklesContainer = document.getElementById('bday-p2-sparkles');
                 if (sparklesContainer) {
-                    var sparkChars = ['✦', '✧', '✨', '⋆', '✦', '✧', '✨', '⋆'];
-                    for (var si = 0; si < 8; si++) {
+                    // Colourful sparkle chars — bigger and tinted so they're clearly visible
+                    var sparkChars = ['\u2B50', '\u2728', '\u2726', '\u2605', '\u2736', '\u2665', '\u25C6', '\u2739',
+                                      '\u2B50', '\u2728', '\u2726', '\u2605', '\u2736', '\u2665'];
+                    var sparkColours = ['#ffd700','#ff6b9d','#a78bfa','#60afff','#6bcb77','#ff9f43',
+                                        '#fff','#ffd700','#ff6b9d','#a78bfa','#60afff','#6bcb77','#ff9f43','#fff'];
+                    for (var si = 0; si < 14; si++) {
                         var sp2 = document.createElement('span');
                         sp2.className = 'bday-p2-sparkle';
                         sp2.textContent = sparkChars[si];
-                        sp2.style.left = (18 + Math.random() * 64) + '%';
-                        sp2.style.top  = (35 + Math.random() * 30) + '%';
-                        sp2.style.animationDuration = (7 + Math.random() * 6) + 's';
-                        sp2.style.animationDelay = (Math.random() * 7) + 's';
-                        sp2.style.fontSize = (8 + Math.random() * 9) + 'px';
+                        sp2.style.color = sparkColours[si];
+
+                        sp2.style.left = (4 + Math.random() * 92).toFixed(1) + '%';
+                        sp2.style.top  = (22 + Math.random() * 56).toFixed(1) + '%';
+
+                        // Angle from vertical: 35-75° → clearly diagonal, never a vertical log
+                        var sAngle = (35 + Math.random() * 40) * (Math.random() < 0.5 ? 1 : -1);
+                        var sDist  = 130 + Math.random() * 100;
+                        var sTx = (Math.sin(sAngle * Math.PI / 180) * sDist).toFixed(1);
+                        var sTy = (-Math.abs(Math.cos(sAngle * Math.PI / 180) * sDist)).toFixed(1);
+                        var sRot = (sAngle * (0.55 + Math.random() * 0.70)).toFixed(1);
+
+                        sp2.style.setProperty('--tx', sTx + 'px');
+                        sp2.style.setProperty('--ty', sTy + 'px');
+                        sp2.style.setProperty('--rot', sRot + 'deg');
+                        sp2.style.animationDuration = (5.5 + Math.random() * 4.5).toFixed(2) + 's';
+                        sp2.style.animationDelay = '-' + (Math.random() * 7).toFixed(2) + 's';
+                        sp2.style.fontSize = (11 + Math.random() * 8) + 'px';  // larger = visible
                         sparklesContainer.appendChild(sp2);
+                    }
+
+                    // 5 bg birthday emoji glows: larger, slow, gentle diagonal drift
+                    var bgElems = ['\uD83C\uDF1F', '\u2728', '\uD83C\uDF1F', '\uD83D\uDCAB', '\u2728'];
+                    for (var bi = 0; bi < 5; bi++) {
+                        var bg = document.createElement('span');
+                        bg.className = 'bday-p2-bg-elem';
+                        bg.textContent = bgElems[bi];
+
+                        bg.style.left = (5 + Math.random() * 90).toFixed(1) + '%';
+                        bg.style.top  = (18 + Math.random() * 62).toFixed(1) + '%';
+                        bg.style.fontSize = (16 + Math.random() * 8).toFixed(0) + 'px';
+
+                        var bAngle = (25 + Math.random() * 40) * (Math.random() < 0.5 ? 1 : -1);
+                        var bDist  = 85 + Math.random() * 70;
+                        var bTx = (Math.sin(bAngle * Math.PI / 180) * bDist).toFixed(1);
+                        var bTy = (-Math.abs(Math.cos(bAngle * Math.PI / 180) * bDist)).toFixed(1);
+                        bg.style.setProperty('--tx', bTx + 'px');
+                        bg.style.setProperty('--ty', bTy + 'px');
+                        bg.style.setProperty('--rot', ((Math.random() - 0.5) * 28).toFixed(1) + 'deg');
+                        bg.style.setProperty('--peak-opacity', (0.35 + Math.random() * 0.20).toFixed(2));
+                        bg.style.animationDuration = (11 + Math.random() * 8).toFixed(1) + 's';
+                        bg.style.animationDelay = '-' + (Math.random() * 11).toFixed(2) + 's';
+                        sparklesContainer.appendChild(bg);
                     }
                 }
             }
@@ -1340,39 +1381,47 @@ setupBirthdayPage1(app) {
                 rt.page5Timers = [];
             }
 
-            // Reset entrance states so animations replay on each page entry
+            // Reset entrance states so replay works on each page entry
+            var _warmEl  = document.getElementById('bday-p5-warm-msg');
             var _chipsEl = document.querySelector('.birthday-finale-chips');
             var _btnEl   = document.getElementById('bday-p5-msg-btn');
+            if (_warmEl)  _warmEl.classList.remove('revealed');
             if (_chipsEl) _chipsEl.classList.remove('revealed');
             if (_btnEl && !_btnEl.classList.contains('dismissed')) _btnEl.classList.remove('revealed');
 
-            // Immediate: badge pop
-            BirthdayMixin._animateBirthdayBadge();
+            // Stars twinkle via CSS — no JS needed
 
-            // 300ms: chips fade in
+            // 300ms: warm message fades in
             var t1 = window.setTimeout(function() {
-                var chips = document.querySelector('.birthday-finale-chips');
-                if (chips) chips.classList.add('revealed');
+                var warm = document.getElementById('bday-p5-warm-msg');
+                if (warm) warm.classList.add('revealed');
             }, 300);
 
-            // 650ms: message button appears (skip if user already dismissed it)
+            // 700ms: decorative chips appear
             var t2 = window.setTimeout(function() {
+                var chips = document.querySelector('.birthday-finale-chips');
+                if (chips) chips.classList.add('revealed');
+            }, 700);
+
+            // 1100ms: message button appears
+            var t3 = window.setTimeout(function() {
                 var btn = document.getElementById('bday-p5-msg-btn');
                 if (btn && !btn.classList.contains('dismissed')) btn.classList.add('revealed');
-            }, 650);
+            }, 1100);
 
-            rt.page5Timers.push(t1, t2);
+            rt.page5Timers.push(t1, t2, t3);
 
-            BirthdayMixin._setupInteractiveBalloons(app);
+            // 3 slow balloons drift upward — calm emotional atmosphere
+            BirthdayMixin._launchPage5Balloons(app);
             BirthdayMixin._setupMsgReveal(app);
 
+            // One-time share nudge
             if (!rt.p5CelebFired) {
                 rt.p5CelebFired = true;
-                var confettiTimer = window.setTimeout(function() { app.showConfetti(); }, 750);
                 var feedbackTimer = window.setTimeout(function() {
                     app.showFeedback('🎈 Want to share this card? Tap Share below.', 'info');
-                }, 1900);
-                rt.page5Timers.push(confettiTimer, feedbackTimer);
+                }, 2400);
+                rt.page5Timers.push(feedbackTimer);
             }
         },
 
@@ -1414,13 +1463,21 @@ setupBirthdayPage1(app) {
 
             rt.balloonsSystem = { active: true, rafId: null };
 
-            // Assign random horizontal positions and sway durations; CSS animation floats up + sways.
+            // Assign random positions, speed, and sway; use larger --dx so the
+            // bdayP5BalloonSway oscillation is clearly visible (±0.6 × dx).
             var swayDurs = ['3.2s', '4.1s', '3.7s', '4.8s', '3.5s', '4.4s'];
             balloons.forEach(function(el, i) {
                 if (el.classList.contains('floating')) return;
-                el.style.left = (8 + Math.random() * 78) + '%';
+                el.style.left = (6 + Math.random() * 86) + '%';
+                // dx ±55-95px → sway covers ±33-57px per oscillation — clearly visible
+                el.style.setProperty('--dx', (Math.random() < 0.5 ? -1 : 1) * (55 + (Math.random() * 40 | 0)) + 'px');
+                el.style.setProperty('--dur', (12.5 + Math.random() * 6.5).toFixed(2) + 's');
+                el.style.setProperty('--delay', (Math.random() * 1.9).toFixed(2) + 's');
                 el.style.setProperty('--sway-dur', swayDurs[i % swayDurs.length]);
-                el.classList.add('floating');
+                // Stagger starts so the bottom doesn't feel like a single launch line.
+                window.setTimeout(function() {
+                    if (rt.balloonsSystem?.active && el.isConnected) el.classList.add('floating');
+                }, (Math.random() * 880) | 0);
             });
 
             var popBalloon = function(el) {
@@ -1469,12 +1526,86 @@ setupBirthdayPage1(app) {
             if (!btn || !reveal) return;
             if (btn.dataset.bound) return;
             btn.dataset.bound = '1';
+            var appRef = app;
             btn.addEventListener('click', function() {
                 btn.classList.add('dismissed');
                 btn.setAttribute('aria-expanded', 'true');
                 reveal.classList.remove('hidden');
                 reveal.classList.add('showing');
+                BirthdayMixin._launchPage5Floaters(appRef, 7, 0.12);
             });
+        },
+
+        _launchPage5Balloons(app) {
+            var layer = document.getElementById('bday-p5-balloons');
+            if (!layer) return;
+            // Reset on each page entry so balloons restart fresh
+            layer.innerHTML = '';
+            var positions = [16, 50, 80];
+            positions.forEach(function(baseLeft, i) {
+                var el = document.createElement('span');
+                el.className = 'bday-p5-balloon';
+                el.setAttribute('aria-hidden', 'true');
+                el.textContent = '\uD83C\uDF88'; // 🎈
+                el.style.left = (baseLeft + (Math.random() - 0.5) * 8).toFixed(1) + '%';
+                el.style.setProperty('--bdur',   (13 + Math.random() * 4).toFixed(1) + 's');
+                el.style.setProperty('--bdelay', (i * 3 + Math.random() * 1.5).toFixed(1) + 's');
+                el.style.setProperty('--bsway',  (3.5 + Math.random() * 2).toFixed(1) + 's');
+                el.style.setProperty('--bdx',    (10 + Math.random() * 14).toFixed(0) + 'px');
+                layer.appendChild(el);
+            });
+        },
+
+        _launchPage5Floaters(app, count, _unused) {
+            var layer = document.getElementById('bday-p5-celebration');
+            if (!layer) return;
+            var rt = BirthdayMixin._getBirthdayRuntime(app);
+            rt.page5FloaterTimers = rt.page5FloaterTimers || [];
+
+            // Colourful tokens — visible on both light and dark backgrounds
+            var tokens  = ['\u2B50', '\u2728', '\u2726', '\u2665', '\u25C6', '\u2605', '\u2736', '\u2739'];
+            var colours = ['#ffd700', '#ff6b9d', '#a78bfa', '#60afff', '#6bcb77', '#ff9f43', '#ffffff'];
+            var total = Math.max(8, count | 0);
+
+            for (var i = 0; i < total; i++) {
+                (function(idx) {
+                    // Stagger launch times so confetti appears over several seconds, not all at once
+                    var t = window.setTimeout(function() {
+                        if (!layer.isConnected) return;
+                        var el = document.createElement('span');
+                        el.className = 'bday-p5-floater';
+
+                        el.textContent = tokens[(Math.random() * tokens.length) | 0];
+                        el.style.color    = colours[(Math.random() * colours.length) | 0];
+                        el.style.fontSize = (11 + Math.random() * 13).toFixed(0) + 'px';
+
+                        // 1. Random X — spawn anywhere across the full container width
+                        el.style.left = (2 + Math.random() * 96).toFixed(1) + '%';
+                        // top: -12px is provided by the CSS rule
+
+                        // 2. Random delay + 3. Random fall duration (speed)
+                        var delay = (Math.random() * 2.4).toFixed(2);
+                        var dur   = (3.5 + Math.random() * 4.0).toFixed(2);
+                        el.style.setProperty('--delay',  delay + 's');
+                        el.style.setProperty('--dur',    dur   + 's');
+
+                        // 4. S-curve horizontal drift: swing one way at mid-fall, then opposite
+                        var driftSign = Math.random() < 0.5 ? 1 : -1;
+                        el.style.setProperty('--driftA', (driftSign  * (28 + Math.random() * 50)).toFixed(0) + 'px');
+                        el.style.setProperty('--driftB', (-driftSign * (22 + Math.random() * 45)).toFixed(0) + 'px');
+
+                        // 5. Rotation through the fall
+                        el.style.setProperty('--rot50',  (100 + Math.random() * 160).toFixed(0) + 'deg');
+                        el.style.setProperty('--rot100', (280 + Math.random() * 160).toFixed(0) + 'deg');
+
+                        layer.appendChild(el);
+                        window.setTimeout(function() {
+                            if (el.parentNode) el.parentNode.removeChild(el);
+                        }, (parseFloat(dur) + parseFloat(delay) + 0.5) * 1000);
+                    }, idx * 80);
+                    rt.page5FloaterTimers.push(t);
+                })(i);
+            }
         },
 
         _updateBirthdayTree(page) {
@@ -1485,11 +1616,19 @@ setupBirthdayPage1(app) {
         },
 
         _teardownInteractiveBalloons(app) {            var rt = BirthdayMixin._getBirthdayRuntime(app);
-            if (!rt.balloonsSystem) return;
-            rt.balloonsSystem.active = false;
-            if (rt.balloonsSystem.rafId) window.cancelAnimationFrame(rt.balloonsSystem.rafId);
-            rt.balloonsSystem.rafId = null;
+            if (rt.balloonsSystem) {
+                rt.balloonsSystem.active = false;
+                if (rt.balloonsSystem.rafId) window.cancelAnimationFrame(rt.balloonsSystem.rafId);
+                rt.balloonsSystem.rafId = null;
+            }
             if (rt._once) rt._once.balloonsBound = false;
+
+            if (Array.isArray(rt.page5FloaterTimers) && rt.page5FloaterTimers.length) {
+                rt.page5FloaterTimers.forEach(function(t) { window.clearTimeout(t); });
+                rt.page5FloaterTimers = [];
+            }
+            var floaterLayer = document.getElementById('bday-p5-celebration');
+            if (floaterLayer) floaterLayer.innerHTML = '';
 
             if (Array.isArray(rt.page5Timers) && rt.page5Timers.length) {
                 rt.page5Timers.forEach(function(t) { window.clearTimeout(t); });

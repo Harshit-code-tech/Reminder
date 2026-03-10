@@ -654,6 +654,28 @@
     position: relative;
 }
 
+/* Festive starfield veil for Page 2 — warm gold tones, prime-number tile sizes to avoid carpet grids */
+.gift-ceremony-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+        radial-gradient(rgba(255, 215, 0, 0.52) 1.5px, transparent 1.5px),
+        radial-gradient(rgba(255, 165, 80, 0.38) 1.5px, transparent 1.5px),
+        radial-gradient(rgba(255, 200, 130, 0.24) 2px, transparent 2px),
+        radial-gradient(rgba(255, 140, 160, 0.16) 1px, transparent 1px);
+    background-size: 67px 59px, 47px 41px, 89px 71px, 29px 31px;
+    background-position: 7px 9px, 23px 19px, 11px 13px, 37px 41px;
+    opacity: 0.90;
+}
+
+.gift-ceremony-container > :not(#bday-p2-env-light):not(.bday-p2-sparkles) {
+    position: relative;
+    z-index: 2;
+}
+
 .birthday-gift {
     position: relative;
     width: clamp(180px, 42vw, 220px);
@@ -946,15 +968,36 @@
 .bday-p2-sparkle {
     position: absolute;
     pointer-events: none;
-    color: rgba(255, 230, 110, 0.80);
+    color: rgba(255, 230, 110, 0.82);
     animation: bdayP2SparkleRise ease-in-out infinite;
     will-change: transform, opacity;
 }
+/* --tx / --ty define the diagonal flight endpoint (set by JS using angle+distance math).
+   At 48% the element overshoots its horizontal target slightly, creating a visible arc curve.
+   Typical values: |--tx| 70-140px and |--ty| 70-120px giving ~35-55° angles from vertical. */
 @keyframes bdayP2SparkleRise {
-    0%   { transform: translateY(0)      rotate(0deg);  opacity: 0; }
-    12%  { opacity: 0.80; }
-    80%  { opacity: 0.45; }
-    100% { transform: translateY(-110px) rotate(28deg); opacity: 0; }
+    0%   { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+    14%  { opacity: 0.88; }
+    48%  { transform: translate(calc(var(--tx, 18px) * 1.14), calc(var(--ty, -110px) * 0.50)) rotate(calc(var(--rot, 32deg) * 0.44)); }
+    82%  { opacity: 0.26; }
+    100% { transform: translate(var(--tx, 18px), var(--ty, -110px)) rotate(var(--rot, 32deg)); opacity: 0; }
+}
+
+/* Background birthday-element decorations (larger, slower, very faint) */
+.bday-p2-bg-elem {
+    position: absolute;
+    pointer-events: none;
+    animation: bdayP2BgElemDrift ease-in-out infinite;
+    will-change: transform, opacity;
+    filter: drop-shadow(0 0 4px rgba(255, 215, 80, 0.35));
+}
+/* Same --tx/--ty/--rot scheme; --peak-opacity controls visibility (set by JS, default 0.32) */
+@keyframes bdayP2BgElemDrift {
+    0%   { transform: translate(0, 0) rotate(0deg);                                                                               opacity: 0; }
+    18%  { opacity: var(--peak-opacity, 0.32); }
+    55%  { transform: translate(calc(var(--tx, 28px) * 1.08), calc(var(--ty, -80px) * 0.52)) rotate(calc(var(--rot, 14deg) * 0.46)); opacity: var(--peak-opacity, 0.32); }
+    80%  { opacity: calc(var(--peak-opacity, 0.32) * 0.45); }
+    100% { transform: translate(var(--tx, 28px), var(--ty, -80px)) rotate(var(--rot, 14deg));                                      opacity: 0; }
 }
 
 /* Subtle step hint */
@@ -2339,33 +2382,42 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     opacity: 0.9;
 }
 
-/* Full-bleed night sky background — fills the farewell container */
+/* Star accent layer — transparent bg so card background shows through; no dark box */
 .bday-p5-bg {
     position: absolute;
     inset: 0;
     z-index: 0;
     overflow: hidden;
-    background-color: #0a0420;
+    border-radius: 20px;
+    /* NO background-color — let card bg bleed through seamlessly */
     background-image:
-        radial-gradient(rgba(255,255,255,0.80) 1px, transparent 1px),
-        radial-gradient(rgba(200,180,255,0.46) 1px, transparent 1px),
-        radial-gradient(rgba(255,255,255,0.33) 1px, transparent 1px),
-        radial-gradient(rgba(180,160,255,0.26) 1px, transparent 1px);
+        radial-gradient(rgba(255,255,255,0.68) 1px, transparent 1px),
+        radial-gradient(rgba(210,188,255,0.40) 1px, transparent 1px),
+        radial-gradient(rgba(255,255,255,0.28) 1px, transparent 1px),
+        radial-gradient(rgba(255,220,160,0.22) 1px, transparent 1px);
     background-size: 97px 83px, 61px 71px, 41px 53px, 137px 113px;
     background-position: 7px 13px, 23px 37px, 11px 43px, 53px 27px;
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
-    mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+    /* Vignette: stars strongest at centre, fade at all edges → no hard rectangle */
+    -webkit-mask-image: radial-gradient(72% 66% at 50% 44%, rgba(0,0,0,0.65) 52%, transparent 100%);
+    mask-image: radial-gradient(72% 66% at 50% 44%, rgba(0,0,0,0.65) 52%, transparent 100%);
+    /* Gentle breathing shimmer so stars feel alive */
+    animation: bdayStarShimmer 5s ease-in-out 0.8s infinite;
 }
 
-/* Purple sky glow at top of the background */
+@keyframes bdayStarShimmer {
+    0%, 100% { opacity: 0.65; }
+    50%       { opacity: 1.0; }
+}
+
+/* Subtle aurora glow at the top — blends with card purple */
 .bday-p5-bg::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(ellipse at 50% 0%,
-        rgba(80, 18, 155, 0.72) 0%,
-        rgba(30, 6, 80, 0.60) 40%,
-        transparent 70%);
+    background:
+        radial-gradient(ellipse at 50% 0%, rgba(140, 72, 240, 0.28) 0%, transparent 58%),
+        radial-gradient(ellipse at 20% 80%, rgba(255, 148, 90, 0.12) 0%, transparent 52%),
+        radial-gradient(ellipse at 80% 82%, rgba(245, 200, 88, 0.10) 0%, transparent 50%);
     pointer-events: none;
 }
 
@@ -2373,25 +2425,25 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
 .bday-p5-bg::after {
     content: '';
     position: absolute;
-    top: 14%;
+    top: 18%;
     left: -5%;
-    width: 50%;
+    width: 48%;
     height: 1.5px;
-    background: linear-gradient(90deg, transparent 0%, rgba(255,255,220,0.92) 50%, transparent 100%);
-    animation: bdayP5ShootStar 7s linear 2s infinite;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,220,0.90) 50%, transparent 100%);
+    animation: bdayP5ShootStar 8s linear 1.5s infinite;
     transform-origin: 0 50%;
     will-change: transform, opacity;
 }
 
 @keyframes bdayP5ShootStar {
-    0%   { transform: translateX(-100%) translateY(0)    scaleX(0.2); opacity: 0; }
-    5%   { transform: translateX(-50%)  translateY(0)    scaleX(1);   opacity: 1; }
-    40%  { transform: translateX(80%)   translateY(14px) scaleX(1.1); opacity: 0.6; }
-    50%  { transform: translateX(110%)  translateY(18px) scaleX(1.1); opacity: 0; }
-    100% { transform: translateX(110%)  translateY(18px) scaleX(1.1); opacity: 0; }
+    0%   { transform: translateX(-110%) translateY(0)    scaleX(0.2); opacity: 0; }
+    6%   { transform: translateX(-40%)  translateY(0)    scaleX(1);   opacity: 0.9; }
+    44%  { transform: translateX(85%)   translateY(16px) scaleX(1.1); opacity: 0.5; }
+    54%  { transform: translateX(115%)  translateY(20px) scaleX(0.8); opacity: 0; }
+    100% { transform: translateX(115%)  translateY(20px) scaleX(0.8); opacity: 0; }
 }
 
-/* Farewell container — positioning context for sky and balloons */
+/* Farewell container — NO distinct background; content floats on card atmosphere */
 .birthday-farewell {
     position: relative;
     overflow: hidden;
@@ -2401,20 +2453,97 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     gap: 0;
     padding: 0;
     width: 100%;
-    min-height: min(420px, 76vh);
+    min-height: min(340px, 64vh);
     border-radius: 20px;
+    isolation: isolate;
+    /* A barely-there warm vignette — reinforces content area without boxing it */
+    background:
+        radial-gradient(ellipse at 50% 18%, rgba(148, 78, 228, 0.13) 0%, transparent 62%),
+        radial-gradient(ellipse at 50% 90%, rgba(250, 190, 90, 0.09) 0%, transparent 55%);
+}
+
+/* Extended glow halo behind the whole section — bleeds into card margins */
+.birthday-farewell::before {
+    content: '';
+    position: absolute;
+    inset: -40px -28px;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(ellipse at 50% 10%, rgba(128, 72, 210, 0.20) 0%, transparent 60%),
+        radial-gradient(ellipse at 50% 96%, rgba(246, 200, 88, 0.14) 0%, transparent 56%);
 }
 
 /* Foreground content wrapper — sits above sky and balloons */
 .bday-p5-content {
     position: relative;
-    z-index: 1;
+    z-index: 2;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 1.4rem;
     width: 100%;
-    padding: 1.75rem 1rem 2.25rem;
+    padding: 1.55rem 1rem 2rem;
+}
+
+/* Warm message card — glassmorphic, always visible on page entry */
+.bday-p5-warm-msg {
+    position: relative;
+    max-width: 440px;
+    width: 100%;
+    padding: 1.5rem 1.75rem;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    text-align: center;
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.65s ease, transform 0.65s ease;
+}
+
+.bday-p5-warm-msg::before {
+    content: '';
+    position: absolute;
+    inset: -14px;
+    border-radius: 30px;
+    background: radial-gradient(circle, rgba(255, 200, 120, 0.18), transparent 68%);
+    z-index: -1;
+    pointer-events: none;
+}
+
+.bday-p5-warm-msg.revealed {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.bday-p5-warm-text {
+    font-size: clamp(0.98rem, 2.6vw, 1.12rem);
+    font-weight: 600;
+    color: #3a1e0a;
+    line-height: 1.75;
+    margin: 0 0 0.55rem;
+}
+
+.bday-p5-warm-sub {
+    font-size: clamp(0.84rem, 2.2vw, 0.94rem);
+    color: rgba(60, 30, 10, 0.72);
+    line-height: 1.6;
+    margin: 0;
+}
+
+[data-theme="dark"] .bday-p5-warm-msg {
+    background: rgba(40, 16, 60, 0.40);
+    border-color: rgba(180, 140, 255, 0.18);
+}
+
+[data-theme="dark"] .bday-p5-warm-text {
+    color: rgba(255, 240, 200, 0.92);
+}
+
+[data-theme="dark"] .bday-p5-warm-sub {
+    color: rgba(255, 220, 170, 0.72);
 }
 
 /* Chips — start hidden, revealed by JS (staggered entrance) */
@@ -2422,10 +2551,10 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 0.55rem;
-    max-width: 520px;
+    gap: 0.4rem;
+    max-width: 380px;
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(6px);
     transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
@@ -2435,16 +2564,15 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
 }
 
 .finale-chip {
-    padding: 0.45rem 0.82rem;
+    padding: 0.28rem 0.62rem;
     border-radius: 999px;
-    font-size: 0.82rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    color: #5a2a10;
-    background: linear-gradient(135deg, rgba(255, 231, 143, 0.92), rgba(255, 176, 86, 0.9));
-    border: 1px solid rgba(232, 133, 10, 0.35);
-    box-shadow: 0 3px 10px rgba(232, 133, 10, 0.18);
-    animation: bdayChipFloat 2.2s ease-in-out infinite alternate;
+    font-size: 0.73rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: rgba(80, 40, 15, 0.72);
+    background: rgba(255, 200, 80, 0.10);
+    border: 1px solid rgba(200, 140, 20, 0.25);
+    animation: bdayChipFloat 3s ease-in-out infinite alternate;
 }
 
 .finale-chip:nth-child(2) { animation-delay: 0.12s; }
@@ -2457,9 +2585,9 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
 }
 
 [data-theme="dark"] .finale-chip {
-    color: #fdf1d8;
-    background: linear-gradient(135deg, rgba(124, 77, 171, 0.62), rgba(232, 133, 10, 0.52));
-    border-color: rgba(245, 200, 66, 0.35);
+    color: rgba(255, 220, 160, 0.62);
+    background: rgba(180, 130, 255, 0.08);
+    border-color: rgba(180, 140, 255, 0.22);
 }
 
 /* Message reveal button — ghost style with glow */
@@ -2600,7 +2728,7 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
 /* Balloon buttons — CSS-animated float, pointer events re-enabled */
 .birthday-balloons .balloon {
     position: absolute;
-    bottom: -60px;
+    bottom: -40px;
     font-size: clamp(22px, 4vw, 36px);
     line-height: 1;
     border: none;
@@ -2611,6 +2739,66 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     touch-action: manipulation;
     pointer-events: auto;
     will-change: transform, opacity;
+}
+
+/* Page 5 celebratory floaters: mostly sparkles, occasional gift icon */
+.bday-p5-celebration {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+/* Balloon layer — 3 slow-rising balloons, JS-injected on page entry */
+.bday-p5-balloons {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.bday-p5-balloon {
+    position: absolute;
+    bottom: -8%;
+    font-size: 1.75rem;
+    line-height: 1;
+    opacity: 0;
+    will-change: transform, opacity;
+    animation:
+        bdayP5BalloonAscend var(--bdur, 14s) linear var(--bdelay, 0s) infinite,
+        bdayP5BalloonSway   var(--bsway, 4.5s) ease-in-out var(--bdelay, 0s) infinite alternate;
+}
+
+@keyframes bdayP5BalloonAscend {
+    0%   { transform: translateY(0);      opacity: 0; }
+    7%   { opacity: 0.8; }
+    80%  { opacity: 0.7; }
+    93%  { opacity: 0; }
+    100% { transform: translateY(-110vh); opacity: 0; }
+}
+
+@keyframes bdayP5BalloonSway {
+    from { translate: calc(var(--bdx, 14px) * -0.5) 0; }
+    to   { translate: calc(var(--bdx, 14px) *  0.5) 0; }
+}
+
+.bday-p5-floater {
+    position: absolute;
+    top: -12px;
+    line-height: 1;
+    opacity: 0;
+    will-change: transform, opacity;
+    animation: bdayP5ConfettiFall var(--dur, 5s) linear var(--delay, 0s) forwards;
+}
+/* Falling confetti: spawned at random X across the top, drifts in an S-curve as it falls */
+@keyframes bdayP5ConfettiFall {
+    0%   { transform: translate(0, -12px)                              rotate(0deg);   opacity: 0; }
+    8%   { opacity: 1; }
+    50%  { transform: translate(var(--driftA,  40px), 150px)           rotate(var(--rot50,  180deg)); opacity: 0.9; }
+    85%  { opacity: 0.4; }
+    100% { transform: translate(var(--driftB, -35px), 320px)           rotate(var(--rot100, 360deg)); opacity: 0; }
 }
 
 .birthday-balloons .balloon.floating {
@@ -2728,6 +2916,11 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     .birthday-farewell {
         min-height: 280px;
         border-radius: 12px;
+        overflow: hidden;
+    }
+    .bday-p5-bg {
+        inset: -16px -12px;
+        border-radius: 18px;
     }
     .birthday-farewell .farewell-message {
         padding: 1.25rem;
@@ -2944,6 +3137,10 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
         animation: none !important;
         opacity: 1;
         transform: none;
+    }
+    .bday-p5-floater {
+        animation: none !important;
+        opacity: 0 !important;
     }
     .birthday-badge {
         /* JS sets animation directly; we keep it brief */

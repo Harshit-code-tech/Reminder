@@ -1,30 +1,27 @@
-{% comment %}Page 5: Birthday Finale — full-bleed starfield sky, floating balloons, badge, message reveal{% endcomment %}
+{% comment %}Page 5: Birthday Finale — twinkling stars, slow balloons, warm message, confetti on button click{% endcomment %}
 <h2 class="page-title bday-p5-title">
   <span class="bday-p5-greeting">Happy Birthday,</span>
   <span class="recipient-name bday-p5-name">{{ event.name }}!</span>
 </h2>
 
 <div class="birthday-farewell">
-  <!-- Full-bleed night sky background -->
+  <!-- Stars twinkle softly via CSS animation -->
   <div class="bday-p5-bg" aria-hidden="true"></div>
 
-  <!-- Balloons float over the sky, behind the foreground content -->
-  <div class="birthday-balloons" id="bday-p5-balloons" aria-hidden="true">
-    <button class="balloon" type="button" style="--color:#FF6B6B;--dur:14s;--dx:-18px;--delay:0s" aria-label="Tap to pop balloon">🎈</button>
-    <button class="balloon" type="button" style="--color:#FFD93D;--dur:17s;--dx:24px;--delay:0.6s" aria-label="Tap to pop balloon">🎈</button>
-    <button class="balloon" type="button" style="--color:#6BCB77;--dur:13s;--dx:-8px;--delay:1.2s" aria-label="Tap to pop balloon">🎈</button>
-    <button class="balloon" type="button" style="--color:#4D96FF;--dur:16s;--dx:15px;--delay:0.3s" aria-label="Tap to pop balloon">🎈</button>
-    <button class="balloon" type="button" style="--color:#FF6FC8;--dur:15s;--dx:-22px;--delay:0.9s" aria-label="Tap to pop balloon">🎈</button>
-    <button class="balloon" type="button" style="--color:#C77DFF;--dur:18s;--dx:10px;--delay:1.5s" aria-label="Tap to pop balloon">🎈</button>
-  </div>
+  <!-- 3 slow-rising balloons — JS injects on page entry -->
+  <div class="bday-p5-balloons" id="bday-p5-balloons" aria-hidden="true"></div>
 
-  <!-- Foreground content: badge, chips, message reveal -->
+  <!-- Confetti burst — triggered only when the message button is clicked -->
+  <div class="bday-p5-celebration" id="bday-p5-celebration" aria-hidden="true"></div>
+
   <div class="bday-p5-content">
-    <div class="birthday-badge">
-      <div class="badge-sparkle">🎂</div>
-      <div class="badge-text">Another Year of Amazing You!</div>
+    <!-- Warm message block — always visible, fades in on entry -->
+    <div class="bday-p5-warm-msg" id="bday-p5-warm-msg">
+      <p class="bday-p5-warm-text">Another year of amazing memories,<br>growth, and happiness.</p>
+      <p class="bday-p5-warm-sub">May this year bring you everything your heart wishes for. 🌟</p>
     </div>
 
+    <!-- Subtle decorative chips -->
     <div class="birthday-finale-chips" aria-label="Birthday highlights">
       <span class="finale-chip">Gratitude</span>
       <span class="finale-chip">Growth</span>
@@ -32,9 +29,8 @@
       <span class="finale-chip">New Memories</span>
     </div>
 
-    <!-- Message reveal button + hidden message -->
     <button class="bday-p5-msg-btn" id="bday-p5-msg-btn" type="button" aria-expanded="false">
-      💌 Read a special message
+      💌 A Message For You
     </button>
 
     {% if event.message %}

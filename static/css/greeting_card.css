@@ -2093,17 +2093,28 @@ body {
   position: absolute;
   width: 10px;
   height: 10px;
-  animation: confetti-fall 3s linear infinite;
+  animation: confetti-fall var(--dur, 4.2s) var(--ease, cubic-bezier(0.2, 0.72, 0.28, 1)) var(--delay, 0s) 1 both;
   z-index: 1000;
+  will-change: transform, opacity;
 }
 
 @keyframes confetti-fall {
   0% {
-    transform: translateY(-100vh) rotate(0deg);
-    opacity: 1;
+    transform: translate(0, -14px) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.95;
+  }
+  52% {
+    transform: translate(var(--x1, 40px), var(--y1, 42vh)) rotate(var(--r1, 180deg));
+    opacity: 0.85;
+  }
+  84% {
+    opacity: 0.35;
   }
   100% {
-    transform: translateY(100vh) rotate(720deg);
+    transform: translate(var(--x2, -34px), var(--y2, 106vh)) rotate(var(--r2, 420deg));
     opacity: 0;
   }
 }

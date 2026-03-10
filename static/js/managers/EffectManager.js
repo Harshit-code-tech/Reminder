@@ -228,10 +228,24 @@ class EffectManager {
 
         const confettiPieces = [];
         const confettiCount = Math.min(50, window.innerWidth / 20);
+        let maxLifetimeMs = 0;
+        const easings = [
+            'cubic-bezier(0.18, 0.72, 0.32, 1)',
+            'cubic-bezier(0.16, 0.80, 0.28, 1)',
+            'cubic-bezier(0.22, 0.74, 0.30, 1)'
+        ];
 
         for (let i = 0; i < confettiCount; i++) {
             const confetti = document.createElement('div');
             confetti.className = 'confetti-piece';
+            const delay = +(Math.random() * 1.4).toFixed(2);
+            const duration = +(3.2 + Math.random() * 3.8).toFixed(2);
+            const sign = Math.random() < 0.5 ? -1 : 1;
+            const driftA = sign * (24 + Math.random() * 58);
+            const driftB = -sign * (22 + Math.random() * 54);
+            const rotMid = sign * (95 + Math.random() * 170);
+            const rotEnd = sign * (260 + Math.random() * 420);
+
             confetti.style.cssText = `
                 position: absolute;
                 left: ${Math.random() * 100}%;
@@ -242,19 +256,29 @@ class EffectManager {
                 z-index: 1000;
                 pointer-events: none;
             `;
+            confetti.style.setProperty('--delay', `${delay}s`);
+            confetti.style.setProperty('--dur', `${duration}s`);
+            confetti.style.setProperty('--ease', easings[Math.floor(Math.random() * easings.length)]);
+            confetti.style.setProperty('--x1', `${driftA.toFixed(1)}px`);
+            confetti.style.setProperty('--x2', `${driftB.toFixed(1)}px`);
+            confetti.style.setProperty('--y1', `${(32 + Math.random() * 26).toFixed(1)}vh`);
+            confetti.style.setProperty('--y2', `${(94 + Math.random() * 24).toFixed(1)}vh`);
+            confetti.style.setProperty('--r1', `${rotMid.toFixed(1)}deg`);
+            confetti.style.setProperty('--r2', `${rotEnd.toFixed(1)}deg`);
 
             container.appendChild(confetti);
             confettiPieces.push(confetti);
+            maxLifetimeMs = Math.max(maxLifetimeMs, (delay + duration) * 1000);
         }
 
-        // Remove confetti after animation
+        // Remove confetti after the longest piece has completed.
         setTimeout(() => {
             confettiPieces.forEach(piece => {
                 if (piece.parentNode) {
                     piece.parentNode.removeChild(piece);
                 }
             });
-        }, CONFIG.TIMEOUTS.CONFETTI);
+        }, Math.max(CONFIG.TIMEOUTS.CONFETTI, maxLifetimeMs + 250));
     }
 
     // ===== PAGE-5 FINALE ANIMATIONS =====
