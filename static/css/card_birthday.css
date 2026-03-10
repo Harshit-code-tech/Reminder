@@ -220,10 +220,10 @@
     animation: bdayGlowPulse 2.8s ease-in-out infinite alternate;
 }
 
-/* Flame wrapper */
+/* Flame wrapper — bottom anchored to wick tip (wick base at oil surface ~68px, wick 13px tall) */
 .bday-loader__flame-wrap {
     position: absolute;
-    top: 14%;
+    bottom: 81px;
     left: 50%;
     transform: translateX(-50%);
     width: 54px;
@@ -289,10 +289,10 @@
     animation: bdayFlameFlickerInner 1.1s ease-in-out 0.1s infinite alternate;
 }
 
-/* Wick */
+/* Wick — base sits at oil surface (bottom: 68px), extends up 13px to meet flame base */
 .bday-loader__wick {
     position: absolute;
-    top: 38%;
+    bottom: 68px;
     left: 50%;
     width: 3px;
     height: 13px;
@@ -320,23 +320,23 @@
 
 .bday-loader__diya.grown .bday-loader__oil { opacity: 1; }
 
-/* Spark ignition flash — JS adds .spark-strike directly to #bday-loader-spark */
+/* Spark ignition flash — sits at flame tip (wick tip 81px + outer flame 88px = 169px from bottom) */
 .bday-loader__spark {
     position: absolute;
-    top: 36%;
+    bottom: 169px;
     left: 50%;
     width: 6px;
     height: 6px;
     background: #fff8c0;
     border-radius: 50%;
-    transform: translate(-50%, -50%) scale(0);
+    transform: translate(-50%, 50%) scale(0);
     opacity: 0;
     transition: transform 0.35s ease-out, opacity 0.35s ease-out, box-shadow 0.35s ease-out;
     z-index: 6;
 }
 
 .bday-loader__spark.spark-strike {
-    transform: translate(-50%, -50%) scale(1);
+    transform: translate(-50%, 50%) scale(1);
     opacity: 1;
     animation:
         bdaySparkIgnite 0.45s ease-out,
@@ -3054,6 +3054,7 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     }
     .bday-loader__spark.spark-strike {
         animation: none !important;
+        transform: translate(-50%, 50%) scale(1);
         opacity: 1;
         box-shadow: 0 0 16px 6px rgba(255, 240, 140, 0.8);
     }
