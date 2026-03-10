@@ -197,6 +197,13 @@ class EventForm(forms.ModelForm):
             if not self.instance or not self.instance.pk:
                 self.fields['raksha_bandhan_theme'].initial = 'traditional'
 
+    def clean_highlights(self):
+        """Normalise CRLF/CR line endings to LF so newlines render correctly on cards."""
+        value = self.cleaned_data.get('highlights')
+        if value:
+            value = value.replace('\r\n', '\n').replace('\r', '\n')
+        return value
+
     def clean_date(self):
         """Validate the event date is not in the past (for new events)."""
         date = self.cleaned_data.get('date')

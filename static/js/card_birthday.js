@@ -236,9 +236,9 @@ setupBirthdayPage1(app) {
             app.saveData({ unlocked: true, birthday_page1_seen: true });
 
             var page1 = document.getElementById('page-1');
-            if (!page1) return;
-
-            var rt = BirthdayMixin._getBirthdayRuntime(app);
+            rt._once = rt._once || {};
+            rt._once.page4Bound = false;
+            rt.page4AutoAdvanceTimer = null;
 
             // Spawn 4 slow ambient balloons — calm, not festive
             if (!rt.page1BalloonsSpawned) {
@@ -793,12 +793,23 @@ setupBirthdayPage1(app) {
         },
 
         _startTypewriter(el, text, page3State) {
-            el.textContent = '';
-            var chars = Array.from(String(text));
+            el.innerHTML = '';
+            // Normalise Windows (CRLF) and old Mac (CR) line endings to LF
+            var normalized = String(text).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+            var chars = Array.from(normalized);
+            var currentNode = document.createTextNode('');
+            el.appendChild(currentNode);
             var i = 0;
             var tick = function() {
                 if (!el.isConnected) return;
-                el.textContent += chars[i] || '';
+                var ch = chars[i] || '';
+                if (ch === '\n') {
+                    el.appendChild(document.createElement('br'));
+                    currentNode = document.createTextNode('');
+                    el.appendChild(currentNode);
+                } else {
+                    currentNode.nodeValue += ch;
+                }
                 i++;
                 if (i < chars.length) {
                     var t = window.setTimeout(tick, 18);
@@ -830,10 +841,7 @@ setupBirthdayPage1(app) {
             rt.page4WishTriggered = false;
             rt.candleStep = 0;
             rt.page4Timers = rt.page4Timers || [];
-
-            // Reset any stale _runOnce guard so the click handler rebinds with a fresh closure
             rt._once = rt._once || {};
-            rt._once.page4Bound = false;
 
             var candles = Array.from(cake.querySelectorAll('.candle'));
             var totalCandles = candles.length || 5;
@@ -945,22 +953,6 @@ setupBirthdayPage1(app) {
             });
         },
 
-        _restorePage4CompletedState(app) {
-            var cake = app.elements.birthdayCake;
-            if (cake) {
-                cake.classList.add('blown-out', 'ceremony-complete');
-                cake.style.pointerEvents = 'none';
-                cake.querySelectorAll('.candle').forEach(function(c) { c.classList.add('blown-out'); });
-            }
-
-            var instruction = document.querySelector('.cake-instruction');
-            if (instruction) instruction.textContent = 'Your wish has been made! 🌟 Tap a star…';
-            app.saveData({ birthday_candle_step: 5 });
-
-            BirthdayMixin._setupWishStarSystem(app);
-            BirthdayMixin._showNightSky(app);
-        },
-
         _createSmokeOnCandle(cake, candle) {
             var candleRect = candle.getBoundingClientRect();
             var cakeRect = cake.getBoundingClientRect();
@@ -981,13 +973,15 @@ setupBirthdayPage1(app) {
             var hint    = document.getElementById('bday-p4-mic-hint');
             var allowBtn = document.getElementById('bday-p4-mic-allow');
             var skipBtn  = document.getElementById('bday-p4-mic-skip');
-            if (allowBtn) {
+            if (allowBtn && !allowBtn.dataset.bound) {
+                allowBtn.dataset.bound = '1';
                 allowBtn.addEventListener('click', function() {
                     if (hint) { hint.classList.add('dismissed'); window.setTimeout(function() { hint.style.display = 'none'; }, 380); }
                     BirthdayMixin._setupCandleBlowDetection(app);
                 }, { once: true });
             }
-            if (skipBtn) {
+            if (skipBtn && !skipBtn.dataset.bound) {
+                skipBtn.dataset.bound = '1';
                 skipBtn.addEventListener('click', function() {
                     if (hint) { hint.classList.add('dismissed'); window.setTimeout(function() { hint.style.display = 'none'; }, 380); }
                 }, { once: true });
@@ -1144,6 +1138,11 @@ setupBirthdayPage1(app) {
                 window.clearTimeout(rt.page4FinalizeTimer);
                 rt.page4FinalizeTimer = null;
             }
+            if (rt.page4AutoAdvanceTimer) {
+                window.clearTimeout(rt.page4AutoAdvanceTimer);
+                rt.page4AutoAdvanceTimer = null;
+            }
+
             // Ensure full reset for next visit
             rt.page4WishTriggered = false;
             rt.candleStep = 0;
@@ -1300,8 +1299,12 @@ setupBirthdayPage1(app) {
                             counter.textContent = 'All wishes sent ✨';
                             counter.classList.add('done');
                         }
-                        window.setTimeout(function() {
+                        if (rt.page4AutoAdvanceTimer) {
+                            window.clearTimeout(rt.page4AutoAdvanceTimer);
+                        }
+                        rt.page4AutoAdvanceTimer = window.setTimeout(function() {
                             app.goToPage(5);
+                            rt.page4AutoAdvanceTimer = null;
                         }, 1500);
                     }
                 };
@@ -1725,8 +1728,6 @@ setupBirthdayPage1(app) {
             }
         }
     };
-
-    console.log('Birthday module loaded');
 
     // Safety net: if the app fails to call EventModule.initialize for any reason,
     // start the loader ceremony directly at DOMContentLoaded.
