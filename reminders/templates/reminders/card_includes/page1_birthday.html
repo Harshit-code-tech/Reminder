@@ -1,27 +1,37 @@
-{% comment %}Page 1: Birthday — Immersive Welcome (balloons + sparkles + gift pulse + greeting){% endcomment %}
+{% comment %}Page 1: Birthday — Calm Welcome (starfield · diya corners · glowing gift){% endcomment %}
 
 <div class="bday-p1-bg" aria-hidden="true">
-  <!-- Floating balloons are injected by JS -->
+  <!-- Ambient star particles injected by JS -->
+  <div class="bday-p1-stars" id="bday-p1-stars"></div>
+  <!-- Floating balloons (3–4) injected by JS -->
   <div class="bday-p1-balloons" id="bday-p1-balloons"></div>
-  <!-- Sparkles are injected by JS -->
+  <!-- Ambient sparkles injected by JS -->
   <div class="bday-p1-sparkles" id="bday-p1-sparkles"></div>
+  <!-- Corner diya accents -->
+  <div class="bday-p1-diya-corners">
+    <span class="bday-p1-diya bday-p1-diya--tl">🪔</span>
+    <span class="bday-p1-diya bday-p1-diya--tr">🪔</span>
+    <span class="bday-p1-diya bday-p1-diya--bl">🪔</span>
+    <span class="bday-p1-diya bday-p1-diya--br">🪔</span>
+  </div>
 </div>
 
 <div class="bday-p1-content">
-  <div class="bday-p1-greeting">
-    <p class="bday-p1-line1">Today is a special day&hellip;</p>
-    <h1 class="bday-p1-name">
-      Happy Birthday,&nbsp;<span class="recipient-name">{{ event.name }}</span>!
-    </h1>
-    <p class="bday-p1-line2">A birthday surprise is waiting&nbsp;🎁</p>
-  </div>
+  <div class="bday-p1-card">
+    <div class="bday-p1-greeting">
+      <p class="bday-p1-line1">Today is a special day&hellip;</p>
+      <p class="bday-p1-hb-label">HAPPY BIRTHDAY</p>
+      <h1 class="bday-p1-name"><span class="recipient-name">{{ event.name }}</span>!</h1>
+      <p class="bday-p1-line2">A birthday surprise is waiting&nbsp;🎁</p>
+    </div>
 
-  <!-- Glowing gift hint -->
-  <div class="bday-p1-gift-hint" aria-hidden="true">
-    <div class="bday-p1-gift-icon">🎁</div>
-  </div>
+    <!-- Glowing gift — the visual anchor -->
+    <div class="bday-p1-gift-hint" aria-hidden="true">
+      <div class="bday-p1-gift-icon">🎁</div>
+    </div>
 
-  <p class="bday-p1-tap-prompt" aria-live="polite">
-    Tap anywhere to begin&nbsp;✨
-  </p>
+    <p class="bday-p1-tap-prompt" aria-live="polite">
+      Tap anywhere to begin&nbsp;✨
+    </p>
+  </div>
 </div>

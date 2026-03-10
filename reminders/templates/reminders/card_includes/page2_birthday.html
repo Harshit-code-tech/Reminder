@@ -1,11 +1,16 @@
 {% comment %}Page 2: Birthday — Open the Gift (3-step unwrap ritual){% endcomment %}
-<h2 class="page-title">A gift for you, <span class="recipient-name">{{ event.name }}</span>!</h2>
+<!-- Background warm bloom + soft light rays — activates when gift opens -->
+<div id="bday-p2-env-light" class="bday-p2-env-light" aria-hidden="true"></div>
+<!-- Ambient sparkle particles (injected by JS) -->
+<div class="bday-p2-sparkles" id="bday-p2-sparkles" aria-hidden="true"></div>
 
 <div class="gift-ceremony-container">
+  <h2 class="page-title gift-page-title">A gift for you,&nbsp;<span class="recipient-name">{{ event.name }}</span>!</h2>
+
   <div id="birthday-gift" class="birthday-gift" role="button" tabindex="0"
        aria-label="Birthday gift — tap to unwrap (3 steps)">
 
-    <!-- Layer 1: Wrapping paper -->
+    <!-- Layer 1: Wrapping paper (box body) -->
     <div class="gift-wrapping">
       <div class="gift-wrapping-pattern"></div>
     </div>
@@ -29,7 +34,11 @@
     </div>
   </div>
 
+  <!-- Step prompt — updates each tap -->
   <p class="gift-step-hint" aria-live="polite">Tap to unwrap the ribbon!</p>
+  <!-- Revealed when gift is fully opened -->
+  <p class="gift-unlock-subtitle">✨ Your surprise is ready</p>
+
   <span class="gift-aria-live" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);"></span>
 
   <button id="birthday-gift-continue" class="action-button hidden" aria-label="Continue to next page">

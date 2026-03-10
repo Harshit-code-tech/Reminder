@@ -242,79 +242,113 @@ setupBirthdayPage1(app) {
 
             var rt = BirthdayMixin._getBirthdayRuntime(app);
 
-            // Spawn floating balloons in #bday-p1-balloons
+            // Spawn 4 slow ambient balloons — calm, not festive
             if (!rt.page1BalloonsSpawned) {
                 rt.page1BalloonsSpawned = true;
                 var balloonContainer = document.getElementById('bday-p1-balloons');
                 if (balloonContainer) {
-                    var colors = ['#FF6B6B', '#FFD93D', '#6BCB77', '#4D96FF', '#FF6FC8', '#C77DFF', '#ffa94d'];
-                    var emojis = ['🎈', '🎈', '🎈', '🎈', '🎉', '🎈', '🎈'];
-                    for (var i = 0; i < 9; i++) {
+                    var emojis = ['🎈', '🎈', '🎈', '🎈'];
+                    for (var i = 0; i < 4; i++) {
                         var b = document.createElement('div');
                         b.className = 'bday-p1-balloon';
-                        b.textContent = emojis[i % emojis.length];
-                        b.style.left = (8 + Math.random() * 84) + '%';
-                        b.style.animationDuration = (7 + Math.random() * 6) + 's';
-                        b.style.animationDelay = (Math.random() * 4) + 's';
-                        b.style.fontSize = (24 + Math.random() * 22) + 'px';
-                        b.style.opacity = (0.55 + Math.random() * 0.35).toFixed(2);
+                        b.textContent = emojis[i];
+                        b.style.left = (12 + (i * 22) + Math.random() * 10) + '%';
+                        b.style.animationDuration = (15 + Math.random() * 7) + 's';
+                        b.style.animationDelay = (i * 3 + Math.random() * 2) + 's';
+                        b.style.fontSize = (20 + Math.random() * 10) + 'px';
+                        b.style.opacity = (0.30 + Math.random() * 0.20).toFixed(2);
                         balloonContainer.appendChild(b);
                     }
                 }
             }
 
-            if (!rt.page1MarigoldRingSpawned) {
-                rt.page1MarigoldRingSpawned = true;
-                var ring = document.createElement('div');
-                ring.className = 'bday-p1-marigold-ring';
-                ring.setAttribute('aria-hidden', 'true');
-
-                var petals = 22;
-                for (var m = 0; m < petals; m++) {
-                    var flower = document.createElement('span');
-                    flower.className = 'bday-p1-marigold';
-                    flower.textContent = (m % 4 === 0) ? '🌸' : '🌼';
-                    var angle = (Math.PI * 2 * m) / petals;
-                    flower.style.setProperty('--mx', String(Math.cos(angle)));
-                    flower.style.setProperty('--my', String(Math.sin(angle)));
-                    flower.style.animationDelay = (m * 0.06) + 's';
-                    ring.appendChild(flower);
-                }
-                page1.appendChild(ring);
-            }
-
-            // Spawn sparkle particles in #bday-p1-sparkles
+            // Ambient sparkles — reduced to 7, slow twinkle
             if (!rt.page1SparklesSpawned) {
                 rt.page1SparklesSpawned = true;
                 var sparkleContainer = document.getElementById('bday-p1-sparkles');
                 if (sparkleContainer) {
-                    var sparkleChars = ['✦', '✧', '⋆', '✦', '✨', '✧'];
-                    for (var j = 0; j < 18; j++) {
+                    var sparkleChars = ['✦', '✧', '⋆', '✨', '✦', '✧', '⋆'];
+                    for (var j = 0; j < 7; j++) {
                         var sp = document.createElement('div');
                         sp.className = 'bday-p1-sparkle';
                         sp.textContent = sparkleChars[j % sparkleChars.length];
-                        sp.style.left = (Math.random() * 96) + '%';
-                        sp.style.top = (Math.random() * 96) + '%';
-                        sp.style.animationDuration = (2 + Math.random() * 3) + 's';
-                        sp.style.animationDelay = (Math.random() * 3) + 's';
-                        sp.style.fontSize = (10 + Math.random() * 14) + 'px';
+                        sp.style.left = (Math.random() * 92) + '%';
+                        sp.style.top = (Math.random() * 92) + '%';
+                        sp.style.animationDuration = (8 + Math.random() * 6) + 's';
+                        sp.style.animationDelay = (Math.random() * 5) + 's';
+                        sp.style.fontSize = (9 + Math.random() * 9) + 'px';
                         sp.style.opacity = '0';
                         sparkleContainer.appendChild(sp);
                     }
                 }
             }
 
-            // Bind tap/keyboard to go to page 2
+            // Inject ambient star particles into #bday-p1-stars
+            if (!rt.page1StarsSpawned) {
+                rt.page1StarsSpawned = true;
+                var starsContainer = document.getElementById('bday-p1-stars');
+                if (starsContainer) {
+                    for (var s = 0; s < 30; s++) {
+                        var star = document.createElement('div');
+                        star.className = 'bday-p1-star';
+                        star.style.left = (Math.random() * 98) + '%';
+                        star.style.top = (Math.random() * 98) + '%';
+                        var sz = (1 + Math.random() * 1.8).toFixed(1);
+                        star.style.width = sz + 'px';
+                        star.style.height = sz + 'px';
+                        star.style.animationDuration = (6 + Math.random() * 8) + 's';
+                        star.style.animationDelay = (Math.random() * 6) + 's';
+                        starsContainer.appendChild(star);
+                    }
+                }
+            }
+
+            // Bind tap/keyboard: sparkle burst near gift → fade-out → page 2
             var startCeremony = function(e) {
                 if (e && e.target && e.target.closest && e.target.closest('button')) return;
-                app.goToPage(2);
+                if (rt.page1Transitioning) return;
+                rt.page1Transitioning = true;
+
+                // Sparkle burst originating near the gift icon
+                var giftEl = page1.querySelector('.bday-p1-gift-icon');
+                if (giftEl) {
+                    var giftRect = giftEl.getBoundingClientRect();
+                    var pageRect = page1.getBoundingClientRect();
+                    var cx = giftRect.left - pageRect.left + giftRect.width / 2;
+                    var cy = giftRect.top  - pageRect.top  + giftRect.height / 2;
+                    var burstChars = ['✦', '✧', '✨', '⋆', '✦', '✨', '✧'];
+                    for (var bi = 0; bi < 7; bi++) {
+                        var spark = document.createElement('span');
+                        spark.className = 'bday-p1-tap-spark';
+                        var angle = (bi / 7) * Math.PI * 2;
+                        var dist = 38 + Math.random() * 26;
+                        spark.style.setProperty('--tx', (Math.cos(angle) * dist).toFixed(1) + 'px');
+                        spark.style.setProperty('--ty', (Math.sin(angle) * dist).toFixed(1) + 'px');
+                        spark.style.left = cx + 'px';
+                        spark.style.top  = cy + 'px';
+                        spark.style.animationDelay = (bi * 0.028) + 's';
+                        spark.textContent = burstChars[bi];
+                        page1.appendChild(spark);
+                    }
+                }
+
+                // Fade page out then navigate
+                setTimeout(function() {
+                    page1.style.transition = 'opacity 0.28s ease-out';
+                    page1.style.opacity = '0';
+                    setTimeout(function() {
+                        app.goToPage(2);
+                        page1.style.opacity = '';
+                        page1.style.transition = '';
+                    }, 300);
+                }, 110);
             };
 
             if (!rt.page1TapBound) {
                 rt.page1TapBound = true;
                 page1.addEventListener('click', startCeremony);
                 page1.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); app.goToPage(2); }
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startCeremony(e); }
                 });
                 page1.setAttribute('tabindex', '0');
                 page1.setAttribute('aria-label', 'Birthday celebration starts. Press Enter or tap to begin.');
@@ -337,8 +371,11 @@ setupBirthdayPage1(app) {
             rt.page2.stepTimers = rt.page2.stepTimers || [];
 
             var savedStepRaw = Number.parseInt(String(app.savedData.birthday_unwrap_step || 0), 10);
-            var step = Number.isNaN(savedStepRaw) ? 0 : Math.max(0, Math.min(3, savedStepRaw));
-            if (app.savedData.birthday_page2_completed) step = 3;
+            // BUG FIX: cap at 2 so previously-completed sessions always re-run the ceremony.
+            // Step 3 is only restored when the user completed in this very session and
+            // navigated back (rt.page2.completedInSession flag — runtime-only, not persisted).
+            var step = Number.isNaN(savedStepRaw) ? 0 : Math.max(0, Math.min(2, savedStepRaw));
+            if (rt.page2.completedInSession) step = 3;
 
             const wrapping = gift.querySelector('.gift-wrapping');
             const ribbonLayer = gift.querySelector('.gift-ribbon-layer');
@@ -347,6 +384,8 @@ setupBirthdayPage1(app) {
             const continueBtn = document.getElementById('birthday-gift-continue');
             const stepHint = document.querySelector('.gift-step-hint');
             const ariaLive = document.querySelector('.gift-aria-live');
+            const envLight = document.getElementById('bday-p2-env-light');
+            const unlockSubtitle = document.querySelector('.gift-unlock-subtitle');
 
             const stepLabels = [
                 'Tap to unwrap the ribbon!',
@@ -378,6 +417,8 @@ setupBirthdayPage1(app) {
                     if (revealContent) revealContent.classList.add('visible');
                     if (continueBtn) continueBtn.classList.remove('hidden');
                     if (stepHint) stepHint.textContent = '🎁 Present unlocked!';
+                    if (envLight) envLight.classList.add('active');
+                    if (unlockSubtitle) unlockSubtitle.classList.add('visible');
                     gift.removeAttribute('tabindex');
                     gift.removeAttribute('role');
                     gift.classList.add('glow');
@@ -385,6 +426,8 @@ setupBirthdayPage1(app) {
                     gift.classList.remove('glow');
                     if (revealContent) revealContent.classList.remove('visible');
                     if (continueBtn) continueBtn.classList.add('hidden');
+                    if (envLight) envLight.classList.remove('active');
+                    if (unlockSubtitle) unlockSubtitle.classList.remove('visible');
                     gift.setAttribute('tabindex', '0');
                     gift.setAttribute('role', 'button');
                     if (stepHint) stepHint.textContent = stepLabels[s];
@@ -392,9 +435,6 @@ setupBirthdayPage1(app) {
             };
 
             applyState(step);
-            if (app.savedData.birthday_page2_completed) {
-                app.saveData({ birthday_unwrap_step: 3 });
-            }
             // Always bind the continue button — needed when returning with step already = 3
             BirthdayMixin._runOnce(app, 'page2ContinueBound', function() {
                 if (continueBtn) continueBtn.addEventListener('click', function() { app.goToPage(3); });
@@ -439,11 +479,14 @@ setupBirthdayPage1(app) {
                 } else {
                     rt.page2.finalizeTimer = window.setTimeout(function() {
                         rt.page2.finalizeTimer = null;
+                        rt.page2.completedInSession = true;
                         gift.classList.add('glow');
                         app.showConfetti();
                         if (revealContent) revealContent.classList.add('visible');
                         if (continueBtn) continueBtn.classList.remove('hidden');
                         if (stepHint) stepHint.textContent = '🎁 Present unlocked!';
+                        if (envLight) envLight.classList.add('active');
+                        if (unlockSubtitle) unlockSubtitle.classList.add('visible');
                         gift.removeAttribute('tabindex');
                         gift.removeAttribute('role');
                         app.saveData({ birthday_page2_completed: true });
@@ -461,6 +504,26 @@ setupBirthdayPage1(app) {
                     }
                 });
             });
+
+            // Inject ambient sparkle particles that float upward near the gift
+            if (!rt.page2.sparklesSpawned) {
+                rt.page2.sparklesSpawned = true;
+                var sparklesContainer = document.getElementById('bday-p2-sparkles');
+                if (sparklesContainer) {
+                    var sparkChars = ['✦', '✧', '✨', '⋆', '✦', '✧', '✨', '⋆'];
+                    for (var si = 0; si < 8; si++) {
+                        var sp2 = document.createElement('span');
+                        sp2.className = 'bday-p2-sparkle';
+                        sp2.textContent = sparkChars[si];
+                        sp2.style.left = (18 + Math.random() * 64) + '%';
+                        sp2.style.top  = (35 + Math.random() * 30) + '%';
+                        sp2.style.animationDuration = (7 + Math.random() * 6) + 's';
+                        sp2.style.animationDelay = (Math.random() * 7) + 's';
+                        sp2.style.fontSize = (8 + Math.random() * 9) + 'px';
+                        sparklesContainer.appendChild(sp2);
+                    }
+                }
+            }
         },
 
         /* ═══════════════════════════════════════════════════
