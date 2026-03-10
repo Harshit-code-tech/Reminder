@@ -1411,8 +1411,6 @@ setupBirthdayPage1(app) {
 
             rt.page5Timers.push(t1, t2, t3);
 
-            // 3 slow balloons drift upward — calm emotional atmosphere
-            BirthdayMixin._launchPage5Balloons(app);
             BirthdayMixin._setupMsgReveal(app);
 
             // One-time share nudge
@@ -1536,36 +1534,16 @@ setupBirthdayPage1(app) {
             });
         },
 
-        _launchPage5Balloons(app) {
-            var layer = document.getElementById('bday-p5-balloons');
-            if (!layer) return;
-            // Reset on each page entry so balloons restart fresh
-            layer.innerHTML = '';
-            var positions = [16, 50, 80];
-            positions.forEach(function(baseLeft, i) {
-                var el = document.createElement('span');
-                el.className = 'bday-p5-balloon';
-                el.setAttribute('aria-hidden', 'true');
-                el.textContent = '\uD83C\uDF88'; // 🎈
-                el.style.left = (baseLeft + (Math.random() - 0.5) * 8).toFixed(1) + '%';
-                el.style.setProperty('--bdur',   (13 + Math.random() * 4).toFixed(1) + 's');
-                el.style.setProperty('--bdelay', (i * 3 + Math.random() * 1.5).toFixed(1) + 's');
-                el.style.setProperty('--bsway',  (3.5 + Math.random() * 2).toFixed(1) + 's');
-                el.style.setProperty('--bdx',    (10 + Math.random() * 14).toFixed(0) + 'px');
-                layer.appendChild(el);
-            });
-        },
-
         _launchPage5Floaters(app, count, _unused) {
             var layer = document.getElementById('bday-p5-celebration');
             if (!layer) return;
             var rt = BirthdayMixin._getBirthdayRuntime(app);
             rt.page5FloaterTimers = rt.page5FloaterTimers || [];
 
-            // Colourful tokens — visible on both light and dark backgrounds
-            var tokens  = ['\u2B50', '\u2728', '\u2726', '\u2665', '\u25C6', '\u2605', '\u2736', '\u2739'];
-            var colours = ['#ffd700', '#ff6b9d', '#a78bfa', '#60afff', '#6bcb77', '#ff9f43', '#ffffff'];
-            var total = Math.max(8, count | 0);
+            // Soft celestial symbols only — keep finale calm and non-cluttered
+            var tokens  = ['\u2728', '\u2726', '\u2736', '\u2739', '\u2605'];
+            var colours = ['#ffd700', '#ffe7ad', '#a78bfa', '#fff2cf', '#ffffff'];
+            var total = Math.max(6, count | 0);
 
             for (var i = 0; i < total; i++) {
                 (function(idx) {

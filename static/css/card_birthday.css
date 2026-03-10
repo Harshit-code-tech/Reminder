@@ -2474,16 +2474,16 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
         radial-gradient(ellipse at 50% 96%, rgba(246, 200, 88, 0.14) 0%, transparent 56%);
 }
 
-/* Foreground content wrapper — sits above sky and balloons */
+/* Foreground content wrapper — sits above sky effects */
 .bday-p5-content {
     position: relative;
     z-index: 2;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.4rem;
+    gap: 1.1rem;
     width: 100%;
-    padding: 1.55rem 1rem 2rem;
+    padding: 0.95rem 1rem 2rem;
 }
 
 /* Warm message card — glassmorphic, always visible on page entry */
@@ -2491,12 +2491,12 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     position: relative;
     max-width: 440px;
     width: 100%;
-    padding: 1.5rem 1.75rem;
+    padding: 1.88rem;
     border-radius: 20px;
     background: rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.10);
     text-align: center;
     opacity: 0;
     transform: translateY(14px);
@@ -2559,35 +2559,26 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
 }
 
 .birthday-finale-chips.revealed {
-    opacity: 1;
+    opacity: 0.78;
     transform: translateY(0);
 }
 
 .finale-chip {
-    padding: 0.28rem 0.62rem;
+    padding: 0.25rem 0.58rem;
     border-radius: 999px;
-    font-size: 0.73rem;
-    font-weight: 600;
-    letter-spacing: 0.03em;
-    color: rgba(80, 40, 15, 0.72);
-    background: rgba(255, 200, 80, 0.10);
-    border: 1px solid rgba(200, 140, 20, 0.25);
-    animation: bdayChipFloat 3s ease-in-out infinite alternate;
-}
-
-.finale-chip:nth-child(2) { animation-delay: 0.12s; }
-.finale-chip:nth-child(3) { animation-delay: 0.22s; }
-.finale-chip:nth-child(4) { animation-delay: 0.32s; }
-
-@keyframes bdayChipFloat {
-    from { transform: translateY(0); }
-    to   { transform: translateY(-2px); }
+    font-size: 0.70rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: rgba(74, 36, 10, 0.58);
+    background: rgba(255, 205, 90, 0.07);
+    border: 1px solid rgba(200, 140, 20, 0.16);
+    animation: none;
 }
 
 [data-theme="dark"] .finale-chip {
-    color: rgba(255, 220, 160, 0.62);
-    background: rgba(180, 130, 255, 0.08);
-    border-color: rgba(180, 140, 255, 0.22);
+    color: rgba(255, 220, 160, 0.56);
+    background: rgba(180, 130, 255, 0.05);
+    border-color: rgba(180, 140, 255, 0.16);
 }
 
 /* Message reveal button — ghost style with glow */
@@ -2613,6 +2604,12 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
 .bday-p5-msg-btn.revealed {
     opacity: 1;
     transform: translateY(0) scale(1);
+    animation: bdayP5CtaPulse 3s ease-in-out 1.2s infinite;
+}
+
+@keyframes bdayP5CtaPulse {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50%      { transform: translateY(0) scale(1.03); }
 }
 
 .bday-p5-msg-btn:hover {
@@ -2748,40 +2745,6 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     z-index: 0;
     overflow: hidden;
     pointer-events: none;
-}
-
-/* Balloon layer — 3 slow-rising balloons, JS-injected on page entry */
-.bday-p5-balloons {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    overflow: hidden;
-    pointer-events: none;
-}
-
-.bday-p5-balloon {
-    position: absolute;
-    bottom: -8%;
-    font-size: 1.75rem;
-    line-height: 1;
-    opacity: 0;
-    will-change: transform, opacity;
-    animation:
-        bdayP5BalloonAscend var(--bdur, 14s) linear var(--bdelay, 0s) infinite,
-        bdayP5BalloonSway   var(--bsway, 4.5s) ease-in-out var(--bdelay, 0s) infinite alternate;
-}
-
-@keyframes bdayP5BalloonAscend {
-    0%   { transform: translateY(0);      opacity: 0; }
-    7%   { opacity: 0.8; }
-    80%  { opacity: 0.7; }
-    93%  { opacity: 0; }
-    100% { transform: translateY(-110vh); opacity: 0; }
-}
-
-@keyframes bdayP5BalloonSway {
-    from { translate: calc(var(--bdx, 14px) * -0.5) 0; }
-    to   { translate: calc(var(--bdx, 14px) *  0.5) 0; }
 }
 
 .bday-p5-floater {
