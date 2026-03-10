@@ -1601,6 +1601,20 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     box-shadow: 0 2px 6px rgba(249, 180, 194, 0.4);
 }
 
+/* Sprinkle dots on bottom cake tier */
+.birthday-cake .cake-base::after {
+    content: '';
+    position: absolute;
+    inset: 6px 12px 10px;
+    background-image:
+        radial-gradient(circle, rgba(255,255,200,0.65) 1.5px, transparent 1.5px),
+        radial-gradient(circle, rgba(255,200,240,0.65) 1.5px, transparent 1.5px);
+    background-size: 17px 17px, 13px 13px;
+    background-position: 0 0, 7px 8px;
+    border-radius: 18px 18px 22px 22px;
+    pointer-events: none;
+}
+
 /* Middle tier */
 .birthday-cake .cake-layers {
     position: absolute;
@@ -1625,6 +1639,20 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     box-shadow: 0 2px 6px rgba(196, 181, 253, 0.4);
 }
 
+/* Sprinkle dots on middle cake tier */
+.birthday-cake .cake-layers::after {
+    content: '';
+    position: absolute;
+    inset: 5px 8px 6px;
+    background-image:
+        radial-gradient(circle, rgba(255,255,255,0.55) 1px, transparent 1px),
+        radial-gradient(circle, rgba(255,240,120,0.52) 1px, transparent 1px);
+    background-size: 14px 14px, 10px 10px;
+    background-position: 0 0, 5px 6px;
+    border-radius: 15px 15px 18px 18px;
+    pointer-events: none;
+}
+
 /* Cake plate — oval shadow base that makes the cake feel grounded */
 .birthday-cake .cake-plate {
     position: absolute;
@@ -1642,10 +1670,30 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     z-index: 0;
 }
 
+/* Smooth ceremony fade-out: applied when all candles are blown out */
+.birthday-cake.ceremony-complete {
+    opacity: 0;
+    transform: scale(0.93) translateY(14px);
+    transition: opacity 0.65s ease, transform 0.65s ease !important;
+    pointer-events: none;
+}
+
+/* Golden glow flash at the moment all candles are extinguished */
+.birthday-cake.blown-out:not(.ceremony-complete) {
+    animation: bdayCakeBlownGlow 0.9s ease-out both;
+}
+
+@keyframes bdayCakeBlownGlow {
+    0%   { filter: drop-shadow(0 12px 28px rgba(224, 92, 120, 0.25)); }
+    25%  { filter: drop-shadow(0 0 32px rgba(255,210,80,0.92)) drop-shadow(0 0 64px rgba(255,160,30,0.55)); }
+    65%  { filter: drop-shadow(0 0 15px rgba(255,170,60,0.60)); }
+    100% { filter: drop-shadow(0 8px 22px rgba(224, 92, 120, 0.30)); }
+}
+
 /* Candle bar */
 .birthday-cake .candles-container {
     position: absolute;
-    top: 12px;
+    bottom: 156px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -1928,7 +1976,7 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
 .night-sky-stars {
     position: relative;
     width: min(500px, 90%);
-    height: 200px;
+    height: min(340px, 50vh);
     overflow: hidden;
 }
 
@@ -1938,15 +1986,15 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     border: none;
     background: transparent;
     color: rgba(255, 248, 220, 0.90);
-    font-size: 22px;
+    font-size: clamp(22px, 3.5vw, 30px);
     line-height: 1;
     cursor: pointer;
     text-shadow: 0 0 12px rgba(255, 240, 140, 0.25);
     transform: translate(-50%, -50%);
     transition: transform 0.16s ease, text-shadow 0.16s ease;
-    padding: 6px;
-    min-width: 44px;
-    min-height: 44px;
+    padding: 10px;
+    min-width: 48px;
+    min-height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2034,7 +2082,7 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     text-shadow: 0 0 12px rgba(245, 200, 66, 0.35);
 }
 
-/* ── Night sky starfield background (JS-populated dots) ── */
+/* ── Night sky starfield background ── */
 .bday-p4-starfield {
     position: absolute;
     inset: 0;
@@ -2042,18 +2090,22 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     overflow: hidden;
     border-radius: inherit;
     z-index: 0;
+    /* Prime-number tile sizes avoid visible repeating grid — each layer
+       tiles at a different incommensurable interval, creating an organic
+       scattered-star appearance instead of a carpet/grid pattern. */
+    background-image:
+        radial-gradient(rgba(255,255,220,0.92) 1.2px, transparent 1.2px),
+        radial-gradient(rgba(200,180,255,0.58) 1px,   transparent 1px),
+        radial-gradient(rgba(255,255,255,0.28) 1px,   transparent 1px),
+        radial-gradient(rgba(255,240,180,0.45) 1.5px, transparent 1.5px);
+    background-size: 97px 83px, 61px 71px, 41px 53px, 137px 113px;
+    background-position: 7px 13px, 23px 37px, 11px 43px, 53px 27px;
+    animation: bdayP4StarlightShimmer 5.5s ease-in-out infinite alternate;
 }
 
-.bday-p4-sf-dot {
-    position: absolute;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.85);
-    animation: bdayP4SfTwinkle ease-in-out infinite alternate;
-}
-
-@keyframes bdayP4SfTwinkle {
-    from { opacity: 0.06; transform: scale(1); }
-    to   { opacity: 0.62; transform: scale(1.5); }
+@keyframes bdayP4StarlightShimmer {
+    from { opacity: 0.45; }
+    to   { opacity: 1; }
 }
 
 /* Ensure night sky flex children render above starfield */
@@ -2183,61 +2235,77 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
 .cake-slice-line {
     position: absolute;
     top: 0; left: 50%;
-    width: 2px; height: 0;
-    background: rgba(255, 248, 240, 0.92);
+    width: 3px; height: 0;
+    /* Gradient: tapers to transparent at both ends — looks like a glowing blade */
+    background: linear-gradient(to bottom,
+        transparent 0%,
+        rgba(255,245,180,0.80) 18%,
+        rgba(255,255,255,0.96) 50%,
+        rgba(255,245,180,0.80) 82%,
+        transparent 100%
+    );
     transform: translateX(-50%);
-    border-radius: 1px;
-    box-shadow: 0 0 7px rgba(255, 220, 150, 0.70);
+    border-radius: 2px;
+    box-shadow: 0 0 8px 3px rgba(255,220,100,0.68), 0 0 18px rgba(255,190,60,0.38);
 }
 
 .bday-p4-cake-slice.active .cake-slice-line {
-    animation: bdaySliceDraw 0.38s ease-out 0.06s both;
+    animation: bdaySliceDraw 0.44s cubic-bezier(0.22, 1, 0.36, 1) 0.05s both;
 }
 
 @keyframes bdaySliceDraw {
-    from { height: 0; opacity: 1; }
-    to   { height: 72px; opacity: 1; }
+    from { height: 0; opacity: 0.5; }
+    to   { height: 76px; opacity: 1; }
 }
 
 .cake-slice-wedge {
     position: absolute;
     bottom: 0; left: 50%;
     width: 0; height: 0;
-    border-left:  22px solid transparent;
-    border-right: 22px solid transparent;
-    border-top:   44px solid rgba(255, 140, 184, 0.72);
+    border-left:  25px solid transparent;
+    border-right: 25px solid transparent;
+    border-top:   50px solid rgba(255, 140, 184, 0.90);
     transform: translateX(-50%);
-    filter: blur(0.5px);
+    filter: drop-shadow(0 4px 10px rgba(255,100,180,0.52));
     opacity: 0;
 }
 
 .bday-p4-cake-slice.active .cake-slice-wedge {
-    animation: bdaySliceWedgePop 0.55s ease-out 0.44s both;
+    animation: bdaySliceWedgePop 0.80s ease-out 0.48s both;
 }
 
 @keyframes bdaySliceWedgePop {
-    0%   { opacity: 0; transform: translateX(-50%) translateY(0); }
-    40%  { opacity: 0.88; }
-    100% { opacity: 0; transform: translateX(calc(-50% + 12px)) translateY(8px); }
+    0%   { opacity: 0;    transform: translateX(-50%) translateY(0)     scale(0.35) rotate(0deg); }
+    28%  { opacity: 0.97; transform: translateX(-50%) translateY(-6px)  scale(1.10) rotate(-5deg); }
+    65%  { opacity: 0.78; transform: translateX(calc(-50% + 14px)) translateY(7px) scale(0.97) rotate(9deg); }
+    100% { opacity: 0;    transform: translateX(calc(-50% + 26px)) translateY(22px) scale(0.80) rotate(20deg); }
 }
 
 @keyframes bdaySliceLifecycle {
     0%   { opacity: 0; }
-    8%   { opacity: 1; }
+    6%   { opacity: 1; }
     88%  { opacity: 1; }
     100% { opacity: 0; }
 }
 
 /* ── Page 4 responsive ── */
 @media (max-width: 480px) {
-    .birthday-cake {
-        transform: scale(0.80);
-        transform-origin: top center;
-        margin-bottom: -2.5rem;
+    .cake-container { gap: 0.75rem; }
+    /* Constrain night sky within the card boundaries on small screens;
+       inset: 0 removes the -12px overflow so it never bleeds to card edges. */
+    #birthday-night-sky {
+        inset: 0;
+        border-radius: var(--bd-r-xl, 20px);
+        padding: 0.85rem 0.7rem;
+        gap: 0.6rem;
+        min-height: 200px;
+        max-height: min(320px, 50vh);
     }
-    #birthday-night-sky { padding: 1rem 0.75rem; }
-    .night-sky-stars { height: 160px; }
-    .bday-p4-mic-hint { padding: 0.75rem 1rem; }
+    .night-sky-title { font-size: 0.86rem; }
+    .night-sky-stars { height: min(180px, 36vh); }
+    .birthday-star { font-size: clamp(18px, 5vw, 24px); }
+    .bday-p4-mic-hint { padding: 0.6rem 0.85rem; font-size: 0.85rem; }
+    .bday-p4-mic-btn { padding: 0.4rem 0.9rem; font-size: 0.82rem; }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -2564,6 +2632,23 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     100% { transform: translate(var(--dx), var(--dy)) rotate(230deg);     opacity: 0; }
 }
 
+/* ── Birthday celebration particles — JS-launched after cake-cut ceremony ── */
+.bday-p4-celebration-particle {
+    position: absolute;
+    top: -30px;
+    pointer-events: none;
+    z-index: 1001;
+    line-height: 1;
+    will-change: transform, opacity;
+    animation: bdayCelebFall linear both;
+}
+
+@keyframes bdayCelebFall {
+    0%   { transform: translate(0, 0)                                           rotate(0deg);          opacity: 1; }
+    60%  { transform: translate(var(--drift), 65vh) rotate(calc(var(--rot) * 0.65)); opacity: 0.9; }
+    100% { transform: translate(var(--drift), 108vh) rotate(var(--rot));              opacity: 0; }
+}
+
 /* ══════════════════════════════════════════════════════════
    10. Shared keyframes
    ══════════════════════════════════════════════════════════ */
@@ -2606,7 +2691,8 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     .birthday-cake { width: 190px; height: 205px; }
     .birthday-cake .cake-base   { width: 182px; height: 82px; }
     .birthday-cake .cake-layers { width: 136px; height: 60px; }
-    .birthday-cake .candles-container { gap: 10px; }
+    /* Candles bottom = cake-layers.bottom (86px) + cake-layers.height (60px) - 3px plant = 143px */
+    .birthday-cake .candles-container { gap: 8px; bottom: 143px; }
     .cake-container { padding: 0.5rem; }
 
     .birthday-farewell {

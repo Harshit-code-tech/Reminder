@@ -586,7 +586,9 @@ class GreetingCardApp {
             const ds = this.cardContainer.dataset;
             const backendState = {
                 birthday_page1_seen: ds.birthdayPage1Seen === 'true',
-                birthday_page4_wish_made: ds.birthdayPage4WishMade === 'true',
+                // birthday_page4_wish_made is intentionally NOT read from the server —
+                // it is tracked per-device in localStorage so each viewer experiences
+                // the full ceremony independently, even on a shared/forwarded card.
                 birthday_page5_seen: ds.birthdayPage5Seen === 'true'
             };
 
@@ -594,7 +596,6 @@ class GreetingCardApp {
                 ...backendState,
                 ...this.savedData,
                 birthday_page1_seen: Boolean(this.savedData.birthday_page1_seen || backendState.birthday_page1_seen),
-                birthday_page4_wish_made: Boolean(this.savedData.birthday_page4_wish_made || backendState.birthday_page4_wish_made),
                 birthday_page5_seen: Boolean(this.savedData.birthday_page5_seen || backendState.birthday_page5_seen)
             };
 
@@ -702,9 +703,10 @@ class GreetingCardApp {
             localStorage.setItem(this.storageKey, JSON.stringify(this.savedData));
             
             // Sync birthday ceremony progression keys to backend.
+            // NOTE: birthday_page4_wish_made is excluded intentionally — it is
+            // per-device localStorage state and must not be shared across viewers.
             const backendKeys = [
                 'birthday_page1_seen',
-                'birthday_page4_wish_made',
                 'birthday_page5_seen'
             ];
             if (Object.keys(data).some(key => backendKeys.includes(key))) {

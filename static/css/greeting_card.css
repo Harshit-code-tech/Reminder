@@ -3937,6 +3937,8 @@ html {
     border-width: 1px;
     overflow-y: auto;
     overflow-x: hidden;
+    /* Leave room for the bottom navigation bar */
+    padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px));
   }
 
   /* Page content optimization */
@@ -3961,29 +3963,37 @@ html {
     margin-bottom: 12px;
   }
 
-  /* Navigation improvements */
+  /* Navigation: convert to bottom tab bar on phone-sized screens */
   .page-navigator {
-    right: 4px;
-    top: 50%;
-    transform: translateY(-50%);
-    padding: 8px 4px;
-    border-radius: 12px;
-    backdrop-filter: blur(10px);
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    width: 100%;
+    transform: none;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+    border-radius: 14px 14px 0 0;
+    border-width: 1px 0 0 0;
+    backdrop-filter: blur(14px);
+    z-index: 950;
   }
 
   .nav-item {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    margin-bottom: 6px;
-  }
-
-  .nav-item:last-child {
+    width: auto;
+    height: 44px;
+    border-radius: 10px;
     margin-bottom: 0;
+    flex: 1;
+    max-width: 64px;
   }
 
   .nav-item i {
-    font-size: 12px;
+    font-size: 15px;
   }
 
   .nav-tooltip {

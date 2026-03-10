@@ -762,26 +762,34 @@ setupBirthdayPage1(app) {
             var rt = BirthdayMixin._getBirthdayRuntime(app);
             var cake = app.elements.birthdayCake;
 
-            // If wish was already made, restore completed state immediately
-            if (app.savedData.birthday_page4_wish_made) {
-                BirthdayMixin._restorePage4CompletedState(app);
-                return;
-            }
-
-            // Initialize candle step tracking
-            var persistedCandleRaw = Number.parseInt(String(app.savedData.birthday_candle_step || 0), 10);
-            var persistedCandle = Number.isNaN(persistedCandleRaw) ? 0 : persistedCandleRaw;
-            var candles = Array.from(cake.querySelectorAll('.candle'));
-            var totalCandles = candles.length || 5;
-            rt.candleStep = Math.max(0, Math.min(totalCandles, rt.candleStep || persistedCandle || 0));
-            rt.page4WishTriggered = Boolean(rt.page4WishTriggered);
+            // Ceremony is session-only — always reset state on each page enter
+            // so the wish experience replays fresh every visit (like page 2).
+            rt.page4WishTriggered = false;
+            rt.candleStep = 0;
             rt.page4Timers = rt.page4Timers || [];
 
-            // Rehydrate partial candle progress when revisiting page 4.
-            candles.forEach(function(candle, idx) {
-                candle.classList.toggle('blown-out', idx < rt.candleStep);
-            });
-            cake.classList.toggle('blown-out', rt.candleStep >= totalCandles);
+            // Reset any stale _runOnce guard so the click handler rebinds with a fresh closure
+            rt._once = rt._once || {};
+            rt._once.page4Bound = false;
+
+            var candles = Array.from(cake.querySelectorAll('.candle'));
+            var totalCandles = candles.length || 5;
+
+            // Restore candle DOM to unblown state
+            candles.forEach(function(candle) { candle.classList.remove('blown-out'); });
+            cake.classList.remove('blown-out', 'ceremony-complete');
+            cake.style.pointerEvents = '';
+
+            // Reset instruction text
+            var instruction = document.querySelector('.cake-instruction');
+            if (instruction) instruction.textContent = 'Tap the cake to blow the candles!';
+
+            // Reset mic hint visibility in case it was hidden from a prior visit
+            var micHint = document.getElementById('bday-p4-mic-hint');
+            if (micHint) {
+                micHint.style.display = '';
+                micHint.classList.remove('dismissed');
+            }
 
             BirthdayMixin._showMicHint(app);
             BirthdayMixin._setupWishStarSystem(app);
@@ -808,9 +816,7 @@ setupBirthdayPage1(app) {
                     BirthdayMixin._createSmokeOnCandle(cake, candle);
                 }
                 rt.candleStep++;
-                app.saveData({ birthday_candle_step: rt.candleStep });
 
-                var instruction = document.querySelector('.cake-instruction');
                 if (instruction) {
                     var remaining = totalCandles - rt.candleStep;
                     if (remaining > 0) {
@@ -825,6 +831,7 @@ setupBirthdayPage1(app) {
                     cake.classList.add('blown-out');
                     BirthdayMixin._teardownCandleBlowDetection(app);
 
+
                     // Dismiss mic hint (in case mic was never tapped)
                     var _mhFinal = document.getElementById('bday-p4-mic-hint');
                     if (_mhFinal) { _mhFinal.classList.add('dismissed'); window.setTimeout(function() { _mhFinal.style.display = 'none'; }, 380); }
@@ -836,19 +843,16 @@ setupBirthdayPage1(app) {
                         rt.page4Timers.push(window.setTimeout(function() { warmBurst.classList.remove('active'); }, 1600));
                     }
 
-                    var blowEffect = document.createElement('div');
-                    blowEffect.className = 'blow-effect';
-                    blowEffect.textContent = '💨';
-                    blowEffect.style.cssText =
-                        'position:absolute;top:20%;left:50%;transform:translateX(-50%);' +
-                        'font-size:2rem;animation:blowAway 1s ease-out forwards;pointer-events:none;';
-                    cake.appendChild(blowEffect);
-
-                    // Cake slice ceremony starts 350ms in
+                    // 350ms: cake slice ceremony
                     rt.page4Timers.push(window.setTimeout(function() {
                         var sliceEl = document.getElementById('bday-p4-cake-slice');
                         if (sliceEl) sliceEl.classList.add('active');
                     }, 350));
+
+                    // 500ms: cake fades out gracefully before night sky appears
+                    rt.page4Timers.push(window.setTimeout(function() {
+                        cake.classList.add('ceremony-complete');
+                    }, 500));
 
                     if (instruction) {
                         instruction.textContent = 'Your wish has been made! 🌟 Tap a star…';
@@ -858,25 +862,12 @@ setupBirthdayPage1(app) {
                         window.clearTimeout(rt.page4FinalizeTimer);
                     }
                     rt.page4FinalizeTimer = window.setTimeout(function() {
-                        app.showConfetti();
+                        BirthdayMixin._showBirthdayCelebration(app);
                         app.audioManager?.playSuccessSound?.();
-                        BirthdayMixin._revealBirthdayWish(app);
                         app.revealAudioOrQuote();
                         BirthdayMixin._showNightSky(app);
-                        blowEffect.remove();
-
-                        // Thread of memories / milestone popup — triggered on page 4
-                        var hasThreadOfMemories = app.cardContainer.dataset.threadOfMemories === 'true';
-                        if (hasThreadOfMemories) {
-                            app.showThreadOfMemories();
-                        } else {
-                            app.showMilestonePopup();
-                        }
-
-                        app.saveData({ birthday_page4_wish_made: true });
-                        app.saveData({ birthday_candle_step: totalCandles });
                         rt.page4FinalizeTimer = null;
-                    }, 1700);
+                    }, 1300);
                 }
             };
 
@@ -894,24 +885,14 @@ setupBirthdayPage1(app) {
         _restorePage4CompletedState(app) {
             var cake = app.elements.birthdayCake;
             if (cake) {
-                cake.classList.add('blown-out');
-                cake.style.opacity = '0';
+                cake.classList.add('blown-out', 'ceremony-complete');
                 cake.style.pointerEvents = 'none';
-                var candles = cake.querySelectorAll('.candle');
-                candles.forEach(function(c) { c.classList.add('blown-out'); });
+                cake.querySelectorAll('.candle').forEach(function(c) { c.classList.add('blown-out'); });
             }
 
             var instruction = document.querySelector('.cake-instruction');
             if (instruction) instruction.textContent = 'Your wish has been made! 🌟 Tap a star…';
             app.saveData({ birthday_candle_step: 5 });
-
-            var wishContainer = document.getElementById('birthday-wish-container');
-            if (wishContainer) {
-                wishContainer.classList.remove('hidden');
-                wishContainer.style.opacity = '1';
-            }
-            var wishResult = wishContainer?.querySelector('.wish-result');
-            if (wishResult) wishResult.style.opacity = '1';
 
             BirthdayMixin._setupWishStarSystem(app);
             BirthdayMixin._showNightSky(app);
@@ -1099,13 +1080,10 @@ setupBirthdayPage1(app) {
             if (rt.page4FinalizeTimer) {
                 window.clearTimeout(rt.page4FinalizeTimer);
                 rt.page4FinalizeTimer = null;
-
-                // If user navigates away mid-finalize and it is not persisted yet,
-                // allow them to complete the wish flow on revisit.
-                if (!app.savedData.birthday_page4_wish_made) {
-                    rt.page4WishTriggered = false;
-                }
             }
+            // Ensure full reset for next visit
+            rt.page4WishTriggered = false;
+            rt.candleStep = 0;
         },
 
         _teardownBirthdayPage2(app) {
@@ -1237,27 +1215,61 @@ setupBirthdayPage1(app) {
             });
         },
 
+        /**
+         * Launch birthday-themed celebration particles after the cake-cut ceremony.
+         * Emits emoji party symbols + coloured confetti with varied speed, drift,
+         * and rotation — much more festive than plain falling squares.
+         */
+        _showBirthdayCelebration(app) {
+            var container = app.cardContainer;
+            if (!container) return;
+            var emojis  = ['\uD83C\uDF82','\uD83C\uDF89','\u2728','\uD83C\uDF88','\u2B50','\uD83C\uDF1F','\uD83C\uDF8A','\uD83D\uDCAB'];
+            var colors  = ['#ff8c94','#ffd86e','#86efac','#93c5fd','#c084fc','#fb923c','#fca5a5','#fde68a'];
+            var count   = Math.min(26, Math.max(12, (window.innerWidth / 18) | 0));
+
+            for (var i = 0; i < count; i++) {
+                (function() {
+                    var el       = document.createElement('div');
+                    var useEmoji = Math.random() > 0.44;
+                    var delay    = (Math.random() * 850)  | 0;
+                    var dur      = (1700 + Math.random() * 1300) | 0;
+                    var drift    = (((Math.random() - 0.5) * 90) | 0) + 'px';
+                    var rot      = (((Math.random() - 0.5) * 580) | 0) + 'deg';
+                    var size     = (13 + Math.random() * 10).toFixed(1);
+
+                    el.className = 'bday-p4-celebration-particle';
+                    el.style.setProperty('--drift', drift);
+                    el.style.setProperty('--rot',   rot);
+                    el.style.left              = (Math.random() * 94).toFixed(1) + '%';
+                    el.style.animationDuration = dur   + 'ms';
+                    el.style.animationDelay    = delay + 'ms';
+                    el.style.fontSize          = size  + 'px';
+
+                    if (useEmoji) {
+                        el.textContent = emojis[(Math.random() * emojis.length) | 0];
+                    } else {
+                        var w = (6 + Math.random() * 7).toFixed(0);
+                        var h = (4 + Math.random() * 8).toFixed(0);
+                        el.style.width        = w + 'px';
+                        el.style.height       = h + 'px';
+                        el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                        el.style.background   = colors[(Math.random() * colors.length) | 0];
+                    }
+
+                    container.appendChild(el);
+                    window.setTimeout(function() {
+                        if (el.parentNode) el.parentNode.removeChild(el);
+                    }, delay + dur + 200);
+                })();
+            }
+        },
+
         _showNightSky(app) {
             var sky = document.getElementById('birthday-night-sky');
             if (!sky) return;
 
-            // Inject background starfield (runs once per page visit)
-            var starfield = document.getElementById('bday-p4-starfield');
-            if (starfield && !starfield.dataset.populated) {
-                starfield.dataset.populated = '1';
-                for (var _sf = 0; _sf < 90; _sf++) {
-                    var sfDot = document.createElement('span');
-                    sfDot.className = 'bday-p4-sf-dot';
-                    sfDot.style.left   = (Math.random() * 99).toFixed(1) + '%';
-                    sfDot.style.top    = (Math.random() * 99).toFixed(1) + '%';
-                    var sfSz = (Math.random() * 1.8 + 0.5).toFixed(1);
-                    sfDot.style.width  = sfSz + 'px';
-                    sfDot.style.height = sfSz + 'px';
-                    sfDot.style.animationDuration = (Math.random() * 2.5 + 1.5).toFixed(1) + 's';
-                    sfDot.style.animationDelay    = (Math.random() * 4.0).toFixed(1) + 's';
-                    starfield.appendChild(sfDot);
-                }
-            }
+            // Starfield background is now pure CSS (radial-gradient on .bday-p4-starfield).
+            // No DOM dots needed — just remove the old populated flag if migrating.
 
             sky.classList.remove('hidden');
             var toast = document.getElementById('birthday-wish-toast');
