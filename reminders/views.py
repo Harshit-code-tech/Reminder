@@ -1129,11 +1129,8 @@ def update_event_state(request, event_id):
 
         if 'birthday_page1_seen' in data:
             event.birthday_page1_seen = bool(data['birthday_page1_seen'])
-        if 'birthday_unwrap_step' in data:
-            step = int(data['birthday_unwrap_step'])
-            event.birthday_unwrap_step = max(0, min(3, step))
-        if 'birthday_page2_completed' in data:
-            event.birthday_page2_completed = bool(data['birthday_page2_completed'])
+        # NOTE: Page 2 unwrap ceremony is intentionally NOT persisted.
+        # Users should be able to replay gift opening on every new visit.
         if 'birthday_page4_wish_made' in data:
             event.birthday_page4_wish_made = bool(data['birthday_page4_wish_made'])
         if 'birthday_page5_seen' in data:

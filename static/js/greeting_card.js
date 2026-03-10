@@ -582,27 +582,18 @@ class GreetingCardApp {
         this.eventType = this.cardContainer.dataset.theme || 'birthday';
 
         // Hydrate birthday ceremony state from server-rendered dataset.
-        // Local state still takes precedence when present.
         if (this.eventType === 'birthday') {
             const ds = this.cardContainer.dataset;
-            const unwrapStepRaw = Number.parseInt(ds.birthdayUnwrapStep || '0', 10);
-            const backendUnwrapStep = Number.isNaN(unwrapStepRaw) ? 0 : Math.max(0, Math.min(3, unwrapStepRaw));
             const backendState = {
                 birthday_page1_seen: ds.birthdayPage1Seen === 'true',
-                birthday_unwrap_step: backendUnwrapStep,
-                birthday_page2_completed: ds.birthdayPage2Completed === 'true',
                 birthday_page4_wish_made: ds.birthdayPage4WishMade === 'true',
                 birthday_page5_seen: ds.birthdayPage5Seen === 'true'
             };
-            const localUnwrapStepRaw = Number.parseInt(String(this.savedData.birthday_unwrap_step ?? ''), 10);
-            const localUnwrapStep = Number.isNaN(localUnwrapStepRaw) ? backendState.birthday_unwrap_step : localUnwrapStepRaw;
 
             this.savedData = {
                 ...backendState,
                 ...this.savedData,
                 birthday_page1_seen: Boolean(this.savedData.birthday_page1_seen || backendState.birthday_page1_seen),
-                birthday_unwrap_step: Math.max(0, Math.min(3, localUnwrapStep)),
-                birthday_page2_completed: Boolean(this.savedData.birthday_page2_completed || backendState.birthday_page2_completed),
                 birthday_page4_wish_made: Boolean(this.savedData.birthday_page4_wish_made || backendState.birthday_page4_wish_made),
                 birthday_page5_seen: Boolean(this.savedData.birthday_page5_seen || backendState.birthday_page5_seen)
             };
@@ -616,7 +607,13 @@ class GreetingCardApp {
         // that bypassed the password lock on first visit after session/cache clear.
         if (this.savedData.unlocked) {
             this.unlocked = true;
-            this.goToPage(this.savedData.lastPage || 2);
+            // Birthday pacing always resumes from page 2 so page3 memory timeline
+            // never feels like a page2 leak on revisit.
+            if (this.eventType === 'birthday') {
+                this.goToPage(2);
+            } else {
+                this.goToPage(this.savedData.lastPage || 2);
+            }
         } else {
             // Ensure page-1 is visible; for password-protected events the template
             // may not include the CSS 'active' class, so we force it here.
@@ -711,8 +708,6 @@ class GreetingCardApp {
             // Sync birthday ceremony progression keys to backend.
             const backendKeys = [
                 'birthday_page1_seen',
-                'birthday_unwrap_step',
-                'birthday_page2_completed',
                 'birthday_page4_wish_made',
                 'birthday_page5_seen'
             ];

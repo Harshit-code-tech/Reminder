@@ -370,12 +370,14 @@ setupBirthdayPage1(app) {
             }
             rt.page2.stepTimers = rt.page2.stepTimers || [];
 
-            var savedStepRaw = Number.parseInt(String(app.savedData.birthday_unwrap_step || 0), 10);
-            // BUG FIX: cap at 2 so previously-completed sessions always re-run the ceremony.
-            // Step 3 is only restored when the user completed in this very session and
-            // navigated back (rt.page2.completedInSession flag — runtime-only, not persisted).
-            var step = Number.isNaN(savedStepRaw) ? 0 : Math.max(0, Math.min(2, savedStepRaw));
-            if (rt.page2.completedInSession) step = 3;
+            // Page 2 unwrap is intentionally session-only so users can replay the ritual
+            // on every fresh visit/reload. Persisted values are ignored here.
+            var step = 0;
+            if (rt.page2.completedInSession) {
+                step = 3;
+            } else if (typeof rt.page2.lastStep === 'number') {
+                step = Math.max(0, Math.min(2, rt.page2.lastStep));
+            }
 
             const wrapping = gift.querySelector('.gift-wrapping');
             const ribbonLayer = gift.querySelector('.gift-ribbon-layer');
@@ -470,7 +472,7 @@ setupBirthdayPage1(app) {
                 }
 
                 step++;
-                app.saveData({ birthday_unwrap_step: step });
+                rt.page2.lastStep = step;
 
                 if (ariaLive) ariaLive.textContent = ariaMessages[step - 1];
 
@@ -489,7 +491,7 @@ setupBirthdayPage1(app) {
                         if (unlockSubtitle) unlockSubtitle.classList.add('visible');
                         gift.removeAttribute('tabindex');
                         gift.removeAttribute('role');
-                        app.saveData({ birthday_page2_completed: true });
+                        rt.page2.lastStep = 3;
                         app.audioManager?.generateTone?.(523.25, 0.15, 'triangle');
                     }, 400);
                 }
