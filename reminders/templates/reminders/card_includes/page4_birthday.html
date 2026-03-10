@@ -1,9 +1,10 @@
 {% comment %}Page 4: Birthday — Make a Wish with Cake{% endcomment %}
 
+{# Warm golden burst overlay — JS adds .active when last candle is blown out #}
+<div class="bday-p4-warm-burst" id="bday-p4-warm-burst" aria-hidden="true"></div>
+
 <div class="cake-container">
-  <div class="birthday-cake" tabindex="0" aria-label="Birthday cake with candles. Click to blow out candles.">
-    <div class="cake-base"></div>
-    <div class="cake-layers"></div>
+  <div class="birthday-cake" tabindex="0" aria-label="Birthday cake with candles. Click or blow to extinguish candles.">
     <div class="candles-container">
       <div class="candle"><div class="candle-flame"></div></div>
       <div class="candle"><div class="candle-flame"></div></div>
@@ -11,8 +12,28 @@
       <div class="candle"><div class="candle-flame"></div></div>
       <div class="candle"><div class="candle-flame"></div></div>
     </div>
+    <div class="cake-layers"></div>
+    <div class="cake-base"></div>
+    {# Plate shadow — sits beneath the cake #}
+    <div class="cake-plate" aria-hidden="true"></div>
+    {# Cake slice ceremony — JS activates .active after blow-out #}
+    <div class="bday-p4-cake-slice" id="bday-p4-cake-slice" aria-hidden="true">
+      <div class="cake-slice-line"></div>
+      <div class="cake-slice-wedge"></div>
+    </div>
   </div>
-  <div class="cake-instruction" aria-live="polite">Blow into your mic (or click the cake) to blow out the candles and make a wish!</div>
+
+  {# Friendly mic prompt shown before the browser permission popup #}
+  <div class="bday-p4-mic-hint" id="bday-p4-mic-hint">
+    <span class="bday-p4-mic-icon" aria-hidden="true">🎤</span>
+    <span class="bday-p4-mic-text">Blow into your mic to extinguish the candles</span>
+    <div class="bday-p4-mic-actions">
+      <button class="bday-p4-mic-btn" type="button" id="bday-p4-mic-allow">Allow mic</button>
+      <button class="bday-p4-mic-tap" type="button" id="bday-p4-mic-skip">I'll tap the cake</button>
+    </div>
+  </div>
+
+  <div class="cake-instruction" aria-live="polite">Tap the cake to blow out the candles and make a wish!</div>
 
   <!-- Birthday Wish Input (revealed after blowing candles) -->
   <div class="wish-container hidden" id="birthday-wish-container">
@@ -32,7 +53,9 @@
 
   <!-- Night Sky Wish Stars (revealed after blowing candles) -->
   <div class="birthday-night-sky hidden" id="birthday-night-sky" aria-label="Night sky wish stars">
-    <div class="night-sky-title">Tap a star to send your wish</div>
+    {# Background starfield — JS will populate with 90 tiny twinkle dots #}
+    <div class="bday-p4-starfield" id="bday-p4-starfield" aria-hidden="true"></div>
+    <div class="night-sky-title">✨ Tap a star to send your wish</div>
     <div class="night-sky-stars" role="group" aria-label="Wish stars">
       <button class="birthday-star" type="button" aria-label="Wish star">✦</button>
       <button class="birthday-star" type="button" aria-label="Wish star">✦</button>

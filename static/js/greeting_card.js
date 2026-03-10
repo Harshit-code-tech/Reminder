@@ -607,13 +607,9 @@ class GreetingCardApp {
         // that bypassed the password lock on first visit after session/cache clear.
         if (this.savedData.unlocked) {
             this.unlocked = true;
-            // Birthday pacing always resumes from page 2 so page3 memory timeline
-            // never feels like a page2 leak on revisit.
-            if (this.eventType === 'birthday') {
-                this.goToPage(2);
-            } else {
-                this.goToPage(this.savedData.lastPage || 2);
-            }
+            // Resume from the page the user was on; default to page 1 for new visits.
+            // (Page 1 no longer contains a password — it is the anticipation/welcome screen.)
+            this.goToPage(this.savedData.lastPage || 1);
         } else {
             // Ensure page-1 is visible; for password-protected events the template
             // may not include the CSS 'active' class, so we force it here.

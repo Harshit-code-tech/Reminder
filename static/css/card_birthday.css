@@ -1625,6 +1625,23 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     box-shadow: 0 2px 6px rgba(196, 181, 253, 0.4);
 }
 
+/* Cake plate — oval shadow base that makes the cake feel grounded */
+.birthday-cake .cake-plate {
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 240px;
+    height: 16px;
+    background: radial-gradient(ellipse at 50% 30%,
+        rgba(180, 110, 70, 0.50) 0%,
+        rgba(160,  90, 50, 0.25) 50%,
+        transparent 72%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+}
+
 /* Candle bar */
 .birthday-cake .candles-container {
     position: absolute;
@@ -1687,24 +1704,24 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
 }
 
 @keyframes bdayCandleFlicker {
-    0%   { transform: translateX(-50%) scaleX(1)    scaleY(1)    rotate(0deg); }
-    30%  { transform: translateX(-50%) scaleX(0.92) scaleY(1.08) rotate(-2deg); }
-    60%  { transform: translateX(-50%) scaleX(1.05) scaleY(0.94) rotate(2deg); }
-    100% { transform: translateX(-50%) scaleX(0.97) scaleY(1.04) rotate(-1deg); }
+    0%   { transform: translateX(-50%) scaleX(1)    scaleY(1)    rotate(0deg);   filter: blur(0.3px) brightness(1); }
+    30%  { transform: translateX(-50%) scaleX(0.92) scaleY(1.08) rotate(-2deg);  filter: blur(0.3px) brightness(1.28); }
+    60%  { transform: translateX(-50%) scaleX(1.05) scaleY(0.94) rotate(2deg);   filter: blur(0.3px) brightness(0.82); }
+    100% { transform: translateX(-50%) scaleX(0.97) scaleY(1.04) rotate(-1deg);  filter: blur(0.3px) brightness(1.12); }
 }
 
 @keyframes bdayCandleFlicker2 {
-    0%   { transform: translateX(-50%) scaleX(1.02) scaleY(1)    rotate(1deg); }
-    35%  { transform: translateX(-50%) scaleX(0.88) scaleY(1.13) rotate(-3deg); }
-    70%  { transform: translateX(-50%) scaleX(1.09) scaleY(0.91) rotate(2.5deg); }
-    100% { transform: translateX(-50%) scaleX(0.95) scaleY(1.06) rotate(-1deg); }
+    0%   { transform: translateX(-50%) scaleX(1.02) scaleY(1)    rotate(1deg);   filter: blur(0.3px) brightness(1); }
+    35%  { transform: translateX(-50%) scaleX(0.88) scaleY(1.13) rotate(-3deg);  filter: blur(0.3px) brightness(1.35); }
+    70%  { transform: translateX(-50%) scaleX(1.09) scaleY(0.91) rotate(2.5deg); filter: blur(0.3px) brightness(0.76); }
+    100% { transform: translateX(-50%) scaleX(0.95) scaleY(1.06) rotate(-1deg);  filter: blur(0.3px) brightness(1.08); }
 }
 
 @keyframes bdayCandleFlicker3 {
-    0%   { transform: translateX(-50%) scaleX(0.95) scaleY(1.06) rotate(-1.5deg); }
-    28%  { transform: translateX(-50%) scaleX(1.11) scaleY(0.89) rotate(3deg); }
-    62%  { transform: translateX(-50%) scaleX(0.90) scaleY(1.10) rotate(-2deg); }
-    100% { transform: translateX(-50%) scaleX(1.04) scaleY(0.95) rotate(1deg); }
+    0%   { transform: translateX(-50%) scaleX(0.95) scaleY(1.06) rotate(-1.5deg); filter: blur(0.3px) brightness(1.10); }
+    28%  { transform: translateX(-50%) scaleX(1.11) scaleY(0.89) rotate(3deg);    filter: blur(0.3px) brightness(1.40); }
+    62%  { transform: translateX(-50%) scaleX(0.90) scaleY(1.10) rotate(-2deg);   filter: blur(0.3px) brightness(0.74); }
+    100% { transform: translateX(-50%) scaleX(1.04) scaleY(0.95) rotate(1deg);    filter: blur(0.3px) brightness(1.18); }
 }
 
 /* Unique flicker rhythm per candle — no two flames synchronise */
@@ -1960,6 +1977,13 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     to   { opacity: 1;    text-shadow: 0 0 24px rgba(255,240,140,0.62); }
 }
 
+/* Individual wish star — hover glow */
+.birthday-star:hover {
+    transform: translate(-50%, -50%) scale(1.55);
+    text-shadow: 0 0 24px rgba(255, 248, 180, 0.95), 0 0 48px rgba(255, 220, 80, 0.55);
+    filter: drop-shadow(0 0 9px rgba(255, 248, 180, 0.80));
+}
+
 /* Shooting star trail (JS-created on wish-star click) */
 .shooting-star-trail {
     position: absolute;
@@ -2008,6 +2032,212 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     text-align: center;
     letter-spacing: 0.02em;
     text-shadow: 0 0 12px rgba(245, 200, 66, 0.35);
+}
+
+/* ── Night sky starfield background (JS-populated dots) ── */
+.bday-p4-starfield {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: inherit;
+    z-index: 0;
+}
+
+.bday-p4-sf-dot {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.85);
+    animation: bdayP4SfTwinkle ease-in-out infinite alternate;
+}
+
+@keyframes bdayP4SfTwinkle {
+    from { opacity: 0.06; transform: scale(1); }
+    to   { opacity: 0.62; transform: scale(1.5); }
+}
+
+/* Ensure night sky flex children render above starfield */
+.night-sky-title,
+.night-sky-stars,
+#birthday-wish-toast {
+    position: relative;
+    z-index: 1;
+}
+
+/* ── Warm golden burst when last candle is extinguished ── */
+.bday-p4-warm-burst {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 99;
+    background: radial-gradient(ellipse at 50% 38%,
+        rgba(255, 220, 90, 0.65) 0%,
+        rgba(255, 155, 50, 0.35) 38%,
+        transparent 65%);
+    opacity: 0;
+    transform: scale(0.7);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.bday-p4-warm-burst.active {
+    animation: bdayWarmBurstFlash 1.5s ease-out forwards;
+}
+
+@keyframes bdayWarmBurstFlash {
+    0%   { opacity: 0; transform: scale(0.8); }
+    18%  { opacity: 0.88; transform: scale(1.08); }
+    60%  { opacity: 0.40; transform: scale(1.18); }
+    100% { opacity: 0; transform: scale(1.30); }
+}
+
+/* ── Friendly mic permission hint ── */
+.bday-p4-mic-hint {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.55rem;
+    background: rgba(255, 248, 235, 0.88);
+    border: 1.5px solid rgba(232, 133, 10, 0.18);
+    border-radius: var(--bd-r-lg, 24px);
+    padding: 1rem 1.5rem;
+    width: min(340px, 90%);
+    text-align: center;
+    font-size: 0.92rem;
+    color: #7a5a3a;
+    box-shadow: var(--bd-shadow-sm, 0 2px 8px rgba(0,0,0,0.06));
+    animation: bdayCardReveal 0.5s ease-out both;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.bday-p4-mic-hint.dismissed {
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+}
+
+.bday-p4-mic-icon { font-size: 1.5rem; }
+
+.bday-p4-mic-text {
+    font-style: italic;
+    opacity: 0.9;
+    line-height: 1.4;
+}
+
+.bday-p4-mic-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+}
+
+.bday-p4-mic-btn {
+    padding: 0.5rem 1.2rem;
+    border-radius: var(--bd-r-pill, 999px);
+    border: 1.5px solid rgba(232, 133, 10, 0.38);
+    background: rgba(245, 200, 66, 0.14);
+    color: #7a5a3a;
+    font-weight: 600;
+    font-size: 0.88rem;
+    cursor: pointer;
+    min-height: 40px;
+    transition: background 0.2s;
+}
+
+.bday-p4-mic-btn:hover { background: rgba(245, 200, 66, 0.28); }
+
+.bday-p4-mic-tap {
+    padding: 0.4rem 0.8rem;
+    border: none;
+    background: transparent;
+    color: rgba(122, 90, 58, 0.65);
+    font-size: 0.82rem;
+    cursor: pointer;
+    text-decoration: underline;
+    min-height: 40px;
+}
+
+[data-theme="dark"] .bday-p4-mic-hint {
+    background: rgba(30, 16, 48, 0.82);
+    border-color: rgba(245, 200, 66, 0.16);
+    color: var(--bd-text-dim);
+}
+
+/* ── Cake slice ceremony (knife + wedge) ── */
+.bday-p4-cake-slice {
+    position: absolute;
+    top: 28%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70px;
+    height: 85px;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 14;
+}
+
+.bday-p4-cake-slice.active {
+    animation: bdaySliceLifecycle 1.1s ease-out forwards;
+}
+
+.cake-slice-line {
+    position: absolute;
+    top: 0; left: 50%;
+    width: 2px; height: 0;
+    background: rgba(255, 248, 240, 0.92);
+    transform: translateX(-50%);
+    border-radius: 1px;
+    box-shadow: 0 0 7px rgba(255, 220, 150, 0.70);
+}
+
+.bday-p4-cake-slice.active .cake-slice-line {
+    animation: bdaySliceDraw 0.38s ease-out 0.06s both;
+}
+
+@keyframes bdaySliceDraw {
+    from { height: 0; opacity: 1; }
+    to   { height: 72px; opacity: 1; }
+}
+
+.cake-slice-wedge {
+    position: absolute;
+    bottom: 0; left: 50%;
+    width: 0; height: 0;
+    border-left:  22px solid transparent;
+    border-right: 22px solid transparent;
+    border-top:   44px solid rgba(255, 140, 184, 0.72);
+    transform: translateX(-50%);
+    filter: blur(0.5px);
+    opacity: 0;
+}
+
+.bday-p4-cake-slice.active .cake-slice-wedge {
+    animation: bdaySliceWedgePop 0.55s ease-out 0.44s both;
+}
+
+@keyframes bdaySliceWedgePop {
+    0%   { opacity: 0; transform: translateX(-50%) translateY(0); }
+    40%  { opacity: 0.88; }
+    100% { opacity: 0; transform: translateX(calc(-50% + 12px)) translateY(8px); }
+}
+
+@keyframes bdaySliceLifecycle {
+    0%   { opacity: 0; }
+    8%   { opacity: 1; }
+    88%  { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* ── Page 4 responsive ── */
+@media (max-width: 480px) {
+    .birthday-cake {
+        transform: scale(0.80);
+        transform-origin: top center;
+        margin-bottom: -2.5rem;
+    }
+    #birthday-night-sky { padding: 1rem 0.75rem; }
+    .night-sky-stars { height: 160px; }
+    .bday-p4-mic-hint { padding: 0.75rem 1rem; }
 }
 
 /* ══════════════════════════════════════════════════════════

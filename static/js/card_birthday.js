@@ -783,12 +783,24 @@ setupBirthdayPage1(app) {
             });
             cake.classList.toggle('blown-out', rt.candleStep >= totalCandles);
 
-            BirthdayMixin._setupCandleBlowDetection(app);
+            BirthdayMixin._showMicHint(app);
             BirthdayMixin._setupWishStarSystem(app);
 
             var blowOneCandle = function() {
                 if (rt.page4WishTriggered) return;
                 if (rt.candleStep >= totalCandles) return;
+
+                // First tap: dismiss mic hint and start detection if not yet running
+                if (rt.candleStep === 0) {
+                    var _mh = document.getElementById('bday-p4-mic-hint');
+                    if (_mh) {
+                        _mh.classList.add('dismissed');
+                        window.setTimeout(function() { _mh.style.display = 'none'; }, 380);
+                    }
+                    if (!rt.mic?.active && !rt.page4MicUnavailable) {
+                        BirthdayMixin._setupCandleBlowDetection(app);
+                    }
+                }
 
                 var candle = candles[rt.candleStep];
                 if (candle) {
@@ -813,6 +825,17 @@ setupBirthdayPage1(app) {
                     cake.classList.add('blown-out');
                     BirthdayMixin._teardownCandleBlowDetection(app);
 
+                    // Dismiss mic hint (in case mic was never tapped)
+                    var _mhFinal = document.getElementById('bday-p4-mic-hint');
+                    if (_mhFinal) { _mhFinal.classList.add('dismissed'); window.setTimeout(function() { _mhFinal.style.display = 'none'; }, 380); }
+
+                    // Warm golden burst
+                    var warmBurst = document.getElementById('bday-p4-warm-burst');
+                    if (warmBurst) {
+                        warmBurst.classList.add('active');
+                        rt.page4Timers.push(window.setTimeout(function() { warmBurst.classList.remove('active'); }, 1600));
+                    }
+
                     var blowEffect = document.createElement('div');
                     blowEffect.className = 'blow-effect';
                     blowEffect.textContent = '💨';
@@ -820,6 +843,12 @@ setupBirthdayPage1(app) {
                         'position:absolute;top:20%;left:50%;transform:translateX(-50%);' +
                         'font-size:2rem;animation:blowAway 1s ease-out forwards;pointer-events:none;';
                     cake.appendChild(blowEffect);
+
+                    // Cake slice ceremony starts 350ms in
+                    rt.page4Timers.push(window.setTimeout(function() {
+                        var sliceEl = document.getElementById('bday-p4-cake-slice');
+                        if (sliceEl) sliceEl.classList.add('active');
+                    }, 350));
 
                     if (instruction) {
                         instruction.textContent = 'Your wish has been made! 🌟 Tap a star…';
@@ -847,7 +876,7 @@ setupBirthdayPage1(app) {
                         app.saveData({ birthday_page4_wish_made: true });
                         app.saveData({ birthday_candle_step: totalCandles });
                         rt.page4FinalizeTimer = null;
-                    }, 1000);
+                    }, 1700);
                 }
             };
 
@@ -901,6 +930,23 @@ setupBirthdayPage1(app) {
                 smoke.style.animationDelay = (i * 0.06) + 's';
                 cake.appendChild(smoke);
                 setTimeout(function(s) { s.remove(); }, 1400, smoke);
+            }
+        },
+
+        _showMicHint(app) {
+            var hint    = document.getElementById('bday-p4-mic-hint');
+            var allowBtn = document.getElementById('bday-p4-mic-allow');
+            var skipBtn  = document.getElementById('bday-p4-mic-skip');
+            if (allowBtn) {
+                allowBtn.addEventListener('click', function() {
+                    if (hint) { hint.classList.add('dismissed'); window.setTimeout(function() { hint.style.display = 'none'; }, 380); }
+                    BirthdayMixin._setupCandleBlowDetection(app);
+                }, { once: true });
+            }
+            if (skipBtn) {
+                skipBtn.addEventListener('click', function() {
+                    if (hint) { hint.classList.add('dismissed'); window.setTimeout(function() { hint.style.display = 'none'; }, 380); }
+                }, { once: true });
             }
         },
 
@@ -1194,6 +1240,25 @@ setupBirthdayPage1(app) {
         _showNightSky(app) {
             var sky = document.getElementById('birthday-night-sky');
             if (!sky) return;
+
+            // Inject background starfield (runs once per page visit)
+            var starfield = document.getElementById('bday-p4-starfield');
+            if (starfield && !starfield.dataset.populated) {
+                starfield.dataset.populated = '1';
+                for (var _sf = 0; _sf < 90; _sf++) {
+                    var sfDot = document.createElement('span');
+                    sfDot.className = 'bday-p4-sf-dot';
+                    sfDot.style.left   = (Math.random() * 99).toFixed(1) + '%';
+                    sfDot.style.top    = (Math.random() * 99).toFixed(1) + '%';
+                    var sfSz = (Math.random() * 1.8 + 0.5).toFixed(1);
+                    sfDot.style.width  = sfSz + 'px';
+                    sfDot.style.height = sfSz + 'px';
+                    sfDot.style.animationDuration = (Math.random() * 2.5 + 1.5).toFixed(1) + 's';
+                    sfDot.style.animationDelay    = (Math.random() * 4.0).toFixed(1) + 's';
+                    starfield.appendChild(sfDot);
+                }
+            }
+
             sky.classList.remove('hidden');
             var toast = document.getElementById('birthday-wish-toast');
             if (toast) toast.textContent = '';
