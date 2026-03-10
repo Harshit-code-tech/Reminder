@@ -541,6 +541,30 @@ setupBirthdayPage1(app) {
             const rt = BirthdayMixin._getBirthdayRuntime(app);
             rt.page3 = rt.page3 || { index: 0, messageTyped: false, timers: [], spotlightShown: false };
 
+            // Inject slow ambient dust particles (once)
+            var ambientContainer = document.querySelector('.bday-p3-ambient');
+            if (ambientContainer && !ambientContainer.dataset.populated) {
+                ambientContainer.dataset.populated = '1';
+                for (var _p = 0; _p < 14; _p++) {
+                    var dot = document.createElement('span');
+                    dot.className = 'bday-p3-ambient-dot';
+                    var size = (Math.random() * 6 + 3); // 3–9 px
+                    var left = (Math.random() * 96 + 2); // 2–98%
+                    var delay = (Math.random() * 18).toFixed(1);
+                    var dur   = (Math.random() * 12 + 14).toFixed(1); // 14–26s (very slow)
+                    dot.style.cssText = [
+                        'width:' + size + 'px',
+                        'height:' + size + 'px',
+                        'left:' + left + '%',
+                        'bottom:-10px',
+                        'animation-duration:' + dur + 's',
+                        'animation-delay:-' + delay + 's',
+                        'opacity:0'
+                    ].join(';');
+                    ambientContainer.appendChild(dot);
+                }
+            }
+
             // Sections/tabs are conditionally rendered server-side; read from DOM
             const sections = Array.from(container.querySelectorAll('.page3-section'));
             const tabs = Array.from(container.querySelectorAll('.page3-tab'));
@@ -604,10 +628,10 @@ setupBirthdayPage1(app) {
                     var caption = container.querySelector('.media-caption');
                     if (caption) {
                         caption.classList.add('spotlight-flash');
-                        var spotlightTimer = window.setTimeout(function() { caption.classList.remove('spotlight-flash'); }, 1200);
+                        var spotlightTimer = window.setTimeout(function() { caption.classList.remove('spotlight-flash'); }, 1600);
                         if (rt.page3?.timers) rt.page3.timers.push(spotlightTimer);
                     }
-                    app.showFeedback('📸 A memory for your special day', 'info');
+                    app.showFeedback('🕯 A memory for your special day', 'info');
                 }
             };
 
@@ -662,7 +686,7 @@ setupBirthdayPage1(app) {
                             audioControl.setAttribute('aria-label', 'Play calming sound');
                             if (!rt.page3AudioPauseHintShown) {
                                 rt.page3AudioPauseHintShown = true;
-                                app.showFeedback('Tip: play the wind sound for vibes.', 'info');
+                                app.showFeedback('🎧 Let the music hold this memory', 'info');
                             }
                         }
                     });

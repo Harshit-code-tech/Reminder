@@ -9,49 +9,53 @@
   JS reads data-section-count to know how many tabs exist.
 {% endcomment %}
 
-{% comment %} Compute which optional tabs are active {% endcomment %}
-{% if event.highlights %}{% with has_moments=True %}{% endwith %}{% endif %}
-{% if has_thread_of_memories %}{% with has_timeline=True %}{% endwith %}{% endif %}
+<h2 class="page-title bday-p3-title">Memory Snapshot</h2>
 
-<h2 class="page-title">Memory Snapshot</h2>
+{% comment %} Ambient slow particles — JS will populate these {% endcomment %}
+<div class="bday-p3-ambient" aria-hidden="true"></div>
 
 <div class="birthday-page3" data-page3-sections="true"
      data-has-moments="{% if event.highlights %}true{% else %}false{% endif %}"
      data-has-timeline="{% if has_thread_of_memories %}true{% else %}false{% endif %}">
 
   <div class="birthday-page3-tabs" role="tablist" aria-label="Birthday memories sections">
-    <button class="page3-tab active" type="button" data-section="0" role="tab" aria-selected="true">Photos</button>
+    <button class="page3-tab active" type="button" data-section="0" role="tab" aria-selected="true">📸 Photos</button>
     {% if event.highlights %}
-    <button class="page3-tab" type="button" data-section="1" role="tab" aria-selected="false">Moments</button>
+    <button class="page3-tab" type="button" data-section="1" role="tab" aria-selected="false">✨ Moments</button>
     {% elif has_thread_of_memories %}
-    <button class="page3-tab" type="button" data-section="1" role="tab" aria-selected="false">Timeline</button>
+    <button class="page3-tab" type="button" data-section="1" role="tab" aria-selected="false">🕰 Timeline</button>
     {% endif %}
     <button class="page3-tab" type="button"
             data-section="{% if event.highlights or has_thread_of_memories %}2{% else %}1{% endif %}"
-            role="tab" aria-selected="false">Audio</button>
+            role="tab" aria-selected="false">🎧 Audio</button>
   </div>
 
   <div class="birthday-page3-stage" aria-live="polite">
     {# Section 0: Photos — always shown #}
     <section class="page3-section active" data-section-index="0" role="tabpanel">
-      <div class="media-display"
-           data-media-urls="{% for media in event.media.all %}{% if media.media_type == 'image' %}{{ media.media_file|urlencode }}{% if not forloop.last %},{% endif %}{% endif %}{% endfor %}"
-         data-fallback-url="{% static 'images/abstract-bg.png' %}"
-           tabindex="0">
+      {# Ambient glow radiates behind the framed photo #}
+      <div class="bday-p3-photo-glow" aria-hidden="true"></div>
+      {# Frame wrapper gives the photo a physical, slightly-tilted feel #}
+      <div class="bday-p3-photo-frame">
+        <div class="media-display"
+             data-media-urls="{% for media in event.media.all %}{% if media.media_type == 'image' %}{{ media.media_file|urlencode }}{% if not forloop.last %},{% endif %}{% endif %}{% endfor %}"
+             data-fallback-url="{% static 'images/abstract-bg.png' %}"
+             tabindex="0">
+        </div>
       </div>
-      <div class="media-caption">
+      <p class="media-caption bday-p3-caption">
         {% if event.media.exists %}
-        {{ event.media.first.caption|default:"Some special moments" }}
+        {{ event.media.first.caption|default:"A moment worth remembering" }}
         {% else %}
-        A moment inspired by nature
+        A moment worth remembering
         {% endif %}
-      </div>
+      </p>
     </section>
 
     {# Section 1: Moments (if highlights) OR Timeline (if thread) — mutually exclusive #}
     {% if event.highlights %}
     <section class="page3-section" data-section-index="1" role="tabpanel" aria-hidden="true">
-      <div class="birthday-message-card">
+      <div class="birthday-message-card bday-p3-memory-note">
         <div class="birthday-message-lead">Highlights &amp; Moments</div>
         <div class="birthday-message-typewriter" id="birthday-message-typewriter"
              data-message="{{ event.highlights|escapejs }}">
@@ -73,14 +77,15 @@
     <section class="page3-section"
              data-section-index="{% if event.highlights or has_thread_of_memories %}2{% else %}1{% endif %}"
              role="tabpanel" aria-hidden="true">
-      <div class="birthday-audio-card">
+      <div class="birthday-audio-card bday-p3-audio-card">
         <div class="audio-title">🎧 A calm moment</div>
+        <p class="bday-p3-audio-subtitle">Close your eyes and listen</p>
         <audio id="calming-sound" loop>
           <source src="{% static 'audio/celebration.mp3' %}" type="audio/mpeg">
           <source src="{% static 'audio/Whispering Wind.mp3' %}" type="audio/mpeg">
           Your browser does not support the audio element.
         </audio>
-        <button class="audio-control" aria-label="Play calming sound" type="button">
+        <button class="audio-control bday-p3-audio-btn" aria-label="Play calming sound" type="button">
           <i class="fas fa-play"></i>
           Play Sound
         </button>
@@ -89,7 +94,7 @@
   </div>
 
   <div class="birthday-page3-nav">
-    <button class="action-button secondary" type="button" id="page3-prev-section" aria-label="Previous section">Back</button>
+    <button class="bday-p3-nav-btn" type="button" id="page3-prev-section" aria-label="Previous section">&#8592;</button>
     <div class="page3-progress" aria-label="Section progress">
       <span class="page3-dot active" data-dot="0"></span>
       {% if event.highlights or has_thread_of_memories %}
@@ -99,6 +104,6 @@
       <span class="page3-dot" data-dot="1"></span>
       {% endif %}
     </div>
-    <button class="action-button" type="button" id="page3-next-section" aria-label="Next section">Next</button>
+    <button class="bday-p3-nav-btn" type="button" id="page3-next-section" aria-label="Next section">&#8594;</button>
   </div>
 </div>

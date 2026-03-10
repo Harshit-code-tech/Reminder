@@ -132,8 +132,6 @@ def _build_card_context(event, *, is_owner, token=None, session_key_unlocked=Fal
         'rakhi_ceremony_notes': event.rakhi_ceremony_notes if is_raksha else '',
         # Birthday specific tracking
         'birthday_page1_seen': event.birthday_page1_seen,
-        'birthday_unwrap_step': event.birthday_unwrap_step,
-        'birthday_page2_completed': event.birthday_page2_completed,
         'birthday_page4_wish_made': event.birthday_page4_wish_made,
         'birthday_page5_seen': event.birthday_page5_seen,
     }

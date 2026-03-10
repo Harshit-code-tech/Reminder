@@ -1003,65 +1003,105 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
 }
 
 /* ══════════════════════════════════════════════════════════
-   7. Page 3 — Memory Spotlight
+   7. Page 3 — Memory Spotlight  (nostalgia phase — slow, calm)
    ══════════════════════════════════════════════════════════ */
+
+/* Ambient slow-floating particles behind the whole page */
+.bday-p3-ambient {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+/* Page title — slightly softer on this page */
+.bday-p3-title {
+    letter-spacing: 0.04em;
+    opacity: 0.92;
+}
+
+/* Individual ambient dust dot */
+.bday-p3-ambient-dot {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(245,200,66,0.55) 0%, transparent 70%);
+    animation: bdayP3DustFloat linear infinite;
+    will-change: transform, opacity;
+}
+
+@keyframes bdayP3DustFloat {
+    0%   { transform: translateY(0)   scale(1);    opacity: 0; }
+    12%  { opacity: 1; }
+    88%  { opacity: 0.7; }
+    100% { transform: translateY(-100vh) scale(0.6); opacity: 0; }
+}
 
 .birthday-page3 {
     width: 100%;
     max-width: 700px;
     margin: 0 auto;
+    position: relative;
+    z-index: 1;
 }
 
+/* ── Tabs — story mode switches, not UI toolkit ── */
 .birthday-page3-tabs {
     display: flex;
     justify-content: center;
-    gap: 8px;
+    gap: 10px;
     flex-wrap: wrap;
-    margin: 0 0 1.25rem;
+    margin: 0 0 1.5rem;
 }
 
 .birthday-page3-tabs .page3-tab {
-    padding: 0.55rem 1.2rem;
+    padding: 0.55rem 1.3rem;
     border-radius: var(--bd-r-pill, 999px);
-    border: 1.5px solid rgba(232, 133, 10, 0.22);
-    background: rgba(255, 248, 235, 0.72);
-    color: #7a5a3a;
-    font-size: 0.9rem;
+    border: 1.5px solid rgba(124, 77, 171, 0.28);
+    background: rgba(124, 77, 171, 0.08);
+    color: rgba(124, 77, 171, 0.75);
+    font-size: 0.88rem;
     font-weight: 600;
     cursor: pointer;
-    transition: transform var(--bd-t-fast, 0.18s), background var(--bd-t-fast, 0.18s),
-                box-shadow var(--bd-t-fast, 0.18s), border-color var(--bd-t-fast, 0.18s);
-    backdrop-filter: blur(6px);
+    transition: transform 0.28s ease, background 0.28s ease,
+                box-shadow 0.28s ease, border-color 0.28s ease, color 0.28s ease;
+    backdrop-filter: blur(8px);
     min-height: 44px;
+    letter-spacing: 0.02em;
 }
 
 .birthday-page3-tabs .page3-tab:hover {
-    transform: translateY(-1px);
-    border-color: rgba(232, 133, 10, 0.45);
+    transform: translateY(-2px);
+    border-color: rgba(245, 200, 66, 0.4);
+    color: #7c4dab;
 }
 
+/* Active tab — gold glow + warm gradient (ceremonial feel) */
 .birthday-page3-tabs .page3-tab.active {
-    background: linear-gradient(135deg, rgba(245,200,66,0.22), rgba(224,92,120,0.16));
-    border-color: rgba(232, 133, 10, 0.55);
+    background: linear-gradient(135deg, rgba(245,200,66,0.28), rgba(232,133,10,0.20));
+    border-color: rgba(245, 200, 66, 0.65);
     color: #5a2a10;
-    box-shadow: 0 2px 10px rgba(232, 133, 10, 0.16);
+    box-shadow: 0 0 14px rgba(245, 200, 66, 0.45), 0 2px 8px rgba(232, 133, 10, 0.20);
+    transform: translateY(-1px);
 }
 
 [data-theme="dark"] .birthday-page3-tabs .page3-tab {
-    background: rgba(30, 16, 48, 0.65);
-    color: var(--bd-text-dim);
-    border-color: rgba(245, 200, 66, 0.18);
+    background: rgba(30, 16, 48, 0.60);
+    color: rgba(192, 132, 252, 0.60);
+    border-color: rgba(124, 77, 171, 0.30);
 }
 
 [data-theme="dark"] .birthday-page3-tabs .page3-tab.active {
-    background: linear-gradient(135deg, rgba(245,200,66,0.16), rgba(124,77,171,0.18));
+    background: linear-gradient(135deg, rgba(245,200,66,0.20), rgba(124,77,171,0.22));
     color: #f5c842;
-    border-color: rgba(245, 200, 66, 0.45);
+    border-color: rgba(245, 200, 66, 0.55);
+    box-shadow: 0 0 18px rgba(245, 200, 66, 0.35);
 }
 
+/* ── Stage (section container) ── */
 .birthday-page3-stage {
     position: relative;
-    min-height: clamp(320px, 55vh, 520px);
+    min-height: clamp(340px, 58vh, 540px);
     overflow: visible;
 }
 
@@ -1069,9 +1109,11 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     position: absolute;
     inset: 0;
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(10px);
     pointer-events: none;
-    transition: opacity 0.44s cubic-bezier(0.22, 1, 0.36, 1), transform 0.44s cubic-bezier(0.22, 1, 0.36, 1);
+    /* calmer, slower transitions than Pages 1-2 */
+    transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .birthday-page3 .page3-section.active {
@@ -1080,39 +1122,87 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     pointer-events: auto;
 }
 
-/* Photo section — cinematic large image */
-.birthday-page3 .page3-section[data-section-index="0"] .media-display {
+/* ── Photo section: ambient glow + physical frame ── */
+
+/* Soft radial glow radiating behind the photo */
+.bday-p3-photo-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 90%;
+    padding-bottom: 80%;
+    transform: translate(-50%, -55%);
+    background: radial-gradient(ellipse at center,
+        rgba(245, 200, 66, 0.22) 0%,
+        rgba(232, 133, 10, 0.10) 45%,
+        transparent 70%);
+    opacity: 0.15;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: 50%;
+    animation: bdayP3GlowPulse 6s ease-in-out infinite;
+}
+
+@keyframes bdayP3GlowPulse {
+    0%, 100% { opacity: 0.12; transform: translate(-50%, -55%) scale(1); }
+    50%       { opacity: 0.22; transform: translate(-50%, -55%) scale(1.06); }
+}
+
+/* Frame gives the photo a physical, slightly-tilted feel */
+.bday-p3-photo-frame {
+    position: relative;
+    z-index: 1;
+    display: inline-block;
+    width: 100%;
+    transform: rotate(-1.2deg);
     border-radius: var(--bd-r-lg, 24px);
+    box-shadow:
+        0 12px 40px rgba(0, 0, 0, 0.40),
+        0 0 32px rgba(245, 200, 66, 0.14),
+        inset 0 0 0 3px rgba(255, 248, 235, 0.55);
     overflow: hidden;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.7s ease, box-shadow 0.7s ease;
+}
+
+.bday-p3-photo-frame:hover {
+    transform: rotate(0deg) scale(1.012);
+    box-shadow:
+        0 18px 52px rgba(0, 0, 0, 0.45),
+        0 0 42px rgba(245, 200, 66, 0.22),
+        inset 0 0 0 3px rgba(255, 248, 235, 0.70);
+}
+
+.bday-p3-photo-frame .media-display {
+    border-radius: 0;
+    overflow: hidden;
     min-height: 260px;
     max-height: 380px;
-    border: 2px solid rgba(245, 200, 66, 0.22);
+    border: none;
     position: relative;
 }
 
-.birthday-page3 .page3-section[data-section-index="0"] .media-display::after {
+.bday-p3-photo-frame .media-display::after {
     content: '';
     position: absolute;
     inset: 0;
     background: radial-gradient(ellipse at center, transparent 55%, rgba(30,10,0,0.18) 100%);
     pointer-events: none;
-    border-radius: inherit;
     z-index: 2;
 }
 
-/* Ken Burns slow zoom — runs inside the photo, adds cinematic depth */
-.birthday-page3 .page3-section[data-section-index="0"] .media-display img,
-.birthday-page3 .page3-section[data-section-index="0"] .media-display .media-image {
-    animation: bdayKenBurns 14s ease-in-out infinite alternate;
+/* Ken Burns slow zoom — calmer than Pages 1-2 */
+.bday-p3-photo-frame .media-display img,
+.bday-p3-photo-frame .media-display .media-image {
+    animation: bdayKenBurns 18s ease-in-out infinite alternate;
     will-change: transform;
 }
 
 @keyframes bdayKenBurns {
     0%   { transform: scale(1)    translate(0, 0); }
-    100% { transform: scale(1.07) translate(-1.5%, -1.5%); }
+    100% { transform: scale(1.06) translate(-1%, -1%); }
 }
 
+/* ── Caption — italic, emotionally weighted ── */
 .media-caption {
     font-size: 0.92rem;
     font-style: italic;
@@ -1121,13 +1211,26 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     margin-top: 0.75rem;
     padding: 0.5rem 1rem;
     border-radius: var(--bd-r-sm, 8px);
-    transition: background 0.3s, box-shadow 0.3s;
+    transition: background 0.4s, box-shadow 0.4s;
 }
 
 [data-theme="dark"] .media-caption { color: var(--bd-text-dim); }
 
+/* Scoped caption on Page 3 photo section — larger + warmer */
+.birthday-page3 .bday-p3-caption {
+    font-size: 1.08rem;
+    font-weight: 500;
+    color: #b06820;
+    letter-spacing: 0.01em;
+    margin-top: 1rem;
+}
+
+[data-theme="dark"] .birthday-page3 .bday-p3-caption {
+    color: rgba(245, 200, 66, 0.80);
+}
+
 .media-caption.spotlight-flash {
-    animation: bdayCaptionSpotlight 1.3s ease-out;
+    animation: bdayCaptionSpotlight 1.6s ease-out;
 }
 
 @keyframes bdayCaptionSpotlight {
@@ -1137,66 +1240,88 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     100% { background: transparent; box-shadow: none; }
 }
 
-/* Message / Timeline / Audio cards */
+/* ── Message / Timeline / Audio cards: shared base ── */
 .birthday-message-card,
 .birthday-timeline-card,
 .birthday-audio-card {
-    background: rgba(255, 248, 235, 0.78);
+    background: rgba(255, 248, 235, 0.82);
     border: 1.5px solid rgba(232, 133, 10, 0.16);
     border-radius: var(--bd-r-lg, 24px);
-    padding: 1.5rem;
+    padding: 1.75rem 2rem;
     box-shadow: var(--bd-shadow-md, 0 6px 24px rgba(0,0,0,0.08));
     text-align: left;
 }
 
-/* Staggered card entry when section becomes active */
+/* Staggered card entry — slower on Page 3 */
 .birthday-page3 .page3-section.active .birthday-message-card,
 .birthday-page3 .page3-section.active .birthday-timeline-card,
 .birthday-page3 .page3-section.active .birthday-audio-card {
-    animation: bdayCardReveal 0.52s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+    animation: bdayCardReveal 0.70s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
 }
 
-/* Timeline item stagger on section enter */
+/* Timeline item stagger */
 .birthday-page3 .page3-section.active #birthday-timeline .timeline-item {
-    animation: fadeInUp 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: fadeInUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.birthday-page3 .page3-section.active #birthday-timeline .timeline-item:nth-child(2) { animation-delay: 0.09s; }
-.birthday-page3 .page3-section.active #birthday-timeline .timeline-item:nth-child(3) { animation-delay: 0.18s; }
-.birthday-page3 .page3-section.active #birthday-timeline .timeline-item:nth-child(4) { animation-delay: 0.27s; }
-.birthday-page3 .page3-section.active #birthday-timeline .timeline-item:nth-child(5) { animation-delay: 0.36s; }
-.birthday-page3 .page3-section.active #birthday-timeline .timeline-item:nth-child(6) { animation-delay: 0.44s; }
+.birthday-page3 .page3-section.active #birthday-timeline .timeline-item:nth-child(2) { animation-delay: 0.10s; }
+.birthday-page3 .page3-section.active #birthday-timeline .timeline-item:nth-child(3) { animation-delay: 0.20s; }
+.birthday-page3 .page3-section.active #birthday-timeline .timeline-item:nth-child(4) { animation-delay: 0.30s; }
+.birthday-page3 .page3-section.active #birthday-timeline .timeline-item:nth-child(5) { animation-delay: 0.40s; }
+.birthday-page3 .page3-section.active #birthday-timeline .timeline-item:nth-child(6) { animation-delay: 0.50s; }
 
 @keyframes bdayCardReveal {
-    from { transform: translateY(16px); opacity: 0; }
+    from { transform: translateY(18px); opacity: 0; }
     to   { transform: translateY(0);    opacity: 1; }
 }
 
 [data-theme="dark"] .birthday-message-card,
 [data-theme="dark"] .birthday-timeline-card,
 [data-theme="dark"] .birthday-audio-card {
-    background: rgba(30, 16, 48, 0.72);
+    background: rgba(30, 16, 48, 0.76);
     border-color: rgba(245, 200, 66, 0.14);
 }
 
+/* ── Moments / message card — looks like a memory note ── */
+
+/* Quote mark rendered via CSS */
+.bday-p3-memory-note {
+    position: relative;
+    padding-top: 2.5rem;
+}
+
+.bday-p3-memory-note::before {
+    content: '\201C';
+    position: absolute;
+    top: 0.35rem;
+    left: 1.5rem;
+    font-size: 4rem;
+    line-height: 1;
+    color: rgba(232, 133, 10, 0.28);
+    font-family: Georgia, serif;
+    pointer-events: none;
+}
+
 .birthday-message-lead {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.12em;
     color: #e8850a;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.85rem;
 }
 
 #birthday-message-typewriter {
     white-space: pre-wrap;
-    line-height: 1.75;
+    line-height: 1.85;
     min-height: 120px;
-    font-size: 1rem;
+    font-size: 1.05rem;
+    font-style: italic;
     color: #3b1f0a;
 }
 
 [data-theme="dark"] #birthday-message-typewriter { color: var(--bd-text-light, #fde8c8); }
 
+/* ── Timeline card ── */
 .timeline-title {
     font-size: 1rem;
     font-weight: 800;
@@ -1225,7 +1350,7 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     border-radius: var(--bd-r-md, 16px);
     border: 1px solid rgba(124, 77, 171, 0.16);
     background: linear-gradient(135deg, rgba(124,77,171,0.06), rgba(245,200,66,0.04));
-    transition: background 0.2s;
+    transition: background 0.3s;
 }
 
 #birthday-timeline .timeline-item:hover {
@@ -1255,106 +1380,166 @@ html:not([data-theme="dark"]) .gift-unlock-subtitle { color: rgba(140, 70, 0, 0.
     font-style: italic;
 }
 
-/* Audio card */
+/* ── Audio card — calm listening moment ── */
+.bday-p3-audio-card {
+    text-align: center;
+    padding: 2.25rem 2rem;
+}
+
 .birthday-audio-card .audio-title {
-    font-size: 1rem;
+    font-size: 1.15rem;
     font-weight: 700;
     color: #3b1f0a;
-    margin-bottom: 1rem;
+    margin-bottom: 0.4rem;
+    letter-spacing: 0.02em;
 }
 
 [data-theme="dark"] .birthday-audio-card .audio-title { color: var(--bd-text-light); }
 
-.birthday-audio-card .audio-control {
-    margin-top: 0.75rem;
-    padding: 0.7rem 1.6rem;
-    border-radius: var(--bd-r-pill, 999px);
-    border: 1.5px solid rgba(232, 133, 10, 0.4);
-    background: rgba(245, 200, 66, 0.1);
-    color: #7a5a3a;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background var(--bd-t-fast), border-color var(--bd-t-fast);
-    min-height: 48px;
+.bday-p3-audio-subtitle {
+    font-size: 0.88rem;
+    font-style: italic;
+    color: #9a6a3a;
+    margin: 0 0 1.5rem;
+    opacity: 0.85;
+}
+
+[data-theme="dark"] .bday-p3-audio-subtitle { color: rgba(245,200,66,0.55); }
+
+/* Calmer play button — pill, soft glow, gentle pulse */
+.bday-p3-audio-btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.55rem;
+    padding: 0.75rem 2rem;
+    border-radius: var(--bd-r-pill, 999px);
+    border: 1.5px solid rgba(124, 77, 171, 0.35);
+    background: rgba(124, 77, 171, 0.10);
+    color: #5a2a70;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    min-height: 52px;
+    transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease;
+    animation: bdayP3AudioPulse 4s ease-in-out infinite;
 }
 
-.birthday-audio-card .audio-control:hover {
-    background: rgba(245, 200, 66, 0.18);
-    border-color: rgba(232, 133, 10, 0.65);
+.bday-p3-audio-btn:hover {
+    background: rgba(124, 77, 171, 0.20);
+    border-color: rgba(124, 77, 171, 0.55);
+    box-shadow: 0 0 20px rgba(124, 77, 171, 0.30);
+    transform: scale(1.03);
+    animation: none;
 }
 
-/* Navigation strip */
+@keyframes bdayP3AudioPulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(124, 77, 171, 0.15); }
+    50%       { box-shadow: 0 0 24px rgba(124, 77, 171, 0.30); }
+}
+
+[data-theme="dark"] .bday-p3-audio-btn {
+    background: rgba(124, 77, 171, 0.18);
+    border-color: rgba(192, 132, 252, 0.35);
+    color: #c084fc;
+}
+
+[data-theme="dark"] .bday-p3-audio-btn:hover {
+    background: rgba(124, 77, 171, 0.30);
+    border-color: rgba(192, 132, 252, 0.55);
+}
+
+/* ── Navigation strip — soft circles + premium dots ── */
 .birthday-page3-nav {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-    margin-top: 1.25rem;
+    margin-top: 1.5rem;
 }
 
 .birthday-page3-nav .page3-progress {
     display: flex;
-    gap: 6px;
+    gap: 8px;
     align-items: center;
     justify-content: center;
 }
 
+/* Dots — "— ● —" feel with smooth expand */
 .birthday-page3-nav .page3-dot {
     width: 7px;
     height: 7px;
     border-radius: var(--bd-r-pill, 999px);
-    background: rgba(0, 0, 0, 0.16);
-    transition: background 0.25s, width 0.25s;
+    background: rgba(0, 0, 0, 0.13);
+    transition: background 0.40s ease, width 0.40s ease, box-shadow 0.40s ease;
 }
 
-[data-theme="dark"] .birthday-page3-nav .page3-dot { background: rgba(255,255,255,0.18); }
+[data-theme="dark"] .birthday-page3-nav .page3-dot { background: rgba(255,255,255,0.15); }
 
 .birthday-page3-nav .page3-dot.active {
-    width: 18px;
+    width: 22px;
     background: linear-gradient(90deg, #f5c842, #e8850a);
+    box-shadow: 0 0 8px rgba(245, 200, 66, 0.55);
 }
 
-/* Navigation prev/next buttons */
-#page3-prev-section,
-#page3-next-section {
-    padding: 0.55rem 1rem;
-    border-radius: var(--bd-r-pill, 999px);
-    border: 1.5px solid rgba(232, 133, 10, 0.30);
-    background: rgba(255, 248, 235, 0.65);
+/* Nav arrows — circle background with soft glow */
+.bday-p3-nav-btn {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(232, 133, 10, 0.28);
+    background: rgba(255, 248, 235, 0.72);
     color: #7a5a3a;
-    font-size: 0.9rem;
-    font-weight: 600;
+    font-size: 1.1rem;
     cursor: pointer;
-    transition: background var(--bd-t-fast), border-color var(--bd-t-fast),
-                transform var(--bd-t-fast);
-    min-height: 44px;
-    min-width: 44px;
     display: flex;
     align-items: center;
-    gap: 4px;
+    justify-content: center;
+    transition: background 0.35s ease, border-color 0.35s ease,
+                box-shadow 0.35s ease, transform 0.35s ease;
+    backdrop-filter: blur(6px);
+    min-height: 44px;
+    min-width: 44px;
 }
 
-#page3-prev-section:hover,
-#page3-next-section:hover {
-    background: rgba(245, 200, 66, 0.16);
-    border-color: rgba(232, 133, 10, 0.5);
-    transform: translateY(-1px);
+.bday-p3-nav-btn:hover {
+    background: rgba(245, 200, 66, 0.18);
+    border-color: rgba(232, 133, 10, 0.55);
+    box-shadow: 0 0 14px rgba(245, 200, 66, 0.35);
+    transform: scale(1.08);
 }
 
-[data-theme="dark"] #page3-prev-section,
-[data-theme="dark"] #page3-next-section {
+[data-theme="dark"] .bday-p3-nav-btn {
     background: rgba(30, 16, 48, 0.65);
     color: var(--bd-text-dim);
-    border-color: rgba(245, 200, 66, 0.18);
+    border-color: rgba(245, 200, 66, 0.20);
 }
 
-#page3-prev-section:disabled,
-#page3-next-section:disabled {
-    opacity: 0.35;
+[data-theme="dark"] .bday-p3-nav-btn:hover {
+    background: rgba(245, 200, 66, 0.12);
+    border-color: rgba(245, 200, 66, 0.45);
+    box-shadow: 0 0 16px rgba(245, 200, 66, 0.25);
+}
+
+.bday-p3-nav-btn:disabled {
+    opacity: 0.32;
     pointer-events: none;
+}
+
+/* ── Reduced-motion overrides for Page 3 ── */
+@media (prefers-reduced-motion: reduce) {
+    .bday-p3-ambient-dot,
+    .bday-p3-photo-glow,
+    .bday-p3-photo-frame .media-display img,
+    .bday-p3-photo-frame .media-display .media-image,
+    .bday-p3-audio-btn {
+        animation: none !important;
+    }
+    .bday-p3-photo-frame {
+        transform: none !important;
+    }
+    .birthday-page3 .page3-section {
+        transition: opacity 0.25s ease !important;
+    }
 }
 
 /* ══════════════════════════════════════════════════════════

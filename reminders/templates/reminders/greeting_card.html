@@ -174,8 +174,6 @@
        data-audio-url="{% if audio_url %}{{ audio_url|urlencode }}{% endif %}"
        {% if event.event_type == 'birthday' %}
       data-birthday-page1-seen="{{ birthday_page1_seen|yesno:'true,false' }}"
-      data-birthday-unwrap-step="{{ birthday_unwrap_step }}"
-       data-birthday-page2-completed="{{ birthday_page2_completed|yesno:'true,false' }}"
        data-birthday-page4-wish-made="{{ birthday_page4_wish_made|yesno:'true,false' }}"
        data-birthday-page5-seen="{{ birthday_page5_seen|yesno:'true,false' }}"
        {% endif %}>
