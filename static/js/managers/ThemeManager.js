@@ -73,6 +73,12 @@ class ThemeManager {
     }
 
     setupThemeSystem() {
+        // Birthday card always uses the fixed dark theme — no toggle, no user preference.
+        if (this.app.eventType === 'birthday') {
+            this.setTheme('dark');
+            return;
+        }
+
         if (!this.elements.themeToggle) return;
 
         // Get saved theme or system preference
@@ -105,14 +111,16 @@ class ThemeManager {
         // Set theme
         document.documentElement.setAttribute('data-theme', theme);
 
-        // Update toggle button
-        this.elements.themeToggle.setAttribute('aria-pressed', theme === 'dark');
+        // Update toggle button (may be absent on birthday card)
+        if (this.elements.themeToggle) {
+            this.elements.themeToggle.setAttribute('aria-pressed', theme === 'dark');
 
-        // Add active animation
-        this.elements.themeToggle.style.transform = 'scale(0.95)';
-        setTimeout(() => {
-            this.elements.themeToggle.style.transform = '';
-        }, 150);
+            // Add active animation
+            this.elements.themeToggle.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.elements.themeToggle.style.transform = '';
+            }, 150);
+        }
 
         // Update background effects
         this.app.updateBackgroundEffects(theme);

@@ -101,8 +101,9 @@
     {% endif %}
   </div>
 
-  <!-- Theme Toggle Button -->
-  <div class="theme-toggle-container{% if event.event_type == 'birthday' %} bday-loader-hidden-nav{% endif %}">
+  <!-- Theme Toggle Button (hidden for birthday — fixed dark theme) -->
+  {% if event.event_type != 'birthday' %}
+  <div class="theme-toggle-container">
     <button class="theme-toggle" aria-label="Toggle dark mode" aria-pressed="false">
       <div class="toggle-track">
         <div class="toggle-thumb">
@@ -120,6 +121,7 @@
       </div>
     </button>
   </div>
+  {% endif %}
 
   <!-- Vertical Navigation Sidebar -->
   <nav class="page-navigator{% if event.event_type == 'birthday' %} bday-loader-hidden-nav{% endif %}" role="navigation" aria-label="Card Pages Navigation">
