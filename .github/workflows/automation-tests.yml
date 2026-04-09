@@ -14,9 +14,12 @@ jobs:
       DEBUG: "False"
       DATABASE_URL: sqlite:///test_db.sqlite3
       DATABASE_SSL: "False"
-      MAILERSEND_API_KEY: test-mailersend-key
-      MAILERSEND_API_URL: https://api.mailersend.com/v1/email
       EMAIL_FROM: test@example.com
+      EMAIL_HOST: smtp-relay.brevo.com
+      EMAIL_PORT: "587"
+      EMAIL_USE_TLS: "True"
+      EMAIL_HOST_USER: test-smtp-user
+      EMAIL_HOST_PASSWORD: test-smtp-pass
       SUPABASE_URL: https://example.supabase.co
       SUPABASE_KEY: test-supabase-key
       SUPABASE_SERVICE_KEY: test-supabase-service-key

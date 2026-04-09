@@ -9,9 +9,9 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.core.cache import cache
+from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.timezone import now
-from mailersend import Email, EmailBuilder, MailerSendClient
 from rest_framework_simplejwt.tokens import RefreshToken
 from tenacity import retry, stop_after_attempt, wait_fixed
 
@@ -29,44 +29,32 @@ LOCK_THRESHOLD = 3                 # Lock account after this many failures
 
 
 # =========================================================================
-# Email service (MailerSend SDK)
+# Email service (SMTP backend)
 # =========================================================================
 class EmailService:
-    """Thin wrapper around MailerSend for transactional emails."""
-
-    @staticmethod
-    def _get_sender_email():
-        """Extract the bare email from DEFAULT_FROM_EMAIL."""
-        from_email = settings.DEFAULT_FROM_EMAIL
-        if '<' in from_email and '>' in from_email:
-            from_email = from_email.split('<')[1].strip('>')
-        return from_email
+    """Thin wrapper around Django SMTP backend for transactional emails."""
 
     @staticmethod
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
     def send_verification_email(user, code):
         """Send a 6-digit verification code to the user's email."""
-        from_email = EmailService._get_sender_email()
+        from_email = settings.DEFAULT_FROM_EMAIL
 
         html_content = render_to_string('emails/verification.html', {
             'code': code,
             'username': user.username,
         })
 
-        email_request = (
-            EmailBuilder()
-            .from_email(email=from_email)
-            .to(email=user.email)
-            .subject("Verify Your Email Address")
-            .text(f"Your verification code is: {code}")
-            .html(html_content)
-            .build()
-        )
-
         try:
-            client = MailerSendClient(api_key=settings.MAILERSEND_API_KEY)
-            response = Email(client).send(email_request)
-            logger.info(f"Verification email sent to {user.email}. Response: {response}")
+            msg = EmailMultiAlternatives(
+                subject="Verify Your Email Address",
+                body=f"Your verification code is: {code}",
+                from_email=from_email,
+                to=[user.email],
+            )
+            msg.attach_alternative(html_content, 'text/html')
+            msg.send(fail_silently=False)
+            logger.info(f"Verification email sent to {user.email}.")
             return True
         except Exception as e:
             logger.error(f"Failed to send verification email to {user.email}: {e}")
@@ -76,7 +64,7 @@ class EmailService:
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
     def send_reset_password_email(user, reset_url):
         """Send a password-reset link to the user."""
-        from_email = EmailService._get_sender_email()
+        from_email = settings.DEFAULT_FROM_EMAIL
 
         html_content = render_to_string('emails/password_reset_email.html', {
             'reset_url': reset_url,
@@ -90,20 +78,16 @@ class EmailService:
             f"Thanks,\nBirthday Reminder App"
         )
 
-        email_request = (
-            EmailBuilder()
-            .from_email(email=from_email)
-            .to(email=user.email)
-            .subject("Reset Your Password")
-            .text(text_content)
-            .html(html_content)
-            .build()
-        )
-
         try:
-            client = MailerSendClient(api_key=settings.MAILERSEND_API_KEY)
-            response = Email(client).send(email_request)
-            logger.info(f"Password reset email sent to {user.email}. Response: {response}")
+            msg = EmailMultiAlternatives(
+                subject="Reset Your Password",
+                body=text_content,
+                from_email=from_email,
+                to=[user.email],
+            )
+            msg.attach_alternative(html_content, 'text/html')
+            msg.send(fail_silently=False)
+            logger.info(f"Password reset email sent to {user.email}.")
             return True
         except Exception as e:
             logger.error(f"Failed to send password reset email to {user.email}: {e}")

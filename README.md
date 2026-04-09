@@ -86,7 +86,7 @@ Welcome! This is a modern Django web app to help you remember and celebrate birt
 ## 🧪 Developer Highlights
 
 - 🧾 Token-based sharing with expiry + renewal logic  
-- 📩 MailerSend integration with retry logic  
+- 📩 SMTP email delivery (Brevo-ready) with retry logic  
 - 🧠 Event-type based themes (Birthday, Anniversary,Raksha Bandhan, Custom)  
 - 🕒 Timezone-aware cron scheduling (IST / UTC+5:30)  
 - 📊 Analytics dashboard with reminder + user metrics  

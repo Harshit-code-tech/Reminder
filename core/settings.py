@@ -2,15 +2,17 @@
 Django settings for the Reminder project.
 
 Configured for deployment on Render with Supabase storage,
-MailerSend email, Redis caching, and django-q task scheduling.
+SMTP email, Redis caching, and django-q task scheduling.
 """
 
 import os
+import warnings
 from datetime import timedelta
 from pathlib import Path
 
 import dj_database_url
 from decouple import config, Csv
+from django.core.exceptions import ImproperlyConfigured
 
 # ---------------------------------------------------------------------------
 # Base paths
@@ -177,19 +179,40 @@ Q_CLUSTER = {
 }
 
 # ---------------------------------------------------------------------------
-# Email configuration (MailerSend)
+# Email configuration (SMTP: Brevo/Gmail/others)
 # ---------------------------------------------------------------------------
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-MAILERSEND_API_KEY = config('MAILERSEND_API_KEY')
-MAILERSEND_API_URL = config('MAILERSEND_API_URL', default='https://api.mailersend.com/v1/email')
-EMAIL_FROM = config('EMAIL_FROM')
-DEFAULT_FROM_EMAIL = f"Birthday Reminder App <{EMAIL_FROM}>"
-EMAIL_HOST = 'smtp.mailersend.net'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = config('EMAIL_FROM')
-EMAIL_HOST_PASSWORD = config('MAILERSEND_API_KEY')
-EMAIL_SUBJECT_PREFIX = '[Birthday Reminder App]'
+EMAIL_HOST = config('EMAIL_HOST', cast=str, default='smtp-relay.brevo.com')
+EMAIL_PORT = config('EMAIL_PORT', cast=int, default=587)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool, default=True)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', cast=str, default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', cast=str, default='')
+EMAIL_FROM = config('EMAIL_FROM', cast=str, default='')
+EMAIL_FROM_NAME = config('EMAIL_FROM_NAME', cast=str, default='Reminder App')
+DEFAULT_FROM_EMAIL = f"{EMAIL_FROM_NAME} <{EMAIL_FROM}>"
+EMAIL_SUBJECT_PREFIX = config('EMAIL_SUBJECT_PREFIX', cast=str, default='[Reminder App]')
+
+# Validate required mail settings at startup.
+_required_email_settings = {
+    'EMAIL_HOST': EMAIL_HOST,
+    'EMAIL_HOST_USER': EMAIL_HOST_USER,
+    'EMAIL_HOST_PASSWORD': EMAIL_HOST_PASSWORD,
+    'EMAIL_FROM': EMAIL_FROM,
+}
+_missing_email_settings = [
+    key for key, value in _required_email_settings.items()
+    if not str(value).strip()
+]
+EMAIL_STARTUP_CHECK_STRICT = config('EMAIL_STARTUP_CHECK_STRICT', cast=bool, default=not DEBUG)
+if _missing_email_settings:
+    _email_error = (
+        'Missing required email settings: '
+        f"{', '.join(_missing_email_settings)}. "
+        'Reminder emails will not send until these environment variables are configured.'
+    )
+    if EMAIL_STARTUP_CHECK_STRICT:
+        raise ImproperlyConfigured(_email_error)
+    warnings.warn(_email_error)
 
 # ---------------------------------------------------------------------------
 # Supabase (storage & auth)
@@ -336,8 +359,8 @@ SITE_URL = os.environ.get('SITE_URL', 'http://localhost:8000').rstrip('/')
 SHARE_VALIDATION_BASE_URL = os.environ.get('SHARE_VALIDATION_BASE_URL', SITE_URL).rstrip('/')
 SHARE_TOKEN_EXPIRY_DAYS = 3
 REMINDER_CRON_SECRET = config('REMINDER_CRON_SECRET', default='')
-HEALTH_CHECK_MAILERSEND_TIMEOUT = config('HEALTH_CHECK_MAILERSEND_TIMEOUT', cast=int, default=5)
-HEALTH_CHECK_STRICT_MAILERSEND = config('HEALTH_CHECK_STRICT_MAILERSEND', cast=bool, default=False)
+HEALTH_CHECK_SMTP_TIMEOUT = config('HEALTH_CHECK_SMTP_TIMEOUT', cast=int, default=5)
+HEALTH_CHECK_STRICT_SMTP = config('HEALTH_CHECK_STRICT_SMTP', cast=bool, default=False)
 
 # ---------------------------------------------------------------------------
 # Cron jobs (django-crontab)

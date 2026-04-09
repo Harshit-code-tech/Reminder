@@ -2,11 +2,11 @@ import json
 import logging
 from pathlib import Path
 
-import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.mail import get_connection
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
@@ -47,23 +47,20 @@ def health_check(request):
         checks['database'] = 'failed'
         status_code = 500
 
-    # MailerSend health is useful for observability, but is non-fatal by
-    # default so a third-party outage does not mark the app as down.
-    if not getattr(settings, 'MAILERSEND_API_KEY', ''):
-        checks['mailersend'] = 'skipped'
+    # SMTP health is useful for observability, but is non-fatal by default
+    # so a third-party outage does not mark the app as down.
+    if not getattr(settings, 'EMAIL_HOST_USER', '') or not getattr(settings, 'EMAIL_HOST_PASSWORD', ''):
+        checks['smtp'] = 'skipped'
     else:
         try:
-            response = requests.get(
-                'https://api.mailersend.com/v1/domains',
-                headers={'Authorization': f'Bearer {settings.MAILERSEND_API_KEY}'},
-                timeout=getattr(settings, 'HEALTH_CHECK_MAILERSEND_TIMEOUT', 5),
-            )
-            response.raise_for_status()
-            checks['mailersend'] = 'ok'
+            connection = get_connection(timeout=getattr(settings, 'HEALTH_CHECK_SMTP_TIMEOUT', 5))
+            connection.open()
+            connection.close()
+            checks['smtp'] = 'ok'
         except Exception as e:
-            logger.error(f"MailerSend health check failed: {e}")
-            checks['mailersend'] = 'failed'
-            if getattr(settings, 'HEALTH_CHECK_STRICT_MAILERSEND', False):
+            logger.error(f"SMTP health check failed: {e}")
+            checks['smtp'] = 'failed'
+            if getattr(settings, 'HEALTH_CHECK_STRICT_SMTP', False):
                 status_code = 500
 
     checks['supabase'] = checks['database']

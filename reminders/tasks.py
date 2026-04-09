@@ -12,7 +12,7 @@ logger = logging.getLogger('app_logger')
 def send_reminder_emails():
     """Send reminder emails for upcoming events (called via django-q).
 
-    This delegates to ReminderEmailService (MailerSend API) for consistency
+    This delegates to ReminderEmailService (SMTP backend) for consistency
     with the cron path in utils.py.  Uses ``<=`` for catch-up resilience.
     """
     today = timezone.localdate()
@@ -31,7 +31,7 @@ def send_reminder_emails():
                 user=event.user,
                 event=event,
                 status='success' if success else 'failure',
-                message='Email sent via MailerSend' if success else f'Send failed',
+                message='Email sent via SMTP' if success else f'Send failed',
             )
 
             if success:

@@ -1,8 +1,9 @@
 import logging
 
-import requests
 from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 from tenacity import retry, stop_after_attempt, wait_fixed
 
 logger = logging.getLogger('app_logger')
@@ -24,7 +25,7 @@ def _get_user_email(user):
 
 
 class ReminderEmailService:
-    """Send transactional emails via the MailerSend API.
+    """Send transactional emails via configured Django SMTP backend.
 
     NOTE: These methods intentionally re-raise exceptions so that the
     ``@retry`` decorator from tenacity can detect failures and retry.
@@ -68,22 +69,17 @@ class ReminderEmailService:
             f"{days} day{'s' if days != 1 else ''}!"
         )
 
-        mail_body = {
-            "from": {"email": _get_sender_email(), "name": "Birthday Reminder App"},
-            "to": [{"email": user_email, "name": username}],
-            "subject": subject,
-            "html": html_content,
-        }
+        text_content = strip_tags(html_content)
+        msg = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[user_email],
+        )
+        msg.attach_alternative(html_content, 'text/html')
+        msg.send(fail_silently=False)
 
-        headers = {
-            "Authorization": f"Bearer {settings.MAILERSEND_API_KEY}",
-            "Content-Type": "application/json",
-        }
-
-        response = requests.post(settings.MAILERSEND_API_URL, json=mail_body, headers=headers)
-        response.raise_for_status()
-
-        logger.info(f"Reminder email sent to {user_email} for event '{event_name}' ({response.status_code})")
+        logger.info(f"Reminder email sent to {user_email} for event '{event_name}'")
         return True
 
     @staticmethod
@@ -110,21 +106,14 @@ class ReminderEmailService:
         html_content = render_to_string('emails/media_reminder.html', context)
         text_content = render_to_string('emails/email_reminder.txt', context)
 
-        mail_body = {
-            "from": {"email": _get_sender_email(), "name": "Event Reminder"},
-            "to": [{"email": user_email, "name": username}],
-            "subject": f"Media Deletion Notice for {event_name}'s {event_type}",
-            "html": html_content,
-            "text": text_content,
-        }
-
-        headers = {
-            "Authorization": f"Bearer {settings.MAILERSEND_API_KEY}",
-            "Content-Type": "application/json",
-        }
-
-        response = requests.post(settings.MAILERSEND_API_URL, json=mail_body, headers=headers)
-        response.raise_for_status()
+        msg = EmailMultiAlternatives(
+            subject=f"Media Deletion Notice for {event_name}'s {event_type}",
+            body=text_content,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[user_email],
+        )
+        msg.attach_alternative(html_content, 'text/html')
+        msg.send(fail_silently=False)
 
         logger.info(f"Deletion notification sent to {user_email} for event '{event_name}'")
         return True
