@@ -1,6 +1,7 @@
 import os
 import sys
 import logging
+from datetime import timedelta
 
 # Set up Django before importing models
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
@@ -40,7 +41,7 @@ class Command(BaseCommand):
 
         # Delete media one day after event
         events_to_delete = Event.objects.filter(
-            date__lt=today - timezone.timedelta(days=1),
+            date__lt=today - timedelta(days=1),
             media__isnull=False
         ).distinct()
         logger.info(f"Found {events_to_delete.count()} events to delete media")

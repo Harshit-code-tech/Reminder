@@ -6,11 +6,14 @@ on:
 jobs:
   health:
     runs-on: ubuntu-latest
+    env:
+      RENDER_BASE_URL: https://reminder-app-gap4.onrender.com
     steps:
       - name: Check health endpoint
         run: |
+          BASE_URL="${RENDER_BASE_URL:-https://reminder-app-gap4.onrender.com}"
           echo "Checking health endpoint..."
-          RESPONSE=$(curl -s -o response.json -w "%{http_code}" --max-time 10 https://reminder-app-gap4.onrender.com/health/)
+          RESPONSE=$(curl -s -o response.json -w "%{http_code}" --max-time 10 "${BASE_URL%/}/health/")
           if [ "$RESPONSE" -eq 200 ]; then
             echo "✅ Health check passed: HTTP $RESPONSE"
             cat response.json

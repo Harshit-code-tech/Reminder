@@ -335,7 +335,9 @@ LOGGING = {
 SITE_URL = os.environ.get('SITE_URL', 'http://localhost:8000').rstrip('/')
 SHARE_VALIDATION_BASE_URL = os.environ.get('SHARE_VALIDATION_BASE_URL', SITE_URL).rstrip('/')
 SHARE_TOKEN_EXPIRY_DAYS = 3
-REMINDER_CRON_SECRET = config('REMINDER_CRON_SECRET')
+REMINDER_CRON_SECRET = config('REMINDER_CRON_SECRET', default='')
+HEALTH_CHECK_MAILERSEND_TIMEOUT = config('HEALTH_CHECK_MAILERSEND_TIMEOUT', cast=int, default=5)
+HEALTH_CHECK_STRICT_MAILERSEND = config('HEALTH_CHECK_STRICT_MAILERSEND', cast=bool, default=False)
 
 # ---------------------------------------------------------------------------
 # Cron jobs (django-crontab)

@@ -36,7 +36,7 @@ services:
     env: python
     plan: free
     schedule: "0 8 * * *"
-    command: python manage.py runcrontab reminders.cron.daily_reminder_job
+    command: python manage.py trigger_reminders
     envVars:
       - fromGroup: birthday-reminder-env
 
@@ -45,7 +45,7 @@ services:
     env: python
     plan: free
     schedule: "0 9 * * *"
-    command: python manage.py runcrontab reminders.cron.daily_deletion_notification_job
+    command: python manage.py send_deletion_notifications
     envVars:
       - fromGroup: birthday-reminder-env
 
@@ -54,6 +54,6 @@ services:
     env: python
     plan: free
     schedule: "0 10 * * *"
-    command: python manage.py runcrontab reminders.cron.daily_media_cleanup_job
+    command: python manage.py cleanup_expired_media
     envVars:
       - fromGroup: birthday-reminder-env

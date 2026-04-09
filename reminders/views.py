@@ -391,6 +391,9 @@ def trigger_send_reminders(request):
         return JsonResponse({'error': 'Method not allowed'}, status=405)
     try:
         secret_token = request.POST.get('token')
+        if not settings.REMINDER_CRON_SECRET:
+            logger.error("REMINDER_CRON_SECRET is not configured")
+            return JsonResponse({'error': 'Server not configured'}, status=503)
         if not secret_token or secret_token != settings.REMINDER_CRON_SECRET:
             logger.warning("Unauthorized attempt to trigger reminders")
             return JsonResponse({'error': 'Unauthorized'}, status=403)

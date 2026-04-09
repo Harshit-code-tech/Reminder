@@ -47,19 +47,24 @@ def health_check(request):
         checks['database'] = 'failed'
         status_code = 500
 
-    # MailerSend API check (lightweight)
-    try:
-        response = requests.get(
-            'https://api.mailersend.com/v1/domains',
-            headers={'Authorization': f'Bearer {settings.MAILERSEND_API_KEY}'},
-            timeout=5,
-        )
-        response.raise_for_status()
-        checks['mailersend'] = 'ok'
-    except Exception as e:
-        logger.error(f"MailerSend health check failed: {e}")
-        checks['mailersend'] = 'failed'
-        status_code = 500
+    # MailerSend health is useful for observability, but is non-fatal by
+    # default so a third-party outage does not mark the app as down.
+    if not getattr(settings, 'MAILERSEND_API_KEY', ''):
+        checks['mailersend'] = 'skipped'
+    else:
+        try:
+            response = requests.get(
+                'https://api.mailersend.com/v1/domains',
+                headers={'Authorization': f'Bearer {settings.MAILERSEND_API_KEY}'},
+                timeout=getattr(settings, 'HEALTH_CHECK_MAILERSEND_TIMEOUT', 5),
+            )
+            response.raise_for_status()
+            checks['mailersend'] = 'ok'
+        except Exception as e:
+            logger.error(f"MailerSend health check failed: {e}")
+            checks['mailersend'] = 'failed'
+            if getattr(settings, 'HEALTH_CHECK_STRICT_MAILERSEND', False):
+                status_code = 500
 
     checks['supabase'] = checks['database']
 
