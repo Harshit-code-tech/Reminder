@@ -1,5 +1,4 @@
 import os
-import sys
 import logging
 from datetime import timedelta
 
@@ -12,7 +11,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 from supabase import create_client, Client
 from django.conf import settings
-from reminders.models import Event, EventMedia
+from reminders.models import Event
 from reminders.email_utils import ReminderEmailService
 
 logger = logging.getLogger('app_logger')

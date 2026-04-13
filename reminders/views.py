@@ -827,7 +827,7 @@ def generate_share_link(request, event_id):
             try:
                 data = json.loads(request.body)
                 password = data.get('password', '').strip()
-            except Exception as e:
+            except Exception:
                 return JsonResponse({'success': False, 'error': 'Invalid data'}, status=400)
         else:
             password = request.POST.get('share_password', '').strip()

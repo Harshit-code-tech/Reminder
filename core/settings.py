@@ -183,7 +183,12 @@ Q_CLUSTER = {
 # ---------------------------------------------------------------------------
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config('EMAIL_HOST', cast=str, default='smtp-relay.brevo.com')
-EMAIL_PORT = config('EMAIL_PORT', cast=int, default=587)
+_email_port_raw = config('EMAIL_PORT', cast=str, default='587').strip()
+try:
+    EMAIL_PORT = int(_email_port_raw) if _email_port_raw else 587
+except ValueError:
+    warnings.warn(f"Invalid EMAIL_PORT value '{_email_port_raw}', falling back to 587.")
+    EMAIL_PORT = 587
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool, default=True)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', cast=str, default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', cast=str, default='')

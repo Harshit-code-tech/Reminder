@@ -1,11 +1,8 @@
 import logging
 
 from django.utils import timezone
-from datetime import timedelta
 from .models import Event, ReminderLog, EventMedia
 from .email_utils import ReminderEmailService
-from django.conf import settings
-
 logger = logging.getLogger('app_logger')
 
 

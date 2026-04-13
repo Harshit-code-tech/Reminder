@@ -4,6 +4,7 @@ from .models import Event, ReminderLog, ImportLog, EventMedia, Reflection
 from .email_utils import ReminderEmailService
 import logging
 import csv
+import re
 from io import StringIO
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse
@@ -121,9 +122,18 @@ def process_bulk_import(user, csv_file):
                 name = row['name'].strip()
                 if not name or len(name) > 500:
                     raise ValueError(f"Invalid name: {name}")
-                event_type = row['event_type'].strip().lower()
+
+                # Accept user-friendly variants such as "Raksha Bandhan"
+                # and normalize to model keys like "raksha_bandhan".
+                raw_event_type = row['event_type'].strip().lower()
+                event_type = re.sub(r'[\s\-]+', '_', raw_event_type)
+                event_type_aliases = {
+                    'rakhi': 'raksha_bandhan',
+                }
+                event_type = event_type_aliases.get(event_type, event_type)
+
                 if event_type not in dict(Event.EVENT_TYPES):
-                    raise ValueError(f"Invalid event_type: {event_type}")
+                    raise ValueError(f"Invalid event_type: {raw_event_type}")
                 date_str = row['date'].strip()
                 try:
                     event_date = datetime.strptime(date_str, '%Y-%m-%d').date()
@@ -144,7 +154,7 @@ def process_bulk_import(user, csv_file):
                     raise ValueError(f"custom_label too long: {custom_label}")
 
                 # Create Event
-                event = Event.objects.create(
+                Event.objects.create(
                     user=user,
                     name=name,
                     event_type=event_type,
