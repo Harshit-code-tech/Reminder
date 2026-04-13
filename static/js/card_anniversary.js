@@ -46,6 +46,45 @@ const AnniversaryMixin = {
         controls.classList.toggle('anniv-controls-gated', !visible);
     },
 
+    _playAnnivPageMusic(app, pageNumber) {
+        try {
+            return app.audioManager?.playAnniversaryTrack?.(pageNumber) || Promise.resolve(null);
+        } catch (error) {
+            console.warn('Anniversary music playback failed:', error);
+            return Promise.resolve(null);
+        }
+    },
+
+    _stopAnnivPageMusic(app) {
+        try {
+            app.audioManager?.stopBackgroundMusic?.();
+        } catch (error) {
+            console.warn('Anniversary music stop failed:', error);
+        }
+    },
+
+    _setDanceMusicState(app, playing) {
+        const rt = app ? this._getAnnivRuntime(app) : null;
+        const btn = document.getElementById('anniv-music-btn');
+        const couple = document.getElementById('anniv-couple');
+
+        if (rt) {
+            rt.danceAudioPlaying = playing;
+        }
+
+        if (btn) {
+            btn.classList.toggle('playing', playing);
+            const icon = btn.querySelector('i');
+            if (icon) icon.className = playing ? 'fas fa-pause' : 'fas fa-play';
+            const label = btn.querySelector('.anniv-music-label');
+            if (label) label.textContent = playing ? 'Pause' : 'Play Our Song';
+        }
+
+        if (couple) {
+            couple.classList.toggle('dancing', playing);
+        }
+    },
+
 
     /* ================================================================
        LOADING SCREEN — "The Grand Clock"
@@ -126,6 +165,7 @@ const AnniversaryMixin = {
         if (!rt.loaderDone && document.getElementById('anniv-loader')) return;
 
         this._setAnnivControlsVisibility(rt.controlsUnlocked);
+        this._playAnnivPageMusic(app, 1).catch(() => {});
 
         const bg = document.querySelector('.anniv-p1-bg');
         if (!bg) return;
@@ -195,6 +235,7 @@ const AnniversaryMixin = {
             rt.controlsUnlocked = true;
             this._setAnnivControlsVisibility(true);
         }
+        this._playAnnivPageMusic(app, 2).catch(() => {});
         if (rt.page2Init) return;
         rt.page2Init = true;
 
@@ -357,26 +398,31 @@ const AnniversaryMixin = {
             rt.controlsUnlocked = true;
             this._setAnnivControlsVisibility(true);
         }
-        if (rt.danceInit) return;
-        rt.danceInit = true;
+        this._playAnnivPageMusic(app, 3)
+            .then(() => this._setDanceMusicState(app, true))
+            .catch(() => this._setDanceMusicState(app, false));
 
-        // Start petal loop with immediate initial burst
-        this._startDancePetals(app);
+        if (!rt.danceInit) {
+            rt.danceInit = true;
 
-        // Couple tap → hearts
-        const couple = document.getElementById('anniv-couple');
-        if (couple) {
-            couple.addEventListener('click', () => {
-                this._spawnHeartBurst(couple);
-            });
-        }
+            // Start petal loop with immediate initial burst
+            this._startDancePetals(app);
 
-        // Music button
-        const musicBtn = document.getElementById('anniv-music-btn');
-        if (musicBtn) {
-            musicBtn.addEventListener('click', () => {
-                this._toggleDanceMusic(app);
-            });
+            // Couple tap → hearts
+            const couple = document.getElementById('anniv-couple');
+            if (couple) {
+                couple.addEventListener('click', () => {
+                    this._spawnHeartBurst(couple);
+                });
+            }
+
+            // Music button
+            const musicBtn = document.getElementById('anniv-music-btn');
+            if (musicBtn) {
+                musicBtn.addEventListener('click', () => {
+                    this._toggleDanceMusic(app);
+                });
+            }
         }
     },
 
@@ -435,18 +481,13 @@ const AnniversaryMixin = {
     _toggleDanceMusic(app) {
         const rt = this._getAnnivRuntime(app);
         const btn = document.getElementById('anniv-music-btn');
-        const couple = document.getElementById('anniv-couple');
         const notesContainer = document.getElementById('anniv-dance-notes');
 
         if (!btn) return;
 
         if (rt.danceAudioPlaying) {
             // Stop
-            rt.danceAudioPlaying = false;
-            btn.classList.remove('playing');
-            btn.querySelector('i').className = 'fas fa-play';
-            btn.querySelector('.anniv-music-label').textContent = 'Play Our Song';
-            if (couple) couple.classList.remove('dancing');
+            this._setDanceMusicState(app, false);
 
             // Stop notes
             if (rt.danceNoteInterval) {
@@ -454,46 +495,13 @@ const AnniversaryMixin = {
                 rt.danceNoteInterval = null;
             }
 
-            // Try pausing audio
-            const audioUrl = app.cardContainer.dataset.audioUrl;
-            if (audioUrl) {
-                const audio = document.getElementById('anniv-dance-audio');
-                if (audio) audio.pause();
-            } else {
-                // Pause background music
-                try { app.audioManager.pauseBackgroundMusic(); } catch(e) {}
-            }
+            // Pause the dedicated anniversary track.
+            try { app.audioManager.pauseBackgroundMusic(); } catch(e) {}
         } else {
             // Play
-            rt.danceAudioPlaying = true;
-            btn.classList.add('playing');
-            btn.querySelector('i').className = 'fas fa-pause';
-            btn.querySelector('.anniv-music-label').textContent = 'Pause';
-            if (couple) couple.classList.add('dancing');
-
-            // Play audio
-            const audioUrl = app.cardContainer.dataset.audioUrl;
-            if (audioUrl) {
-                let audio = document.getElementById('anniv-dance-audio');
-                if (!audio) {
-                    audio = document.createElement('audio');
-                    audio.id = 'anniv-dance-audio';
-                    audio.loop = true;
-                    const decodedUrl = decodeURIComponent(audioUrl);
-                    audio.src = decodedUrl;
-                    document.body.appendChild(audio);
-                }
-                audio.play().catch(e => console.log('Dance audio play prevented:', e));
-            } else {
-                // Play background music + arpeggio
-                try {
-                    app.audioManager.playBgm();
-                    // 3 note arpeggio
-                    app.audioManager.generateTone(523, 0.2, 'sine');
-                    setTimeout(() => app.audioManager.generateTone(659, 0.2, 'sine'), 200);
-                    setTimeout(() => app.audioManager.generateTone(784, 0.2, 'sine'), 400);
-                } catch(e) {}
-            }
+            this._playAnnivPageMusic(app, 3)
+                .then(() => this._setDanceMusicState(app, true))
+                .catch(() => this._setDanceMusicState(app, false));
 
             // Floating music notes
             if (notesContainer) {
@@ -521,19 +529,7 @@ const AnniversaryMixin = {
             clearInterval(rt.danceNoteInterval);
             rt.danceNoteInterval = null;
         }
-        // Pause dance audio if exists
-        const audio = document.getElementById('anniv-dance-audio');
-        if (audio) audio.pause();
-        rt.danceAudioPlaying = false;
-
-        const btn = document.getElementById('anniv-music-btn');
-        if (btn) {
-            btn.classList.remove('playing');
-            const icon = btn.querySelector('i');
-            if (icon) icon.className = 'fas fa-play';
-            const label = btn.querySelector('.anniv-music-label');
-            if (label) label.textContent = 'Play Our Song';
-        }
+        this._setDanceMusicState(app, false);
 
         const couple = document.getElementById('anniv-couple');
         if (couple) {
@@ -560,7 +556,8 @@ const AnniversaryMixin = {
         // Start calming sound
         const calmingSound = document.getElementById('calming-sound');
         if (calmingSound) {
-            calmingSound.volume = 0.4;
+            calmingSound.currentTime = 0;
+            calmingSound.volume = 0.12;
             calmingSound.play().catch(e => console.log('Calming sound prevented:', e));
         }
 
@@ -588,7 +585,10 @@ const AnniversaryMixin = {
 
         // Pause calming sound
         const calmingSound = document.getElementById('calming-sound');
-        if (calmingSound) { calmingSound.pause(); }
+        if (calmingSound) {
+            calmingSound.pause();
+            calmingSound.currentTime = 0;
+        }
 
         // Stop petals
         if (rt.page4PetalInterval) {
@@ -608,6 +608,7 @@ const AnniversaryMixin = {
             rt.controlsUnlocked = true;
             this._setAnnivControlsVisibility(true);
         }
+        this._playAnnivPageMusic(app, 5).catch(() => {});
         if (rt.page5Init) return;
         rt.page5Init = true;
 
@@ -749,6 +750,25 @@ const AnniversaryMixin = {
                     </audio>
                 </div>
             `;
+
+            const userAudio = revealContainer.querySelector('audio');
+            if (userAudio) {
+                userAudio.volume = 0.92;
+
+                userAudio.addEventListener('play', () => {
+                    // Ensure custom message audio is the only active track on page 5.
+                    try { app.audioManager.pauseBackgroundMusic(); } catch (e) {}
+                });
+
+                const resumePageFiveTrack = () => {
+                    if (app.currentPage === 5) {
+                        this._playAnnivPageMusic(app, 5).catch(() => {});
+                    }
+                };
+
+                userAudio.addEventListener('pause', resumePageFiveTrack);
+                userAudio.addEventListener('ended', resumePageFiveTrack);
+            }
         } else {
             // Fallback quote — 15 curated love quotes
             const quotes = [
@@ -796,13 +816,11 @@ const AnniversaryMixin = {
             rt.controlsUnlocked = true;
             this._setAnnivControlsVisibility(true);
         }
+        this._playAnnivPageMusic(app, 6).catch(() => {});
         if (rt.page6Init) return;
         rt.page6Init = true;
 
-        // Play celebration sound
-        try {
-            app.audioManager.playCelebrationSound();
-        } catch(e) {}
+        // Dedicated finale track is handled by the audio manager.
 
         // We do NOT call app.playFinalAnimation() because Tree of Love replaces standard generic animations
 
@@ -927,6 +945,9 @@ window.EventModules['anniversary'] = {
     },
 
     onPageLeave(page, app) {
+        if (app.eventType === 'anniversary') {
+            AnniversaryMixin._stopAnnivPageMusic(app);
+        }
         switch (page) {
             case 3: AnniversaryMixin.teardownPage3(app); break;
             case 4: AnniversaryMixin.teardownPage4(app); break;

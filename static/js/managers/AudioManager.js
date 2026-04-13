@@ -6,10 +6,29 @@
 class AudioManager {
     constructor(eventType) {
         this.eventType = eventType || 'birthday';
-        this.backgroundVolume = this.eventType === 'birthday' ? 0.24 : 0.3;
-        this.effectVolume = this.eventType === 'birthday' ? 0.45 : 0.6;
+        this.backgroundVolume = this.eventType === 'birthday' ? 0.24 : (this.eventType === 'anniversary' ? 0.16 : 0.3);
+        this.effectVolume = this.eventType === 'birthday' ? 0.45 : (this.eventType === 'anniversary' ? 0.45 : 0.6);
         this.isBackgroundPlaying = false;
         this.syntheticBirthdayBgmTimer = null;
+        this.currentAnniversaryTrackKey = null;
+        this.currentAnniversaryTrack = null;
+        this.anniversaryTracks = {};
+        this.anniversaryTrackSources = {
+            1: '/static/audio/anniversary/welcome.mp3',
+            2: '/static/audio/anniversary/our_story.mp3',
+            3: '/static/audio/anniversary/dance_with_me.mp3',
+            4: '/static/audio/anniversary/moonlit_memories.mp3',
+            5: '/static/audio/anniversary/love_letter.mp3',
+            6: '/static/audio/anniversary/forever_and_always.mp3'
+        };
+        this.anniversaryTrackVolumes = {
+            1: 0.12,
+            2: 0.13,
+            3: 0.21,
+            4: 0.10,
+            5: 0.09,
+            6: 0.15
+        };
 
         this.tracks = {
             background: null,
@@ -83,12 +102,34 @@ class AudioManager {
 
             if (this.eventType === 'birthday') {
                 this.loadBirthdaySfxTracks();
+            } else if (this.eventType === 'anniversary') {
+                this.loadAnniversaryTracks();
             }
 
         } catch (error) {
             console.warn('AudioManager initialization failed:', error);
             this.isEnabled = false;
         }
+    }
+
+    loadAnniversaryTracks() {
+        Object.keys(this.anniversaryTrackSources).forEach(pageKey => {
+            try {
+                const audio = new Audio(this.anniversaryTrackSources[pageKey]);
+                audio.preload = 'auto';
+                audio.loop = true;
+                audio.addEventListener('error', () => {
+                    this.anniversaryTracks[pageKey] = null;
+                });
+                audio.addEventListener('canplaythrough', () => {
+                    const v = this.anniversaryTrackVolumes[pageKey];
+                    audio.volume = Math.max(0, Math.min(1, typeof v === 'number' ? v : this.backgroundVolume));
+                });
+                this.anniversaryTracks[pageKey] = audio;
+            } catch (_error) {
+                this.anniversaryTracks[pageKey] = null;
+            }
+        });
     }
 
     loadBirthdaySfxTracks() {
@@ -160,6 +201,33 @@ class AudioManager {
 
     // Duck background music when other sounds play
     duckBackgroundAudio(shouldDuck = true) {
+        if (this.eventType === 'anniversary' && this.currentAnniversaryTrack && this.isBackgroundPlaying) {
+            const baseVolume = (typeof this.currentAnniversaryTrack.volume === 'number' && isFinite(this.currentAnniversaryTrack.volume))
+                ? this.currentAnniversaryTrack.volume : this.backgroundVolume;
+            const targetVolume = shouldDuck ? baseVolume * 0.2 : baseVolume;
+            const currentVolume = (typeof this.currentAnniversaryTrack.volume === 'number' && isFinite(this.currentAnniversaryTrack.volume))
+                ? this.currentAnniversaryTrack.volume : baseVolume;
+            const step = (targetVolume - currentVolume) / 10;
+
+            let steps = 0;
+            const fadeInterval = setInterval(() => {
+                if (steps >= 10 || !this.currentAnniversaryTrack) {
+                    if (this.currentAnniversaryTrack && isFinite(targetVolume)) {
+                        this.currentAnniversaryTrack.volume = Math.max(0, Math.min(1, targetVolume));
+                    }
+                    clearInterval(fadeInterval);
+                    return;
+                }
+
+                const newVolume = currentVolume + (step * steps);
+                if (this.currentAnniversaryTrack && isFinite(newVolume)) {
+                    this.currentAnniversaryTrack.volume = Math.max(0, Math.min(1, newVolume));
+                }
+                steps++;
+            }, 50);
+            return;
+        }
+
         if (this.tracks.background && this.isBackgroundPlaying) {
             // FIXED: Validate volumes are finite numbers
             const baseVolume = (typeof this.backgroundVolume === 'number' && isFinite(this.backgroundVolume))
@@ -298,6 +366,10 @@ class AudioManager {
         if (this.eventType === 'birthday') {
             return;
         }
+        if (this.eventType === 'anniversary') {
+            this.playAnniversaryTrack(6);
+            return;
+        }
         if (this.tracks.celebration && this.tracks.celebration.readyState >= 2) {
             this.duckBackgroundAudio(true);
             this.tracks.celebration.currentTime = 0;
@@ -318,6 +390,10 @@ class AudioManager {
     startBackgroundMusic() {
         if (this.eventType === 'birthday') {
             this.stopSyntheticBirthdayBackground();
+        }
+
+        if (this.eventType === 'anniversary') {
+            return this.playAnniversaryTrack(this.app?.currentPage || 1);
         }
 
         if (this.tracks.background && this.tracks.background.readyState >= 2) {
@@ -345,12 +421,91 @@ class AudioManager {
 
 
     stopBackgroundMusic() {
+        if (this.eventType === 'anniversary') {
+            this.stopAnniversaryTrack();
+            return;
+        }
         if (this.tracks.background) {
             this.tracks.background.pause();
             this.tracks.background.currentTime = 0;
             this.isBackgroundPlaying = false;
         }
         this.stopSyntheticBirthdayBackground();
+    }
+
+    pauseBackgroundMusic() {
+        if (this.eventType === 'anniversary') {
+            if (this.currentAnniversaryTrack) {
+                this.currentAnniversaryTrack.pause();
+                this.isBackgroundPlaying = false;
+            }
+            return;
+        }
+
+        if (this.tracks.background) {
+            this.tracks.background.pause();
+            this.isBackgroundPlaying = false;
+        }
+    }
+
+    playAnniversaryTrack(pageNumber) {
+        if (this.eventType !== 'anniversary') {
+            return Promise.resolve(null);
+        }
+
+        const pageKey = String(pageNumber || 1);
+        const source = this.anniversaryTrackSources[pageKey] || this.anniversaryTrackSources['1'];
+        const targetVolume = this.anniversaryTrackVolumes[pageKey] ?? this.backgroundVolume;
+
+        let track = this.anniversaryTracks[pageKey];
+        if (!track) {
+            track = new Audio(source);
+            track.preload = 'auto';
+            track.loop = true;
+            track.addEventListener('error', () => {
+                this.anniversaryTracks[pageKey] = null;
+            });
+            this.anniversaryTracks[pageKey] = track;
+        }
+
+        if (this.currentAnniversaryTrack && this.currentAnniversaryTrack !== track) {
+            this.currentAnniversaryTrack.pause();
+            this.currentAnniversaryTrack.currentTime = 0;
+        }
+
+        this.currentAnniversaryTrack = track;
+        this.currentAnniversaryTrackKey = pageKey;
+        track.src = source;
+        track.loop = true;
+        track.volume = Math.max(0, Math.min(1, typeof targetVolume === 'number' ? targetVolume : this.backgroundVolume));
+
+        const playResult = track.play();
+        if (playResult && typeof playResult.then === 'function') {
+            playResult.then(() => {
+                this.isBackgroundPlaying = true;
+            }).catch(e => {
+                console.debug('Anniversary audio blocked:', e);
+                this.isBackgroundPlaying = false;
+            });
+        } else {
+            this.isBackgroundPlaying = true;
+        }
+
+        return playResult || Promise.resolve(track);
+    }
+
+    stopAnniversaryTrack() {
+        if (!this.currentAnniversaryTrack) {
+            this.currentAnniversaryTrackKey = null;
+            this.isBackgroundPlaying = false;
+            return;
+        }
+
+        this.currentAnniversaryTrack.pause();
+        this.currentAnniversaryTrack.currentTime = 0;
+        this.currentAnniversaryTrackKey = null;
+        this.currentAnniversaryTrack = null;
+        this.isBackgroundPlaying = false;
     }
 
     startSyntheticBirthdayBackground() {

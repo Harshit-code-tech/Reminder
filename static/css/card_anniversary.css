@@ -51,13 +51,28 @@
 }
 
 /* Anniversary ambient wallpaper outside the card container */
+body.event-anniversary,
 html:has(.card-container[data-theme="anniversary"]) body {
   background:
-    linear-gradient(rgba(8, 12, 30, 0.58), rgba(8, 12, 30, 0.58)),
-    url('/static/images/abstract-bg.png') center center / cover no-repeat fixed,
-    radial-gradient(circle at 20% 20%, rgba(232, 164, 184, 0.18), transparent 45%),
-    radial-gradient(circle at 80% 15%, rgba(245, 200, 66, 0.14), transparent 42%),
+    linear-gradient(rgba(8, 12, 30, 0.50), rgba(8, 12, 30, 0.58)),
+    url('/static/images/anniversary/celestial_romance.png') center center / cover no-repeat fixed,
+    radial-gradient(circle at 20% 20%, rgba(232, 164, 184, 0.22), transparent 44%),
+    radial-gradient(circle at 80% 15%, rgba(245, 200, 66, 0.18), transparent 40%),
     linear-gradient(160deg, #070b1b 0%, #120f2c 45%, #1b0d2e 100%);
+  background-attachment: fixed;
+  background-size: cover;
+}
+
+body.event-anniversary::before,
+html:has(.card-container[data-theme="anniversary"]) body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at center, rgba(7, 9, 22, 0) 30%, rgba(7, 9, 22, 0.38) 100%),
+    linear-gradient(180deg, rgba(8, 12, 30, 0.08) 0%, rgba(8, 12, 30, 0.30) 100%);
+  z-index: -1;
 }
 
 

@@ -60,6 +60,7 @@ class GreetingCardApp {
                 throw new Error('Card container not found');
             }
             this.eventType = this.cardContainer.dataset.theme || 'birthday';
+            document.body.classList.toggle('event-anniversary', this.eventType === 'anniversary');
 
             // Fire event module early initialization (e.g. raksha loading screen)
             const initEventModule = this.getEventModule();
