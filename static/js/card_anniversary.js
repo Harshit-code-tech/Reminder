@@ -24,6 +24,8 @@ const AnniversaryMixin = {
                 loaderDone: false,
                 controlsUnlocked: false,
                 constellationDrawn: false,
+                page1MusicReadyNotified: false,
+                page1MusicBlockedHintShown: false,
                 page2Init: false,
                 danceInit: false,
                 danceAudioPlaying: false,
@@ -165,7 +167,19 @@ const AnniversaryMixin = {
         if (!rt.loaderDone && document.getElementById('anniv-loader')) return;
 
         this._setAnnivControlsVisibility(rt.controlsUnlocked);
-        this._playAnnivPageMusic(app, 1).catch(() => {});
+        this._playAnnivPageMusic(app, 1)
+            .then(() => {
+                if (!rt.page1MusicReadyNotified) {
+                    rt.page1MusicReadyNotified = true;
+                    app.showFeedback?.('Sound on. Let the story unfold ✨', 'info');
+                }
+            })
+            .catch(() => {
+                if (!rt.page1MusicBlockedHintShown) {
+                    rt.page1MusicBlockedHintShown = true;
+                    app.showFeedback?.('Tap once to enable music', 'info');
+                }
+            });
 
         const bg = document.querySelector('.anniv-p1-bg');
         if (!bg) return;
@@ -216,6 +230,17 @@ const AnniversaryMixin = {
                     rt.controlsUnlocked = true;
                     this._setAnnivControlsVisibility(true);
                 }
+
+                // Browser autoplay policies can block first render playback.
+                // Retry on the user gesture before navigation.
+                this._playAnnivPageMusic(app, 1)
+                    .then(() => {
+                        if (!rt.page1MusicReadyNotified) {
+                            rt.page1MusicReadyNotified = true;
+                            app.showFeedback?.('Sound on. Let the story unfold ✨', 'info');
+                        }
+                    })
+                    .catch(() => {});
 
                 // Play a brief chime
                 try { app.audioManager.generateTone(880, 0.15, 'triangle'); } catch(e) {}

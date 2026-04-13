@@ -22,12 +22,12 @@ class AudioManager {
             6: '/static/audio/anniversary/forever_and_always.mp3'
         };
         this.anniversaryTrackVolumes = {
-            1: 0.12,
-            2: 0.13,
+            1: 0.15,
+            2: 0.15,
             3: 0.21,
             4: 0.10,
-            5: 0.09,
-            6: 0.15
+            5: 0.10,
+            6: 0.17
         };
 
         this.tracks = {
