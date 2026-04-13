@@ -1,0 +1,63 @@
+{% comment %}Page 6: Anniversary — "Forever & Always" (Farewell){% endcomment %}
+
+<h2 class="page-title anniv-p6-title">
+  Forever &amp; Always, <span class="recipient-name">{{ event.name }}</span> 💫
+</h2>
+
+<div class="anniv-farewell-scene">
+  <div class="anniv-tree-scene" id="anniv-tree-scene" aria-hidden="true">
+    <!-- The glowing roots/ground -->
+    <div class="anniv-tree-ground"></div>
+    
+    <!-- SVG Tree Trunk & Branches -->
+    <svg class="anniv-tree-svg" viewBox="0 0 200 250" preserveAspectRatio="xMidYMid meet">
+      <!-- Glow filter -->
+      <defs>
+        <filter id="anniv-tree-glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="2.5" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+      </defs>
+      <!-- Trunk & Left Branch -->
+      <path class="anniv-tree-path anniv-tree-trunk-l"
+            d="M 100 240 Q 95 190, 85 150 Q 75 110, 40 70 Q 20 50, 10 30"
+            fill="none" stroke="var(--anniv-silver)" stroke-width="4" stroke-linecap="round"
+            stroke-dasharray="300" stroke-dashoffset="300" filter="url(#anniv-tree-glow)"/>
+      
+      <!-- Right Branch -->
+      <path class="anniv-tree-path anniv-tree-trunk-r"
+            d="M 100 240 Q 105 190, 115 150 Q 130 110, 160 80 Q 180 60, 190 40"
+            fill="none" stroke="var(--anniv-gold)" stroke-width="4" stroke-linecap="round"
+            stroke-dasharray="300" stroke-dashoffset="300" filter="url(#anniv-tree-glow)"/>
+
+      <!-- Center-Right Branch -->
+      <path class="anniv-tree-path anniv-tree-branch-1"
+            d="M 110 170 Q 130 130, 140 100 Q 145 80, 150 60"
+            fill="none" stroke="var(--anniv-rose)" stroke-width="2.5" stroke-linecap="round"
+            stroke-dasharray="150" stroke-dashoffset="150" filter="url(#anniv-tree-glow)"/>
+      
+      <!-- Center-Left Branch -->
+      <path class="anniv-tree-path anniv-tree-branch-2"
+            d="M 90 160 Q 70 120, 60 90 Q 50 60, 40 40"
+            fill="none" stroke="var(--anniv-silver)" stroke-width="2.5" stroke-linecap="round"
+            stroke-dasharray="150" stroke-dashoffset="150" filter="url(#anniv-tree-glow)"/>
+    </svg>
+    
+    <!-- Blossoms/Leaves container -->
+    <div class="anniv-tree-blossoms" id="anniv-tree-blossoms"></div>
+    
+    <!-- Ambient Fireflies layer -->
+    <div class="anniv-tree-fireflies" id="anniv-tree-fireflies"></div>
+  </div>
+
+  <!-- Farewell message (Animated in JS) -->
+  <div class="anniv-farewell-message" id="anniv-farewell-msg">
+    <p>
+      Through every season, every challenge, and every celebration —
+      I'd choose you again and again.
+    </p>
+    <p class="anniv-farewell-signature">
+      Our love story is my favourite story, and the best chapters are yet to come. ♾️
+    </p>
+  </div>
+</div>

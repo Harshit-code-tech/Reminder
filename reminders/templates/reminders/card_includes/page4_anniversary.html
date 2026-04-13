@@ -1,33 +1,39 @@
-{% comment %}Page 4: Anniversary — Dance & Love Letter{% endcomment %}
+{% comment %}Page 4: Anniversary — "Moonlit Memories" (Media / Photos){% endcomment %}
+{% load static %}
 
-<div class="dance-container">
-  <button class="dance-button" aria-label="Start dance animation">
-    <i class="fas fa-music"></i>
-    Shall We Dance?
+<h2 class="page-title anniv-p4-title">Moonlit Memories</h2>
+
+<div class="anniv-memories-scene">
+  <!-- Moonlight vignette overlay -->
+  <div class="anniv-moonlight-vignette" aria-hidden="true"></div>
+
+  <!-- Rose petal layer — JS injects sparse floating petals -->
+  <div class="anniv-mem-petals" id="anniv-mem-petals" aria-hidden="true"></div>
+
+  <!-- Media display — engine fills this via setupMediaDisplays() -->
+  <div class="media-container anniv-media-container">
+    <div class="media-display"
+         data-media-urls="{% for media in event.media.all %}{% if media.media_type == 'image' %}{{ media.media_file|urlencode }}{% if not forloop.last %},{% endif %}{% endif %}{% endfor %}"
+         data-fallback-url="{% static 'images/nature.jpg' %}"
+         tabindex="0"
+         role="img"
+         aria-label="Anniversary memories">
+    </div>
+    <div class="media-caption anniv-media-caption">
+      {% if event.media.exists %}
+        {{ event.media.first.caption|default:"Our cherished moments together" }}
+      {% else %}
+        A moment inspired by nature
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Calming ambient sound for this page -->
+  <audio id="calming-sound" loop>
+    <source src="{% static 'audio/Whispering Wind.mp3' %}" type="audio/mpeg">
+  </audio>
+  <button class="audio-control anniv-audio-control" aria-label="Toggle ambient sound">
+    <i class="fas fa-pause"></i>
+    Pause Sound
   </button>
-  <div class="dance-animation" aria-live="polite"></div>
-</div>
-
-<!-- Love Letter Reveal -->
-<div class="love-letter-container" id="love-letter">
-  <div class="letter-envelope" id="letter-envelope" tabindex="0" aria-label="Click to open love letter">
-    <div class="envelope-flap"></div>
-    <div class="envelope-body">
-      <div class="heart-seal"><i class="fas fa-heart"></i></div>
-    </div>
-  </div>
-  <div class="letter-content hidden" id="letter-content">
-    <div class="letter-paper">
-      <p class="letter-greeting">My Dearest {{ event.name }},</p>
-      <p class="letter-body">
-        {% if event.message %}
-          {{ event.message|linebreaksbr }}
-        {% else %}
-          Every moment with you feels like a page from the most beautiful love story ever written.
-          Through all our seasons together, my love for you has only grown deeper.
-        {% endif %}
-      </p>
-      <p class="letter-closing">Forever yours ❤️</p>
-    </div>
-  </div>
 </div>

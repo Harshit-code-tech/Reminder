@@ -44,6 +44,19 @@ class NavigationManager {
             this.audioManager.playPageTransition();
         }
 
+        // Support custom async exit animations (e.g. Anniversary meteor shower)
+        const eventModule = this.app.getEventModule();
+        if (previousPage && previousPage !== pageNum && eventModule && typeof eventModule.onPageLeaveAnimation === 'function') {
+            eventModule.onPageLeaveAnimation(previousPage, pageNum, this.app, () => {
+                this._finalizeGoToPage(previousPage, pageNum);
+            });
+            return;
+        }
+
+        this._finalizeGoToPage(previousPage, pageNum);
+    }
+
+    _finalizeGoToPage(previousPage, pageNum) {
         // Give event modules (and core) a chance to clean up loops/streams.
         if (previousPage && previousPage !== pageNum) {
             const eventModule = this.app.getEventModule();
@@ -79,7 +92,6 @@ class NavigationManager {
 
         // Initialize page-specific features
         this.initializePage(pageNum);
-
 
         // Smooth scroll to top
         this.cardContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -129,6 +141,11 @@ class NavigationManager {
             case 5:
                 this.app.playFinalAnimation();
                 if (eventModule?.onPageEnter) eventModule.onPageEnter(5, this.app);
+                break;
+            default:
+                // Pages 6+ are event-module-specific (e.g. anniversary's 6-page layout).
+                // Unreachable for cards with totalPages=5 since goToPage() guards on bounds.
+                if (eventModule?.onPageEnter) eventModule.onPageEnter(pageNum, this.app);
                 break;
         }
     }

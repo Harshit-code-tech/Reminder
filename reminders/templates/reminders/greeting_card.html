@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 {% load static %}
-<html lang="en"{% if event.event_type == 'birthday' %} data-theme="dark"{% endif %}>
+<html lang="en"{% if event.event_type == 'birthday' %} data-theme="dark"{% elif event.event_type == 'anniversary' %} data-theme="dark"{% endif %}>
 
 <head>
   <meta charset="UTF-8">
@@ -21,10 +21,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Noto+Sans+Devanagari:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
-<body{% if event.event_type != 'birthday' %} class="overflow-hidden"{% endif %}>
+<body{% if event.event_type != 'birthday' and event.event_type != 'anniversary' %} class="overflow-hidden"{% endif %}>
   <!-- Raksha Bandhan Loading Screen -->
   {% if event.event_type == 'raksha_bandhan' %}
   <div class="rakhi-loading" id="rakhi-loading">
@@ -82,8 +82,45 @@
     </div>
   </div>
   {% endif %}
+
+  <!-- Anniversary Loading Screen — "The Grand Clock" -->
+  {% if event.event_type == 'anniversary' %}
+  <div class="anniv-loader" id="anniv-loader" aria-label="Anniversary celebration loading" aria-live="polite">
+    <!-- Golden dust particles — JS injects -->
+    <div class="anniv-loader__dust" id="anniv-loader-dust"></div>
+
+    <!-- Clock assembly -->
+    <div class="anniv-loader__clock" id="anniv-loader-clock">
+      <!-- Radial glow behind clock -->
+      <div class="anniv-loader__glow"></div>
+      <!-- Clock face ring -->
+      <div class="anniv-loader__face">
+        <!-- Tick marks — 60 small lines around the rim -->
+        <div class="anniv-loader__ticks" id="anniv-loader-ticks"></div>
+        <!-- Roman numerals -->
+        <span class="anniv-loader__numeral anniv-loader__numeral--12">XII</span>
+        <span class="anniv-loader__numeral anniv-loader__numeral--3">III</span>
+        <span class="anniv-loader__numeral anniv-loader__numeral--6">VI</span>
+        <span class="anniv-loader__numeral anniv-loader__numeral--9">IX</span>
+        <!-- Centre pivot -->
+        <div class="anniv-loader__pivot"></div>
+      </div>
+      <!-- Clock hands -->
+      <div class="anniv-loader__hand anniv-loader__hand--hour" id="anniv-hand-hour"></div>
+      <div class="anniv-loader__hand anniv-loader__hand--minute" id="anniv-hand-minute"></div>
+      <!-- Filigree ring (appears late) -->
+      <div class="anniv-loader__filigree"></div>
+    </div>
+
+    <!-- Loading text -->
+    <div class="anniv-loader__text" id="anniv-loader-text">
+      Your timeless love story awaits&hellip;
+    </div>
+  </div>
+  {% endif %}
+
   <!-- Background Elements -->
-  <div class="background-effects{% if event.event_type == 'birthday' %} bday-loader-hidden-nav{% endif %}">
+  <div class="background-effects{% if event.event_type == 'birthday' %} bday-loader-hidden-nav{% elif event.event_type == 'anniversary' %} anniv-loader-hidden{% endif %}">
     <div class="stars-container"></div>
     <div class="clouds-container"></div>
 
@@ -100,8 +137,8 @@
     {% endif %}
   </div>
 
-  <!-- Theme Toggle Button (hidden for birthday — fixed dark theme) -->
-  {% if event.event_type != 'birthday' %}
+  <!-- Theme Toggle Button (hidden for birthday & anniversary — fixed dark theme) -->
+  {% if event.event_type != 'birthday' and event.event_type != 'anniversary' %}
   <div class="theme-toggle-container">
     <button class="theme-toggle" aria-label="Toggle dark mode" aria-pressed="false">
       <div class="toggle-track">
@@ -123,37 +160,43 @@
   {% endif %}
 
   <!-- Vertical Navigation Sidebar -->
-  <nav class="page-navigator{% if event.event_type == 'birthday' %} bday-loader-hidden-nav{% endif %}" role="navigation" aria-label="Card Pages Navigation">
+  <nav class="page-navigator{% if event.event_type == 'birthday' %} bday-loader-hidden-nav{% elif event.event_type == 'anniversary' %} anniv-loader-hidden{% endif %}" role="navigation" aria-label="Card Pages Navigation">
     <div class="nav-item active" data-page="1" tabindex="0" role="button" aria-label="Welcome Page">
       <i class="fas fa-home"></i>
       <span class="nav-tooltip">
-        {% if event.event_type == 'raksha_bandhan' %}Sacred Bond{% else %}Welcome{% endif %}
+        {% if event.event_type == 'raksha_bandhan' %}Sacred Bond{% elif event.event_type == 'anniversary' %}Starlight{% else %}Welcome{% endif %}
       </span>
     </div>
-    <div class="nav-item" data-page="2" tabindex="0" role="button" aria-label="Ritual Page">
-      <i class="{% if event.event_type == 'raksha_bandhan' %}fas fa-hand-holding-heart{% else %}fas fa-play-circle{% endif %}"></i>
+    <div class="nav-item" data-page="2" tabindex="0" role="button" aria-label="Story Page">
+      <i class="{% if event.event_type == 'raksha_bandhan' %}fas fa-hand-holding-heart{% elif event.event_type == 'anniversary' %}fas fa-book-open{% else %}fas fa-play-circle{% endif %}"></i>
       <span class="nav-tooltip">
-        {% if event.event_type == 'raksha_bandhan' %}Sacred Ritual{% else %}Animation{% endif %}
+        {% if event.event_type == 'raksha_bandhan' %}Sacred Ritual{% elif event.event_type == 'anniversary' %}Our Story{% else %}Animation{% endif %}
       </span>
     </div>
-    <div class="nav-item" data-page="3" tabindex="0" role="button" aria-label="Memories Page">
-      <i class="fas fa-camera"></i>
+    <div class="nav-item" data-page="3" tabindex="0" role="button" aria-label="{% if event.event_type == 'anniversary' %}Dance{% else %}Memories{% endif %} Page">
+      <i class="{% if event.event_type == 'anniversary' %}fas fa-music{% else %}fas fa-camera{% endif %}"></i>
       <span class="nav-tooltip">
-        {% if event.event_type == 'raksha_bandhan' %}Bachpan Ki Yaadein{% else %}Memories{% endif %}
+        {% if event.event_type == 'raksha_bandhan' %}Bachpan Ki Yaadein{% elif event.event_type == 'anniversary' %}Dance{% else %}Memories{% endif %}
       </span>
     </div>
-    <div class="nav-item" data-page="4" tabindex="0" role="button" aria-label="Blessings Page">
-      <i class="{% if event.event_type == 'raksha_bandhan' %}fas fa-praying-hands{% else %}fas fa-magic{% endif %}"></i>
+    <div class="nav-item" data-page="4" tabindex="0" role="button" aria-label="{% if event.event_type == 'anniversary' %}Memories{% else %}Blessings{% endif %} Page">
+      <i class="{% if event.event_type == 'raksha_bandhan' %}fas fa-praying-hands{% elif event.event_type == 'anniversary' %}fas fa-camera{% else %}fas fa-magic{% endif %}"></i>
       <span class="nav-tooltip">
-        {% if event.event_type == 'raksha_bandhan' %}Blessings{% else %}Interactive{% endif %}
+        {% if event.event_type == 'raksha_bandhan' %}Blessings{% elif event.event_type == 'anniversary' %}Memories{% else %}Interactive{% endif %}
       </span>
     </div>
-    <div class="nav-item" data-page="5" tabindex="0" role="button" aria-label="Eternal Bond Page">
-      <i class="fas fa-heart"></i>
+    <div class="nav-item" data-page="5" tabindex="0" role="button" aria-label="{% if event.event_type == 'anniversary' %}Love Letter{% else %}Farewell{% endif %} Page">
+      <i class="{% if event.event_type == 'anniversary' %}fas fa-envelope-open-text{% else %}fas fa-heart{% endif %}"></i>
       <span class="nav-tooltip">
-        {% if event.event_type == 'raksha_bandhan' %}Eternal Bond{% else %}Farewell{% endif %}
+        {% if event.event_type == 'raksha_bandhan' %}Eternal Bond{% elif event.event_type == 'anniversary' %}Our Letter{% else %}Farewell{% endif %}
       </span>
     </div>
+    {% if event.event_type == 'anniversary' %}
+    <div class="nav-item" data-page="6" tabindex="0" role="button" aria-label="Forever Page">
+      <i class="fas fa-infinity"></i>
+      <span class="nav-tooltip">Forever</span>
+    </div>
+    {% endif %}
   </nav>
 
   {% if error %}
@@ -163,7 +206,7 @@
   {% endif %}
 
   <!-- Main Card Container -->
-  <div class="card-container{% if event.event_type == 'birthday' %} bday-loader-hidden{% endif %}"
+  <div class="card-container{% if event.event_type == 'birthday' %} bday-loader-hidden{% elif event.event_type == 'anniversary' %} anniv-loader-hidden{% endif %}"
        data-theme="{{ event.event_type }}"
        data-cultural-theme="{{ event.cultural_theme|yesno:'true,false' }}"
        data-recipient-name="{{ recipient_name }}"
@@ -203,7 +246,7 @@
     </div>
     {% else %}
 
-    {% if event.event_type != 'birthday' %}
+    {% if event.event_type != 'birthday' and event.event_type != 'anniversary' %}
     <!-- CSS Tree Growth Animation (not used for birthday) -->
     <div class="tree-animation">
       <div class="tree-trunk"></div>
@@ -235,6 +278,11 @@
     {% endif %}
     {% endif %}
 
+    <!-- Anniversary transition overlay -->
+    {% if event.event_type == 'anniversary' %}
+    <div id="anniv-transition-overlay"></div>
+    {% endif %}
+
     <!-- Card Pages -->
     <div class="card-pages">
       <!-- Page 1: Welcome / Password -->
@@ -244,6 +292,10 @@
           {% if event.event_type == 'birthday' %}
           <!-- Birthday Page 1: Immersive welcome — JS will populate decorations -->
           {% include "reminders/card_includes/page1_birthday.html" %}
+
+          {% elif event.event_type == 'anniversary' %}
+          <!-- Anniversary Page 1: "Written in the Stars" welcome -->
+          {% include "reminders/card_includes/page1_anniversary.html" %}
 
           {% else %}
           <h2 class="welcome-title" data-event-type="{{ event.event_type }}">
@@ -330,17 +382,18 @@
         </div>
       </div>
 
-      <!-- Page 3: Memory/Media -->
+      <!-- Page 3: Memory/Media (or Dance for anniversary) -->
       <div class="card-page" id="page-3" role="tabpanel" aria-labelledby="nav-3">
         <div class="page-content">
           {% if event.event_type == 'birthday' %}
             {% include "reminders/card_includes/page3_birthday.html" %}
+          {% elif event.event_type == 'anniversary' %}
+            {% include "reminders/card_includes/page3_anniversary.html" %}
           {% else %}
             <h2 class="page-title">
               {% if event.event_type == 'raksha_bandhan' %}
               Rakhi Recap<br>
               <span style="font-size: 1.2rem; color: var(--rakhi-saffron);">Sibling Memories Through the Years</span>
-              {% elif event.event_type == 'anniversary' %}Our Story
               {% else %}Special Moments
               {% endif %}
             </h2>
@@ -393,14 +446,16 @@
         </div>
       </div>
 
-      <!-- Page 4: Interactive Element -->
+      <!-- Page 4: Interactive Element (or Memories for anniversary) -->
       <div class="card-page" id="page-4" role="tabpanel" aria-labelledby="nav-4">
         <div class="page-content">
+          {% if event.event_type == 'anniversary' %}
+            {% include "reminders/card_includes/page4_anniversary.html" %}
+          {% else %}
           <h2 class="page-title">
             {% if event.event_type == 'raksha_bandhan' %}
             Blessings & Promises 🙏
             {% elif event.event_type == 'birthday' %}Make a Wish!
-            {% elif event.event_type == 'anniversary' %}One More Dance?
             {% else %}Tree of Memories
             {% endif %}
           </h2>
@@ -409,8 +464,6 @@
             {% include "reminders/card_includes/page4_raksha_bandhan.html" %}
           {% elif event.event_type == 'birthday' %}
             {% include "reminders/card_includes/page4_birthday.html" %}
-          {% elif event.event_type == 'anniversary' %}
-            {% include "reminders/card_includes/page4_anniversary.html" %}
           {% else %}
             {% include "reminders/card_includes/page4_other.html" %}
           {% endif %}
@@ -439,10 +492,11 @@
           <div class="quote-container fallback-quote" {% if audio_url %}style="display: none;"{% endif %}>
             <blockquote class="inspiration-quote" aria-live="polite"></blockquote>
           </div>
+          {% endif %}
         </div>
       </div>
 
-      <!-- Page 5: Farewell -->
+      <!-- Page 5: Farewell (or Love Letter for anniversary) -->
       <div class="card-page" id="page-5" role="tabpanel" aria-labelledby="nav-5">
         <div class="page-content">
           {% if event.event_type == 'raksha_bandhan' %}
@@ -454,6 +508,29 @@
           {% else %}
             {% include "reminders/card_includes/page5_other.html" %}
           {% endif %}
+
+          {% if event.event_type != 'anniversary' %}
+          {% if event.reflections.exists %}
+          <div class="voice-note">
+            <div class="voice-note-player">
+              <button class="play-voice-note" aria-label="Play reflection note">
+                <i class="fas fa-microphone"></i>
+                Play Reflection
+              </button>
+              <div class="voice-note-text hidden" aria-live="polite">{{ event.reflections.first.note }}</div>
+            </div>
+          </div>
+          {% endif %}
+          <div class="final-animation" aria-hidden="true"></div>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if event.event_type == 'anniversary' %}
+      <!-- Page 6: Anniversary Farewell — "Forever & Always" -->
+      <div class="card-page" id="page-6" role="tabpanel" aria-labelledby="nav-6">
+        <div class="page-content">
+          {% include "reminders/card_includes/page6_anniversary.html" %}
 
           {% if event.reflections.exists %}
           <div class="voice-note">
@@ -469,6 +546,7 @@
           <div class="final-animation" aria-hidden="true"></div>
         </div>
       </div>
+      {% endif %}
     </div>
   </div>
 

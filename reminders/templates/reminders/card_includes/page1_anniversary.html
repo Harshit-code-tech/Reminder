@@ -1,0 +1,51 @@
+{% comment %}Page 1: Anniversary — "Written in the Stars" Welcome{% endcomment %}
+
+<div class="anniv-p1-bg" id="anniv-p1-bg" aria-hidden="true">
+  <!-- Ambient star particles injected by JS -->
+  <div class="anniv-p1-stars" id="anniv-p1-stars"></div>
+
+  <!-- HUGE Heart constellation — covers most of the page -->
+  <div class="anniv-p1-constellation" id="anniv-p1-constellation">
+    <svg class="anniv-constellation-svg" viewBox="0 0 400 360" preserveAspectRatio="xMidYMid meet">
+      <!-- Heart constellation paths — traced by CSS animation -->
+      <path class="anniv-const-line anniv-const-line--left"
+            d="M 80 200 Q 80 110 140 85 Q 200 60 200 130"
+            fill="none" stroke="rgba(245,200,66,0.5)" stroke-width="1.2"
+            stroke-dasharray="350" stroke-dashoffset="350"/>
+      <path class="anniv-const-line anniv-const-line--right"
+            d="M 320 200 Q 320 110 260 85 Q 200 60 200 130"
+            fill="none" stroke="rgba(245,200,66,0.5)" stroke-width="1.2"
+            stroke-dasharray="350" stroke-dashoffset="350"/>
+      <path class="anniv-const-line anniv-const-line--bottom-left"
+            d="M 80 200 Q 120 270 200 330"
+            fill="none" stroke="rgba(245,200,66,0.5)" stroke-width="1.2"
+            stroke-dasharray="250" stroke-dashoffset="250"/>
+      <path class="anniv-const-line anniv-const-line--bottom-right"
+            d="M 320 200 Q 280 270 200 330"
+            fill="none" stroke="rgba(245,200,66,0.5)" stroke-width="1.2"
+            stroke-dasharray="250" stroke-dashoffset="250"/>
+      <circle class="anniv-const-dot" cx="80" cy="200" r="3"/>
+      <circle class="anniv-const-dot" cx="140" cy="85" r="3"/>
+      <circle class="anniv-const-dot" cx="260" cy="85" r="3"/>
+      <circle class="anniv-const-dot" cx="320" cy="200" r="3"/>
+      <circle class="anniv-const-dot" cx="200" cy="130" r="4"/>
+      <circle class="anniv-const-dot" cx="200" cy="330" r="4"/>
+    </svg>
+  </div>
+</div>
+
+<!-- Content — positioned INSIDE the heart -->
+<div class="anniv-p1-content">
+  <div class="anniv-p1-card">
+    <div class="anniv-p1-greeting">
+      <p class="anniv-p1-line1">A timeless love story…</p>
+      <p class="anniv-p1-label">HAPPY ANNIVERSARY</p>
+      <h1 class="anniv-p1-name"><span class="recipient-name">{{ event.name }}</span></h1>
+      <p class="anniv-p1-line2">Your journey together continues&nbsp;💫</p>
+    </div>
+
+    <p class="anniv-p1-tap-prompt" aria-live="polite">
+      Tap anywhere to begin&nbsp;✨
+    </p>
+  </div>
+</div>

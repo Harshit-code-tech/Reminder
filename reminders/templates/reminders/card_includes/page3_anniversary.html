@@ -1,0 +1,39 @@
+{% comment %}Page 3: Anniversary — "Dance With Me" (Couple Dancing Scene){% endcomment %}
+{% load static %}
+<div class="anniv-dance-scene">
+  <!-- Dance floor backdrop -->
+  <div class="anniv-dance-floor" aria-hidden="true">
+    <div class="anniv-dance-spotlight"></div>
+    <div class="anniv-dance-glow"></div>
+    <div class="anniv-floor-reflection"></div>
+  </div>
+
+  <!-- Rose petal layer — JS injects floating petals -->
+  <div class="anniv-dance-petals" id="anniv-dance-petals" aria-hidden="true"></div>
+
+  <!-- Music note particles — JS injects when music plays -->
+  <div class="anniv-dance-notes" id="anniv-dance-notes" aria-hidden="true"></div>
+
+  <!-- Couple — GIF figures -->
+  <div class="anniv-couple" id="anniv-couple">
+    <div class="anniv-couple-glow" aria-hidden="true"></div>
+
+    <div class="anniv-gif-wrapper">
+      <img src="{% static 'images/anniv_dance.gif' %}" alt="Couple dancing" class="anniv-dance-gif">
+    </div>
+
+    <!-- Heart burst on click -->
+    <div class="anniv-heart-trail" id="anniv-heart-trail"></div>
+  </div>
+
+  <!-- Music controls -->
+  <div class="anniv-dance-controls">
+    <button class="anniv-music-btn" id="anniv-music-btn"
+            aria-label="Play music for the dance">
+      <i class="fas fa-play"></i>
+      <span class="anniv-music-label">Play Our Song</span>
+    </button>
+  </div>
+
+  <p class="anniv-dance-quote">"In your arms is where I find my rhythm."</p>
+</div>

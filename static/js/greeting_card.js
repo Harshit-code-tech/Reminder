@@ -820,7 +820,7 @@ function initPage1Decor() {
 
     const cardContainer = document.querySelector('.card-container');
     const eventType = cardContainer ? (cardContainer.dataset.theme || 'birthday') : 'birthday';
-    if (eventType === 'birthday') {
+    if (eventType === 'birthday' || eventType === 'anniversary') {
         return;
     }
 
