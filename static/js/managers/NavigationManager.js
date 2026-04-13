@@ -139,7 +139,10 @@ class NavigationManager {
                 if (eventModule?.onPageEnter) eventModule.onPageEnter(4, this.app);
                 break;
             case 5:
-                this.app.playFinalAnimation();
+                // Anniversary relies on custom Page 6 Tree of Love rather than generic finale
+                if (this.eventType !== 'anniversary') {
+                    this.app.playFinalAnimation();
+                }
                 if (eventModule?.onPageEnter) eventModule.onPageEnter(5, this.app);
                 break;
             default:
