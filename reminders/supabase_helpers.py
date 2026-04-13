@@ -99,3 +99,21 @@ def delete_media(request, file_path):
 
     logger.info(f"Deleted media from storage: {file_path}")
     return True
+
+
+def delete_media_from_storage(supabase, file_path):
+    dir_path = "/".join(file_path.split('/')[:-1])
+    file_list = supabase.storage.from_('event-media').list(path=dir_path)
+
+    file_exists = any(f['name'] == file_path.split('/')[-1] for f in file_list)
+    if not file_exists:
+        logger.warning(f"File not found in storage: {file_path}")
+        return True
+
+    response = supabase.storage.from_('event-media').remove([file_path])
+    if response is None or (isinstance(response, list) and not response):
+        logger.error(f"Media deletion failed: {file_path}")
+        return False
+
+    logger.info(f"Deleted media from storage: {file_path}")
+    return True

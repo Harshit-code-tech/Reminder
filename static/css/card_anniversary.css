@@ -7,6 +7,8 @@
 :root {
   --anniv-midnight:       #080c1e;
   --anniv-deep:           #0d1133;
+  --anniv-bg-deep:        #0b1028;
+  --event-bg:             #0b1028;
   --anniv-indigo:         #1a1040;
   --anniv-indigo-mid:     #2a1860;
   --anniv-rose:           #e8a4b8;
@@ -37,15 +39,25 @@
 }
 
 /* Force dark theme background on all anniversary pages */
-[data-theme="anniversary"] .card-page,
-[data-theme="anniversary"] .card-pages {
+.card-container[data-theme="anniversary"] .card-page,
+.card-container[data-theme="anniversary"] .card-pages {
   background: var(--anniv-midnight) !important;
 }
-[data-theme="anniversary"] .card-container {
+.card-container[data-theme="anniversary"] {
   background: var(--anniv-midnight) !important;
 }
-[data-theme="anniversary"] .page-content {
+.card-container[data-theme="anniversary"] .page-content {
   color: var(--anniv-silver-light);
+}
+
+/* Anniversary ambient wallpaper outside the card container */
+html:has(.card-container[data-theme="anniversary"]) body {
+  background:
+    linear-gradient(rgba(8, 12, 30, 0.58), rgba(8, 12, 30, 0.58)),
+    url('/static/images/abstract-bg.png') center center / cover no-repeat fixed,
+    radial-gradient(circle at 20% 20%, rgba(232, 164, 184, 0.18), transparent 45%),
+    radial-gradient(circle at 80% 15%, rgba(245, 200, 66, 0.14), transparent 42%),
+    linear-gradient(160deg, #070b1b 0%, #120f2c 45%, #1b0d2e 100%);
 }
 
 

@@ -109,7 +109,13 @@ def process_bulk_import(user, csv_file):
         csv_content = csv_file.read().decode('utf-8')
         csv_reader = csv.DictReader(StringIO(csv_content))
         expected_columns = {'name', 'event_type', 'date', 'remind_days_before', 'message', 'custom_label'}
-        if set(csv_reader.fieldnames) != expected_columns:
+
+        normalized_headers = {
+            (header or '').replace('\ufeff', '').strip().lower()
+            for header in (csv_reader.fieldnames or [])
+        }
+
+        if normalized_headers != expected_columns:
             raise ValidationError(f"Invalid CSV format. Expected headers: {', '.join(expected_columns)}")
 
         success_count = 0
@@ -118,14 +124,19 @@ def process_bulk_import(user, csv_file):
 
         for row in csv_reader:
             try:
+                normalized_row = {
+                    (key or '').replace('\ufeff', '').strip().lower(): (value or '')
+                    for key, value in row.items()
+                }
+
                 # Validate required fields
-                name = row['name'].strip()
+                name = normalized_row['name'].strip()
                 if not name or len(name) > 500:
                     raise ValueError(f"Invalid name: {name}")
 
                 # Accept user-friendly variants such as "Raksha Bandhan"
                 # and normalize to model keys like "raksha_bandhan".
-                raw_event_type = row['event_type'].strip().lower()
+                raw_event_type = normalized_row['event_type'].strip().lower()
                 event_type = re.sub(r'[\s\-]+', '_', raw_event_type)
                 event_type_aliases = {
                     'rakhi': 'raksha_bandhan',
@@ -134,22 +145,22 @@ def process_bulk_import(user, csv_file):
 
                 if event_type not in dict(Event.EVENT_TYPES):
                     raise ValueError(f"Invalid event_type: {raw_event_type}")
-                date_str = row['date'].strip()
+                date_str = normalized_row['date'].strip()
                 try:
                     event_date = datetime.strptime(date_str, '%Y-%m-%d').date()
                 except ValueError:
                     raise ValueError(f"Invalid date format: {date_str}. Use YYYY-MM-DD")
 
                 # Optional fields
-                remind_days_before = row.get('remind_days_before', '1').strip()
+                remind_days_before = normalized_row.get('remind_days_before', '1').strip()
                 try:
                     remind_days_before = int(remind_days_before)
                     if remind_days_before < 0:
                         raise ValueError
                 except ValueError:
                     raise ValueError(f"Invalid remind_days_before: {remind_days_before}")
-                message = row.get('message', '').strip() or None
-                custom_label = row.get('custom_label', '').strip() or None
+                message = normalized_row.get('message', '').strip() or None
+                custom_label = normalized_row.get('custom_label', '').strip() or None
                 if custom_label and len(custom_label) > 100:
                     raise ValueError(f"custom_label too long: {custom_label}")
 

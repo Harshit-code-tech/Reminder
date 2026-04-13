@@ -13,4 +13,4 @@ class Command(BaseCommand):
                 f"Sent {result['sent_count']} of {result['total_events']} deletion notifications"
             ))
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"Error: {str(e)}"))
+            self.stderr.write(self.style.ERROR(f"Error: {e}"))

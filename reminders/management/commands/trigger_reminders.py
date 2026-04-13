@@ -1,6 +1,8 @@
-# for manual testing
 from django.core.management.base import BaseCommand
+
 from reminders.utils import send_upcoming_reminders
+
+
 class Command(BaseCommand):
     help = 'Manually trigger sending of upcoming event reminders'
 
@@ -11,4 +13,4 @@ class Command(BaseCommand):
                 f"Sent {result['sent_count']} of {result['total_events']} reminders"
             ))
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"Error: {str(e)}"))
+            self.stderr.write(self.style.ERROR(f"Error: {e}"))

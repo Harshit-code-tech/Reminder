@@ -13,4 +13,4 @@ class Command(BaseCommand):
                 f"Deleted media for {result['deleted_count']} of {result['total_events']} events"
             ))
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"Error: {str(e)}"))
+            self.stderr.write(self.style.ERROR(f"Error: {e}"))

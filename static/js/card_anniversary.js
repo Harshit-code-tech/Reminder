@@ -28,15 +28,12 @@ const AnniversaryMixin = {
                 danceAudioPlaying: false,
                 danceInterval: null,
                 danceNoteInterval: null,
-                danceSpinInterval: null,
-                page4Init: false,
                 page4PetalInterval: null,
                 page5Init: false,
                 envelopeOpened: false,
                 typewriterTimer: null,
                 page6Init: false,
                 page6PetalInterval: null,
-                page6Sequence: null,
             };
         }
         return app._annivRuntime;
@@ -502,10 +499,6 @@ const AnniversaryMixin = {
             clearInterval(rt.danceNoteInterval);
             rt.danceNoteInterval = null;
         }
-        if (rt.danceSpinInterval) {
-            clearInterval(rt.danceSpinInterval);
-            rt.danceSpinInterval = null;
-        }
         // Pause dance audio if exists
         const audio = document.getElementById('anniv-dance-audio');
         if (audio) audio.pause();
@@ -896,68 +889,60 @@ window.EventModules['anniversary'] = {
         }
     },
 
-    onPageLeaveAnimation(page, nextPage, app, callback) {
+    onPageLeaveAnimation(page, _nextPage, app, callback) {
         const overlay = document.getElementById('anniv-transition-overlay');
         if (!overlay) {
             callback();
             return;
         }
 
-        // Different animations per page transition
-        if (page === 1 && nextPage === 2) {
-            // Page 1 -> 2: Meteor shower flash
+        const applyOverlay = (className, callbackDelay, resetDelay, toneFreq, toneDur = 0.15) => {
+            overlay.className = className;
+            try { app.audioManager.generateTone(toneFreq, toneDur, 'sine'); } catch (e) {}
+            setTimeout(() => callback(), callbackDelay);
+            setTimeout(() => { overlay.className = ''; }, resetDelay);
+        };
+
+        const launchMeteorBurst = () => {
             for (let i = 0; i < 15; i++) {
                 setTimeout(() => {
                     const star = document.createElement('div');
                     star.className = 'anniv-p1-shooting-star';
                     star.style.top = Math.random() * 50 + 'vh';
                     star.style.left = Math.random() * 100 + 'vw';
-                    star.style.animation = `annivMeteor 1s linear forwards`;
+                    star.style.animation = 'annivMeteor 1s linear forwards';
                     document.body.appendChild(star);
                     setTimeout(() => star.remove(), 1000);
                 }, i * 50);
             }
-            try { app.audioManager.generateTone(880, 0.1, 'sine'); } catch(e) {}
+        };
 
-            setTimeout(() => {
-                overlay.className = 'active-flash';
-                setTimeout(() => callback(), 600); 
-                setTimeout(() => { overlay.className = ''; }, 1500);
-            }, 600);
-        } 
-        else if (page === 2 && nextPage === 3) {
-            // Page 2 -> 3: Spotlight Dim
-            overlay.className = 'active-spotlight';
-            try { app.audioManager.generateTone(440, 0.2, 'sine'); } catch(e) {}
-            setTimeout(() => callback(), 800);
-            setTimeout(() => { overlay.className = ''; }, 1600);
-        }
-        else if (page === 3 && nextPage === 4) {
-            // Page 3 -> 4: Golden Sparkle Fade
-            overlay.className = 'active-sparkle';
-            try { app.audioManager.generateTone(659, 0.15, 'sine'); } catch(e) {}
-            setTimeout(() => callback(), 700);
-            setTimeout(() => { overlay.className = ''; }, 1400);
-        }
-        else if (page === 4 && nextPage === 5) {
-            // Page 4 -> 5: Soft Blur Crossfade
-            overlay.className = 'active-blur';
-            try { app.audioManager.generateTone(523, 0.15, 'sine'); } catch(e) {}
-            setTimeout(() => callback(), 600);
-            setTimeout(() => { overlay.className = ''; }, 1200);
-        }
-        else if (page === 5 && nextPage === 6) {
-            // Page 5 -> 6: Deep Romantic Ambient
-            overlay.className = 'active-ambient';
-            try { app.audioManager.generateTone(392, 0.25, 'sine'); } catch(e) {}
-            setTimeout(() => callback(), 900);
-            setTimeout(() => { overlay.className = ''; }, 1800);
-        }
-        else {
-            // Default fast wipe
-            overlay.className = 'active-fade';
-            setTimeout(() => callback(), 500);
-            setTimeout(() => { overlay.className = ''; }, 1000);
+        // Page-source-led transitions so reverse/jump navigation still feels intentional.
+        switch (page) {
+            case 1:
+                launchMeteorBurst();
+                setTimeout(() => {
+                    applyOverlay('active-flash', 600, 1500, 880, 0.1);
+                }, 600);
+                return;
+            case 2:
+                applyOverlay('active-spotlight', 800, 1600, 440, 0.2);
+                return;
+            case 3:
+                applyOverlay('active-sparkle', 700, 1400, 659, 0.15);
+                return;
+            case 4:
+                applyOverlay('active-blur', 600, 1200, 523, 0.15);
+                return;
+            case 5:
+                applyOverlay('active-ambient', 900, 1800, 392, 0.25);
+                return;
+            case 6:
+                // Back-navigation from finale uses a soft fade instead of full ambient bloom.
+                applyOverlay('active-fade', 550, 1000, 349, 0.12);
+                return;
+            default:
+                applyOverlay('active-fade', 500, 1000, 330, 0.12);
         }
     }
 };
