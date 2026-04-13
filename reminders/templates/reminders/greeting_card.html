@@ -199,6 +199,19 @@
     {% endif %}
   </nav>
 
+  {% if event.event_type == 'anniversary' %}
+  <div class="anniv-page-controls anniv-loader-hidden" aria-label="Page navigation controls">
+    <button type="button" class="anniv-page-btn anniv-page-btn-prev" data-anniv-nav="prev" aria-label="Go to previous page">
+      <i class="fas fa-chevron-left" aria-hidden="true"></i>
+      <span>Back</span>
+    </button>
+    <button type="button" class="anniv-page-btn anniv-page-btn-next" data-anniv-nav="next" aria-label="Go to next page">
+      <span>Next</span>
+      <i class="fas fa-chevron-right" aria-hidden="true"></i>
+    </button>
+  </div>
+  {% endif %}
+
   {% if error %}
   <div class="error-alert" role="alert">
     {{ error }}

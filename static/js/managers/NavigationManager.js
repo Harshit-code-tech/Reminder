@@ -110,6 +110,23 @@ class NavigationManager {
             item.style.pointerEvents = isAccessible ? 'auto' : 'none';
             item.setAttribute('aria-current', isActive ? 'page' : 'false');
         });
+
+        const prevButton = this.elements.prevPageButton;
+        const nextButton = this.elements.nextPageButton;
+        if (prevButton || nextButton) {
+            const canGoBack = this.unlocked && this.currentPage > 1;
+            const canGoNext = this.unlocked && this.currentPage < this.totalPages;
+
+            if (prevButton) {
+                prevButton.disabled = !canGoBack;
+                prevButton.setAttribute('aria-disabled', String(!canGoBack));
+            }
+
+            if (nextButton) {
+                nextButton.disabled = !canGoNext;
+                nextButton.setAttribute('aria-disabled', String(!canGoNext));
+            }
+        }
     }
 
     initializePage(pageNum) {

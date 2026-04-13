@@ -261,6 +261,56 @@ html:has(.card-container[data-theme="anniversary"]) body {
   pointer-events: auto !important;
 }
 
+.anniv-page-controls {
+  position: fixed;
+  left: 50%;
+  bottom: 1.4rem;
+  transform: translateX(-50%);
+  z-index: 101;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.anniv-page-controls.anniv-controls-gated {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.anniv-page-btn {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(15, 20, 46, 0.88), rgba(30, 24, 62, 0.88));
+  color: var(--anniv-silver-light);
+  padding: 0.56rem 1.05rem;
+  font-family: var(--anniv-font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  box-shadow: 0 8px 28px rgba(5, 8, 22, 0.42);
+  transition: transform 0.25s var(--anniv-ease), box-shadow 0.25s var(--anniv-ease), opacity 0.25s var(--anniv-ease), border-color 0.25s var(--anniv-ease);
+}
+
+.anniv-page-btn:hover:not(:disabled),
+.anniv-page-btn:focus-visible:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: rgba(245, 200, 66, 0.45);
+  box-shadow: 0 12px 30px rgba(5, 8, 22, 0.5), 0 0 0 3px rgba(245, 200, 66, 0.2);
+  outline: none;
+}
+
+.anniv-page-btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 6px 20px rgba(5, 8, 22, 0.28);
+}
+
 
 /* 3. ============= SHARED UTILITY KEYFRAMES ============= */
 @keyframes annivFadeIn {
@@ -1419,6 +1469,14 @@ html:has(.card-container[data-theme="anniversary"]) body {
 
 /* 11. ============= RESPONSIVE ============= */
 @media (max-width: 480px) {
+  .anniv-page-controls {
+    bottom: calc(0.75rem + env(safe-area-inset-bottom));
+    gap: 0.5rem;
+  }
+  .anniv-page-btn {
+    padding: 0.5rem 0.9rem;
+    font-size: 0.82rem;
+  }
   .anniv-loader__clock { width: 150px; height: 150px; }
   .anniv-loader__hand--hour { height: 42px; }
   .anniv-loader__hand--minute { height: 56px; }

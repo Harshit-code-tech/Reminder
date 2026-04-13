@@ -22,6 +22,7 @@ const AnniversaryMixin = {
         if (!app._annivRuntime) {
             app._annivRuntime = {
                 loaderDone: false,
+                controlsUnlocked: false,
                 constellationDrawn: false,
                 page2Init: false,
                 danceInit: false,
@@ -37,6 +38,12 @@ const AnniversaryMixin = {
             };
         }
         return app._annivRuntime;
+    },
+
+    _setAnnivControlsVisibility(visible) {
+        const controls = document.querySelector('.anniv-page-controls');
+        if (!controls) return;
+        controls.classList.toggle('anniv-controls-gated', !visible);
     },
 
 
@@ -118,6 +125,8 @@ const AnniversaryMixin = {
         // Do not trigger animations while loader is still active
         if (!rt.loaderDone && document.getElementById('anniv-loader')) return;
 
+        this._setAnnivControlsVisibility(rt.controlsUnlocked);
+
         const bg = document.querySelector('.anniv-p1-bg');
         if (!bg) return;
 
@@ -163,6 +172,11 @@ const AnniversaryMixin = {
                 if (e.target.closest('.page-navigator, .share-card, button')) return;
                 if (!app.unlocked) return;
 
+                if (!rt.controlsUnlocked) {
+                    rt.controlsUnlocked = true;
+                    this._setAnnivControlsVisibility(true);
+                }
+
                 // Play a brief chime
                 try { app.audioManager.generateTone(880, 0.15, 'triangle'); } catch(e) {}
                 app.goToPage(2);
@@ -177,6 +191,10 @@ const AnniversaryMixin = {
 
     setupAnnivPage2(app) {
         const rt = this._getAnnivRuntime(app);
+        if (!rt.controlsUnlocked) {
+            rt.controlsUnlocked = true;
+            this._setAnnivControlsVisibility(true);
+        }
         if (rt.page2Init) return;
         rt.page2Init = true;
 
@@ -335,6 +353,10 @@ const AnniversaryMixin = {
 
     setupAnnivPage3(app) {
         const rt = this._getAnnivRuntime(app);
+        if (!rt.controlsUnlocked) {
+            rt.controlsUnlocked = true;
+            this._setAnnivControlsVisibility(true);
+        }
         if (rt.danceInit) return;
         rt.danceInit = true;
 
@@ -527,6 +549,10 @@ const AnniversaryMixin = {
 
     setupAnnivPage4(app) {
         const rt = this._getAnnivRuntime(app);
+        if (!rt.controlsUnlocked) {
+            rt.controlsUnlocked = true;
+            this._setAnnivControlsVisibility(true);
+        }
 
         // Run media display setup on page 4
         app.setupMediaDisplays();
@@ -578,13 +604,20 @@ const AnniversaryMixin = {
 
     setupAnnivPage5(app) {
         const rt = this._getAnnivRuntime(app);
+        if (!rt.controlsUnlocked) {
+            rt.controlsUnlocked = true;
+            this._setAnnivControlsVisibility(true);
+        }
         if (rt.page5Init) return;
         rt.page5Init = true;
 
         const envelopeWrap = document.getElementById('anniv-envelope-wrap');
         const envelope = document.getElementById('anniv-envelope');
+        const bodyEl = document.getElementById('anniv-letter-body');
 
         if (!envelope || !envelopeWrap) return;
+
+        this._prepareAnnivLetterContent(bodyEl);
 
         envelope.addEventListener('click', () => {
             if (rt.envelopeOpened) return;
@@ -622,25 +655,7 @@ const AnniversaryMixin = {
         const bodyEl = document.getElementById('anniv-letter-body');
         if (!bodyEl) return;
 
-        const fallbackSpan = bodyEl.querySelector('.anniv-fallback-msg');
-        if (fallbackSpan) {
-            const fallbackQuotes = [
-                "With you, every moment feels like a page from the most beautiful love story ever written. Through every season we've shared, my love for you has only grown deeper. You are my favourite chapter, my best adventure, and my forever home.",
-                "In a lifetime of choices, choosing you was the easiest and best decision I've ever made. Thank you for walking by my side and holding my hand through it all. Here's to us, today and always.",
-                "I never knew what it meant to find a soulmate until I met you. You understand my silence, you celebrate my joy, and you are the calm in my storms. I love you more with every passing day.",
-                "Every day with you is a gift I promise never to take for granted. You are my brightest star, my deepest comfort, and the love of my life. Happy Anniversary, my heart.",
-                "They say true love gets stronger over time, and watching our journey unfold has proven it true. You are my rock, my sanctuary, and the most beautiful part of my world.",
-                "Sometimes I pause and just marvel at how lucky I am to share this life with you. To love you and to be loved by you is everything I could ever ask for.",
-                "Through the highs and lows, your love has been my constant anchor. I wouldn't want to navigate this beautiful, chaotic life with anyone else but you.",
-                "A million times over, I would still choose you. You make the ordinary moments magical and the difficult times bearable. Happy Anniversary to my person.",
-                "Looking into your eyes still gives me the same butterflies as the day we first met. Thank you for building a wonderful life and a beautiful love with me.",
-                "You are my heart's permanent address. With each anniversary, I realize more fully that you are the greatest blessing of my life. I love you endlessly."
-            ];
-            const randomMsg = fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)];
-            fallbackSpan.outerHTML = randomMsg;
-        }
-
-        const fullText = bodyEl.innerHTML.trim();
+        const fullText = bodyEl.dataset.typewriterSource || bodyEl.innerHTML.trim();
         bodyEl.innerHTML = '';
         bodyEl.classList.add('typing');
 
@@ -687,6 +702,32 @@ const AnniversaryMixin = {
                 }, 600);
             }
         }, speed);
+    },
+
+    _prepareAnnivLetterContent(bodyEl) {
+        if (!bodyEl || bodyEl.dataset.typewriterPrepared === 'true') return;
+
+        const fallbackSpan = bodyEl.querySelector('.anniv-fallback-msg');
+        if (fallbackSpan) {
+            const fallbackQuotes = [
+                "With you, every moment feels like a page from the most beautiful love story ever written. Through every season we've shared, my love for you has only grown deeper. You are my favourite chapter, my best adventure, and my forever home.",
+                "In a lifetime of choices, choosing you was the easiest and best decision I've ever made. Thank you for walking by my side and holding my hand through it all. Here's to us, today and always.",
+                "I never knew what it meant to find a soulmate until I met you. You understand my silence, you celebrate my joy, and you are the calm in my storms. I love you more with every passing day.",
+                "Every day with you is a gift I promise never to take for granted. You are my brightest star, my deepest comfort, and the love of my life. Happy Anniversary, my heart.",
+                "They say true love gets stronger over time, and watching our journey unfold has proven it true. You are my rock, my sanctuary, and the most beautiful part of my world.",
+                "Sometimes I pause and just marvel at how lucky I am to share this life with you. To love you and to be loved by you is everything I could ever ask for.",
+                "Through the highs and lows, your love has been my constant anchor. I wouldn't want to navigate this beautiful, chaotic life with anyone else but you.",
+                "A million times over, I would still choose you. You make the ordinary moments magical and the difficult times bearable. Happy Anniversary to my person.",
+                "Looking into your eyes still gives me the same butterflies as the day we first met. Thank you for building a wonderful life and a beautiful love with me.",
+                "You are my heart's permanent address. With each anniversary, I realize more fully that you are the greatest blessing of my life. I love you endlessly."
+            ];
+            const randomMsg = fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)];
+            fallbackSpan.outerHTML = randomMsg;
+        }
+
+        bodyEl.dataset.typewriterSource = bodyEl.innerHTML.trim();
+        bodyEl.innerHTML = '';
+        bodyEl.dataset.typewriterPrepared = 'true';
     },
 
     _revealAnnivAudio(app) {
@@ -751,6 +792,10 @@ const AnniversaryMixin = {
 
     setupAnnivPage6(app) {
         const rt = this._getAnnivRuntime(app);
+        if (!rt.controlsUnlocked) {
+            rt.controlsUnlocked = true;
+            this._setAnnivControlsVisibility(true);
+        }
         if (rt.page6Init) return;
         rt.page6Init = true;
 
@@ -945,4 +990,83 @@ window.EventModules['anniversary'] = {
                 applyOverlay('active-fade', 500, 1000, 330, 0.12);
         }
     }
+};
+
+// Dev-only helper: run `window.runAnniversaryTransitionQA()` in browser console
+// to quickly verify source-page transition identity across navigation paths.
+window.runAnniversaryTransitionQA = async function runAnniversaryTransitionQA() {
+    const app = window.greetingCard;
+    if (!app || app.eventType !== 'anniversary') {
+        console.warn('Anniversary QA is available only on an Anniversary greeting card page.');
+        return;
+    }
+
+    const overlay = document.getElementById('anniv-transition-overlay');
+    if (!overlay) {
+        console.warn('Transition overlay element was not found.');
+        return;
+    }
+
+    const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    const waitForOverlayClass = (timeout = 2200) => new Promise((resolve) => {
+        const start = performance.now();
+        const poll = () => {
+            const activeClass = overlay.className || '';
+            if (activeClass) {
+                resolve({ activeClass, elapsedMs: Math.round(performance.now() - start) });
+                return;
+            }
+            if (performance.now() - start >= timeout) {
+                resolve({ activeClass: '', elapsedMs: Math.round(performance.now() - start) });
+                return;
+            }
+            requestAnimationFrame(poll);
+        };
+        poll();
+    });
+
+    const scenarios = [
+        { label: 'forward 1->2', from: 1, to: 2 },
+        { label: 'forward 2->3', from: 2, to: 3 },
+        { label: 'forward 3->4', from: 3, to: 4 },
+        { label: 'forward 4->5', from: 4, to: 5 },
+        { label: 'forward 5->6', from: 5, to: 6 },
+        { label: 'backward 6->5', from: 6, to: 5 },
+        { label: 'backward 5->4', from: 5, to: 4 },
+        { label: 'jump 4->2', from: 4, to: 2 },
+        { label: 'jump 2->6', from: 2, to: 6 },
+    ];
+
+    const rows = [];
+    const startedAt = performance.now();
+
+    console.group('Anniversary Transition QA');
+    console.log('Running scenarios:', scenarios.map((s) => s.label).join(', '));
+
+    for (const scenario of scenarios) {
+        app.goToPage(scenario.from);
+        await wait(280);
+
+        const navStart = performance.now();
+        app.goToPage(scenario.to);
+        const seen = await waitForOverlayClass();
+        const settledMs = Math.round(performance.now() - navStart);
+
+        rows.push({
+            scenario: scenario.label,
+            from: scenario.from,
+            to: scenario.to,
+            overlayClass: seen.activeClass || '(none seen)',
+            firstClassSeenMs: seen.elapsedMs,
+            navSettledMs: settledMs,
+        });
+
+        await wait(500);
+    }
+
+    console.table(rows);
+    console.log(`Completed in ${Math.round(performance.now() - startedAt)}ms`);
+    console.groupEnd();
+
+    return rows;
 };

@@ -92,6 +92,8 @@ class GreetingCardApp {
         this.elements = {
             // Navigation
             navItems: document.querySelectorAll('.nav-item'),
+            prevPageButton: document.querySelector('[data-anniv-nav="prev"]'),
+            nextPageButton: document.querySelector('[data-anniv-nav="next"]'),
 
             // Theme toggle
             themeToggle: document.querySelector('.theme-toggle'),
@@ -147,6 +149,18 @@ class GreetingCardApp {
                 }
             });
         });
+
+        if (this.elements.prevPageButton) {
+            this.elements.prevPageButton.addEventListener('click', () => {
+                this.goToPage(this.currentPage - 1);
+            });
+        }
+
+        if (this.elements.nextPageButton) {
+            this.elements.nextPageButton.addEventListener('click', () => {
+                this.goToPage(this.currentPage + 1);
+            });
+        }
 
         // Password validation
         if (this.elements.passwordInput && this.elements.unlockButton) {
