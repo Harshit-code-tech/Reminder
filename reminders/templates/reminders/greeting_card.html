@@ -303,8 +303,7 @@
             🌸 A Sacred Bond Awaits 🌸<br>
             💝 Surprise for <span class="recipient-name">{{ event.name }}</span>!<br>
             ✨ Raksha Bandhan Ki Shubhkamnayein ✨
-            {% elif event.event_type == 'anniversary' %}
-            💞 A Love Note for <span class="recipient-name">{{ event.name }}</span>
+
             {% else %}
             ✨ A Special Message for <span class="recipient-name">{{ event.name }}</span>
             {% endif %}
@@ -585,11 +584,11 @@
       <div class="share-url-container hidden" id="share-url-container">
         <p id="share-url"></p>
         <div class="social-links">
-          <a id="whatsapp-share" href="#" target="_blank" aria-label="Share on WhatsApp">
+          <a id="whatsapp-share" href="#" target="_blank" rel="noopener noreferrer" aria-label="Share on WhatsApp">
             <i class="fab fa-whatsapp"></i>
             WhatsApp
           </a>
-          <a id="twitter-share" href="#" target="_blank" aria-label="Share on Twitter">
+          <a id="twitter-share" href="#" target="_blank" rel="noopener noreferrer" aria-label="Share on Twitter">
             <i class="fab fa-twitter"></i>
             Twitter
           </a>

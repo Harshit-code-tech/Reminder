@@ -15,7 +15,7 @@
   --glow-primary: 0 0 20px rgba(59, 130, 246, 0.3);
   --glow-secondary: 0 0 20px rgba(139, 92, 246, 0.3);
 
-  --rakhi-border-color:orange;
+  --rakhi-border-color: orange;
 
   /* Transition Variables */
   --transition-fast: 0.2s ease;
@@ -23,26 +23,24 @@
   --transition-slow: 0.5s ease;
   --transition-theme: 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 
+  /* Raksha Bandhan Specific Styles */
+  --rakhi-primary: #DC2626;
+  --rakhi-gold: #F59E0B;
+  --rakhi-saffron: #FF6B35;
+  --rakhi-green: #10B981;
+  --rakhi-purple: #7C3AED;
+  --rakhi-silk: linear-gradient(45deg, #F59E0B, #DC2626);
 
-  /*Raksha Bandhan Specific Styles*/
-
-      --rakhi-primary: #DC2626;
-      --rakhi-gold: #F59E0B;
-      --rakhi-saffron: #FF6B35;
-      --rakhi-green: #10B981;
-      --rakhi-purple: #7C3AED;
-      --rakhi-silk: linear-gradient(45deg, #F59E0B, #DC2626);
-
-      /* Mobile optimizations */
-      --particle-count-mobile: 30;
-      --particle-count-desktop: 100;
-      --animation-duration-mobile: 2s;
-      --animation-duration-desktop: 3s;
+  /* Mobile optimizations */
+  --particle-count-mobile: 30;
+  --particle-count-desktop: 100;
+  --animation-duration-mobile: 2s;
+  --animation-duration-desktop: 3s;
 }
-    /* Raksha Bandhan Theme Styles */
-    [data-theme="raksha_bandhan"] {
-      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fbbf24 100%);
-    }
+/* Raksha Bandhan Theme Styles */
+[data-theme="raksha_bandhan"] {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fbbf24 100%);
+}
 
     /* Loading Screen for Rakhi */
     .rakhi-loading {
@@ -916,7 +914,6 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(4px);
   z-index: 2;
-  /*background-color: rgba(139, 69, 19, 0.7);*/
 }
 
 .tree-instruction {
@@ -932,17 +929,6 @@ body {
   50% { transform: scale(1.1); }
   100% { transform: scale(1); opacity: 1; }
 }
-/*.tree-trunk {*/
-/*  position: relative;*/
-/*  bottom: 0;*/
-/*  left: 50%;*/
-/*  transform: translateX(-50%);*/
-/*  width: 8px;*/
-/*  height: 30px;*/
-/*  background: linear-gradient(180deg, #92400e, #78350f);*/
-/*  border-radius: 4px 4px 0 0;*/
-/*  animation: growTrunk 3s ease-out;*/
-/*}*/
 
 .tree-leaves {
   position: absolute;

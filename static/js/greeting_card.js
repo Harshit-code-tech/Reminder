@@ -701,7 +701,7 @@ class GreetingCardApp {
         try {
             this.savedData = { ...this.savedData, ...data, lastVisited: Date.now() };
             localStorage.setItem(this.storageKey, JSON.stringify(this.savedData));
-            
+
             // Sync birthday ceremony progression keys to backend.
             // NOTE: birthday_page4_wish_made is excluded intentionally — it is
             // per-device localStorage state and must not be shared across viewers.
@@ -712,7 +712,7 @@ class GreetingCardApp {
             if (Object.keys(data).some(key => backendKeys.includes(key))) {
                 this.saveBackendData(data);
             }
-            
+
             return true;
         } catch (e) {
             console.error('Error saving card data:', e);
@@ -836,20 +836,9 @@ function initPage1Decor() {
 
 }
 
-
-// ===== APPLY EVENT-SPECIFIC MIXINS =====
-// Module files loaded after this script set window._*Mixin objects.
-// Apply them to the prototype before DOMContentLoaded creates the instance.
-function _applyPendingMixins() {
-    // Prototype mutation replaced by EventModule API.
-    // Event modules now register on window.EventModules[eventType] instead of modifying the prototype.
-}
-
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        // Apply any event-specific mixins before creating the instance
-        _applyPendingMixins();
         // Initialize the greeting card application
         window.greetingCard = new GreetingCardApp();
 
