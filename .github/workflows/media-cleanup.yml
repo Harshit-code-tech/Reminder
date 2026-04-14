@@ -14,6 +14,7 @@ jobs:
       EMAIL_HOST: ${{ vars.EMAIL_HOST }}
       EMAIL_PORT: ${{ vars.EMAIL_PORT }}
       EMAIL_USE_TLS: ${{ vars.EMAIL_USE_TLS }}
+      EMAIL_STARTUP_CHECK_STRICT: "false"
       EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
       EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
