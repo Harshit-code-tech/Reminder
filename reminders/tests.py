@@ -8,7 +8,9 @@ from django.test import TestCase
 from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth import get_user_model
+from django.utils.datastructures import MultiValueDict
 
+from reminders.forms import EventForm
 from reminders.utils import process_bulk_import
 from reminders.models import Event
 
@@ -151,3 +153,110 @@ class AnniversaryTransitionContractTests(TestCase):
 		self.assertIn('switch (page)', content)
 		for page_case in ('case 1:', 'case 2:', 'case 3:', 'case 4:', 'case 5:', 'case 6:'):
 			self.assertIn(page_case, content)
+
+
+class EventFormMemoryPersistenceTests(TestCase):
+	def setUp(self):
+		User = get_user_model()
+		self.user = User.objects.create_user(
+			username='memory_tester',
+			email='memory_tester@example.com',
+			password='test-pass-123'
+		)
+		self.event = Event.objects.create(
+			user=self.user,
+			name='Memory Event',
+			event_type='anniversary',
+			date=date(2026, 4, 21),
+			remind_days_before=1,
+			highlights='Year 1: First trip\nYear 2: New home',
+			thread_of_memories='[{"year":"2020","title":"First date","description":"We met at a cafe"},{"year":"2021","title":"Proposal","description":"A quiet evening"}]',
+		)
+
+	def test_editing_highlights_keeps_thread_of_memories(self):
+		form = EventForm(
+			data={
+				'name': 'Memory Event',
+				'event_type': 'anniversary',
+				'date': '2026-04-21',
+				'remind_days_before': '1',
+				'message': '',
+				'custom_label': '',
+				'cultural_theme': '',
+				'memory_display_type': 'highlights',
+				'highlights': 'Year 3: New milestone',
+				'thread_of_memories': self.event.thread_of_memories,
+				'is_recurring': 'on',
+				'recipient_email': '',
+				'auto_share_enabled': 'on',
+				'raksha_bandhan_theme': '',
+				'sibling_relationship': '',
+				'sacred_promises': '',
+				'rakhi_ceremony_notes': '',
+			},
+			instance=self.event,
+		)
+
+		self.assertTrue(form.is_valid())
+		saved = form.save(commit=False)
+		self.assertEqual(saved.thread_of_memories, self.event.thread_of_memories)
+		self.assertEqual(saved.highlights, 'Year 3: New milestone')
+
+	def test_editing_thread_keeps_highlights(self):
+		form = EventForm(
+			data={
+				'name': 'Memory Event',
+				'event_type': 'anniversary',
+				'date': '2026-04-21',
+				'remind_days_before': '1',
+				'message': '',
+				'custom_label': '',
+				'cultural_theme': '',
+				'memory_display_type': 'thread_of_memories',
+				'highlights': self.event.highlights,
+				'thread_of_memories': self.event.thread_of_memories,
+				'is_recurring': 'on',
+				'recipient_email': '',
+				'auto_share_enabled': 'on',
+				'raksha_bandhan_theme': '',
+				'sibling_relationship': '',
+				'sacred_promises': '',
+				'rakhi_ceremony_notes': '',
+			},
+			instance=self.event,
+		)
+
+		self.assertTrue(form.is_valid())
+		saved = form.save(commit=False)
+		self.assertEqual(saved.highlights, self.event.highlights)
+		self.assertEqual(saved.thread_of_memories, self.event.thread_of_memories)
+
+	def test_form_accepts_expanded_image_and_audio_types(self):
+		image_file = SimpleUploadedFile('cover.gif', b'gif-bytes', content_type='image/gif')
+		audio_file = SimpleUploadedFile('message.m4a', b'm4a-bytes', content_type='audio/x-m4a')
+
+		form = EventForm(
+			data={
+				'name': 'Memory Event',
+				'event_type': 'anniversary',
+				'date': '2026-04-21',
+				'remind_days_before': '1',
+				'message': '',
+				'custom_label': '',
+				'cultural_theme': '',
+				'memory_display_type': 'highlights',
+				'highlights': 'Year 3: New milestone',
+				'thread_of_memories': self.event.thread_of_memories,
+				'is_recurring': 'on',
+				'recipient_email': '',
+				'auto_share_enabled': 'on',
+				'raksha_bandhan_theme': '',
+				'sibling_relationship': '',
+				'sacred_promises': '',
+				'rakhi_ceremony_notes': '',
+			},
+			files=MultiValueDict({'image_files': [image_file], 'audio_files': [audio_file]}),
+			instance=self.event,
+		)
+
+		self.assertTrue(form.is_valid())

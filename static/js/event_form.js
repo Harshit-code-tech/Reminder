@@ -257,15 +257,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (radio.value === 'highlights') {
                     highlightsSection.classList.remove('hidden');
                     threadOfMemoriesSection.classList.add('hidden');
-                    // Clear thread of memories field
-                    if (threadOfMemoriesInput) {
-                        threadOfMemoriesInput.value = '';
-                    }
                 } else if (radio.value === 'thread_of_memories') {
                     highlightsSection.classList.add('hidden');
                     threadOfMemoriesSection.classList.remove('hidden');
-                    // Clear highlights field
-                    document.getElementById('id_highlights').value = '';
                     // Update thread of memories data
                     updateThreadOfMemoriesData();
                 }
@@ -475,11 +469,11 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log(`DEBUG JS: Hidden field value:`, threadOfMemoriesInput.value);
         }
 
-        // Initial update of thread of memories data
-        updateThreadOfMemoriesData();
-        
         // Initialize existing thread of memories data when editing
         initializeExistingMemories();
+
+        // Keep the hidden field in sync after hydration or default entry creation.
+        updateThreadOfMemoriesData();
     }
     
     // Function to initialize existing thread of memories data when editing

@@ -48,8 +48,22 @@ def _validate_and_upload_media(request, event, supabase, files):
     for file in files:
         if file.size > settings.MAX_FILE_SIZE:
             return f"File '{file.name}' exceeds 50MB limit."
-        if file.content_type not in settings.ALLOWED_MEDIA_TYPES:
-            return f"Invalid file type for '{file.name}'. Allowed: .jpg, .png, .mp3, .wav, .flac"
+        content_type = (file.content_type or '').lower()
+        if content_type not in settings.ALLOWED_MEDIA_TYPES:
+            return (
+                f"Invalid file type for '{file.name}'. Allowed: JPG, PNG, GIF, WEBP, BMP, TIFF, SVG, "
+                f"MP3, WAV, FLAC, OGG, AAC, M4A, MP4"
+            )
+
+        if content_type.startswith('image/'):
+            media_type = 'image'
+        elif content_type.startswith('audio/'):
+            media_type = 'audio'
+        else:
+            return (
+                f"Invalid file type for '{file.name}'. Allowed: JPG, PNG, GIF, WEBP, BMP, TIFF, SVG, "
+                f"MP3, WAV, FLAC, OGG, AAC, M4A"
+            )
 
         unique_suffix = uuid.uuid4().hex[:8]
         filename = f"{unique_suffix}_{file.name}"
@@ -68,8 +82,8 @@ def _validate_and_upload_media(request, event, supabase, files):
         media = EventMedia.objects.create(
             event=event,
             media_file=public_url.rstrip('?'),
-            media_type='image' if file.content_type.startswith('image/') else 'audio',
-            mime_type=file.content_type,
+            media_type=media_type,
+            mime_type=content_type,
         )
         created.append(media)
     return created

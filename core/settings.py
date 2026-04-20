@@ -230,14 +230,30 @@ SUPABASE_JWT_SECRET = config('SUPABASE_JWT_SECRET')
 # ---------------------------------------------------------------------------
 # Media upload constraints
 # ---------------------------------------------------------------------------
-ALLOWED_MEDIA_TYPES = [
+ALLOWED_IMAGE_TYPES = [
     'image/jpeg',
+    'image/jpg',
     'image/png',
+    'image/gif',
+    'image/webp',
+    'image/bmp',
+    'image/tiff',
+    'image/svg+xml',
+]
+ALLOWED_AUDIO_TYPES = [
     'audio/mpeg',
+    'audio/mp3',
     'audio/wav',
+    'audio/x-wav',
     'audio/flac',
     'audio/ogg',
     'audio/aac',
+    'audio/mp4',
+    'audio/x-m4a',
+]
+ALLOWED_MEDIA_TYPES = [
+    *ALLOWED_IMAGE_TYPES,
+    *ALLOWED_AUDIO_TYPES,
 ]
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
 

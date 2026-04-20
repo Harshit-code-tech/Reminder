@@ -1,4 +1,5 @@
 from django import forms
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from .models import Event
@@ -25,7 +26,7 @@ class EventForm(forms.ModelForm):
         label="Upload Images for Slideshow (Page 3)",
         widget=forms.ClearableFileInput(attrs={
             'allow_multiple_selected': True,
-            'accept': '.jpg,.jpeg,.png'
+            'accept': '.jpg,.jpeg,.png,.gif,.webp,.bmp,.tif,.tiff,.svg'
 
         }),
     )
@@ -34,7 +35,7 @@ class EventForm(forms.ModelForm):
         label="Upload Audio for Voice Message (Page 4)",
         widget=forms.ClearableFileInput(attrs={
             'allow_multiple_selected': True,
-            'accept': '.mp3,.wav,.flac,.ogg,.aac'
+            'accept': '.mp3,.wav,.flac,.ogg,.aac,.m4a'
 
         }),
     )
@@ -226,18 +227,20 @@ class EventForm(forms.ModelForm):
         audio_files = self.files.getlist('audio_files')
 
         max_file_size = 50 * 1024 * 1024  # 50 MB
-        allowed_image_types = ['image/jpeg', 'image/png', 'image/jpg']
-        allowed_audio_types = ['audio/mpeg', 'audio/wav', 'audio/flac', 'audio/ogg', 'audio/aac', 'audio/mp3']
+        allowed_image_types = set(settings.ALLOWED_IMAGE_TYPES)
+        allowed_audio_types = set(settings.ALLOWED_AUDIO_TYPES)
 
         for file in image_files:
             if file.content_type not in allowed_image_types:
-                raise ValidationError(f'Invalid image type: {file.name}. Allowed: JPG, PNG')
+                raise ValidationError(
+                    f'Invalid image type: {file.name}. Allowed: JPG, PNG, GIF, WEBP, BMP, TIFF, SVG'
+                )
             if file.size > max_file_size:
                 raise ValidationError(f'Image {file.name} exceeds 50 MB.')
 
         for file in audio_files:
             if file.content_type not in allowed_audio_types:
-                raise ValidationError(f'Invalid audio type: {file.name}. Allowed: MP3, WAV, FLAC, OGG, AAC')
+                raise ValidationError(f'Invalid audio type: {file.name}. Allowed: MP3, WAV, FLAC, OGG, AAC, M4A')
             if file.size > max_file_size:
                 raise ValidationError(f'Audio {file.name} exceeds 50 MB.')
 
@@ -309,11 +312,9 @@ class EventForm(forms.ModelForm):
             else:
                 self.add_error('thread_of_memories', 'Please add at least 2 memories for Thread of Memories.')
 
-            # Clear highlights when thread_of_memories is the active display
-            cleaned_data['highlights'] = ''
-
         elif memory_display_type == 'highlights':
-            cleaned_data['thread_of_memories'] = ''
+            if cleaned_data.get('highlights'):
+                cleaned_data['highlights'] = cleaned_data['highlights'].replace('\r\n', '\n').replace('\r', '\n')
 
         return cleaned_data
 

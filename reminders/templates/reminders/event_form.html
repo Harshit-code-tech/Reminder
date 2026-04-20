@@ -243,11 +243,11 @@
                         Images for Slideshow (max 3)
                     </label>
                     <div class="ef-upload-zone">
-                        <input type="file" name="image_files" id="id_image_files" accept=".jpg,.jpeg,.png" multiple class="ef-file-input">
+                        <input type="file" name="image_files" id="id_image_files" accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.tif,.tiff,.svg" multiple class="ef-file-input">
                         <label for="id_image_files" class="ef-upload-label">
                             <svg class="ef-upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
                             <span><strong class="ef-upload-cta">Click to upload</strong> or drag and drop</span>
-                            <span class="ef-upload-hint">JPG, PNG - Up to 3 images</span>
+                            <span class="ef-upload-hint">JPG, PNG, GIF, WEBP, BMP, TIFF, SVG - Up to 3 images</span>
                         </label>
                     </div>
                     <div class="image-preview-container ef-preview-row"></div>
@@ -258,14 +258,14 @@
                 <div class="ef-field">
                     <label for="id_audio_files" class="ef-label">
                         <svg class="ef-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
-                        Audio for Voice Message
+                        Audio / Video for Voice Message
                     </label>
                     <div class="ef-upload-zone">
-                        <input type="file" name="audio_files" id="id_audio_files" accept=".mp3,.wav,.flac" multiple class="ef-file-input">
+                        <input type="file" name="audio_files" id="id_audio_files" accept=".mp3,.wav,.flac,.ogg,.aac,.m4a" multiple class="ef-file-input">
                         <label for="id_audio_files" class="ef-upload-label">
                             <svg class="ef-upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
                             <span><strong class="ef-upload-cta">Click to upload</strong> or drag and drop</span>
-                            <span class="ef-upload-hint">MP3, WAV, FLAC</span>
+                            <span class="ef-upload-hint">MP3, WAV, FLAC, OGG, AAC, M4A</span>
                         </label>
                     </div>
                     <div class="audio-preview-container"></div>
@@ -284,14 +284,14 @@
                         {% for media in form.instance.media.all %}
                         <div class="ef-media-thumb">
                             {% if media.media_type == 'image' %}
-                                <img src="{{ media.file.url }}" alt="Preview" class="ef-thumb-img">
+                                <img src="{{ media.media_file }}" alt="Preview" class="ef-thumb-img">
                             {% elif media.media_type == 'audio' %}
                                 <div class="ef-thumb-audio">
                                     <svg class="w-10 h-10" style="color:#8b5cf6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
                                 </div>
                             {% endif %}
                             <div class="ef-thumb-overlay">
-                                <a href="{{ media.file.url }}" data-download="media" title="Download">
+                                <a href="{{ media.media_file }}" data-download="media" title="Download">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                                 </a>
                             </div>
