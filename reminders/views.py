@@ -217,6 +217,15 @@ def toggle_recurring(request, event_id):
         if event.event_type in ['birthday', 'anniversary', 'raksha_bandhan']:
             event.is_recurring = not event.is_recurring
             event.save()
+            
+            # Immediately process recurring events so it shows up without waiting for the cron task
+            if event.is_recurring:
+                try:
+                    from reminders.tasks import check_recurring_events
+                    check_recurring_events()
+                except Exception as e:
+                    logger.error(f"Error checking recurring events after toggle: {e}")
+                    
             messages.success(request, f"Recurring {'enabled' if event.is_recurring else 'disabled'} for {event.name}")
         else:
             messages.error(request, "Recurring is only available for birthdays, anniversaries, and Raksha Bandhan.")
@@ -571,6 +580,15 @@ def edit_past_event(request, event_id):
                     return render(request, "reminders/event_form.html", {"form": form, "event": event})
 
                 form.save()
+                
+                # Immediately process recurring events so the user sees the new event right away
+                if event.is_recurring:
+                    try:
+                        from reminders.tasks import check_recurring_events
+                        check_recurring_events()
+                    except Exception as e:
+                        logger.error(f"Error checking recurring events after edit: {e}")
+
                 messages.success(request, f"Past event '{event.name}' updated successfully!")
                 logger.info(f"Past event '{event.name}' updated for user {request.user.username}")
                 return redirect('past_events')
