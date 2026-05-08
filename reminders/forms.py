@@ -283,7 +283,18 @@ class EventForm(forms.ModelForm):
         if memory_display_type == 'thread_of_memories':
             thread_of_memories = cleaned_data.get('thread_of_memories')
 
-            if thread_of_memories and thread_of_memories.strip():
+            # Treat empty JSON arrays ("[]") the same as truly empty — the JS
+            # sets this when no memories have been filled in yet.
+            is_actually_empty = not thread_of_memories or not thread_of_memories.strip()
+            if not is_actually_empty:
+                try:
+                    memories_data = json.loads(thread_of_memories)
+                    if isinstance(memories_data, list) and len(memories_data) == 0:
+                        is_actually_empty = True
+                except (json.JSONDecodeError, ValueError):
+                    pass
+
+            if not is_actually_empty:
                 try:
                     memories_data = json.loads(thread_of_memories)
                     if not isinstance(memories_data, list):
@@ -310,7 +321,14 @@ class EventForm(forms.ModelForm):
                             'Thread of Memories requires at least 2 memory entries.',
                         )
             else:
-                self.add_error('thread_of_memories', 'Please add at least 2 memories for Thread of Memories.')
+                # Only enforce the "must have memories" rule when explicitly
+                # setting thread_of_memories on a NEW event. When editing an
+                # existing event the user may just be toggling is_recurring,
+                # so only block if thread_of_memories is genuinely the chosen
+                # display and has no data at all (new event path).
+                is_new = not (self.instance and self.instance.pk)
+                if is_new:
+                    self.add_error('thread_of_memories', 'Please add at least 2 memories for Thread of Memories.')
 
         elif memory_display_type == 'highlights':
             if cleaned_data.get('highlights'):

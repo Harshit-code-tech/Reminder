@@ -172,29 +172,44 @@ class Event(models.Model):
         if self.recipient_email and not self.recipient_email.strip():
             raise ValidationError({'recipient_email': "Recipient email cannot be empty if provided."})
 
-        # Thread of memories validation
-        if self.thread_of_memories:
+        # Thread of memories validation.
+        # The JS widget serialises memory entries to JSON and always sends a
+        # value (even "[]" when nothing has been filled in). We must treat an
+        # empty JSON array the same as null / empty so that editing an existing
+        # event (e.g. just toggling is_recurring) never trips this validator.
+        raw_tom = self.thread_of_memories
+        if raw_tom:
+            # Detect empty JSON array first
+            _is_empty_json = False
             try:
-                memories_data = json.loads(self.thread_of_memories)
-                if not isinstance(memories_data, list):
-                    raise ValidationError({'thread_of_memories': "Invalid thread of memories format."})
-                valid_memories = [
-                    m for m in memories_data
-                    if isinstance(m, dict) and (
-                        m.get('title', '').strip() or m.get('description', '').strip()
-                    )
-                ]
-                if len(valid_memories) < 2:
-                    raise ValidationError(
-                        {'thread_of_memories': "Thread of Memories requires at least 2 memories."}
-                    )
-            except json.JSONDecodeError:
-                # Fallback to legacy newline-separated text format
-                memories = [m.strip() for m in self.thread_of_memories.split('\n') if m.strip()]
-                if len(memories) < 2:
-                    raise ValidationError(
-                        {'thread_of_memories': "Thread of Memories requires at least 2 memories."}
-                    )
+                _parsed = json.loads(raw_tom)
+                if isinstance(_parsed, list) and len(_parsed) == 0:
+                    _is_empty_json = True
+            except (json.JSONDecodeError, ValueError):
+                pass
+
+            if not _is_empty_json:
+                try:
+                    memories_data = json.loads(raw_tom)
+                    if not isinstance(memories_data, list):
+                        raise ValidationError({'thread_of_memories': "Invalid thread of memories format."})
+                    valid_memories = [
+                        m for m in memories_data
+                        if isinstance(m, dict) and (
+                            m.get('title', '').strip() or m.get('description', '').strip()
+                        )
+                    ]
+                    if len(valid_memories) < 2:
+                        raise ValidationError(
+                            {'thread_of_memories': "Thread of Memories requires at least 2 memories."}
+                        )
+                except json.JSONDecodeError:
+                    # Fallback to legacy newline-separated text format
+                    memories = [m.strip() for m in raw_tom.split('\n') if m.strip()]
+                    if len(memories) < 2:
+                        raise ValidationError(
+                            {'thread_of_memories': "Thread of Memories requires at least 2 memories."}
+                        )
 
     def get_memory_data(self):
         """Parse thread_of_memories into structured data.
