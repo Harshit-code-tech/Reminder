@@ -95,17 +95,24 @@ def _remove_event_media_from_storage(supabase, media_queryset):
     Logs warnings for already-missing files and errors on failure.
     """
     for media in media_queryset:
-        file_path = media.media_file
+        public_url = media.media_file
         try:
-            dir_path = "/".join(file_path.split('/')[:-1])
-            existing_files = supabase.storage.from_('event-media').list(dir_path)
-            if any(f['name'] == file_path.split('/')[-1] for f in existing_files):
-                supabase.storage.from_('event-media').remove([file_path])
+            if '/event-media/' in public_url:
+                relative_path = public_url.split('/event-media/')[-1]
+            else:
+                relative_path = public_url
+                
+            try:
+                # Best-effort removal from Supabase
+                supabase.storage.from_('event-media').remove([relative_path])
+                logger.info(f"Deleted media from storage '{relative_path}'")
+            except Exception as e:
+                logger.warning(f"Storage delete failed for {relative_path}: {e}")
+            
+            # ALWAYS delete the DB record so we don't get stuck
             media.delete()
-            logger.info(f"Deleted media '{file_path}'")
         except Exception as e:
-            logger.warning(f"Failed to delete media {file_path}: {e}")
-            raise
+            logger.warning(f"Failed to delete media record {public_url}: {e}")
 
 
 def _build_card_context(event, *, is_owner, token=None, session_key_unlocked=False):
@@ -356,26 +363,19 @@ def delete_event_media(request, media_id):
     if request.method == 'POST' and media.media_file:
         try:
             supabase = get_user_supabase_client(request)
-            file_path = media.media_file
-
-            # Handle full URLs — extract the path component
-            if file_path.startswith('http'):
-                file_path = urlparse(file_path).path.lstrip('/')
-
-            # Check if file still exists in storage before attempting deletion
-            dir_path = "/".join(file_path.split('/')[:-1])
-            existing_files = supabase.storage.from_('event-media').list(dir_path)
-            file_name = file_path.split('/')[-1]
-
-            if not any(f['name'] == file_name for f in existing_files):
-                logger.warning(f"Media already missing for event {event.name}. Clearing DB fields only.")
+            public_url = media.media_file
+            
+            if '/event-media/' in public_url:
+                relative_path = public_url.split('/event-media/')[-1]
             else:
-                response = supabase.storage.from_('event-media').remove([file_path])
-                if response is None or (isinstance(response, list) and not response):
-                    logger.error(f"Deletion failed for event {event.id}: invalid path or permissions")
-                    messages.error(request, f"Failed to delete media for event '{event.name}'.")
-                    return redirect('event_list')
+                relative_path = public_url
+
+            try:
+                # Best-effort removal from Supabase
+                supabase.storage.from_('event-media').remove([relative_path])
                 logger.info(f"Media deleted from Supabase for event {event.id}")
+            except Exception as e:
+                logger.warning(f"Storage delete failed for {relative_path}: {e}")
 
             # Clear fields but keep the record
             media.media_url = None
