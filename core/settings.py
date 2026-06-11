@@ -196,6 +196,7 @@ EMAIL_FROM = config('EMAIL_FROM', cast=str, default='')
 EMAIL_FROM_NAME = config('EMAIL_FROM_NAME', cast=str, default='Reminder App')
 DEFAULT_FROM_EMAIL = f"{EMAIL_FROM_NAME} <{EMAIL_FROM}>"
 EMAIL_SUBJECT_PREFIX = config('EMAIL_SUBJECT_PREFIX', cast=str, default='[Reminder App]')
+EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', cast=int, default=5)
 
 # Validate required mail settings at startup.
 _required_email_settings = {
