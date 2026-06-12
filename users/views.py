@@ -167,14 +167,14 @@ def login_view(request):
             messages.info(request, "Please verify your email. A code has been sent.")
             return redirect("verify_email")
 
-        # Successful authentication
-        auth_login(request, user)
-        reset_failed_login_attempts(identifier)
-
         try:
             token, refresh_token, expires_in = _fetch_supabase_jwt(user.email, password)
             _store_supabase_session(request, token, refresh_token, expires_in)
             logger.info(f"Fetched Supabase JWT for {user.email}")
+            
+            # Successful authentication
+            auth_login(request, user)
+            reset_failed_login_attempts(identifier)
         except Exception as e:
             logger.error(f"Supabase JWT fetch error for {user.email}: {e}")
             messages.error(request, "Failed to authenticate with Supabase.")
@@ -444,7 +444,27 @@ def password_reset_confirm(request, uidb64, token):
     form = SetPasswordForm(user, request.POST or None) if validlink else None
 
     if request.method == 'POST' and validlink and form and form.is_valid():
-        form.save()
+        user_obj = form.save()
+        
+        # Update password in Supabase as well
+        if user_obj.supabase_id:
+            try:
+                new_password = form.cleaned_data.get('new_password1')
+                response = requests.put(
+                    f"{settings.SUPABASE_URL}/auth/v1/admin/users/{user_obj.supabase_id}",
+                    headers={
+                        "apikey": settings.SUPABASE_SERVICE_KEY,
+                        "Authorization": f"Bearer {settings.SUPABASE_SERVICE_KEY}",
+                        "Content-Type": "application/json"
+                    },
+                    json={"password": new_password},
+                    timeout=10
+                )
+                if response.status_code != 200:
+                    logger.error(f"Failed to update Supabase password for {user_obj.email}: {response.text}")
+            except Exception as e:
+                logger.error(f"Error updating Supabase password for {user_obj.email}: {e}")
+
         messages.success(request, "Your password has been set. You can now log in.")
         return redirect('password_reset_complete')
 
